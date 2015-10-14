@@ -1,10 +1,14 @@
- function TestSuite(about){
-	/*	This object helps to test different parts of the program.
-	 *	Use:
-	 *	    - Create a TestSuite object:    ts = new TestSuite("Info about this group of tests");
-     *      - Run a test:                   ts.run_test(Computed value, Expected value, "error message");
-     *      - Check results:                ts.results_on_console();
-	 */
+/*	This object helps to test different parts of the program.
+ *	Use:
+ *	    - Create a TestSuite object:    ts = new TestSuite("Info about this group of tests");
+ *      - Run a test:                   ts.run_test(Computed value, Expected value, "error message");
+ *      - Check results:                ts.results_on_console();
+ *  Author: Jaime Pérez Aparicio
+ *  email: 19.jaime.91@gmail.com
+ *  license: GPL
+ */ 
+
+function TestSuite(about){
 
     //variables
 	var passed_tests = 0;
@@ -45,3 +49,12 @@
 		document.write(message);
 	}
 }
+
+function tests(){
+ts = new TestSuite("Pruebas de TestSuite");
+ts.run_test(1,1,"");
+ts.run_test(1,2,"H");
+ts.results_on_console();
+}
+
+new tests();
