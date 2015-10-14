@@ -1,8 +1,19 @@
  function TestSuite(about){
+	/*	This object helps to test different parts of the program.
+	 *	Use:
+	 *	    - Create a TestSuite object:    ts = new TestSuite("Info about this group of tests");
+     *      - Run a test:                   ts.run_test(Computed value, Expected value, "error message");
+     *      - Check results:                ts.results_on_console();
+	 */
+
+    //variables
 	var passed_tests = 0;
 	var run_tests = 0;
 	var about = (about===undefined?"Empty info about the test":about.toString());
 	var test_info = "";
+
+
+    //methods
 	this.run_test = function(computed_value, expected_value, info){
 		run_tests++;
 		if (info==undefined) {info="";};
