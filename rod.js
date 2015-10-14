@@ -4,5 +4,7 @@
  *  license: GPL
  */ 
 
-var rod = function();
+var rod = function(){
+
+};
 
