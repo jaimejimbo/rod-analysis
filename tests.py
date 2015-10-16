@@ -1,5 +1,6 @@
 import unittest
 import matrix
+import rod_statistics
 
 class TestMatrix(unittest.TestCase):
     """
