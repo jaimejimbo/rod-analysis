@@ -107,7 +107,7 @@ class Matrix:
             if adim != bdim:
                 raise DimError
             else:
-                output = Matrix(adim[0], adim[1])
+                output = zeros(adim[0], adim[1])
                 for row in range(adim[0]):
                     for col in range(adim[1]):
                         avalue = self._data[row][col]
@@ -280,7 +280,7 @@ class Matrix:
         Returns identity element in actual space
         """
         cols = self.get_cols()
-        output = Matrix(cols, cols)
+        output = zeros(cols, cols)
         for pos in range(cols):
             output[pos][pos] = 1.0
         return output
@@ -302,7 +302,7 @@ class Matrix:
         """
         returns the trasposed of the matrix
         """
-        output = Matrix(self._cols, self._rows)
+        output = zeros(self._cols, self._rows)
         for row in range(self._rows):
             for col in range(self._cols):
                 output[col][row] = self._data[row][col]

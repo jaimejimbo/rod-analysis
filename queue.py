@@ -34,10 +34,3 @@ class Queue(object):
         Return position of the element
         """
         return self._data.index(element) + 1
-        
-    @property
-    def data(self):
-        """
-        Data vector
-        """
-        return self._data

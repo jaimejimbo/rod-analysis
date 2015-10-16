@@ -75,5 +75,3 @@ def RecursiveList(Tree):
             output += son.get_output()
         return output
 
-list1 = RecursiveList("a")
-print list1._data

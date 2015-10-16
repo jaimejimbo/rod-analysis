@@ -1,40 +1,70 @@
+import unittest
 import matrix
-import poc_simpletest
 
-def test1():
-    test_obj = poc_simpletest.TestSuite()
-    
-    a = matrix.Matrix(1,1)
-    a[0][0] = 1
-    test_obj.run_test(a[0][0], 1, "Error in getter / setter")
-    
-    a = matrix.Matrix(3,3)
-    test_obj.run_test(a.__str__(), "0.0\t0.0\t0.0\n0.0\t0.0\t0.0\n0.0\t0.0\t0.0", "Error in getter / setter")
-    
-    b = matrix.Matrix(3,3)
-    b[1][1] = 1.0
-    
-    test_obj.run_test(str(a+b), str(b), "Error in sum")
-    test_obj.run_test(str(a*b), str(a), "Error in prod")
-        
-    b = matrix.Matrix(3,3,[[1,2,3],[4,5,6],[7,8,9]])
-    c = b.delete(1,1)
-    d = matrix.Matrix(2,2,[[1,3],[7,9]])
-    test_obj.run_test(str(c), str(d), "Error in put_out")
-    
-    a = matrix.Matrix(3,3,[[1,1,1],[1,1,1],[1,1,1]])
-    test_obj.run_test(str(a.det(a)), str(0), "Error in det")
-    
-    a = matrix.Matrix(3,3,[[1,0,1],[0,1,0],[1,0,-1]])
-    ident = a.identity()
-    inv = a.inverse()
-    test_obj.run_test(str(a*inv),str(ident), "Error in inverse")
-    
-    print a^3
-    
-    a = matrix.Matrix(1,1,[["Hola"]])
-    
-        
-    test_obj.report_results()
+class TestMatrix(unittest.TestCase):
+    """
+    Test Matrix class    
+    """
 
-test1()
+    def setUp(self):
+        pass
+    
+    def test_getset(self):
+        """
+        Getter and Setter tests. 
+        """
+        a = matrix.zeros(1,1)
+        a[0][0] = 1
+        self.assertEqual(a[0][0], 1, "Setter not working.")
+
+    def test_str(self):
+        """
+        Getter and Setter tests. 
+        """
+        a = matrix.zeros(3,3)
+        self.assertEqual(a.__str__(), "\n0.0\t0.0\t0.0\n0.0\t0.0\t0.0\n0.0\t0.0\t0.0\n", "str test.")
+    
+    def test_sumprod(self):
+        """
+        Sum and prod tests.
+        """
+        b = matrix.zeros(3,3)
+        b[1][1] = 1.0
+        a = matrix.zeros(3,3)
+        self.assertEqual(str(a+b), str(b))
+        self.assertEqual(str(a*b), str(a))
+      
+    def test_putout(self):  
+        """
+        ...
+        """
+        b = matrix.Matrix([[1,2,3],[4,5,6],[7,8,9]])
+        c = b.delete(1,1)
+        d = matrix.Matrix([[1,3],[7,9]])
+        self.assertEqual(str(c), str(d))
+    
+    def test_det(self):
+        """
+        Determinant tests
+        """
+        a = matrix.Matrix([[1,1,1],[1,1,1],[1,1,1]])
+        self.assertEqual(str(a.det(a)), str(0), "Error in det")
+    
+    def test_inverse(self):
+        """
+        Inversion tests
+        """
+        a = matrix.Matrix([[1,0,1],[0,1,0],[1,0,-1]])
+        ident = a.identity()
+        inv = a.inverse()
+        self.assertEqual(str(a*inv),str(ident), "Error in inverse")
+    
+    def test_strmatrix(self):
+        """
+        Generalization of matrix values
+        """
+        a = matrix.Matrix([["Hola"]])
+
+
+
+
