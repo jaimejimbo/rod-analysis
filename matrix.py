@@ -81,8 +81,7 @@ class Matrix:
         """
         rows = len(matrix_vector)+1
         cols = len(matrix_vector[0])+1
-        print rows, cols
-        output = Matrix(rows, cols, matrix_vector)
+        output = Matrix(matrix_vector)
         return output
         
     def __pow__(self, exponent):
