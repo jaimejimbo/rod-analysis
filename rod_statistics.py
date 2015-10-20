@@ -56,7 +56,7 @@ def import_files(folder="./", _glob='rods_*', regular_expression='rods_[0-9]{1,5
     check_if_data = re.compile(reg1)
     names = []
     for data_file in glob(_glob):
-        if reg1.match(data_file):             #check if file is a data file
+        if reg1.match(data_file):
             names.append(data_file)
     files = []
     for name in names:
@@ -65,8 +65,16 @@ def import_files(folder="./", _glob='rods_*', regular_expression='rods_[0-9]{1,5
 
 def import_data(file_, regular_expression='*'):
     """
-    Import data of a file (only works with rod data)
+    Import data of a file
+    Returns an array with data
     """
     reg_exp = re.compile(regular_expression)
-    rod = None                     #Rod(prop1, prop2)
-    return rod
+    data = []
+    return data
+
+def create_rods(folder="./"):
+    """
+    Create one rod for each rod_data and for each file
+    returns [RodGroup1, RodGroup2, ...]
+    """
+    return []

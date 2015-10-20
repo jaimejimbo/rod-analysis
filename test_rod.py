@@ -69,3 +69,9 @@ class TestRod(unittest.TestCase):
         """
         pass
 
+    def test_CreateRods(self):
+        """
+        Checks rod groups.
+        """
+        pass
+
