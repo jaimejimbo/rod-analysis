@@ -11,11 +11,23 @@ class Rod(object):
     Rod object.
     """
     
-    def __init__(self, ARGS):
+    def __init__(self, (ID, area, xm, ym, major, minor, angle, feret, feretx, ferety, feretangle, minferet, xstart, ystart)):
         """
         Initialization of rod
         """
-        pass
+        self.id = ID
+        self.area = area
+        self.xm = xm
+        self.ym = ym
+        self.major = major
+        self.minor = minor
+        self.angle = angle
+        self.feret = feretx
+        self.ferety = ferety
+        self.feretangle = feretangle
+        self.minferet = minferet
+        self.xstart = xstart
+        self.ystart = ystart
 
     def check_if_rod(self):
         """
@@ -49,7 +61,7 @@ class RodGroup(object):
         pass
     
 
-def import_files(folder="./", _glob='rods_*', regular_expression='rods_[0-9]{1,5}'):
+def import_files(folder="./", _glob='rods_*', regular_expression='rods_[0-9]*'):
     """
     Import all files using glob and checking with reg exp.
     """
@@ -76,10 +88,16 @@ def import_data(_file, split_char='\t', regular_expression='[0-9]\.[0-9]*'):
             dataline = re.split(split_char, line.rstrip('\n')) # Removes new line char from the line
             for element in dataline:
                 if not reg_exp.match(element):
-                    dataline.delete(element)
+                    try:
+                        dataline.remove(element)
+                    except AttributeError:
+                        print "Something went badly" + str(dataline)
             data.append(dataline)
     except ValueError:
         print "File must be passed opened to import_data."
+    except TypeError:
+        print "Perhaps the file passed is not in the right format."
+        print _file
     return data
 
 def create_rods(folder="./"):
@@ -87,4 +105,14 @@ def create_rods(folder="./"):
     Create one rod for each rod_data and for each file
     returns [RodGroup1, RodGroup2, ...]
     """
-    return []
+    files = import_files()
+    rod_groups = []
+    for _file in files:
+        rod_group = RodGroup()
+        data = import_data(_file)
+        for dataline in data:
+            parameters = tuple(dataline)
+            new_rod = Rod(parameters)
+            rod_group.add_rod(new_rod)
+        rod_groups.append(rod_group)
+    return rod_groups

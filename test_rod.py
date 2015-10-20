@@ -109,5 +109,5 @@ class TestRod(unittest.TestCase):
         """
         Checks rod groups.
         """
-        pass
-
+        rod_grps = rod_statistics.create_rods()
+        print rod_grps
