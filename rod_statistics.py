@@ -4,6 +4,7 @@ Analyze rods data
 from queue import Queue
 from glob import glob
 import re
+import multiprocessing as mp    #for using all cores
 
 class Rod(object):
     """
@@ -63,7 +64,7 @@ def import_files(folder="./", _glob='rods_*', regular_expression='rods_[0-9]{1,5
         files.append(open(name))
     return files
 
-def import_data(file_, split_char='\t', regular_expression='*'):
+def import_data(_file, split_char='\t', regular_expression='[0-9]\.[0-9]*'):
     """
     Import data of a file
     Returns an array with data
@@ -71,15 +72,14 @@ def import_data(file_, split_char='\t', regular_expression='*'):
     reg_exp = re.compile(regular_expression)
     data = []
     try:
-        while True:
-            line = file_.readline()
-            dataline = re.split(split_char ,line)
+        for line in _file:            
+            dataline = re.split(split_char, line.rstrip('\n')) # Removes new line char from the line
             for element in dataline:
                 if not reg_exp.match(element):
                     dataline.delete(element)
             data.append(dataline)
-    except IndexError:
-        pass
+    except ValueError:
+        print "File must be passed opened to import_data."
     return data
 
 def create_rods(folder="./"):
