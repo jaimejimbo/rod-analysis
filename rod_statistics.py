@@ -76,7 +76,7 @@ def import_files(folder="./", _glob='rods_*', regular_expression='rods_[0-9]*'):
         files.append(open(name))
     return files
 
-def import_data(_file, split_char='\t', regular_expression='[0-9]\.[0-9]*'):
+def import_data(_file, split_char='\t', regular_expression='[0-9]\.?[0-9]*'):
     """
     Import data of a file
     Returns an array with data
@@ -110,9 +110,15 @@ def create_rods(folder="./"):
     for _file in files:
         rod_group = RodGroup()
         data = import_data(_file)
+        #print data
         for dataline in data:
             parameters = tuple(dataline)
-            new_rod = Rod(parameters)
+            try:
+                new_rod = Rod(parameters)
+            except ValueError as e:
+                print parameters
+                print e.message
+                raise ValueError
             rod_group.add_rod(new_rod)
         rod_groups.append(rod_group)
     return rod_groups
