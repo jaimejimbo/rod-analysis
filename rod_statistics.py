@@ -73,7 +73,7 @@ def import_data(file_, split_char='\t', regular_expression='*'):
     try:
         while True:
             line = file_.readline()
-            dataline = re.split('\t',line)
+            dataline = re.split(split_char ,line)
             for element in dataline:
                 if not reg_exp.match(element):
                     dataline.delete(element)
