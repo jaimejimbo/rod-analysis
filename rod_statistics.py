@@ -63,13 +63,23 @@ def import_files(folder="./", _glob='rods_*', regular_expression='rods_[0-9]{1,5
         files.append(open(name))
     return files
 
-def import_data(file_, regular_expression='*'):
+def import_data(file_, split_char='\t', regular_expression='*'):
     """
     Import data of a file
     Returns an array with data
     """
     reg_exp = re.compile(regular_expression)
     data = []
+    try:
+        while True:
+            line = file_.readline()
+            dataline = re.split('\t',line)
+            for element in dataline:
+                if not reg_exp.match(element):
+                    dataline.delete(element)
+            data.append(dataline)
+    except IndexError:
+        pass
     return data
 
 def create_rods(folder="./"):
