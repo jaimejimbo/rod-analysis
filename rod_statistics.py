@@ -46,7 +46,7 @@ class Rod(object):
         self.y_start = float(ystart)           #13
         dif_x = abs(self.x_mid - CENTER_X)
         dif_y = abs(self.y_mid - CENTER_Y)
-        self.distance_to_center = math.sqrt(pow(dif_x,2)+pow(dif_y,2))
+        self.distance_to_center = math.sqrt(dif_x**2+dif_y**2)
 
     def is_valid_rod(self):
         """
@@ -165,3 +165,15 @@ def create_rods(folder="./"):
         rod_groups.append(rod_group)
     return rod_groups
 
+
+
+
+def segment_area(r,h): 
+    return r**2 * math.acos(h/r) - h*sqrt(r**2-h**2)
+
+def effective_area(r,r_pos, R):
+    h = (r_pos**2-r**2+R**2)/(2*r_pos)
+    if h>=r_pos: 
+        return math.pi*r**2 - segment_area(r,h-r_pos)+segment_area(R,h)
+    else:
+        return segment_area(r,r_pos-h)+segment_area(R,h)
