@@ -31,6 +31,13 @@ class Queue(object):
         
     def get_pos(self, element):
         """
-        Return position of the element
+        Returns position of the element
         """
         return self._data.index(element) + 1
+
+    def __len__(self):
+        """
+        Returns length of the queue
+        """
+        return len(self._data)
+

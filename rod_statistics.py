@@ -54,6 +54,12 @@ class RodGroup(object):
         """
         self._rods.join(rod)
 
+    def get_rod(self):
+        """
+        Returns the first rod in the queue
+        """
+        return self._rods.get_next()
+
     def remove_rod(self, rod):
         """
         Removes a rod from the group (queue object mod needed)
@@ -110,7 +116,6 @@ def create_rods(folder="./"):
     for _file in files:
         rod_group = RodGroup()
         data = import_data(_file)
-        #print data
         for dataline in data:
             parameters = tuple(dataline)
             try:

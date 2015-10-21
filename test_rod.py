@@ -4,6 +4,7 @@ import os
 
 class TestRod(unittest.TestCase):
     """
+    Group of tests for rod_statistics library
     """
     
     def SetUp(self):
@@ -93,6 +94,15 @@ class TestRod(unittest.TestCase):
         os.remove("prueba2.txt")
         os.remove("prueba3.txt")
 
+    def test_CreateRods(self):
+        """
+        Checks rod groups.
+        """
+        rod_grps = rod_statistics.create_rods()
+        rod = rod_grps[0].get_rod()
+        self.assertEqual(str(rod.id), "1", "Errors when importing data. ID obtained: "+str(rod.id))
+        self.assertEqual(str(rod.area), "578", "Errors when importing data. Area obtained: "+str(rod.area))
+
     def test_Rod(self):
         """
         Checks rod object and methods.
@@ -105,9 +115,4 @@ class TestRod(unittest.TestCase):
         """
         pass
 
-    def test_CreateRods(self):
-        """
-        Checks rod groups.
-        """
-        rod_grps = rod_statistics.create_rods()
-        print rod_grps
+
