@@ -96,7 +96,7 @@ class TestRod(unittest.TestCase):
 
     def test_CreateRods(self):
         """
-        Checks rod groups.
+        Checks rod group creation
         """
         rod_grps = rod_statistics.create_rods()
         rod = rod_grps[0].get_rod()

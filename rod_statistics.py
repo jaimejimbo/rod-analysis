@@ -6,6 +6,20 @@ from glob import glob
 import re
 import multiprocessing as mp    #for using all cores
 
+
+
+#consts
+RADIUS = 1704*0.5
+CENTER_X = 519+RADIUS
+CENTER_Y = 96+RADIUS
+KAPPA_1 = 4
+KAPPA_2 = 12
+#ROD_LENGTH,ROD_DIAMETER #Now there are two types of rod
+# Time consts
+FRAME_INTERVAL = 1.0/3
+
+
+
 class Rod(object):
     """
     Rod object.
@@ -33,7 +47,9 @@ class Rod(object):
     def check_if_rod(self):
         """
         Checks if this is a rod looking at different factors
+        If it is a group of two rods that are very near, 
         """
+            
         return True
     
 
@@ -65,7 +81,7 @@ class RodGroup(object):
         """
         Removes a rod from the group (queue object mod needed)
         """
-        pass
+        self._rods.delete(rod)
     
 
 def import_files(folder="./", _glob='rods_*', regular_expression='rods_[0-9]*'):
@@ -128,3 +144,4 @@ def create_rods(folder="./"):
             rod_group.add_rod(new_rod)
         rod_groups.append(rod_group)
     return rod_groups
+
