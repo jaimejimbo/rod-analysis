@@ -41,3 +41,9 @@ class Queue(object):
         """
         return len(self._data)
 
+    def delete(self, element):
+        """
+        Deletes an element of the queue.
+        """
+        pos = self.get_pos(element)
+        del self._data[pos]
