@@ -20,6 +20,11 @@ class TestQueue(unittest.TestCase):
         a.join(3)
         a.join(4)
         a.join(5)
-        self.assertEqual(a.get_next(), 1, "Check get_next function. Obtained:"+str(a.get_next()))
-        self.assertEqual(a.get_pos(3), 1, "Check get_pos function Obtained:"+str(a.get_pos(3)))
+        self.assertEqual(len(a), 5, "Length method doesn't work. Obtained:"+str(len(a)))
+        next = a.get_next()
+        self.assertEqual(next, 1, "Check get_next function. Obtained:"+str(next))
+        self.assertEqual(len(a), 4, "Length method doesn't work. Obtained:"+str(len(a)))
+        self.assertEqual(a.get_pos(2), 1, "Check get_pos function Obtained:"+str(a.get_pos(3)))
+        a.delete(3)
+        self.assertEqual(len(a), 3, "Length method doesn't work. Obtained:"+str(len(a)))
 
