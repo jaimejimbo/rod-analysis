@@ -128,7 +128,7 @@ def create_rods(folder="./"):
     Create one rod for each rod_data and for each file
     returns [RodGroup1, RodGroup2, ...]
     """
-    files = import_files()
+    files = import_files(folder=folder)
     rod_groups = []
     for _file in files:
         rod_group = RodGroup()
