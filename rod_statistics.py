@@ -22,7 +22,8 @@ class Rod(object):
         self.major = major
         self.minor = minor
         self.angle = angle
-        self.feret = feretx
+        self.feret = feret
+        self.feretx = feretx
         self.ferety = ferety
         self.feretangle = feretangle
         self.minferet = minferet
