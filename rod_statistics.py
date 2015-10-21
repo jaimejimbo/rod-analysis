@@ -89,7 +89,11 @@ class RodGroup(object):
         """
         self._rods.delete(rod)
     
-
+    def compute_density(self):
+        """
+        Computes density of the system
+        """
+        pass
 
 
 
@@ -168,10 +172,16 @@ def create_rods(folder="./"):
 
 
 
-def segment_area(r,h): 
+def segment_area(r,h):
+    """
+    ??
+    """
     return r**2 * math.acos(h/r) - h*sqrt(r**2-h**2)
 
 def effective_area(r,r_pos, R):
+    """
+    ??
+    """
     h = (r_pos**2-r**2+R**2)/(2*r_pos)
     if h>=r_pos: 
         return math.pi*r**2 - segment_area(r,h-r_pos)+segment_area(R,h)
