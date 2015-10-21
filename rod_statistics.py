@@ -5,6 +5,7 @@ from queue import Queue
 from glob import glob
 import re
 import multiprocessing as mp    #for using all cores
+import math
 
 
 
@@ -28,28 +29,30 @@ class Rod(object):
     def __init__(self, (ID, area, xm, ym, major, minor, angle, feret, feretx, ferety, feretangle, minferet, xstart, ystart)):
         """
         Initialization of rod
-        """
-        self.id = ID
-        self.area = area
-        self.xm = xm
-        self.ym = ym
-        self.major = major
-        self.minor = minor
-        self.angle = angle
-        self.feret = feret
-        self.feretx = feretx
-        self.ferety = ferety
-        self.feretangle = feretangle
-        self.minferet = minferet
-        self.xstart = xstart
-        self.ystart = ystart
+        """                                    #Column
+        self.id = int(ID)                      #0
+        self.area = float(area)                #1
+        self.x_m = float(xm)                   #2
+        self.y_m = float(ym)                   #3
+        self.major = float(major)              #4
+        self.minor = float(minor)              #5
+        self.angle = float(angle)              #6
+        self.feret = float(feret)              #7
+        self.feret_x = float(feretx)           #8
+        self.feret_y = float(ferety)           #9
+        self.feret_angle = float(feretangle)   #10
+        self.min_feret = float(minferet)       #11
+        self.x_start = float(xstart)           #12
+        self.y_start = float(ystart)           #13
+        dif_x = abs(self.x_m - CENTER_X)
+        dif_y = abs(self.y_m - CENTER_Y)
+        self.center_dist = math.sqrt(pow(dif_x,2)+pow(dif_y,2))
 
-    def check_if_rod(self):
+    def valid_rod(self):
         """
         Checks if this is a rod looking at different factors
         If it is a group of two rods that are very near, 
         """
-            
         return True
     
 
