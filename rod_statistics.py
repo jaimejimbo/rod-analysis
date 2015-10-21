@@ -32,8 +32,8 @@ class Rod(object):
         """                                    #Column
         self.id = int(ID)                      #0
         self.area = float(area)                #1
-        self.x_m = float(xm)                   #2
-        self.y_m = float(ym)                   #3
+        self.x_mid = float(xm)                 #2
+        self.y_mid = float(ym)                 #3
         self.major = float(major)              #4
         self.minor = float(minor)              #5
         self.angle = float(angle)              #6
@@ -44,17 +44,20 @@ class Rod(object):
         self.min_feret = float(minferet)       #11
         self.x_start = float(xstart)           #12
         self.y_start = float(ystart)           #13
-        dif_x = abs(self.x_m - CENTER_X)
-        dif_y = abs(self.y_m - CENTER_Y)
-        self.center_dist = math.sqrt(pow(dif_x,2)+pow(dif_y,2))
+        dif_x = abs(self.x_mid - CENTER_X)
+        dif_y = abs(self.y_mid - CENTER_Y)
+        self.distance_to_center = math.sqrt(pow(dif_x,2)+pow(dif_y,2))
 
-    def valid_rod(self):
+    def is_valid_rod(self):
         """
         Checks if this is a rod looking at different factors
         If it is a group of two rods that are very near, 
         """
         return True
     
+
+
+
 
 
 class RodGroup(object):
@@ -87,6 +90,12 @@ class RodGroup(object):
         self._rods.delete(rod)
     
 
+
+
+
+
+
+
 def import_files(folder="./", _glob='rods_*', regular_expression='rods_[0-9]*'):
     """
     Import all files using glob and checking with reg exp.
@@ -101,6 +110,10 @@ def import_files(folder="./", _glob='rods_*', regular_expression='rods_[0-9]*'):
     for name in names:
         files.append(open(name))
     return files
+
+
+
+
 
 def import_data(_file, split_char='\t', regular_expression='[0-9]\.?[0-9]*'):
     """
@@ -125,6 +138,10 @@ def import_data(_file, split_char='\t', regular_expression='[0-9]\.?[0-9]*'):
         print "Perhaps the file passed is not in the right format."
         print _file
     return data
+
+
+
+
 
 def create_rods(folder="./"):
     """
