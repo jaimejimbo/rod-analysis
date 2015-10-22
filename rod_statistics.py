@@ -25,7 +25,7 @@ class Rod(object):
     """
     Rod object.
     """
-    
+
     def __init__(self, (ID, area, xm, ym, major, minor, angle, feret, feretx, ferety, feretangle, minferet, xstart, ystart)):
         """
         Initialization of rod
@@ -48,14 +48,14 @@ class Rod(object):
         dif_y = abs(self.y_mid - CENTER_Y)
         self.distance_to_center = math.sqrt(dif_x**2+dif_y**2)
 
-    def is_valid_rod(self):
+    def is_valid_rod(self, kappa, allowed_percentaje_kappa_error, allowed_distance_from_border):
         """
         Checks if this is a rod looking at different factors
         If it is a group of two rods that are very near.
         Remove rods that are near the border.
         """
         return True
-    
+
 
 
 
@@ -94,7 +94,7 @@ class SystemState(object):
         """
         self._rods.delete(rod)
         self._number_of_particles -= 1
-    
+
     def _compute_density(self):
         """
         Computes density of the system
@@ -103,12 +103,14 @@ class SystemState(object):
 
 
 
-class RodGroup(SystemState):
+
+
+class SubsystemState(SystemState):
     """
     Group of rods. Used to put all rods that are in a zone or
     have something in common.
     """
-    
+
     def __init__(self, area):
         """
         Initialization
@@ -166,8 +168,9 @@ def import_data(_file, split_char='\t', regular_expression='[0-9]\.?[0-9]*'):
     reg_exp = re.compile(regular_expression)
     data = []
     try:
-        for line in _file:            
-            dataline = re.split(split_char, line.rstrip('\n')) # Removes new line char from the line
+        for line in _file:
+            #Removes new line char from the line
+            dataline = re.split(split_char, line.rstrip('\n'))
             for element in dataline:
                 if not reg_exp.match(element):
                     try:
@@ -194,7 +197,7 @@ def create_rods(folder="./"):
     files = import_files(folder=folder)
     states = []
     for _file in files:
-        state = State()
+        state = SystemState()
         data = import_data(_file)
         for dataline in data:
             parameters = tuple(dataline)
@@ -205,40 +208,52 @@ def create_rods(folder="./"):
                 print e.message
                 raise ValueError
             state.add_rod(new_rod)
-        states.append(rod_group)
-    return rod_groups
+        states.append(state)
+    return states
 
 
 
-
-#
-#   IN DEVELOPMENT
-#  Allows the creation of circles all with same area.
-#  Computes the area of circles' intesection. 
-#  Computes a radius of a cricle that, when intesecting with the main circle, has the same area than the others
-#
-
-def segment_area(small_rad, distance_to_border):
+def segment_area(radius, distance_to_border):
     """
-    Computes the area of a small circle intersecting with the bigger one.
-    small_rad: radius of the small circle.
-    distance_to_border: distance from the center of the small circle to the intersection (border).
-    is the circle much smaller? (R of the main circle -> infinity?)
+    Computes the area of an intersection of a circle with a line
+    (the part that doesn't have the center)
     """
-    angle = math.acos(distance_to_border/small_rad)
-    
-    return small_rad**2 * angle - distance_to_border*sqrt(small_rad**2-distance_to_border**2)
+    if distance_to_border > radius:
+        return 0
+    angle_between_intersections = 2*math.acos(distance_to_border/radius)
+    print angle_between_intersections
+    distance_between_intersections = 2*math.sqrt(radius**2-distance_to_border**2)
+    section_area = angle_between_intersections*radius**2
+    invalid_area = distance_between_intersections*distance_to_border*0.5
+    total_segment_area = section_area-invalid_area
+    return section_area-invalid_area
+
+
 
 def effective_area(small_rad, small_position_rad, main_rad):
     """
-    small_rad: radius of small circle
-    main_rad: radius of main circle
-    small_position_rad: position of the small circle
+    Computes the area of the small circle intersected with main circle.
     """
-    distance_to_border = (position_rad**2-small_rad**2+main_rad**2)/(2*position_rad)
-    if distance_to_border>=small_position_rad: 
-        output = math.pi*small_rad**2 - segment_area(small_rad,distance_to_border-small_position_rad)+segment_area(main_rad,distance_to_border)
-    else:
-        output = segment_area(small_rad,small_position_rad-distance_to_border)+segment_area(main_rad,distance_to_border)
-    return output
+    distance_to_border = main_rad - small_position_rad
+    #area of the circle
+    area = math.pi*small_rad**2
+    if distance_to_border>=small_rad:
+        return area
+    #is the area that was ignored in segment_area computation
+    correction = segment_area(main_rad, main_rad-distance_to_border)
+    seg_area = segment_area(small_rad, distance_to_border) - correction
+    area -= seg_area
+    return area
+
+
+def same_area_radius(small_position_rad, small_rad, main_rad, allowed_error):
+    """
+    Computes a new radius. With that, effective area is the same small circle's.
+    """
+    #circle completely included in main
+    if small_possition_rad + small_rad <= main_rad:
+        return small_rad
+    #while (
+    return None
+
 
