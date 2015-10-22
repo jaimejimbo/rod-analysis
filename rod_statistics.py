@@ -51,7 +51,8 @@ class Rod(object):
     def is_valid_rod(self):
         """
         Checks if this is a rod looking at different factors
-        If it is a group of two rods that are very near, 
+        If it is a group of two rods that are very near.
+        Remove rods that are near the boundrie.
         """
         return True
     
@@ -60,9 +61,9 @@ class Rod(object):
 
 
 
-class RodGroup(object):
+class SystemState(object):
     """
-    Group of rods.
+    Group of rods in a moment.
     Each image has to be translated into a RodGroup (by this class?)
     """
     def __init__(self):
@@ -70,17 +71,21 @@ class RodGroup(object):
         Initialization
         """
         self._rods = Queue()    #I use a Queue, but perhaps is better a tree or a recursive list
+        self._number_of_particles = 0
 
     def add_rod(self, rod):
         """
         Adds a rod to the group
         """
         self._rods.join(rod)
+        self._number_of_particles += 1
 
     def get_rod(self):
         """
         Returns the first rod in the queue
+        The rod is removed of the group!
         """
+        self._number_of_particles -= 1
         return self._rods.get_next()
 
     def remove_rod(self, rod):
@@ -88,12 +93,46 @@ class RodGroup(object):
         Removes a rod from the group (queue object mod needed)
         """
         self._rods.delete(rod)
+        self._number_of_particles -= 1
     
-    def compute_density(self):
+    def _compute_density(self):
         """
         Computes density of the system
         """
         pass
+
+
+
+class RodGroup(SystemState):
+    """
+    Group of rods. Used to put all rods that are in a zone or
+    have something in common.
+    """
+    
+    def __init__(self, area):
+        """
+        Initialization
+        """
+        self._rods = Queue()    #I use a Queue, but perhaps is better a tree or a recursive list
+        self._density = -1
+        self._area = area
+
+
+    def _update_density(self):
+        """
+        Overrides.
+        Computes density of the group.
+        """
+        self._density = self._number_of_particles * 1.0/self._area
+
+    def get_density(self):
+        """
+        Returns the density of the group
+        Perhaps sometimes update_density method can be ignored
+        """
+        self._update_density()
+        return self._density
+
 
 
 
@@ -153,9 +192,9 @@ def create_rods(folder="./"):
     returns [RodGroup1, RodGroup2, ...]
     """
     files = import_files(folder=folder)
-    rod_groups = []
+    states = []
     for _file in files:
-        rod_group = RodGroup()
+        state = State()
         data = import_data(_file)
         for dataline in data:
             parameters = tuple(dataline)
@@ -165,22 +204,34 @@ def create_rods(folder="./"):
                 print parameters
                 print e.message
                 raise ValueError
-            rod_group.add_rod(new_rod)
-        rod_groups.append(rod_group)
+            state.add_rod(new_rod)
+        states.append(rod_group)
     return rod_groups
 
 
 
 
+#
+#   IN DEVELOPMENT
+#  Allows the creation of circles all with same area.
+#  Computes the area of circles' intesection. 
+#  Computes a radius of a cricle that, when intesecting with the main circle, has the same area than the others
+#
+
 def segment_area(r,h):
     """
-    ??
+    Computes the area of a small circle intersecting with the bigger one.
+    r is the radius of the small circle.
+    h is the distance from the center of the small circle to the intersection.
+    is the circle much smaller? (R of the main circle -> infinity?)
     """
     return r**2 * math.acos(h/r) - h*sqrt(r**2-h**2)
 
 def effective_area(r,r_pos, R):
     """
-    ??
+    r: radius of small circle
+    R: radius of main circle
+    r_pos: position of the small circle
     """
     h = (r_pos**2-r**2+R**2)/(2*r_pos)
     if h>=r_pos: 
