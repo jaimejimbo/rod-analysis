@@ -52,7 +52,7 @@ class Rod(object):
         """
         Checks if this is a rod looking at different factors
         If it is a group of two rods that are very near.
-        Remove rods that are near the boundrie.
+        Remove rods that are near the border.
         """
         return True
     
@@ -218,23 +218,27 @@ def create_rods(folder="./"):
 #  Computes a radius of a cricle that, when intesecting with the main circle, has the same area than the others
 #
 
-def segment_area(r,h):
+def segment_area(small_rad, distance_to_border):
     """
     Computes the area of a small circle intersecting with the bigger one.
-    r is the radius of the small circle.
-    h is the distance from the center of the small circle to the intersection.
+    small_rad: radius of the small circle.
+    distance_to_border: distance from the center of the small circle to the intersection (border).
     is the circle much smaller? (R of the main circle -> infinity?)
     """
-    return r**2 * math.acos(h/r) - h*sqrt(r**2-h**2)
+    angle = math.acos(distance_to_border/small_rad)
+    
+    return small_rad**2 * angle - distance_to_border*sqrt(small_rad**2-distance_to_border**2)
 
-def effective_area(r,r_pos, R):
+def effective_area(small_rad, small_position_rad, main_rad):
     """
-    r: radius of small circle
-    R: radius of main circle
-    r_pos: position of the small circle
+    small_rad: radius of small circle
+    main_rad: radius of main circle
+    small_position_rad: position of the small circle
     """
-    h = (r_pos**2-r**2+R**2)/(2*r_pos)
-    if h>=r_pos: 
-        return math.pi*r**2 - segment_area(r,h-r_pos)+segment_area(R,h)
+    distance_to_border = (position_rad**2-small_rad**2+main_rad**2)/(2*position_rad)
+    if distance_to_border>=small_position_rad: 
+        output = math.pi*small_rad**2 - segment_area(small_rad,distance_to_border-small_position_rad)+segment_area(main_rad,distance_to_border)
     else:
-        return segment_area(r,r_pos-h)+segment_area(R,h)
+        output = segment_area(small_rad,small_position_rad-distance_to_border)+segment_area(main_rad,distance_to_border)
+    return output
+
