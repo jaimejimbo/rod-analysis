@@ -221,9 +221,13 @@ def segment_area(rad, h):
     h: minimum distance from small circle center to a line that joins 
         both intersections of the circles.
     """
-    assert rad>h, "In segment_area:\n\th can't be greater \
-                    than rad\nvalues:\trad="+str(rad)+"\n\th="+str(h)
+    if rad<abs(h):
+        message = "In segment_area:\n\th can't be greater than "
+        message += "rad\nvalues:\trad="+str(rad)+"\n\th="+str(h)
+        raise ValueError(message)
     #area fo the section of the circle between intersections
+    if rad==abs(h):
+        return 0
     output = rad**2 * math.acos(h/rad)           #section area
     if h>0:
         distance_between_intersections = math.sqrt(rad**2-h**2)
@@ -241,7 +245,7 @@ def effective_area(small_rad, small_position_rad, main_rad):
         return math.pi*small_rad**2
     assert small_position_rad < main_rad, "Circle is outside the bigger one"
     h = ((main_rad**2)-(small_position_rad**2)-(small_rad**2)) / (2*small_position_rad)
-    assert small_rad>h, "Error in h computing"
+    assert small_rad>abs(h), "Error in h computing"
     correction = segment_area(main_rad, small_position_rad+h)
     section_area = segment_area(small_rad, h)
     output = math.pi*small_rad**2 - section_area + correction 
