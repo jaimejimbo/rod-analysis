@@ -142,8 +142,8 @@ class TestRod(unittest.TestCase):
         """
         Tests for effective area method
         """
-        computed_area = rod_statistics.effective_area(1,99.5,100)
-        half_circle_area = math.pi
-        self.assertAlmostEqual(computed_area, half_circle_area/2, msg="Error in effective computing. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area/2), delta=half_circle_area*.05)
+        computed_area = rod_statistics.effective_area(1,9.5,10)
+        half_circle_area = math.pi/2
+        self.assertAlmostEqual(computed_area, half_circle_area, msg="Error in effective computing. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area/2), delta=half_circle_area*.05)
         
 

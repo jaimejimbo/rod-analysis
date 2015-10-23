@@ -224,9 +224,10 @@ def segment_area(rad, h):
     assert rad>h, "In segment_area:\n\th can't be greater \
                     than rad\nvalues:\trad="+str(rad)+"\n\th="+str(h)
     #area fo the section of the circle between intersections
-    section_area = rad**2 * math.acos(h/rad)
-    distance_between_intersections = math.sqrt(rad**2-h**2)
-    output = section_area - distance_between_intersections*h/2
+    output = rad**2 * math.acos(h/rad)           #section area
+    if h>0:
+        distance_between_intersections = math.sqrt(rad**2-h**2)
+        output -= distance_between_intersections*h/2
     return output
 
 
@@ -235,6 +236,7 @@ def effective_area(small_rad, small_position_rad, main_rad):
     """
     Computes the area of the small circle intersected with main circle.
     """
+    # circle completely included in the bigger one
     if small_rad+small_position_rad <= main_rad:
         return math.pi*small_rad**2
     assert small_position_rad < main_rad, "Circle is outside the bigger one"
@@ -246,7 +248,7 @@ def effective_area(small_rad, small_position_rad, main_rad):
     return output
 
 
-def same_area_radius(small_position_rad, small_rad, main_rad, allowed_error):
+def same_area_rad(small_position_rad, small_rad, main_rad, allowed_error):
     """
     Computes a new radius. With that, effective area is the same small circle's.
     Better use binary search
