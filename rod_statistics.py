@@ -246,9 +246,17 @@ def effective_area(small_rad, small_position_rad, main_rad):
     if small_rad+small_position_rad <= main_rad:
         return math.pi*small_rad**2
     assert small_position_rad < main_rad, "Circle is outside the bigger one"
-    h = ((main_rad**2)-(small_position_rad**2)-(small_rad**2)) / (2*small_position_rad)
+    lim_small_position_rad = math.sqrt(main_rad**2 - small_rad**2)
+    if small_position_rad < lim_small_position_rad:
+        h = ((main_rad**2)-(small_position_rad**2)-(small_rad**2)) / (2*small_position_rad)
+        H = small_position_rad+h        #h for main circle
+        correction = segment_area(main_rad, H)
+    else:
+        h = (-1)*((main_rad**2)-(small_position_rad**2)-(small_rad**2)) / (2*small_position_rad)
+        H = small_position_rad+h
+        distance_between_intersections = math.sqrt(main_rad**2-H**2)
+        correction = segment_area(main_rad, H) - distance_between_intersections*abs(h)/2
     assert small_rad>abs(h), "Error in h computing"
-    correction = segment_area(main_rad, small_position_rad+h)
     section_area = segment_area(small_rad, h)
     output = math.pi*small_rad**2 - section_area + correction 
     return output
