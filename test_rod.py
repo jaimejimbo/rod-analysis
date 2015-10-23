@@ -131,11 +131,11 @@ class TestRod(unittest.TestCase):
         """
         half_circle_area = math.pi/2
         computed_area = rod_statistics.segment_area(1,0)
-        self.assertEqual(computed_area, half_circle_area, msg="Error in sement area computing. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area))
+        self.assertEqual(computed_area, half_circle_area, msg="Error in segment area computing. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area))
         computed_area = rod_statistics.segment_area(1,0.5)
-        self.assertAlmostEqual(computed_area, half_circle_area/2, msg="Error in sement area computing. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area/2), delta=half_circle_area*.05)
-        computed_area = rod_statistics.segment_area(1e10,1e10-1)
-        self.assertAlmostEqual(computed_area, 0, msg="Error in sement area computing. Obtained: "+str(computed_area)+" Expected: "+str(0), delta=10)
+        self.assertAlmostEqual(computed_area, half_circle_area/2, msg="Error in segment area computing. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area/2), delta=half_circle_area*.05)
+        computed_area = rod_statistics.segment_area(1,0.999999999)
+        self.assertAlmostEqual(computed_area, 0, msg="Error in segment area computing. Obtained: "+str(computed_area)+" Expected: "+str(0), delta=0.0005)
         
 
     def test_effective_area(self):
@@ -144,6 +144,6 @@ class TestRod(unittest.TestCase):
         """
         computed_area = rod_statistics.effective_area(1,99.5,100)
         half_circle_area = math.pi
-        self.assertAlmostEqual(computed_area, half_circle_area/2, msg="Error in sement area computing. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area/2), delta=half_circle_area*.05)
+        self.assertAlmostEqual(computed_area, half_circle_area/2, msg="Error in effective computing. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area/2), delta=half_circle_area*.05)
         
 
