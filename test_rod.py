@@ -129,7 +129,7 @@ class TestRod(unittest.TestCase):
         """
         Tests for segment area method
         """
-        half_circle_area = math.pi
+        half_circle_area = math.pi/2
         computed_area = rod_statistics.segment_area(1,0)
         self.assertEqual(computed_area, half_circle_area, msg="Error in sement area computing. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area))
         computed_area = rod_statistics.segment_area(1,0.5)
@@ -142,7 +142,7 @@ class TestRod(unittest.TestCase):
         """
         Tests for effective area method
         """
-        computed_area = rod_statistics.effective_area(1,1e6-.5,1e6)
+        computed_area = rod_statistics.effective_area(1,99.5,100)
         half_circle_area = math.pi
         self.assertAlmostEqual(computed_area, half_circle_area/2, msg="Error in sement area computing. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area/2), delta=half_circle_area*.05)
         

@@ -213,20 +213,21 @@ def create_rods(folder="./"):
 
 
 
-def segment_area(radius, distance_to_border):
+def segment_area(rad, h):
     """
     Computes the area of an intersection of a circle with a line
     (the part that doesn't have the center)
+    rad: radius of the circle
+    h: minimum distance from small circle center to a line that joins 
+        both intersections of the circles.
     """
-    if distance_to_border > radius:
-        return 0
-    angle_between_intersections = 2*math.acos(distance_to_border/radius)
-    print angle_between_intersections
-    distance_between_intersections = 2*math.sqrt(radius**2-distance_to_border**2)
-    section_area = angle_between_intersections*radius**2
-    invalid_area = distance_between_intersections*distance_to_border*0.5
-    total_segment_area = section_area-invalid_area
-    return section_area-invalid_area
+    assert rad>h, "In segment_area:\n\th can't be greater \
+                    than rad\nvalues:\trad="+str(rad)+"\n\th="+str(h)
+    #area fo the section of the circle between intersections
+    section_area = rad**2 * math.acos(h/rad)
+    distance_between_intersections = math.sqrt(rad**2-h**2)
+    output = section_area - distance_between_intersections*h/2
+    return output
 
 
 
@@ -234,21 +235,24 @@ def effective_area(small_rad, small_position_rad, main_rad):
     """
     Computes the area of the small circle intersected with main circle.
     """
-    distance_to_border = main_rad - small_position_rad
-    #area of the circle
-    area = math.pi*small_rad**2
-    if distance_to_border>=small_rad:
-        return area
-    #is the area that was ignored in segment_area computation
-    correction = segment_area(main_rad, main_rad-distance_to_border)
-    seg_area = segment_area(small_rad, distance_to_border) - correction
-    area -= seg_area
-    return area
+    if small_rad+small_position_rad <= main_rad:
+        return math.pi*small_rad**2
+    assert small_position_rad < main_rad, "Circle is outside the bigger one"
+    h = (main_rad**2-small_position_rad**2-small_rad**2) / (2*small_position_rad)
+    output = segment_area(main_rad, h) 
+    if h>=small_position_rad:
+        var1 = segment_area(small_rad, h-small_position_rad)
+        output += math.pi*small_rad**2 - var1
+    else:
+        var1 = segment_area(small_rad, small_position_rad-h)
+        output += var1
+    return output
 
 
 def same_area_radius(small_position_rad, small_rad, main_rad, allowed_error):
     """
     Computes a new radius. With that, effective area is the same small circle's.
+    Better use binary search
     """
     #circle completely included in main
     if small_possition_rad + small_rad <= main_rad:
