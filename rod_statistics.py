@@ -228,10 +228,12 @@ def segment_area(rad, h):
     #area fo the section of the circle between intersections
     if rad==abs(h):
         return 0
-    output = rad**2 * math.acos(h/rad)           #section area
+    section = rad**2 * math.acos(h/rad)           #section area
     if h>0:
         distance_between_intersections = math.sqrt(rad**2-h**2)
-        output -= distance_between_intersections*h/2
+        output = section - distance_between_intersections*h/2
+    else:
+        output = math.pi*rad**2 - section
     return output
 
 
