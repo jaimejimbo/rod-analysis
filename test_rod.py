@@ -130,16 +130,31 @@ class TestRod(unittest.TestCase):
         self.assertAlmostEqual(computed_area, expected, msg="Error in segment area computing #7. Obtained: "+str(computed_area)+" Expected: "+str(expected), delta=(expected)*.1)
         computed_area = rod_statistics.segment_area(1,-0.99999)
         self.assertAlmostEqual(computed_area, total_area, msg="Error in segment area computing #8. Obtained: "+str(computed_area)+" Expected: "+str(0), delta=0.01)
+
+    def test_compute_h(self):
+        """
+        Tests for h computation method
+        """
+        computed = rod_statistics.compute_h(1,1e10-.5, 1e10)
+        expected = .5
+        self.assertAlmostEqual(computed,expected,delta=.1,msg="Error in compute_h #1: Obtained: "+str(computed)+" Expected: "+str(expected))
+        computed = rod_statistics.compute_h(1,1e10, 1e10)
+        expected = 0
+        self.assertAlmostEqual(computed,expected,delta=.1,msg="Error in compute_h #2: Obtained: "+str(computed)+" Expected: "+str(expected))
+        computed = rod_statistics.compute_h(1,1e10+.5, 1e10)
+        expected = -.5
+        self.assertAlmostEqual(computed,expected,delta=.1,msg="Error in compute_h #3: Obtained: "+str(computed)+" Expected: "+str(expected))
         
+
     def test_effective_area(self):
         """
         Tests for effective area method
         """
         total_area = math.pi
         half_circle_area = total_area/2
-        computed_area = rod_statistics.effective_area(1,1e6-.5,1e6)
+        computed_area = rod_statistics.effective_area(1,1e10,1e10)
         self.assertAlmostEqual(computed_area, half_circle_area, msg="Error in effective_area computing #1. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area), delta=half_circle_area*.05)
-        computed_area = rod_statistics.effective_area(1,9.5,10)
+        computed_area = rod_statistics.effective_area(1,10,10)
         self.assertAlmostEqual(computed_area, half_circle_area, msg="Error in effective_area computing #2. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area), delta=half_circle_area*.3)
 
     def test_Rod(self):

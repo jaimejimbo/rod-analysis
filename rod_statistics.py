@@ -261,10 +261,11 @@ def effective_area(small_rad, small_position_rad, main_rad):
     # circle completely included in the bigger one
     if small_rad+small_position_rad <= main_rad:
         return math.pi*small_rad**2
-    assert small_position_rad < main_rad, "Circle is outside the bigger one"
-    h = float((main_rad**2)-(small_position_rad**2)-(small_rad**2))/(2*small_position_rad)
+    assert small_position_rad <= main_rad, "Circle is outside the bigger one"
+    h = compute_h(small_rad, small_position_rad, main_rad)
     assert small_rad>abs(h), "Error in h computing"
     H = small_position_rad+h
+    #print h/small_rad, H/main_rad
     correction = segment_area(main_rad, H)
     msg = "effective_area: Correction must be smaller than small circle's area"
     assert correction<math.pi*small_rad**2, msg
@@ -274,8 +275,16 @@ def effective_area(small_rad, small_position_rad, main_rad):
     assert small_area==segment_area(small_rad, -small_rad), msg
     assert correction<small_area/10, "correction to high"
     output = math.pi*small_rad**2 - section_area + correction
+    #print math.pi*small_rad**2, section_area, correction
     return output
 
+def compute_h(small_rad, small_position_rad, main_rad):
+    """
+    Computes the distance from small circle center to the line that joins both
+    circles' intersections.
+    """
+    h = float((main_rad**2)-(small_position_rad**2)-(small_rad**2))/(2*small_position_rad)
+    return h
 
 def same_area_rad(small_position_rad, small_rad, main_rad, allowed_error):
     """
