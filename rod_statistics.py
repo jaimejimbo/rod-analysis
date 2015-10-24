@@ -26,11 +26,13 @@ class Rod(object):
     Rod object.
     """
 
-    def __init__(self, (ID, area, xm, ym, major, minor, angle, feret, feretx, ferety, feretangle, minferet, xstart, ystart)):
+    def __init__(self, (ID, area, xm, ym, major, minor,
+                        angle, feret, feretx, ferety, 
+                        feretangle, minferet, xstart, ystart)):
         """
         Initialization of rod
         """                                    #Column
-        self.id = int(ID)                      #0
+        self._id = int(ID)                     #0
         self.area = float(area)                #1
         self.x_mid = float(xm)                 #2
         self.y_mid = float(ym)                 #3
@@ -70,7 +72,7 @@ class SystemState(object):
         """
         Initialization
         """
-        self._rods = Queue()    #I use a Queue, but perhaps is better a tree or a recursive list
+        self._rods = Queue()
         self._number_of_particles = 0
 
     def add_rod(self, rod):
@@ -115,7 +117,7 @@ class SubsystemState(SystemState):
         """
         Initialization
         """
-        self._rods = Queue()    #I use a Queue, but perhaps is better a tree or a recursive list
+        SystemState.__init__(self)
         self._density = -1
         self._area = area
 
@@ -148,7 +150,7 @@ def import_files(folder="./", _glob='rods_*', regular_expression='rods_[0-9]*'):
     reg1 = re.compile(regular_expression)
     check_if_data = re.compile(reg1)
     names = []
-    for data_file in glob(_glob):
+    for data_file in glob(folder+_glob):
         if reg1.match(data_file):
             names.append(data_file)
     files = []
@@ -203,9 +205,9 @@ def create_rods(folder="./"):
             parameters = tuple(dataline)
             try:
                 new_rod = Rod(parameters)
-            except ValueError as e:
+            except ValueError as exception:
                 print parameters
-                print e.message
+                print exception.message
                 raise ValueError
             state.add_rod(new_rod)
         states.append(state)
@@ -213,42 +215,42 @@ def create_rods(folder="./"):
 
 
 
-def segment_area(rad, h):
+def segment_area(rad, min_dist):
     """
     Computes the area of an intersection of a circle with a line
     (the part that doesn't have the center)
     rad: radius of the circle
-    h: minimum distance from small circle center to a line that joins 
+    min_dist: minimum distance from small circle center to a line that joins
         both intersections of the circles.
     """
-    h = float(h)
-    if rad<abs(h):
+    min_dist = float(min_dist)
+    if rad < abs(min_dist):
         message = "In segment_area:\n\th can't be greater than "
-        message += "rad\nvalues:\trad="+str(rad)+"\n\th="+str(h)
+        message += "rad\nvalues:\trad="+str(rad)+"\n\th="+str(min_dist)
         raise ValueError(message)
-    phi = math.acos(abs(h)/rad)
-    assert 0<=phi<=math.pi/2, "Error in angle"    
+    phi = math.acos(abs(min_dist)/rad)
+    assert 0 <= phi <= math.pi/2, "Error in angle"
     if phi <= 1e-10:
-        if h>0:
-            return 0        
+        if min_dist > 0:
+            return 0
         else:
             return math.pi*rad**2
     section = phi*rad**2        #section area
-    assert section>=0, "segment_area: Section is negative"
-    distance_between_intersections = 2*h*math.tan(phi)
+    assert section >= 0, "segment_area: Section is negative"
+    distance_between_intersections = 2*min_dist*math.tan(phi)
     msg = "segment_area: distance between intersections can't be greater than diameter"
-    assert distance_between_intersections<=2*rad, msg
-    triangle_area = distance_between_intersections*h/2.0
+    assert distance_between_intersections <= 2*rad, msg
+    triangle_area = distance_between_intersections*min_dist/2.0
     msg = "segment_area: Triangle area must be smaller than section area"
     msg += "\nRatio="+str(triangle_area*1.0/section)
-    assert triangle_area<section, msg
-    if h>=0:
+    assert triangle_area < section, msg
+    if min_dist >= 0:
         output = section - triangle_area
     else:
         output = math.pi*rad**2 - section + triangle_area
     msg = "segment_area: Obtained area is negative. Values: rad:"+str(rad)
-    msg += " h:"+str(h)+" rat:"+str(h/rad)+" phi:"+str(phi)+" area:"+str(output)
-    assert output>0, msg
+    msg += " min_dist:"+str(min_dist)+" rat:"+str(min_dist/rad)+" phi:"+str(phi)+" area:"+str(output)
+    assert output > 0, msg
     return output
 
 
@@ -262,29 +264,29 @@ def effective_area(small_rad, small_position_rad, main_rad):
     if small_rad+small_position_rad <= main_rad:
         return math.pi*small_rad**2
     assert small_position_rad <= main_rad, "Circle is outside the bigger one"
-    h = compute_h(small_rad, small_position_rad, main_rad)
-    assert small_rad>abs(h), "Error in h computing"
-    H = small_position_rad+h
-    #print h/small_rad, H/main_rad
-    correction = segment_area(main_rad, H)
+    min_dist = compute_min_dist(small_rad, small_position_rad, main_rad)
+    assert small_rad > abs(min_dist), "Error in h computing"
+    min_dist_main = small_position_rad+min_dist
+    correction = segment_area(main_rad, min_dist_main)
     msg = "effective_area: Correction must be smaller than small circle's area"
-    assert correction<math.pi*small_rad**2, msg
-    section_area = segment_area(small_rad, h)
+    assert correction < math.pi*small_rad**2, msg
+    section_area = segment_area(small_rad, min_dist)
     small_area = math.pi*small_rad**2
     msg = "In the limit, h=-rad has to return total area"
-    assert small_area==segment_area(small_rad, -small_rad), msg
-    assert correction<small_area/10, "correction to high"
+    assert small_area == segment_area(small_rad, -small_rad), msg
+    assert correction < small_area/10, "correction to high"
     output = math.pi*small_rad**2 - section_area + correction
     #print math.pi*small_rad**2, section_area, correction
     return output
 
-def compute_h(small_rad, small_position_rad, main_rad):
+def compute_min_dist(small_rad, small_position_rad, main_rad):
     """
     Computes the distance from small circle center to the line that joins both
     circles' intersections.
     """
-    h = float((main_rad**2)-(small_position_rad**2)-(small_rad**2))/(2*small_position_rad)
-    return h
+    min_dist = float((main_rad**2)-(small_position_rad**2)-(small_rad**2))
+    min_dist /= (2*small_position_rad)
+    return min_dist
 
 def same_area_rad(small_position_rad, small_rad, main_rad, allowed_error):
     """
@@ -292,9 +294,7 @@ def same_area_rad(small_position_rad, small_rad, main_rad, allowed_error):
     Better use binary search
     """
     #circle completely included in main
-    if small_possition_rad + small_rad <= main_rad:
+    if small_position_rad + small_rad <= main_rad:
         return small_rad
-    #while (
     return None
-
 

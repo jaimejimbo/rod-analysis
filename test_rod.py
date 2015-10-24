@@ -131,19 +131,19 @@ class TestRod(unittest.TestCase):
         computed_area = rod_statistics.segment_area(1,-0.99999)
         self.assertAlmostEqual(computed_area, total_area, msg="Error in segment area computing #8. Obtained: "+str(computed_area)+" Expected: "+str(0), delta=0.01)
 
-    def test_compute_h(self):
+    def test_compute_min_dist(self):
         """
         Tests for h computation method
         """
-        computed = rod_statistics.compute_h(1,1e10-.5, 1e10)
+        computed = rod_statistics.compute_min_dist(1,1e10-.5, 1e10)
         expected = .5
-        self.assertAlmostEqual(computed,expected,delta=.1,msg="Error in compute_h #1: Obtained: "+str(computed)+" Expected: "+str(expected))
-        computed = rod_statistics.compute_h(1,1e10, 1e10)
+        self.assertAlmostEqual(computed,expected,delta=.1,msg="Error in compute_min_dist #1: Obtained: "+str(computed)+" Expected: "+str(expected))
+        computed = rod_statistics.compute_min_dist(1,1e10, 1e10)
         expected = 0
-        self.assertAlmostEqual(computed,expected,delta=.1,msg="Error in compute_h #2: Obtained: "+str(computed)+" Expected: "+str(expected))
-        computed = rod_statistics.compute_h(1,1e10+.5, 1e10)
+        self.assertAlmostEqual(computed,expected,delta=.1,msg="Error in compute_min_dist #2: Obtained: "+str(computed)+" Expected: "+str(expected))
+        computed = rod_statistics.compute_min_dist(1,1e10+.5, 1e10)
         expected = -.5
-        self.assertAlmostEqual(computed,expected,delta=.1,msg="Error in compute_h #3: Obtained: "+str(computed)+" Expected: "+str(expected))
+        self.assertAlmostEqual(computed,expected,delta=.1,msg="Error in compute_min_dist #3: Obtained: "+str(computed)+" Expected: "+str(expected))
         
 
     def test_effective_area(self):
