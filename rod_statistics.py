@@ -150,8 +150,8 @@ def import_files(folder="./", _glob='rods_.*', regular_expression='rods_[0-9]*')
     reg1 = re.compile(regular_expression)
     check_if_data = re.compile(reg1)
     names = []
-    __glob=folder+_glob
-    for data_file in glob(__glob):
+    #__glob=folder+_glob
+    for data_file in glob(_glob):
         if reg1.match(data_file):
             names.append(data_file)
     files = []
@@ -168,6 +168,9 @@ def import_data(_file, split_char='\t', regular_expression='[0-9]\.?[0-9]*'):
     Import data of a file
     Returns an array with data
     """
+    if str(type(_file)) != "<type 'file'>":
+        print "Passed file argument is not a file descriptor"
+        raise ValueError 
     reg_exp = re.compile(regular_expression)
     data = []
     try:
@@ -186,6 +189,9 @@ def import_data(_file, split_char='\t', regular_expression='[0-9]\.?[0-9]*'):
     except TypeError:
         print "Perhaps the file passed is not in the right format."
         print _file
+    except IndexError:
+        print "Error importing files (empty list)"
+        raise IndexError
     return data
 
 
@@ -198,6 +204,9 @@ def create_rods(folder="./"):
     returns [RodGroup1, RodGroup2, ...]
     """
     files = import_files(folder=folder)
+    if len(files) == 0:
+        print "No files to import."
+        raise ValueError
     states = []
     for _file in files:
         state = SystemState()
