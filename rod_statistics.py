@@ -6,6 +6,7 @@ from glob import glob
 import re
 import multiprocessing as mp    #for using all cores
 import math
+import os
 
 
 
@@ -143,17 +144,19 @@ class SubsystemState(SystemState):
 
 
 
-def import_files(folder="./", _glob='rods_.*', regular_expression='rods_[0-9]*'):
+def import_files(folder="./", regular_expression='rods_[0-9]*'):
     """
     Import all files using glob and checking with reg exp.
     """
+    if not re.match("\.?/?[a-zA-Z0-9\.]/*", folder):
+        print "You must provide a folder like: \"./\" or \"/home/user/\""
+        raise ValueError
     reg1 = re.compile(regular_expression)
-    check_if_data = re.compile(reg1)
     names = []
-    #__glob=folder+_glob
-    for data_file in glob(_glob):
-        if reg1.match(data_file):
-            names.append(data_file)
+    files = os.listdir(folder)
+    for _file in files:
+        if reg1.match(_file):
+            names.append(_file)
     files = []
     for name in names:
         files.append(open(name))
