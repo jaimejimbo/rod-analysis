@@ -30,6 +30,9 @@ class TestRod(unittest.TestCase):
         files = rod_statistics.import_files(regular_expression='^prueba1\.txt')
         line1 = files[0].readline()
         self.assertEqual(line1.split(), ["Hola"], "Error importing singular file. Obtained: " + str(line1.split()))
+        files = rod_statistics.import_files(folder="./../../TFG/rod-analysis/", regular_expression='^prueba1\.txt')
+        line1 = files[0].readline()
+        self.assertEqual(line1.split(), ["Hola"], "Error importing singular file. Obtained: " + str(line1.split()))
         input2 = open('prueba2.txt','w+')
         input2.write("Adios\n")
         input2.close()
@@ -156,6 +159,26 @@ class TestRod(unittest.TestCase):
         self.assertAlmostEqual(computed_area, half_circle_area, msg="Error in effective_area computing #1. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area), delta=half_circle_area*3e-2)
         computed_area = rod_statistics.effective_area(1,10,10)
         self.assertAlmostEqual(computed_area, half_circle_area, msg="Error in effective_area computing #2. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area), delta=half_circle_area*3e-2)
+
+    def test_same_area_rad(self):
+        """
+        Tests for same area radius method 
+        """
+        small_rad, small_position_rad, main_rad = 1,9,10
+        rad = rod_statistics.same_area_rad(small_rad, small_position_rad, main_rad)
+        self.assertAlmostEqual(rad, small_rad, delta=small_rad*0.05, msg="Error in same_area_rad #1. Initial rad should be returned. Obtained: "+str(rad))
+        small_rad, small_position_rad, main_rad = 1,9.5,10
+        rad = rod_statistics.same_area_rad(small_rad, small_position_rad, main_rad)
+        expected = small_rad*1.5
+        self.assertAlmostEqual(rad, expected, delta=expected*.3, msg="Error in same_area_rad #2. Obtained: "+str(rad)+" Expected: "+str(expected))
+        obtained = rod_statistics.effective_area(rad,9.5,10)
+        expected = math.pi
+        self.assertAlmostEqual(obtained,expected,delta=math.pi*0.1,msg="Areas should be equivalent: Obtained: "+str(obtained)+" Expected: "+str(expected))
+        small_rad, small_position_rad, main_rad = 1,1e6-.3, 1e6
+        obtained = rod_statistics.same_area_rad(small_rad, small_position_rad, main_rad)  
+        expected = 1.5
+        self.assertAlmostEqual(obtained, expected, delta=expected*.3, msg="Error in same_area_rad #3. Obtained: "+str(obtained)+" Expected: "+str(expected))
+        
 
     def test_Rod(self):
         """

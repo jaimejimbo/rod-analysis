@@ -27,7 +27,7 @@ class Rod(object):
     """
 
     def __init__(self, (ID, area, xm, ym, major, minor,
-                        angle, feret, feretx, ferety, 
+                        angle, feret, feretx, ferety,
                         feretangle, minferet, xstart, ystart)):
         """
         Initialization of rod
@@ -172,7 +172,7 @@ def import_data(_file, split_char='\t', regular_expression='[0-9]\.?[0-9]*'):
     """
     if str(type(_file)) != "<type 'file'>":
         print "Passed file argument is not a file descriptor"
-        raise ValueError 
+        raise ValueError
     reg_exp = re.compile(regular_expression)
     data = []
     try:
@@ -277,7 +277,9 @@ def effective_area(small_rad, small_position_rad, main_rad):
         return math.pi*small_rad**2
     assert small_position_rad <= main_rad, "Circle is outside the bigger one"
     min_dist = compute_min_dist(small_rad, small_position_rad, main_rad)
-    assert small_rad > abs(min_dist), "Error in h computing"
+    msg = "Error in min_dist computation: [small_rad,min_dist] "
+    msg += str([small_rad, abs(min_dist)])
+    assert small_rad > abs(min_dist), msg
     min_dist_main = small_position_rad+min_dist
     correction = segment_area(main_rad, min_dist_main)
     msg = "effective_area: Correction must be smaller than small circle's area"
@@ -286,9 +288,9 @@ def effective_area(small_rad, small_position_rad, main_rad):
     small_area = math.pi*small_rad**2
     msg = "In the limit, h=-rad has to return total area"
     assert small_area == segment_area(small_rad, -small_rad), msg
-    assert correction < small_area/10, "correction to high"
+    msg = "Correction too high: Ration: "+str(float(correction)/small_area)
+    assert correction < small_area, msg
     output = math.pi*small_rad**2 - section_area + correction
-    #print math.pi*small_rad**2, section_area, correction
     return output
 
 def compute_min_dist(small_rad, small_position_rad, main_rad):
@@ -300,13 +302,39 @@ def compute_min_dist(small_rad, small_position_rad, main_rad):
     min_dist /= (2*small_position_rad)
     return min_dist
 
-def same_area_rad(small_position_rad, small_rad, main_rad, allowed_error):
+def same_area_rad(small_rad, small_position_rad, main_rad, allowed_error_ratio=.05, max_reps=1e3):
     """
     Computes a new radius. With that, effective area is the same small circle's.
     Better use binary search
     """
     #circle completely included in main
+    if small_position_rad > main_rad:
+        print small_position_rad, main_rad
+        raise ValueError("Method only implemented for inner circles")
     if small_position_rad + small_rad <= main_rad:
         return small_rad
-    return None
+    wanted_area = math.pi*small_rad**2
+    low_rad = small_rad
+    high_rad = small_rad*10
+    mid_rad = float(low_rad+high_rad)/2
+    actual_area = effective_area(mid_rad, small_position_rad, main_rad)
+    while actual_area<wanted_area:
+        hight_rad *= 10
+        actual_area = effective_area(mid_rad, small_position_rad, main_rad)
+    actual_area = effective_area(mid_rad, small_position_rad, main_rad)
+    rep = 0
+    allowed_error = allowed_error_ratio*wanted_area
+    error = abs(wanted_area-actual_area)
+    while (error > allowed_error) or (rep < max_reps):
+        if actual_area > wanted_area:
+            high_rad = mid_rad
+        elif actual_area < wanted_area:
+            low_rad = mid_rad
+        else:
+            return mid_rad
+        mid_rad = float(low_rad+high_rad)/2
+        actual_area = effective_area(mid_rad, small_position_rad, main_rad)
+        error = abs(wanted_area-actual_area)
+        rep += 1
+    return mid_rad
 
