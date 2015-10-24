@@ -221,19 +221,28 @@ def segment_area(rad, h):
     h: minimum distance from small circle center to a line that joins 
         both intersections of the circles.
     """
+    h = float(h)
     if rad<abs(h):
         message = "In segment_area:\n\th can't be greater than "
         message += "rad\nvalues:\trad="+str(rad)+"\n\th="+str(h)
         raise ValueError(message)
-    #area fo the section of the circle between intersections
-    if rad==abs(h):
-        return 0
-    section = rad**2 * math.acos(h/rad)           #section area
-    if h>0:
-        distance_between_intersections = math.sqrt(rad**2-h**2)
-        output = section - distance_between_intersections*h/2
+    phi = math.acos(abs(h)/rad)
+    assert 0<=phi<=math.pi/2, "Error in angle"    
+    section = phi*rad**2        #section area
+    assert section>=0, "segment_area: Section is negative"
+    distance_between_intersections = 2*h*math.tan(phi)
+    msg = "segment_area: distance between intersections can't be greater than diameter"
+    assert distance_between_intersections<=2*rad, msg
+    triangle_area = distance_between_intersections*h/2.0
+    msg = "segment_area: Triangle area must be smaller than section area"
+    assert triangle_area<section, msg
+    if h>=0:
+        output = section - triangle_area
     else:
-        output = math.pi*rad**2 - section
+        output = math.pi*rad**2 - section + triangle_area
+    msg = "segment_area: Obtained area is negative. Values: rad:"+str(rad)
+    msg += " h:"+str(h)+" rat:"+str(h/rad)+" phi:"+str(phi)+" area:"+str(output)
+    assert output>0, msg
     return output
 
 
@@ -247,19 +256,12 @@ def effective_area(small_rad, small_position_rad, main_rad):
     if small_rad+small_position_rad <= main_rad:
         return math.pi*small_rad**2
     assert small_position_rad < main_rad, "Circle is outside the bigger one"
-    lim_small_position_rad = math.sqrt(main_rad**2 - small_rad**2)
-    if small_position_rad < lim_small_position_rad:
-        h = ((main_rad**2)-(small_position_rad**2)-(small_rad**2)) / (2*small_position_rad)
-        H = small_position_rad+h        #h for main circle
-        correction = segment_area(main_rad, H)
-    else:
-        h = (-1)*((main_rad**2)-(small_position_rad**2)-(small_rad**2)) / (2*small_position_rad)
-        H = small_position_rad+h
-        distance_between_intersections = math.sqrt(main_rad**2-H**2)
-        correction = segment_area(main_rad, H) - distance_between_intersections*abs(h)/2
+    h = float((main_rad**2)-(small_position_rad**2)-(small_rad**2))/(2*small_position_rad)
     assert small_rad>abs(h), "Error in h computing"
+    H = small_position_rad+h
+    correction = segment_area(main_rad, H)
     section_area = segment_area(small_rad, h)
-    output = math.pi*small_rad**2 - section_area + correction 
+    output = math.pi*small_rad**2 - section_area + correction
     return output
 
 
