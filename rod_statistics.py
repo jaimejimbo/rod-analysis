@@ -97,9 +97,15 @@ class SystemState(object):
         self._rods.delete(rod)
         self._number_of_particles -= 1
 
-    def _compute_density(self):
+    def compute_density(self):
         """
         Computes density of the system
+        """
+        pass
+
+    def divide_in_circles(self, rad):
+        """
+        Divides rods into groups contained in circles.
         """
         pass
 
@@ -136,8 +142,6 @@ class SubsystemState(SystemState):
         """
         self._update_density()
         return self._density
-
-
 
 
 
