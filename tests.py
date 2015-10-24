@@ -27,9 +27,9 @@ def suite():
 
 result = runner.run(suite())
 print 'Tests run ', result.testsRun
-print bcolors.WARNING + 'ERRORS ' + bcolors.FAIL + bcolors.BOLD + str(result.errors) + bcolors.ENDC
+print bcolors.WARNING + 'ERRORS ' + bcolors.FAIL + bcolors.BOLD + str(result.errors)
 pprint(result.failures)
 stream.seek(0)
-if result.errors==[]: print bcolors.OKGREEN + bcolors.BOLD + str("NO ERRORS") + bcolors.ENDC
-print 'Test output\n', stream.read()
+if result.errors==[] and len(result.failures)==0: print bcolors.OKGREEN + bcolors.BOLD + str("NO ERRORS") + bcolors.ENDC
+print bcolors.ENDC+'Test output\n', stream.read() + bcolors.ENDC
 

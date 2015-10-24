@@ -107,24 +107,6 @@ class TestRod(unittest.TestCase):
         self.assertEqual(str(rod.id), "1", "Errors when importing data. ID obtained: "+str(rod.id))
         self.assertEqual(str(rod.area), "578.0", "Errors when importing data. Area obtained: "+str(rod.area))
 
-    def test_Rod(self):
-        """
-        Checks rod object and methods.
-        """
-        pass
-
-    def test_SubsystemState(self):
-        """
-        Checks rod groups.
-        """
-        pass
-
-    def test_SystemState(self):
-        """
-        Checks rod groups.
-        """
-        pass
-
     def test_segment_area(self):
         """
         Tests for segment area method
@@ -143,7 +125,6 @@ class TestRod(unittest.TestCase):
         computed_area = rod_statistics.segment_area(1,-0.99999)
         self.assertAlmostEqual(computed_area, 0, msg="Error in segment area computing. Obtained: "+str(computed_area)+" Expected: "+str(0), delta=0.01)
         
-
     def test_effective_area(self):
         """
         Tests for effective area method
@@ -151,5 +132,24 @@ class TestRod(unittest.TestCase):
         computed_area = rod_statistics.effective_area(1,9.5,10)
         half_circle_area = math.pi/2
         self.assertAlmostEqual(computed_area, half_circle_area, msg="Error in effective computing. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area/2), delta=half_circle_area*.05)
+
+    def test_Rod(self):
+        """
+        Checks rod object and methods.
+        """
+        pass
+
+    def test_SubsystemState(self):
+        """
+        Checks rod groups.
+        """
+        pass
+
+    def test_SystemState(self):
+        """
+        Checks rod groups.
+        """
+        pass
+
         
 

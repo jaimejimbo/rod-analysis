@@ -241,6 +241,7 @@ def segment_area(rad, h):
 def effective_area(small_rad, small_position_rad, main_rad):
     """
     Computes the area of the small circle intersected with main circle.
+    There are errors in this method implementation.
     """
     # circle completely included in the bigger one
     if small_rad+small_position_rad <= main_rad:
