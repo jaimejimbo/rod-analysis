@@ -143,14 +143,15 @@ class SubsystemState(SystemState):
 
 
 
-def import_files(folder="./", _glob='rods_*', regular_expression='rods_[0-9]*'):
+def import_files(folder="./", _glob='rods_.*', regular_expression='rods_[0-9]*'):
     """
     Import all files using glob and checking with reg exp.
     """
     reg1 = re.compile(regular_expression)
     check_if_data = re.compile(reg1)
     names = []
-    for data_file in glob(folder+_glob):
+    __glob=folder+_glob
+    for data_file in glob(__glob):
         if reg1.match(data_file):
             names.append(data_file)
     files = []

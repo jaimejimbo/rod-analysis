@@ -101,10 +101,10 @@ class TestRod(unittest.TestCase):
         """
         rod_grps = rod_statistics.create_rods()
         rod = rod_grps[0].get_rod()
-        self.assertEqual(str(rod.id), "1", "Errors when importing data. ID obtained: "+str(rod.id))
+        self.assertEqual(str(rod._id), "1", "Errors when importing data. ID obtained: "+str(rod._id))
         self.assertEqual(str(rod.area), "578.0", "Errors when importing data. Area obtained: "+str(rod.area))
         rod = rod_grps[1].get_rod()
-        self.assertEqual(str(rod.id), "1", "Errors when importing data. ID obtained: "+str(rod.id))
+        self.assertEqual(str(rod._id), "1", "Errors when importing data. ID obtained: "+str(rod._id))
         self.assertEqual(str(rod.area), "578.0", "Errors when importing data. Area obtained: "+str(rod.area))
 
     def test_segment_area(self):
