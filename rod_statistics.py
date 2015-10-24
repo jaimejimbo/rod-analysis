@@ -2,7 +2,6 @@
 Analyze rods data
 """
 from queue import Queue
-from glob import glob
 import re
 import multiprocessing as mp    #for using all cores
 import math
