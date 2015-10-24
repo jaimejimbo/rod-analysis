@@ -228,6 +228,11 @@ def segment_area(rad, h):
         raise ValueError(message)
     phi = math.acos(abs(h)/rad)
     assert 0<=phi<=math.pi/2, "Error in angle"    
+    if phi <= 1e-10:
+        if h>0:
+            return 0        
+        else:
+            return math.pi*rad**2
     section = phi*rad**2        #section area
     assert section>=0, "segment_area: Section is negative"
     distance_between_intersections = 2*h*math.tan(phi)
@@ -235,6 +240,7 @@ def segment_area(rad, h):
     assert distance_between_intersections<=2*rad, msg
     triangle_area = distance_between_intersections*h/2.0
     msg = "segment_area: Triangle area must be smaller than section area"
+    msg += "\nRatio="+str(triangle_area*1.0/section)
     assert triangle_area<section, msg
     if h>=0:
         output = section - triangle_area
@@ -260,7 +266,13 @@ def effective_area(small_rad, small_position_rad, main_rad):
     assert small_rad>abs(h), "Error in h computing"
     H = small_position_rad+h
     correction = segment_area(main_rad, H)
+    msg = "effective_area: Correction must be smaller than small circle's area"
+    assert correction<math.pi*small_rad**2, msg
     section_area = segment_area(small_rad, h)
+    small_area = math.pi*small_rad**2
+    msg = "In the limit, h=-rad has to return total area"
+    assert small_area==segment_area(small_rad, -small_rad), msg
+    assert correction<small_area/10, "correction to high"
     output = math.pi*small_rad**2 - section_area + correction
     return output
 
