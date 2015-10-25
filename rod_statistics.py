@@ -57,7 +57,14 @@ class Rod(object):
         If it is a group of two rods that are very near.
         Remove rods that are near the border.
         """
-        return True
+        output = self.is_in_main()
+        return output
+
+    def is_in_main(self):
+        """
+        Checks if circle is in main.
+        """
+        return is_in_circle(self.x_mid, self.y_mid, CENTER_X, CENTER_Y, RADIUS)
 
 
 
@@ -353,7 +360,7 @@ def same_area_rad(small_rad, small_position_rad, main_rad, allowed_error_ratio=.
 
 def is_in_circle(point_x, point_y, center_x, center_y, rad):
     """
-    Checks if a point is in main circle
+    Checks if a point is in a circle
     """
     diff_x = abs(point_x-center_x)
     diff_y = abs(point_y-center_y)
