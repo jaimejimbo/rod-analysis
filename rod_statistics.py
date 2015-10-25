@@ -14,8 +14,6 @@ import matrix
 RADIUS = 1704*0.5
 CENTER_X = 519+RADIUS
 CENTER_Y = 96+RADIUS
-KAPPA_1 = 4
-KAPPA_2 = 12
 #ROD_LENGTH,ROD_DIAMETER #Now there are two types of rod
 # Time consts
 FRAME_INTERVAL = 1.0/3
@@ -58,27 +56,35 @@ class Rod(object):
         """
         return is_in_circle(self.x_mid, self.y_mid, CENTER_X, CENTER_Y, RADIUS-delta_rad)
 
-    def has_valid_proportions(self, kappa, allowed_kappa_error_percentaje):
+    def has_valid_proportions(self, kappas, allowed_error):
         """
         Checks if rod has valid proportions.
         """
         obtained_kappa = float(self.feret)/self.min_feret
-        allowed_error = allowed_kappa_error_percentaje * kappa
-        error = abs(obtained_kappa-kappa)
-        return error < allowed_error
-            
+        passed = []
+        try:
+            for kappa in kappas:
+                condition = abs(obtained_kappa-kappa)<allowed_error
+                passed.append(condition)
+        except TypeError:
+            condition = abs(obtained_kappa-kappas)<allowed_error
+            passed.append(condition)
+        output = False
+        for condition in passed:
+            output = output or condition
+        return output
 
-    def is_valid_rod(self, kappa,
-                    allowed_percentaje_kappa_error,
+    def is_valid_rod(self, kappas,
+                    allowed_kappa_error,
                     allowed_distance_from_border):
         """
         Checks if this is a rod looking at different factors
         If it is a group of two rods that are very near.
         Remove rods that are near the border.
         """
-        condition1 = self.is_in_main(allowed_distance_from_border)
-        condition2 = self.has_valid_size(kappa, allowed_kappa_error_percentaje)
-        output = condition1 and condition2
+        is_in_main = self.is_in_main(allowed_distance_from_border)
+        has_valid_proportions = self.has_valid_proportions(kappas, allowed_kappa_error)
+        output = is_in_main and has_valid_proportions
         return output
 
 
@@ -91,19 +97,25 @@ class SystemState(object):
     Group of rods in a moment.
     Each image has to be translated into a RodGroup (by this class?)
     """
-    def __init__(self):
+    def __init__(self, kappas=1, allowed_kappa_error=0.5,
+                allowed_distance_from_border=0):
         """
         Initialization
         """
         self._rods = Queue()
         self._number_of_particles = 0
+        self._kappas = kappas
+        self._allowed_kappa_error = allowed_kappa_error
+        self._allowed_distance_from_border = allowed_distance_from_border
 
     def add_rod(self, rod):
         """
         Adds a rod to the group
         """
-        self._rods.join(rod)
-        self._number_of_particles += 1
+        if True:#rod.is_valid_rod(self._kappas, self._allowed_kappa_error,
+                #            self._allowed_distance_from_border):
+            self._rods.join(rod)
+            self._number_of_particles += 1
 
     def get_rod(self):
         """
@@ -131,7 +143,7 @@ class SystemState(object):
         Divides rods into groups contained in circles.
         """
         diff = int(rad/2)
-        #for x_pos in 
+        #for x_pos in
 
 
 
