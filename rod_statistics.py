@@ -51,6 +51,23 @@ class Rod(object):
         dif_y = abs(self.y_mid - CENTER_Y)
         self.distance_to_center = math.sqrt(dif_x**2+dif_y**2)
 
+    def is_in_main(self, delta_rad=0):
+        """
+        Checks if rod is in main.
+        It deletes all rods that are near the border (delta_rad).
+        """
+        return is_in_circle(self.x_mid, self.y_mid, CENTER_X, CENTER_Y, RADIUS-delta_rad)
+
+    def has_valid_proportions(self, kappa, allowed_kappa_error_percentaje):
+        """
+        Checks if rod has valid proportions.
+        """
+        obtained_kappa = float(self.feret)/self.min_feret
+        allowed_error = allowed_kappa_error_percentaje * kappa
+        error = abs(obtained_kappa-kappa)
+        return error < allowed_error
+            
+
     def is_valid_rod(self, kappa,
                     allowed_percentaje_kappa_error,
                     allowed_distance_from_border):
@@ -59,15 +76,10 @@ class Rod(object):
         If it is a group of two rods that are very near.
         Remove rods that are near the border.
         """
-        condition1 = self.is_in_main()
-        output = condition1
+        condition1 = self.is_in_main(allowed_distance_from_border)
+        condition2 = self.has_valid_size(kappa, allowed_kappa_error_percentaje)
+        output = condition1 and condition2
         return output
-
-    def is_in_main(self):
-        """
-        Checks if rod is in main.
-        """
-        return is_in_circle(self.x_mid, self.y_mid, CENTER_X, CENTER_Y, RADIUS)
 
 
 
@@ -118,7 +130,8 @@ class SystemState(object):
         """
         Divides rods into groups contained in circles.
         """
-        pass
+        diff = int(rad/2)
+        #for x_pos in 
 
 
 
