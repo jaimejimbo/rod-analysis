@@ -188,6 +188,24 @@ class TestRod(unittest.TestCase):
         obtained = rod_statistics.is_in_circle(0,0,rod_statistics.CENTER_X, rod_statistics.CENTER_Y,rod_statistics.RADIUS)
         self.assertFalse(obtained, "Error in is_in_main #2: (0,0) is not in zone.")
 
+    def test_binary_search(self):
+        """
+        Checks binary search method.
+        """
+        a = [0,1,2,3,4,5,6,7,8,9,10]
+        def extract(index):
+            return a[int(index)]
+        expected = 5
+        obtained = int(rod_statistics.binary_search(0,10,extract,expected,.1,10))
+        self.assertEqual(obtained, expected, "Error in binary search #1 Obtained: "+str(obtained)+" Expected:"+str(expected))
+        expected = 7
+        obtained = int(rod_statistics.binary_search(0,10,extract,expected,.1,10))
+        self.assertEqual(obtained, expected, "Error in binary search #2 Obtained: "+str(obtained)+" Expected:"+str(expected))
+        expected = 8
+        obtained = int(rod_statistics.binary_search(0,10,extract,expected,.1,10))
+        self.assertEqual(obtained, expected, "Error in binary search #3 Obtained: "+str(obtained)+" Expected:"+str(expected))
+        #rod_statistics.binary_search(1,1,1,1,1,1) #pass
+
     def test_Rod(self):
         """
         Checks rod object and methods.
