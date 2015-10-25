@@ -48,6 +48,7 @@ class Rod(object):
         dif_x = abs(self.x_mid - CENTER_X)
         dif_y = abs(self.y_mid - CENTER_Y)
         self.distance_to_center = math.sqrt(dif_x**2+dif_y**2)
+        self.kappa = float(self.feret)/self.min_feret
 
     def is_in_main(self, delta_rad=0):
         """
@@ -60,14 +61,13 @@ class Rod(object):
         """
         Checks if rod has valid proportions.
         """
-        obtained_kappa = float(self.feret)/self.min_feret
         passed = []
         try:
             for kappa in kappas:
-                condition = abs(obtained_kappa-kappa)<allowed_error
+                condition = abs(self.kappa-kappa)<allowed_error
                 passed.append(condition)
         except TypeError:
-            condition = abs(obtained_kappa-kappas)<allowed_error
+            condition = abs(self.kappa-kappas)<allowed_error
             passed.append(condition)
         output = False
         for condition in passed:
@@ -97,7 +97,7 @@ class SystemState(object):
     Group of rods in a moment.
     Each image has to be translated into a RodGroup (by this class?)
     """
-    def __init__(self, kappas=1, allowed_kappa_error=0.5,
+    def __init__(self, kappas=10, allowed_kappa_error=.5,
                 allowed_distance_from_border=0):
         """
         Initialization
@@ -112,8 +112,8 @@ class SystemState(object):
         """
         Adds a rod to the group
         """
-        if True:#rod.is_valid_rod(self._kappas, self._allowed_kappa_error,
-                #            self._allowed_distance_from_border):
+        if rod.is_valid_rod(self._kappas, self._allowed_kappa_error,
+                            self._allowed_distance_from_border):
             self._rods.join(rod)
             self._number_of_particles += 1
 
@@ -240,7 +240,7 @@ def import_data(_file, split_char='\t', regular_expression='[0-9]\.?[0-9]*'):
 
 
 
-def create_rods(folder="./"):
+def create_rods(folder="./", kappas=10, allowed_kappa_error=.3):
     """
     Create one rod for each rod_data and for each file
     returns [RodGroup1, RodGroup2, ...]
@@ -251,7 +251,8 @@ def create_rods(folder="./"):
         raise ValueError
     states = []
     for _file in files:
-        state = SystemState()
+        state = SystemState(kappas=kappas,
+                            allowed_kappa_error=allowed_kappa_error)
         data = import_data(_file)
         for dataline in data:
             parameters = tuple(dataline)
