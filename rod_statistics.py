@@ -59,7 +59,8 @@ class Rod(object):
         If it is a group of two rods that are very near.
         Remove rods that are near the border.
         """
-        output = self.is_in_main()
+        condition1 = self.is_in_main()
+        output = condition1
         return output
 
     def is_in_main(self):

@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import unittest
 from test_matrix import TestMatrix
 from test_rod import TestRod
@@ -32,4 +33,5 @@ pprint(result.failures)
 stream.seek(0)
 if result.errors==[] and len(result.failures)==0: print bcolors.OKGREEN + bcolors.BOLD + str("NO ERRORS") + bcolors.ENDC
 print bcolors.ENDC+'Test output\n', stream.read() + bcolors.ENDC
+raw_input("Press Enter to end.")
 
