@@ -6,6 +6,7 @@ import re
 import multiprocessing as mp    #for using all cores
 import math
 import os
+import matrix
 
 
 
@@ -360,4 +361,14 @@ def same_area_rad(small_rad, small_position_rad, main_rad, allowed_error_ratio=.
         error = abs(wanted_area-actual_area)
         rep += 1
     return mid_rad
+
+def is_in_circle(point_x, point_y, center_x, center_y, rad):
+    """
+    Checks if a point is in main circle
+    """
+    diff_x = abs(point_x-center_x)
+    diff_y = abs(point_y-center_y)
+    distance = math.sqrt(diff_x**2 + diff_y**2)
+    return distance<=rad
+
 

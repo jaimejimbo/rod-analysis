@@ -179,6 +179,14 @@ class TestRod(unittest.TestCase):
         expected = 1.5
         self.assertAlmostEqual(obtained, expected, delta=expected*.3, msg="Error in same_area_rad #3. Obtained: "+str(obtained)+" Expected: "+str(expected))
         
+    def test_is_in_circle(self):
+        """
+        Checks is_in_main function
+        """ 
+        obtained = rod_statistics.is_in_circle(rod_statistics.CENTER_X, rod_statistics.CENTER_Y, rod_statistics.CENTER_X, rod_statistics.CENTER_Y, rod_statistics.RADIUS)
+        self.assertTrue(obtained, "Error in is_in_main #1: Center of zone must be in zone.")
+        obtained = rod_statistics.is_in_circle(0,0,rod_statistics.CENTER_X, rod_statistics.CENTER_Y,rod_statistics.RADIUS)
+        self.assertFalse(obtained, "Error in is_in_main #2: (0,0) is not in zone.")
 
     def test_Rod(self):
         """
@@ -197,6 +205,4 @@ class TestRod(unittest.TestCase):
         Checks rod groups.
         """
         pass
-
-        
 
