@@ -51,7 +51,9 @@ class Rod(object):
         dif_y = abs(self.y_mid - CENTER_Y)
         self.distance_to_center = math.sqrt(dif_x**2+dif_y**2)
 
-    def is_valid_rod(self, kappa, allowed_percentaje_kappa_error, allowed_distance_from_border):
+    def is_valid_rod(self, kappa,
+                    allowed_percentaje_kappa_error,
+                    allowed_distance_from_border):
         """
         Checks if this is a rod looking at different factors
         If it is a group of two rods that are very near.
@@ -267,7 +269,8 @@ def segment_area(rad, min_dist):
     #######
     distance_between_intersections = 2*min_dist*math.tan(phi)
     #DEBUG#
-    msg = "segment_area: distance between intersections can't be greater than diameter"
+    msg = "segment_area: distance between "
+    msg += "intersections can't be greater than diameter"
     assert distance_between_intersections <= 2*rad, msg
     #######
     triangle_area = distance_between_intersections*min_dist/2.0
@@ -275,14 +278,16 @@ def segment_area(rad, min_dist):
     msg = "segment_area: Triangle area must be smaller than section area"
     msg += "\nRatio="+str(triangle_area*1.0/section)
     assert triangle_area < section, msg
-    ######    
+    ######
     if min_dist >= 0:
         output = section - triangle_area
     else:
         output = math.pi*rad**2 - section + triangle_area
     #DEBUG#
-    msg = "segment_area: Obtained area is negative. Values: rad:"+str(rad)
-    msg += " min_dist:"+str(min_dist)+" rat:"+str(min_dist/rad)+" phi:"+str(phi)+" area:"+str(output)
+    msg = "segment_area: Obtained area is negative. "
+    msg += "Values: rad:"+str(rad)
+    msg += " min_dist:"+str(min_dist)+" rat:"+str(min_dist/rad)
+    msg += " phi:"+str(phi)+" area:"+str(output)
     assert output > 0, msg
     #######
     return output
@@ -332,7 +337,9 @@ def compute_min_dist(small_rad, small_position_rad, main_rad):
     min_dist /= (2*small_position_rad)
     return min_dist
 
-def same_area_rad(small_rad, small_position_rad, main_rad, allowed_error_ratio=.05, max_reps=1e2):
+def same_area_rad(small_rad, small_position_rad,
+                    main_rad, allowed_error_ratio=.05,
+                    max_reps=1e2):
     """
     Computes a new radius. With that, effective area is the same small circle's.
     Better use binary search
@@ -348,15 +355,18 @@ def same_area_rad(small_rad, small_position_rad, main_rad, allowed_error_ratio=.
     allowed_error = wanted_area * allowed_error_ratio
     low_rad = small_rad
     high_rad = small_rad*10
-    #This function is needed for binary search algorithm
-    def area(rad, small_position_rad = small_position_rad, main_rad = main_rad):
+    def area(rad, small_position_rad=small_position_rad, main_rad=main_rad):
+        """
+        Needed function for binary search, as only 1 arg is allowed.
+        """
         return effective_area(rad, small_position_rad, main_rad)
-    ###
     actual_area = area(high_rad)
-    while actual_area<wanted_area:
+    while actual_area < wanted_area:
         high_rad *= 10
         actual_area = area(high_rad)
-    return binary_search(low_rad, high_rad, area, wanted_area, allowed_error, max_reps)
+    return binary_search(low_rad, high_rad,
+                        area, wanted_area,
+                        allowed_error, max_reps)
 
 def is_in_circle(point_x, point_y, center_x, center_y, rad):
     """
@@ -365,7 +375,7 @@ def is_in_circle(point_x, point_y, center_x, center_y, rad):
     diff_x = abs(point_x-center_x)
     diff_y = abs(point_y-center_y)
     distance = math.sqrt(diff_x**2 + diff_y**2)
-    return distance<=rad
+    return distance <= rad
 
 def binary_search(low, high, ordering_function, expected, max_error, max_reps):
     """
@@ -382,7 +392,9 @@ def binary_search(low, high, ordering_function, expected, max_error, max_reps):
         try:
             actual_value = ordering_function(mid)
         except TypeError as exception:
-            print "binary search: Ordering_function must be a function. Introduced: "+str(ordering_function)
+            msg = "binary search: Ordering_function must be a function. "
+            msg += "Introduced: "+str(ordering_function)
+            print msg
             raise exception
         error = abs(actual_value-expected)
         if actual_value > expected:
@@ -392,6 +404,6 @@ def binary_search(low, high, ordering_function, expected, max_error, max_reps):
         else:
             return mid
     return mid
-        
-        
+
+
 
