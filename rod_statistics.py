@@ -143,7 +143,7 @@ class SystemState(object):
         Divides rods into groups contained in circles.
         """
         diff = int(rad/2)
-        #for x_pos in
+        pass
 
 
 
