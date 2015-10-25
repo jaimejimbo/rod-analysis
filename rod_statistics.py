@@ -64,7 +64,7 @@ class Rod(object):
 
     def is_in_main(self):
         """
-        Checks if circle is in main.
+        Checks if rod is in main.
         """
         return is_in_circle(self.x_mid, self.y_mid, CENTER_X, CENTER_Y, RADIUS)
 
