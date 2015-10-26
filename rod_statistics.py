@@ -285,9 +285,10 @@ def get_file_names(folder="./", regular_expression='rods_[0-9]*'):
     """
     names = []
     reg1 = re.compile(regular_expression)
+    extension = re.compile('.*\.png')
     files = os.listdir(folder)
     for _file in files:
-        if reg1.match(_file):
+        if reg1.match(_file) and not extension.match(_file):
             names.append(_file)
     return names
 
@@ -339,10 +340,13 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
         print "No files to import."
         raise ValueError
     states = []
-    for _file in files:
+    for index in range(len(files)):
+        _file = files[index]
+        name = names[index]
         state = SystemState(kappas=kappas,
                             allowed_kappa_error=allowed_kappa_error,
-                            allowed_distance_from_border=allowed_distance_from_border)
+                            allowed_distance_from_border=allowed_distance_from_border,
+                            id_string=name)
         data = import_data(_file)
         for dataline in data:
             parameters = tuple(dataline)
