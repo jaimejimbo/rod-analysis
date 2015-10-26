@@ -197,6 +197,7 @@ class SystemState(object):
             subdensity.append(dens)
             density.append(subdensity)
         self._density_matrix = density
+        return self._density_matrix
 
     def density_matrix_for_plot(self):
         """

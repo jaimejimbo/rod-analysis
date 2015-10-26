@@ -219,11 +219,10 @@ class TestRod(unittest.TestCase):
         rods = rod_statistics.create_rods(folder="../rod-analysis", kappas=10, allowed_kappa_error=.2, allowed_distance_from_border=10)
         self.assertTrue(rods[0].get_rod().is_valid_rod(kappas=10, allowed_kappa_error=.2, allowed_distance_from_border=10), "Must be a rod.")
         self.assertAlmostEqual(rods[0].get_rod().kappa, 10, delta=.2, msg="If passed before, must be passed here.")
-        dens_mat = rods[0].compute_density_matrix(100)
+        dens_mat = rods[0].compute_density_matrix(300)
+        dens_mat2 = rods[0].compute_density_matrix(100)
         xval, yval, zval = rods[0].density_matrix_for_plot()
         fig = plt.figure()
-        #ax = fig.gca(projection='3d')
-        #ax.plot_surface(xval, yval, zval)
         plt.scatter(xval, yval, zval)
         plt.show()
 
