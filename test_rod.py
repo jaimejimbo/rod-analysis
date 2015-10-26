@@ -204,13 +204,14 @@ class TestRod(unittest.TestCase):
         expected = 8
         obtained = int(rod_statistics.binary_search(0,10,extract,expected,.1,10))
         self.assertEqual(obtained, expected, "Error in binary search #3 Obtained: "+str(obtained)+" Expected:"+str(expected))
-        #rod_statistics.binary_search(1,1,1,1,1,1) #pass
 
-    def test_Rod(self):
+    def test_SystemState(self):
         """
-        Checks rod object and methods.
+        Checks rod groups and rod class.
         """
-        pass
+        rods = rod_statistics.create_rods(folder="../rod-analysis", kappas=10, allowed_kappa_error=.2, allowed_distance_from_border=10)
+        self.assertTrue(rods[0].get_rod().is_valid_rod(kappas=10, allowed_kappa_error=.2, allowed_distance_from_border=10), "Must be a rod.")
+        self.assertAlmostEqual(rods[0].get_rod().kappa, 10, delta=.2, msg="If passed before, must be passed here.")
 
     def test_SubsystemState(self):
         """
@@ -218,9 +219,4 @@ class TestRod(unittest.TestCase):
         """
         pass
 
-    def test_SystemState(self):
-        """
-        Checks rod groups.
-        """
-        pass
 

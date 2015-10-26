@@ -50,12 +50,14 @@ class Rod(object):
         self.distance_to_center = math.sqrt(dif_x**2+dif_y**2)
         self.kappa = float(self.feret)/self.min_feret
 
-    def is_in_main(self, delta_rad=0):
+    def is_in_main(self, allowed_distance_from_border=0):
         """
         Checks if rod is in main.
         It deletes all rods that are near the border (delta_rad).
         """
-        return is_in_circle(self.x_mid, self.y_mid, CENTER_X, CENTER_Y, RADIUS-delta_rad)
+        return is_in_circle(self.x_mid, self.y_mid,
+                            CENTER_X, CENTER_Y,
+                            RADIUS-allowed_distance_from_border)
 
     def has_valid_proportions(self, kappas, allowed_error):
         """
@@ -240,7 +242,8 @@ def import_data(_file, split_char='\t', regular_expression='[0-9]\.?[0-9]*'):
 
 
 
-def create_rods(folder="./", kappas=10, allowed_kappa_error=.3):
+def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
+                allowed_distance_from_border=0):
     """
     Create one rod for each rod_data and for each file
     returns [RodGroup1, RodGroup2, ...]
@@ -252,7 +255,8 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3):
     states = []
     for _file in files:
         state = SystemState(kappas=kappas,
-                            allowed_kappa_error=allowed_kappa_error)
+                            allowed_kappa_error=allowed_kappa_error,
+                            allowed_distance_from_border=allowed_distance_from_border)
         data = import_data(_file)
         for dataline in data:
             parameters = tuple(dataline)
