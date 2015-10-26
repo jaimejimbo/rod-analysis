@@ -167,8 +167,12 @@ class SystemState(object):
         start_y = CENTER_Y-RADIUS
         end_y = CENTER_Y+RADIUS
         subsystems = []
-        for (actual_x=start_x, actual_x<=end_x, actual_x+=diff):
-            for actual_y=start_y, actual_y<=end_y, actual_y+=diff):
+        max_times = float(end_x - start_x)/diff
+        possible_x_values = [start_x + times*diff for times in range(max_times)]
+        max_times = float(end_y - start_y)/diff
+        possible_y_values = [start_y + times*diff for times in range(max_times)]
+        for actual_x in possible_x_values:
+            for actual_y in possible_y_values:
                 if is_in_circle(actual_x, actual_y,
                                 CENTER_X, CENTER_Y,
                                 RADIUS):
