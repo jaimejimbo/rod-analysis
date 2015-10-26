@@ -225,7 +225,7 @@ class TestRod(unittest.TestCase):
         xval, yval, zval = rods[0].density_matrix_for_plot()
         fig = plt.figure()
         plt.scatter(xval, yval, zval)
-        plt.show()
+        plt.savefig("plot1.png")
 
     def test_SubsystemState(self):
         """
