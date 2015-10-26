@@ -17,11 +17,12 @@ class Queue(object):
         """
         self._data = []
 
-    def __list__(self):
+    def __iter__(self):
         """
         To list converter.
         """
-        return self._data
+        for element in self._data:
+            yield element
         
     def join(self, element):
         """

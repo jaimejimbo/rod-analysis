@@ -212,6 +212,8 @@ class TestRod(unittest.TestCase):
         rods = rod_statistics.create_rods(folder="../rod-analysis", kappas=10, allowed_kappa_error=.2, allowed_distance_from_border=10)
         self.assertTrue(rods[0].get_rod().is_valid_rod(kappas=10, allowed_kappa_error=.2, allowed_distance_from_border=10), "Must be a rod.")
         self.assertAlmostEqual(rods[0].get_rod().kappa, 10, delta=.2, msg="If passed before, must be passed here.")
+        dens_mat = rods[0].get_density_matrix(5)
+        print dens_mat
 
     def test_SubsystemState(self):
         """

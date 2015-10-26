@@ -118,12 +118,7 @@ class SystemState(object):
         self._rad_for_division = -1
         self._actual_subdivision = []
         self._changed = False
-
-    def __list__(self):
-        """
-        Creates an output with list type.
-        """
-        return list(self._rods)
+        self._density_matrix = []
 
     def add_rod(self, rod):
         """
@@ -152,7 +147,7 @@ class SystemState(object):
         self._number_of_particles -= 1
         self._changed = True
 
-    def divide_in_circles(self, rad):
+    def _divide_in_circles(self, rad):
         """
         Divides rods into groups contained in circles.
         """
@@ -167,10 +162,12 @@ class SystemState(object):
         start_y = CENTER_Y-RADIUS
         end_y = CENTER_Y+RADIUS
         subsystems = []
-        max_times = float(end_x - start_x)/diff
-        possible_x_values = [start_x + times*diff for times in range(max_times)]
-        max_times = float(end_y - start_y)/diff
-        possible_y_values = [start_y + times*diff for times in range(max_times)]
+        max_times = int((end_x-start_x)/diff+1)
+        possible_x_values = [start_x + times*diff
+                             for times in range(max_times)]
+        max_times = int((end_y-start_y)/diff+1)
+        possible_y_values = [start_y + times*diff
+                             for times in range(max_times)]
         for actual_x in possible_x_values:
             for actual_y in possible_y_values:
                 if is_in_circle(actual_x, actual_y,
@@ -181,12 +178,24 @@ class SystemState(object):
                     subsystems.append(subsystem)
         self._actual_subdivision = subsystems
 
-    def compute_density(self):
+    def get_density_matrix(self, rad, normalized=True):
         """
-        Computes density of the system
+        Computes density of the system.
+        Returns a plotable matrix
         """
-        pass
-
+        if self._rad_for_division == rad and not self._changed:
+            return self._density_matrix
+        self._divide_in_circles(rad)
+        density = []
+        for subsystem in self._actual_subdivision:
+            subdensity = [subsystem.center[0],subsystem.center[1]]
+            dens = get_density()
+            if normalized:
+                dens /= self._number_of_particles
+            subdensity.append(dens)
+            density.append(subdensity)
+        self._density_matrix = density
+        return self._density_matrix
 
 
 
@@ -203,8 +212,8 @@ class SubsystemState(SystemState):
         """
         SystemState.__init__(self)
         self._density = -1
-        self._center = center
-        self._rad = rad
+        self.center = center
+        self.rad = rad
 
     def _update_density(self):
         """
@@ -227,7 +236,7 @@ class SubsystemState(SystemState):
         """
         try:
             for rod in rod_list:
-                if rod.is_in_circle(self._center, self._rad):
+                if rod.is_in_circle(self.center, self.rad):
                     self.add_rod(rod)
         except TypeError:
             print "Use a rod list in add_rods method"
