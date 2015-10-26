@@ -224,7 +224,7 @@ class TestRod(unittest.TestCase):
         fig = plt.figure()
         #ax = fig.gca(projection='3d')
         #ax.plot_surface(xval, yval, zval)
-        plt.contour(xval, yval, zval)
+        plt.scatter(xval, yval, zval)
         plt.show()
 
     def test_SubsystemState(self):
