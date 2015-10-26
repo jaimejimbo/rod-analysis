@@ -34,16 +34,16 @@ class TestRod(unittest.TestCase):
         input1 = open('prueba1.txt','w+')
         input1.write("Hola")
         input1.close()
-        files = rod_statistics.import_files(regular_expression='^prueba1\.txt')
+        names, files = rod_statistics.import_files(regular_expression='^prueba1\.txt')
         line1 = files[0].readline()
         self.assertEqual(line1.split(), ["Hola"], "Error importing singular file. Obtained: " + str(line1.split()))
-        files = rod_statistics.import_files(folder="./../../TFG/rod-analysis/", regular_expression='^prueba1\.txt')
+        names, files = rod_statistics.import_files(folder="./../../TFG/rod-analysis/", regular_expression='^prueba1\.txt')
         line1 = files[0].readline()
         self.assertEqual(line1.split(), ["Hola"], "Error importing singular file. Obtained: " + str(line1.split()))
         input2 = open('prueba2.txt','w+')
         input2.write("Adios\n")
         input2.close()
-        files = rod_statistics.import_files( regular_expression='^prueba*')
+        names, files = rod_statistics.import_files( regular_expression='^prueba*')
         line1 = files[0].readline()
         line2 = files[1].readline()
         self.assertIn(line1.split(), [["Adios"],["Hola"]], "Error importing 2 files. Obtained: " + str(line1.split()))
@@ -51,7 +51,7 @@ class TestRod(unittest.TestCase):
         input3 = open('prueba3.txt','w+')
         input3.write("Hasta pronto\n")
         input3.close()
-        files = rod_statistics.import_files( regular_expression='^prueba*')
+        names, files = rod_statistics.import_files( regular_expression='^prueba*')
         line1 = files[0].readline()
         line2 = files[1].readline()
         line3 = files[2].readline()
@@ -109,7 +109,7 @@ class TestRod(unittest.TestCase):
         """
         Checks rod group creation
         """
-        rod_grps = rod_statistics.create_rods(kappas=10, allowed_kappa_error=5)
+        names, rod_grps = rod_statistics.create_rods(kappas=10, allowed_kappa_error=5)
         rod = rod_grps[0].get_rod()
         self.assertEqual(str(rod._id), "1", "Errors when importing data. ID obtained: "+str(rod._id))
         self.assertEqual(str(rod.area), "578.0", "Errors when importing data. Area obtained: "+str(rod.area))
@@ -216,7 +216,7 @@ class TestRod(unittest.TestCase):
         """
         Checks rod groups and rod class.
         """
-        rods = rod_statistics.create_rods(folder="../rod-analysis", kappas=10, allowed_kappa_error=.2, allowed_distance_from_border=10)
+        names, rods = rod_statistics.create_rods(folder="../rod-analysis", kappas=10, allowed_kappa_error=.2, allowed_distance_from_border=10)
         self.assertTrue(rods[0].get_rod().is_valid_rod(kappas=10, allowed_kappa_error=.2, allowed_distance_from_border=10), "Must be a rod.")
         self.assertAlmostEqual(rods[0].get_rod().kappa, 10, delta=.2, msg="If passed before, must be passed here.")
         dens_mat = rods[0].compute_density_matrix(300)
@@ -225,7 +225,7 @@ class TestRod(unittest.TestCase):
         xval, yval, zval = rods[0].density_matrix_for_plot()
         fig = plt.figure()
         plt.scatter(xval, yval, zval)
-        plt.savefig("plot1.png")
+        plt.savefig(rods[0].id_string+".png")
 
     def test_SubsystemState(self):
         """

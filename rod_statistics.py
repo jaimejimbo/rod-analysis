@@ -106,7 +106,8 @@ class SystemState(object):
     Each image has to be translated into a RodGroup (by this class?)
     """
     def __init__(self, kappas=10, allowed_kappa_error=.5,
-                allowed_distance_from_border=0):
+                allowed_distance_from_border=0,
+                id_string=""):
         """
         Initialization
         """
@@ -119,6 +120,7 @@ class SystemState(object):
         self._actual_subdivision = []
         self._changed = False
         self._density_matrix = []
+        self.id_string = id_string
 
     def add_rod(self, rod):
         """
@@ -269,18 +271,25 @@ def import_files(folder="./", regular_expression='rods_[0-9]*'):
     if not re.match("\.?/?[a-zA-Z0-9\.]/*", folder):
         print "You must provide a folder like: \"./\" or \"/home/user/\""
         raise ValueError
-    reg1 = re.compile(regular_expression)
+    names = get_file_names(folder=folder, regular_expression=regular_expression)
+    files = []
+    for name in names:
+        files.append(open(name,'r'))
+    return names, files
+
+
+
+def get_file_names(folder="./", regular_expression='rods_[0-9]*'):
+    """
+    Get file names of the folder whose names pass regular expression
+    """
     names = []
+    reg1 = re.compile(regular_expression)
     files = os.listdir(folder)
     for _file in files:
         if reg1.match(_file):
             names.append(_file)
-    files = []
-    for name in names:
-        files.append(open(name))
-    return files
-
-
+    return names
 
 
 
@@ -325,7 +334,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
     Create one rod for each rod_data and for each file
     returns [RodGroup1, RodGroup2, ...]
     """
-    files = import_files(folder=folder)
+    names, files = import_files(folder=folder)
     if len(files) == 0:
         print "No files to import."
         raise ValueError
@@ -345,7 +354,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
                 raise ValueError
             state.add_rod(new_rod)
         states.append(state)
-    return states
+    return names, states
 
 
 
