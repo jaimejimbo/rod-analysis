@@ -50,13 +50,19 @@ class Rod(object):
         self.distance_to_center = math.sqrt(dif_x**2+dif_y**2)
         self.kappa = float(self.feret)/self.min_feret
 
+    def is_in_circle(self, center, rad):
+        """
+        Checks if rod is in circle.
+        """
+        return is_in_circle(self.x_mid, self.y_mid,
+                            center[0], center[1], rad)
+
     def is_in_main(self, allowed_distance_from_border=0):
         """
         Checks if rod is in main.
         It deletes all rods that are near the border (delta_rad).
         """
-        return is_in_circle(self.x_mid, self.y_mid,
-                            CENTER_X, CENTER_Y,
+        return self.is_in_circle((CENTER_X, CENTER_Y),
                             RADIUS-allowed_distance_from_border)
 
     def has_valid_proportions(self, kappas, allowed_error):
@@ -109,6 +115,15 @@ class SystemState(object):
         self._kappas = kappas
         self._allowed_kappa_error = allowed_kappa_error
         self._allowed_distance_from_border = allowed_distance_from_border
+        self._rad_for_division = -1
+        self._actual_subdivision = []
+        self._changed = False
+
+    def __list__(self):
+        """
+        Creates an output with list type.
+        """
+        return list(self._rods)
 
     def add_rod(self, rod):
         """
@@ -118,6 +133,7 @@ class SystemState(object):
                             self._allowed_distance_from_border):
             self._rods.join(rod)
             self._number_of_particles += 1
+            self._changed = True
 
     def get_rod(self):
         """
@@ -126,6 +142,7 @@ class SystemState(object):
         """
         self._number_of_particles -= 1
         return self._rods.get_next()
+        self._changed = True
 
     def remove_rod(self, rod):
         """
@@ -133,18 +150,37 @@ class SystemState(object):
         """
         self._rods.delete(rod)
         self._number_of_particles -= 1
-
-    def compute_density(self):
-        """
-        Computes density of the system
-        """
-        pass
+        self._changed = True
 
     def divide_in_circles(self, rad):
         """
         Divides rods into groups contained in circles.
         """
+        if self._rad_for_division == rad and not self._changed:
+            return
+        if (rad < 0) or (rad > RADIUS):
+            print "Use a correct radius (0<rad<main_rad)"
+            raise ValueError
         diff = int(rad/2)
+        start_x = CENTER_X-RADIUS
+        end_x = CENTER_X+RADIUS
+        start_y = CENTER_Y-RADIUS
+        end_y = CENTER_Y+RADIUS
+        subsystems = []
+        for (actual_x=start_x, actual_x<=end_x, actual_x+=diff):
+            for actual_y=start_y, actual_y<=end_y, actual_y+=diff):
+                if is_in_circle(actual_x, actual_y,
+                                CENTER_X, CENTER_Y,
+                                RADIUS):
+                    subsystem = SubsystemState((actual_x, actual_y), rad)
+                    subsystem.add_rods(list(self._rods))
+                    subsystems.append(subsystem)
+        self._actual_subdivision = subsystems
+
+    def compute_density(self):
+        """
+        Computes density of the system
+        """
         pass
 
 
@@ -157,14 +193,14 @@ class SubsystemState(SystemState):
     have something in common.
     """
 
-    def __init__(self, area):
+    def __init__(self, center, rad):
         """
         Initialization
         """
         SystemState.__init__(self)
         self._density = -1
-        self._area = area
-
+        self._center = center
+        self._rad = rad
 
     def _update_density(self):
         """
@@ -181,6 +217,16 @@ class SubsystemState(SystemState):
         self._update_density()
         return self._density
 
+    def add_rods(self, rod_list):
+        """
+        Add all rods of the list that are inside the circle.
+        """
+        try:
+            for rod in rod_list:
+                if rod.is_in_circle(self._center, self._rad):
+                    self.add_rod(rod)
+        except TypeError:
+            print "Use a rod list in add_rods method"
 
 
 
@@ -272,6 +318,8 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
 
 
 
+
+
 def segment_area(rad, min_dist):
     """
     Computes the area of an intersection of a circle with a line
@@ -325,6 +373,8 @@ def segment_area(rad, min_dist):
 
 
 
+
+
 def effective_area(small_rad, small_position_rad, main_rad):
     """
     Computes the area of the small circle intersected with main circle.
@@ -359,6 +409,10 @@ def effective_area(small_rad, small_position_rad, main_rad):
     output = math.pi*small_rad**2 - section_area + correction
     return output
 
+
+
+
+
 def compute_min_dist(small_rad, small_position_rad, main_rad):
     """
     Computes the distance from small circle center to the line that joins both
@@ -367,6 +421,11 @@ def compute_min_dist(small_rad, small_position_rad, main_rad):
     min_dist = float((main_rad**2)-(small_position_rad**2)-(small_rad**2))
     min_dist /= (2*small_position_rad)
     return min_dist
+
+
+
+
+
 
 def same_area_rad(small_rad, small_position_rad,
                     main_rad, allowed_error_ratio=.05,
@@ -399,6 +458,10 @@ def same_area_rad(small_rad, small_position_rad,
                         area, wanted_area,
                         allowed_error, max_reps)
 
+
+
+
+
 def is_in_circle(point_x, point_y, center_x, center_y, rad):
     """
     Checks if a point is in a circle
@@ -407,6 +470,10 @@ def is_in_circle(point_x, point_y, center_x, center_y, rad):
     diff_y = abs(point_y-center_y)
     distance = math.sqrt(diff_x**2 + diff_y**2)
     return distance <= rad
+
+
+
+
 
 def binary_search(low, high, ordering_function, expected, max_error, max_reps):
     """

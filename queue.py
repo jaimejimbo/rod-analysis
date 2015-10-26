@@ -16,6 +16,12 @@ class Queue(object):
         Creator
         """
         self._data = []
+
+    def __list__(self):
+        """
+        To list converter.
+        """
+        return self._data
         
     def join(self, element):
         """
