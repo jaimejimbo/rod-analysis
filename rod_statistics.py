@@ -178,7 +178,7 @@ class SystemState(object):
                     subsystems.append(subsystem)
         self._actual_subdivision = subsystems
 
-    def get_density_matrix(self, rad, normalized=True):
+    def compute_density_matrix(self, rad, normalized=False, divided_by_area=False):
         """
         Computes density of the system.
         Returns a plotable matrix
@@ -189,14 +189,29 @@ class SystemState(object):
         density = []
         for subsystem in self._actual_subdivision:
             subdensity = [subsystem.center[0],subsystem.center[1]]
-            dens = get_density()
+            dens = subsystem.get_density()
+            if divided_by_area:
+                dens /= subsystem._area
             if normalized:
                 dens /= self._number_of_particles
             subdensity.append(dens)
             density.append(subdensity)
         self._density_matrix = density
-        return self._density_matrix
 
+    def density_matrix_for_plot(self):
+        """
+        Returns 3 arrays: one for x, another for y and the last for values.
+        """
+        if len(self._density_matrix) == 0:
+            self.compute_density_matrix()
+        x_values = []
+        y_values = []
+        z_values = []
+        for row in self._density_matrix:
+            x_values.append(row[0])
+            y_values.append(row[1])
+            z_values.append(row[2])
+        return x_values, y_values, z_values
 
 
 
@@ -214,13 +229,15 @@ class SubsystemState(SystemState):
         self._density = -1
         self.center = center
         self.rad = rad
+        self._area = float(math.pi*rad**2)
 
     def _update_density(self):
         """
         Overrides.
         Computes density of the group.
         """
-        self._density = self._number_of_particles * 1.0/self._area
+        self._density = self._number_of_particles
+        
 
     def get_density(self):
         """
