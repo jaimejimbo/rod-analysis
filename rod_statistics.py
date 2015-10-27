@@ -57,14 +57,6 @@ class Rod(object):
         return is_in_circle(self.x_mid, self.y_mid,
                             center[0], center[1], rad)
 
-    def is_in_main(self, allowed_distance_from_border=0):
-        """
-        Checks if rod is in main.
-        It deletes all rods that are near the border (delta_rad).
-        """
-        return self.is_in_circle((CENTER_X, CENTER_Y),
-                            RADIUS-allowed_distance_from_border)
-
     def has_valid_proportions(self, kappas, allowed_error):
         """
         Checks if rod has valid proportions.
@@ -84,13 +76,15 @@ class Rod(object):
 
     def is_valid_rod(self, kappas,
                     allowed_kappa_error,
-                    allowed_distance_from_border):
+                    allowed_distance_from_border,
+                    zone_coords=(CENTER_X, CENTER_Y, RADIUS)):
         """
         Checks if this is a rod looking at different factors
         If it is a group of two rods that are very near.
         Remove rods that are near the border.
         """
-        is_in_main = self.is_in_main(allowed_distance_from_border)
+        center = (zone_coords[0], zone_coords[1])
+        is_in_main = self.is_in_circle(center, zone_coords[2]-allowed_distance_from_border)
         has_valid_proportions = self.has_valid_proportions(kappas,
                                                            allowed_kappa_error)
         output = is_in_main and has_valid_proportions
@@ -108,7 +102,7 @@ class SystemState(object):
     """
     def __init__(self, kappas=10, allowed_kappa_error=.5,
                 allowed_distance_from_border=0,
-                id_string=""):
+                id_string="", coords_of_zone=(CENTER_X, CENTER_Y, RADIUS)):
         """
         Initialization
         """
@@ -122,13 +116,18 @@ class SystemState(object):
         self._changed = False
         self._density_matrix = []
         self.id_string = id_string
+        self._radius = coords_of_zone[2]
+        self._center_x = coords_of_zone[0]
+        self._center_y = coords_of_zone[1]
+        self._coords_of_zone = coords_of_zone
 
     def add_rod(self, rod):
         """
         Adds a rod to the group
         """
         if rod.is_valid_rod(self._kappas, self._allowed_kappa_error,
-                            self._allowed_distance_from_border):
+                            self._allowed_distance_from_border,
+                            self._coords_of_zone):
             self._rods.join(rod)
             self._number_of_particles += 1
             self._changed = True
@@ -206,6 +205,7 @@ class SystemState(object):
             subdensity.append(dens)
             density.append(subdensity)
         self._density_matrix = density
+        print self._density_matrix
         return self._density_matrix
 
     def density_matrix_for_plot(self):

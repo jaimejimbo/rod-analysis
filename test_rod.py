@@ -3,12 +3,17 @@ import rod_statistics
 import os
 import math
 
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
-import matplotlib.pyplot as plt
-import numpy as np
-
+try:
+    from mpl_toolkits.mplot3d import Axes3D
+    from matplotlib import cm
+    from matplotlib.ticker import LinearLocator, FormatStrFormatter
+    import matplotlib.pyplot as plt
+except:
+    os.system('sudo apt-get install python-matplotlib')
+try:
+    import numpy as np
+except:
+    os.system('sudo apt-get install python-numpy')
 
 class TestRod(unittest.TestCase):
     """
@@ -213,17 +218,19 @@ class TestRod(unittest.TestCase):
         """
         Checks rod groups and rod class.
         """
-        names, rods = rod_statistics.create_rods(folder="../rod-analysis", kappas=10, allowed_kappa_error=.2, allowed_distance_from_border=10)
-        self.assertTrue(rods[0].get_rod().is_valid_rod(kappas=10, allowed_kappa_error=.2, allowed_distance_from_border=10), "Must be a rod.")
-        self.assertAlmostEqual(rods[0].get_rod().kappa, 10, delta=.2, msg="If passed before, must be passed here.")
-        dens_mat = rods[0].compute_density_matrix(300)
-        dens_mat2 = rods[0].compute_density_matrix(100)
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=[5,10,12], allowed_kappa_error=100, allowed_distance_from_border=10)
+        rod = rod_groups[0].get_rod()
+        self.assertTrue(rod.is_valid_rod(kappas=10, allowed_kappa_error=[2,10,12], allowed_distance_from_border=10), "Must be a rod.")
+        #self.assertAlmostEqual(rod.kappa, 10, delta=.5, msg="If passed before, must be passed here. Obtained: "+str(rod.kappa))
+        dens_mat = rod_groups[0].compute_density_matrix(300)
+        dens_mat2 = rod_groups[0].compute_density_matrix(100)
         self.assertTrue(len(dens_mat) < len(dens_mat2), "There must be more points if rad is smaller.")
-        for rod in rods:
-            xval, yval, zval = rod.density_matrix_for_plot()
+        for rod_group in rod_groups:
+            rod_group.compute_density_matrix(100)
+            xval, yval, zval = rod_group.density_matrix_for_plot()
             fig = plt.figure()
             plt.scatter(xval, yval, zval)
-            file_=rod.id_string+"_density.png"
+            file_=rod_group.id_string+"_density.png"
             plt.savefig(file_)
 
     def test_binary_order(self):
