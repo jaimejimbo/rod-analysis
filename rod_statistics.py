@@ -45,9 +45,6 @@ class Rod(object):
         self.min_feret = float(minferet)       #11
         self.x_start = float(xstart)           #12
         self.y_start = float(ystart)           #13
-        dif_x = abs(self.x_mid - CENTER_X)
-        dif_y = abs(self.y_mid - CENTER_Y)
-        self.distance_to_center = math.sqrt(dif_x**2+dif_y**2)
         self.kappa = float(self.feret)/self.min_feret
 
     def is_in_circle(self, center, rad):
@@ -155,14 +152,14 @@ class SystemState(object):
         """
         if self._rad_for_division == rad and not self._changed:
             return
-        if (rad < 0) or (rad > RADIUS):
+        if (rad < 0) or (rad > self._radius):
             print "Use a correct radius (0<rad<main_rad)"
             raise ValueError
         diff = int(rad/2)
-        start_x = CENTER_X-RADIUS
-        end_x = CENTER_X+RADIUS
-        start_y = CENTER_Y-RADIUS
-        end_y = CENTER_Y+RADIUS
+        start_x = self._center_x-self._radius
+        end_x = self._center_x+self._radius
+        start_y = self._center_y-self._radius
+        end_y = self._center_y+self._radius
         subsystems = []
         max_times = int((end_x-start_x)/diff+1)
         possible_x_values = [start_x + times*diff
@@ -173,12 +170,12 @@ class SystemState(object):
         for actual_x in possible_x_values:
             for actual_y in possible_y_values:
                 if is_in_circle(actual_x, actual_y,
-                                CENTER_X, CENTER_Y,
-                                RADIUS):
-                    diff_x = abs(actual_x-CENTER_X)
-                    diff_y = abs(actual_y-CENTER_Y)
+                                self._center_x, self._center_y,
+                                self._radius):
+                    diff_x = abs(actual_x-self._center_x)
+                    diff_y = abs(actual_y-self._center_y)
                     pos_rad = math.sqrt(diff_x**2+diff_y**2)
-                    same_area_radius = same_area_rad(rad, pos_rad, RADIUS)
+                    same_area_radius = same_area_rad(rad, pos_rad, self._radius)
                     subsystem = SubsystemState((actual_x, actual_y),
                                                same_area_radius)
                     subsystem.add_rods(list(self._rods))
