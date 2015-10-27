@@ -223,7 +223,7 @@ class SystemState(object):
             z_values.append(row[2])
         return x_values, y_values, z_values
 
-    #def 
+    #def
 
 
 
@@ -309,9 +309,12 @@ def get_file_names(folder="./", regular_expression='rods_[0-9]*'):
     return binary_order(names, file_name_ordering_function)
 
 
+
+
+
 def file_name_ordering_function(name):
     """
-    Gets the number in the name of the file.    
+    Gets the number in the name of the file.
     """
     reg = re.compile('\d+')
     found = reg.findall(name)
@@ -319,6 +322,8 @@ def file_name_ordering_function(name):
     for found_element in found:
         output += found_element
     return int(output)
+
+
 
 
 
@@ -591,7 +596,7 @@ def binary_order(array, ordering_id):
     #recursive part
     length = len(array)
     array_1 = array[:length/2]
-    array_2 = array[length/2:]    
+    array_2 = array[length/2:]
     array_1 = binary_order(array_1, ordering_id)
     array_2 = binary_order(array_2, ordering_id)
     ordered_array = []
