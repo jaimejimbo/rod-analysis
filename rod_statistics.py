@@ -176,7 +176,12 @@ class SystemState(object):
                 if is_in_circle(actual_x, actual_y,
                                 CENTER_X, CENTER_Y,
                                 RADIUS):
-                    subsystem = SubsystemState((actual_x, actual_y), rad)
+                    diff_x = abs(actual_x-CENTER_X)
+                    diff_y = abs(actual_y-CENTER_Y)
+                    pos_rad = math.sqrt(diff_x**2+diff_y**2)
+                    same_area_radius = same_area_rad(rad, pos_rad, RADIUS)
+                    subsystem = SubsystemState((actual_x, actual_y),
+                                               same_area_radius)
                     subsystem.add_rods(list(self._rods))
                     subsystems.append(subsystem)
         self._actual_subdivision = subsystems
@@ -217,6 +222,8 @@ class SystemState(object):
             y_values.append(row[1])
             z_values.append(row[2])
         return x_values, y_values, z_values
+
+    #def 
 
 
 
