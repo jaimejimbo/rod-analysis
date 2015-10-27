@@ -417,10 +417,10 @@ def segment_area(rad, min_dist):
         both intersections of the circles.
     """
     min_dist = float(min_dist)
-    if rad < abs(min_dist):
-        message = "In segment_area:\n\th can't be greater than "
-        message += "rad\nvalues:\trad="+str(rad)+"\n\th="+str(min_dist)
-        raise ValueError(message)
+    if min_dist >= rad:
+        return 0
+    elif abs(min_dist) >= rad:
+        return math.pi*rad**2
     phi = math.acos(abs(min_dist)/rad)
     #DEBUG#
     assert 0 <= phi <= math.pi/2, "Error in angle"
@@ -475,16 +475,12 @@ def effective_area(small_rad, small_position_rad, main_rad):
     assert small_position_rad <= main_rad, "Circle is outside the bigger one"
     #######
     min_dist = compute_min_dist(small_rad, small_position_rad, main_rad)
-    #DEBUG#
-    msg = "Error in min_dist computation: [small_rad, min_dist] "
-    msg += str([small_rad, abs(min_dist)])
-    assert small_rad >= abs(min_dist), msg
-    #######
-    if abs(min_dist) >= small_rad:
-        correction = 0
-    else:
-        min_dist_main = small_position_rad+min_dist
-        correction = segment_area(main_rad, min_dist_main)
+    if min_dist >= small_rad:
+        return math.pi*small_rad**2        
+    elif abs(min_dist) >= small_rad:
+        return 0
+    min_dist_main = small_position_rad+min_dist
+    correction = segment_area(main_rad, min_dist_main)
     #DEBUG#
     msg = "effective_area: Correction must be smaller than small circle's area"
     assert correction < math.pi*small_rad**2, msg
@@ -509,7 +505,11 @@ def compute_min_dist(small_rad, small_position_rad, main_rad):
     Computes the distance from small circle center to the line that joins both
     circles' intersections.
     """
-    min_dist = float((main_rad**2)-(small_position_rad**2)-(small_rad**2))
+    try:
+        min_dist = (main_rad**2)-(small_position_rad**2)-(small_rad**2)
+        min_dist = float(min_dist)
+    except OverflowError:
+        return small_rad*1.1
     min_dist /= (2*small_position_rad)
     if min_dist > small_rad:
         return small_rad
@@ -546,8 +546,8 @@ def same_area_rad(small_rad, small_position_rad,
         """
         try:
             return effective_area(rad, small_position_rad, main_rad)
-        except:
-            return wanted_area * 10
+        except OverflowError:
+            return 1e100
     actual_area = area(high_rad)
     while actual_area < wanted_area:
         high_rad *= 10
