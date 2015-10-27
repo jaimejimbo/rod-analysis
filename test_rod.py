@@ -206,7 +206,7 @@ class TestRod(unittest.TestCase):
         """
         Checks rod groups and rod class.
         """
-        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=[5,10,12], allowed_kappa_error=100, allowed_distance_from_border=10)
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=[5,10,12], allowed_kappa_error=1, allowed_distance_from_border=10)
         for group in rod_groups:
             group.compute_center_and_radius()
         rod = rod_groups[0].get_rod()
