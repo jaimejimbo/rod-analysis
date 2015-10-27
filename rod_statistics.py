@@ -306,7 +306,19 @@ def get_file_names(folder="./", regular_expression='rods_[0-9]*'):
     for _file in files:
         if reg1.match(_file) and not extension.match(_file):
             names.append(_file)
-    return names
+    return binary_order(names, file_name_ordering_function)
+
+
+def file_name_ordering_function(name):
+    """
+    Gets the number in the name of the file.    
+    """
+    reg = re.compile('\d+')
+    found = reg.findall(name)
+    output = ""
+    for found_element in found:
+        output += found_element
+    return int(output)
 
 
 
