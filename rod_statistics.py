@@ -547,7 +547,7 @@ def same_area_rad(small_rad, small_position_rad,
         try:
             return effective_area(rad, small_position_rad, main_rad)
         except OverflowError:
-            return 1e100
+            return wanted_area*10
     actual_area = area(high_rad)
     while actual_area < wanted_area:
         high_rad *= 10
