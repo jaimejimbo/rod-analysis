@@ -1,0 +1,11 @@
+- Global and local orientation properties.
+- g2, g4 functions.
+- clusters
+- dynamics
+    · velocities and temperature
+    · density as a function of local temperature.
+- tracks?
+- GUI
+- imagej interface
+
+BUGS

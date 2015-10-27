@@ -593,14 +593,14 @@ def binary_order(array, ordering_id):
     #base part
     if len(array) <= 1:
         return array
-    #recursive part
+    #recursive part (divide array in 2 parts and order those parts)
     length = len(array)
     array_1 = array[:length/2]
     array_2 = array[length/2:]
     array_1 = binary_order(array_1, ordering_id)
     array_2 = binary_order(array_2, ordering_id)
     ordered_array = []
-    #merge part
+    #merge part (take ordered arrays and ordered them into a bigger one)
     element_1 = array_1.pop(0)
     element_2 = array_2.pop(0)
     unemptied_array = None
