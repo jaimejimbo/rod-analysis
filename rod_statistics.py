@@ -63,7 +63,6 @@ class Rod(object):
 
     def is_valid_rod(self, kappas,
                     allowed_kappa_error,
-                    allowed_distance_from_border,
                     zone_coords):
         """
         Checks if this is a rod looking at different factors
@@ -71,7 +70,7 @@ class Rod(object):
         Remove rods that are near the border.
         """
         center = (zone_coords[0], zone_coords[1])
-        is_in_main = self.is_in_circle(center, zone_coords[2]-allowed_distance_from_border)
+        is_in_main = self.is_in_circle(center, zone_coords[2])
         has_valid_proportions = self.has_valid_proportions(kappas,
                                                            allowed_kappa_error)
         output = is_in_main and has_valid_proportions
@@ -163,7 +162,7 @@ class SystemState(object):
         for rod in list(self._rods):
             valid = rod.is_valid_rod(self._kappas,
                         self._allowed_kappa_error,
-                        self._zone_cords)
+                        self._zone_coords)
             if not valid:
                 self.remove_rod(rod)
 
@@ -420,6 +419,8 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
                 print exception.message
                 raise ValueError
             state.add_rod(new_rod)
+        state.compute_center_and_radius()
+        state.check_rods()
         states.append(state)
     return names, states
 
