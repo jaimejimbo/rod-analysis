@@ -221,7 +221,7 @@ class TestRod(unittest.TestCase):
         self.assertAlmostEqual(rods[0].get_rod().kappa, 10, delta=.2, msg="If passed before, must be passed here.")
         dens_mat = rods[0].compute_density_matrix(300)
         dens_mat2 = rods[0].compute_density_matrix(100)
-	self.assertTrue(len(dens_mat) < len(dens_mat2), "There must be more points if rad is smaller.")
+        self.assertTrue(len(dens_mat) < len(dens_mat2), "There must be more points if rad is smaller.")
         xval, yval, zval = rods[0].density_matrix_for_plot()
         fig = plt.figure()
         plt.scatter(xval, yval, zval)
@@ -229,10 +229,19 @@ class TestRod(unittest.TestCase):
         print file_
         plt.savefig(file_)
 
+    def test_binary_order(self):
+        """
+        Tests binary order method.
+        """
+        def ordering_id(element):
+            return element
+        a = [9,8,7,6,5,4,3,2,1,0,-1,-2]
+        ordered_a = rod_statistics.binary_order(a, ordering_id)
+        self.assertEqual(str(ordered_a),"[-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]","Error in ordering function #1 Obtained: "+str(ordered_a)+" Expected: [-2,-1,0,1,2,3,4,5,6,7,8,9]")
+
     def test_SubsystemState(self):
         """
         Checks rod groups.
         """
         pass
-
 

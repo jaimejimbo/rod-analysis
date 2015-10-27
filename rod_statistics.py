@@ -563,3 +563,50 @@ def binary_search(low, high, ordering_function, expected, max_error, max_reps):
             return mid
     return mid
 
+
+
+
+
+def binary_order(array, ordering_id):
+    """
+    Orders an array using ordering_function.
+    ordering_id must return an integer
+    orders from low id to high id
+    """
+    #base part
+    if len(array) <= 1:
+        return array
+    #recursive part
+    length = len(array)
+    array_1 = array[:length/2]
+    array_2 = array[length/2:]    
+    array_1 = binary_order(array_1, ordering_id)
+    array_2 = binary_order(array_2, ordering_id)
+    ordered_array = []
+    #merge part
+    element_1 = array_1.pop(0)
+    element_2 = array_2.pop(0)
+    unemptied_array = None
+    while True:
+        id_1 = ordering_id(element_1)
+        id_2 = ordering_id(element_2)
+        if id_1 < id_2:
+            ordered_array.append(element_1)
+            try:
+                element_1 = array_1.pop(0)
+            except IndexError:
+                ordered_array.append(element_2)
+                unemptied_array = array_2
+                break
+        else:   #If id_1==id_2 order isn't important
+            ordered_array.append(element_2)
+            try:
+                element_2 = array_2.pop(0)
+            except IndexError:
+                ordered_array.append(element_1)
+                unemptied_array = array_1
+                break
+    for element in unemptied_array:
+        ordered_array.append(element)
+    return ordered_array
+
