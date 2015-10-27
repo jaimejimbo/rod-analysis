@@ -187,15 +187,6 @@ class TestRod(unittest.TestCase):
         obtained = rod_statistics.same_area_rad(small_rad, small_position_rad, main_rad)  
         expected = 1.5
         self.assertAlmostEqual(obtained, expected, delta=expected*.3, msg="Error in same_area_rad #3. Obtained: "+str(obtained)+" Expected: "+str(expected))
-        
-    def test_is_in_circle(self):
-        """
-        Checks is_in_main function
-        """ 
-        obtained = rod_statistics.is_in_circle(rod_statistics.CENTER_X, rod_statistics.CENTER_Y, rod_statistics.CENTER_X, rod_statistics.CENTER_Y, rod_statistics.RADIUS)
-        self.assertTrue(obtained, "Error in is_in_main #1: Center of zone must be in zone.")
-        obtained = rod_statistics.is_in_circle(0,0,rod_statistics.CENTER_X, rod_statistics.CENTER_Y,rod_statistics.RADIUS)
-        self.assertFalse(obtained, "Error in is_in_main #2: (0,0) is not in zone.")
 
     def test_binary_search(self):
         """
@@ -219,15 +210,16 @@ class TestRod(unittest.TestCase):
         Checks rod groups and rod class.
         """
         names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=[5,10,12], allowed_kappa_error=100, allowed_distance_from_border=10)
+        for group in rod_groups:
+            group.compute_center_and_radius()
         rod = rod_groups[0].get_rod()
-        self.assertTrue(rod.is_valid_rod(kappas=10, allowed_kappa_error=[2,10,12], allowed_distance_from_border=10), "Must be a rod.")
-        #self.assertAlmostEqual(rod.kappa, 10, delta=.5, msg="If passed before, must be passed here. Obtained: "+str(rod.kappa))
         dens_mat = rod_groups[0].compute_density_matrix(300)
         dens_mat2 = rod_groups[0].compute_density_matrix(100)
         self.assertTrue(len(dens_mat) < len(dens_mat2), "There must be more points if rad is smaller.")
         for rod_group in rod_groups:
             rod_group.compute_density_matrix(100)
             xval, yval, zval = rod_group.density_matrix_for_plot()
+            #print [xval,yval,zval]
             fig = plt.figure()
             plt.scatter(xval, yval, zval)
             file_=rod_group.id_string+"_density.png"

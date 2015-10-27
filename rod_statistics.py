@@ -10,16 +10,6 @@ import matrix
 
 
 
-#consts
-RADIUS = 1704*0.5
-CENTER_X = 519+RADIUS
-CENTER_Y = 96+RADIUS
-#ROD_LENGTH,ROD_DIAMETER #Now there are two types of rod
-# Time consts
-FRAME_INTERVAL = 1.0/3
-
-
-
 class Rod(object):
     """
     Rod object.
@@ -74,7 +64,7 @@ class Rod(object):
     def is_valid_rod(self, kappas,
                     allowed_kappa_error,
                     allowed_distance_from_border,
-                    zone_coords=(CENTER_X, CENTER_Y, RADIUS)):
+                    zone_coords):
         """
         Checks if this is a rod looking at different factors
         If it is a group of two rods that are very near.
@@ -99,12 +89,12 @@ class SystemState(object):
     """
     def __init__(self, kappas=10, allowed_kappa_error=.5,
                 allowed_distance_from_border=0,
-                id_string="", coords_of_zone=(CENTER_X, CENTER_Y, RADIUS)):
+                id_string="", zone_coords=(0,0,20000)):
         """
         Initialization
         """
         self._rods = Queue()
-        self._number_of_particles = 0
+        self._number_of_rods = 0
         self._kappas = kappas
         self._allowed_kappa_error = allowed_kappa_error
         self._allowed_distance_from_border = allowed_distance_from_border
@@ -113,28 +103,28 @@ class SystemState(object):
         self._changed = False
         self._density_matrix = []
         self.id_string = id_string
-        self._radius = coords_of_zone[2]
-        self._center_x = coords_of_zone[0]
-        self._center_y = coords_of_zone[1]
-        self._coords_of_zone = coords_of_zone
+        try:
+            self._radius = zone_coords[2]
+            self._center_x = zone_coords[0]
+            self._center_y = zone_coords[1]
+            self._zone_coords = zone_coords
+        except:
+            self.compute_center_and_radius()
 
     def add_rod(self, rod):
         """
         Adds a rod to the group
         """
-        if rod.is_valid_rod(self._kappas, self._allowed_kappa_error,
-                            self._allowed_distance_from_border,
-                            self._coords_of_zone):
-            self._rods.join(rod)
-            self._number_of_particles += 1
-            self._changed = True
+        self._rods.join(rod)
+        self._number_of_rods += 1
+        self._changed = True
 
     def get_rod(self):
         """
         Returns the first rod in the queue
         The rod is removed of the group!
         """
-        self._number_of_particles -= 1
+        self._number_of_rods -= 1
         self._changed = True
         return self._rods.get_next()
 
@@ -143,8 +133,39 @@ class SystemState(object):
         Removes a rod from the group (queue object mod needed)
         """
         self._rods.delete(rod)
-        self._number_of_particles -= 1
+        self._number_of_rods -= 1
         self._changed = True
+
+    def compute_center_and_radius(self):
+        """
+        Computes where the center of the system is and its
+        radius.
+        """
+        x_values = []
+        y_values = []
+        for rod in list(self._rods):
+            x_values.append(rod.x_mid)
+            y_values.append(rod.y_mid)
+        center_x = sum(x_values)*1.0/self._number_of_rods
+        center_y = sum(y_values)*1.0/self._number_of_rods
+        radius = (max(x_values)-min(x_values)+max(y_values)-min(y_values))*.9/4.0
+        self._center_x = center_x
+        self._center_y = center_y
+        self._radius = radius
+        self._zone_coords = (center_x, center_y, radius)
+        return center_x, center_y, radius
+
+    def check_rods(self):
+        """
+        Check if rods are correct.
+        """
+        self.compute_center_and_radius()
+        for rod in list(self._rods):
+            valid = rod.is_valid_rod(self._kappas,
+                        self._allowed_kappa_error,
+                        self._zone_cords)
+            if not valid:
+                self.remove_rod(rod)
 
     def _divide_in_circles(self, rad):
         """
@@ -198,11 +219,10 @@ class SystemState(object):
             if divided_by_area:
                 dens /= subsystem.area
             if normalized:
-                dens /= self._number_of_particles
+                dens /= self._number_of_rods
             subdensity.append(dens)
             density.append(subdensity)
         self._density_matrix = density
-        print self._density_matrix
         return self._density_matrix
 
     def density_matrix_for_plot(self):
@@ -227,11 +247,13 @@ class SystemState(object):
         cos2_av, sin2_av, cos4_av, sin4_av = 0,0,0,0
         for rod in list(self._rods()):
             angle = rod.angle*math.pi/180.0
-            cos2_av += math.cos(2*angle)/self._number_of_particles
-            sin2_av += math.sin(2*angle)/self._number_of_particles
-            cos4_av += math.cos(4*angle)/self._number_of_particles
-            sin4_av += math.sin(4*angle)/self._number_of_particles
+            cos2_av += math.cos(2*angle)/self._number_of_rods
+            sin2_av += math.sin(2*angle)/self._number_of_rods
+            cos4_av += math.cos(4*angle)/self._number_of_rods
+            sin4_av += math.sin(4*angle)/self._number_of_rods
         return cos2_av, sin2_av, cos4_av, sin4_av
+
+
 
 
 
@@ -263,7 +285,7 @@ class SubsystemState(SystemState):
         Overrides.
         Computes density of the group.
         """
-        self._density = self._number_of_particles
+        self._density = self._number_of_rods
 
 
     def get_density(self):
