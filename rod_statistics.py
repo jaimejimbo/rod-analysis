@@ -476,12 +476,15 @@ def effective_area(small_rad, small_position_rad, main_rad):
     #######
     min_dist = compute_min_dist(small_rad, small_position_rad, main_rad)
     #DEBUG#
-    msg = "Error in min_dist computation: [small_rad,min_dist] "
+    msg = "Error in min_dist computation: [small_rad, min_dist] "
     msg += str([small_rad, abs(min_dist)])
-    assert small_rad > abs(min_dist), msg
+    assert small_rad >= abs(min_dist), msg
     #######
-    min_dist_main = small_position_rad+min_dist
-    correction = segment_area(main_rad, min_dist_main)
+    if abs(min_dist) >= small_rad:
+        correction = 0
+    else:
+        min_dist_main = small_position_rad+min_dist
+        correction = segment_area(main_rad, min_dist_main)
     #DEBUG#
     msg = "effective_area: Correction must be smaller than small circle's area"
     assert correction < math.pi*small_rad**2, msg
@@ -508,6 +511,10 @@ def compute_min_dist(small_rad, small_position_rad, main_rad):
     """
     min_dist = float((main_rad**2)-(small_position_rad**2)-(small_rad**2))
     min_dist /= (2*small_position_rad)
+    if min_dist > small_rad:
+        return small_rad
+    if abs(min_dist) > small_rad:
+        return -small_rad
     return min_dist
 
 
@@ -516,8 +523,8 @@ def compute_min_dist(small_rad, small_position_rad, main_rad):
 
 
 def same_area_rad(small_rad, small_position_rad,
-                    main_rad, allowed_error_ratio=.05,
-                    max_reps=1e2):
+                    main_rad, allowed_error_ratio=.2,
+                    max_reps=10):
     """
     Computes a new radius. With that, effective area is the same small circle's.
     Better use binary search
@@ -537,7 +544,10 @@ def same_area_rad(small_rad, small_position_rad,
         """
         Needed function for binary search, as only 1 arg is allowed.
         """
-        return effective_area(rad, small_position_rad, main_rad)
+        try:
+            return effective_area(rad, small_position_rad, main_rad)
+        except:
+            return wanted_area * 10
     actual_area = area(high_rad)
     while actual_area < wanted_area:
         high_rad *= 10
@@ -563,13 +573,14 @@ def is_in_circle(point_x, point_y, center_x, center_y, rad):
 
 
 
-def binary_search(low, high, ordering_function, expected, max_error, max_reps):
+def binary_search(low, high, ordering_function, expected, max_error_ratio=.3, max_reps=1e4):
     """
     Binary search algorithm.
     low is a point where ordering function is under expected
     high is a point where ordering function is over expected
     ordering function must be a function(raise TypeError)
     """
+    max_error = expected*max_error_ratio
     error = max_error+1
     rep = 0
     while (error > max_error) or (rep < max_reps):

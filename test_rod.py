@@ -113,10 +113,6 @@ class TestRod(unittest.TestCase):
         rod = rod_grps[0].get_rod()
         self.assertEqual(str(rod._id), "1", "Errors when importing data. ID obtained: "+str(rod._id))
         self.assertEqual(str(rod.area), "578.0", "Errors when importing data. Area obtained: "+str(rod.area))
-        rod = rod_grps[1].get_rod()
-        self.assertEqual(str(rod._id), "1", "Errors when importing data. ID obtained: "+str(rod._id))
-        self.assertEqual(str(rod.area), "578.0", "Errors when importing data. Area obtained: "+str(rod.area))
-        print names
 
     def test_segment_area(self):
         """
@@ -223,12 +219,12 @@ class TestRod(unittest.TestCase):
         dens_mat = rods[0].compute_density_matrix(300)
         dens_mat2 = rods[0].compute_density_matrix(100)
         self.assertTrue(len(dens_mat) < len(dens_mat2), "There must be more points if rad is smaller.")
-        xval, yval, zval = rods[0].density_matrix_for_plot()
-        fig = plt.figure()
-        plt.scatter(xval, yval, zval)
-        file_=rods[0].id_string+"_density.png"
-        print file_
-        plt.savefig(file_)
+        for rod in rods:
+            xval, yval, zval = rod.density_matrix_for_plot()
+            fig = plt.figure()
+            plt.scatter(xval, yval, zval)
+            file_=rod.id_string+"_density.png"
+            plt.savefig(file_)
 
     def test_binary_order(self):
         """
