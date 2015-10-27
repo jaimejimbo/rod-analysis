@@ -223,7 +223,18 @@ class SystemState(object):
             z_values.append(row[2])
         return x_values, y_values, z_values
 
-    #def
+    def average_cos_sin(self):
+        """
+        
+        """
+        cos2_av, sin2_av, cos4_av, sin4_av = 0,0,0,0
+        for rod in list(self._rods()):
+            angle = rod.angle*math.pi/180.0
+            cos2_av += math.cos(2*angle)/self._number_of_particles
+            sin2_av += math.sin(2*angle)/self._number_of_particles
+            cos4_av += math.cos(4*angle)/self._number_of_particles
+            sin4_av += math.sin(4*angle)/self._number_of_particles
+        return cos2_av, sin2_av, cos4_av, sin4_av
 
 
 
