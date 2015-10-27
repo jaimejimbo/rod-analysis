@@ -72,10 +72,10 @@ class Rod(object):
         passed = []
         try:
             for kappa in kappas:
-                condition = abs(self.kappa-kappa)<allowed_error
+                condition = abs(self.kappa-kappa) < allowed_error
                 passed.append(condition)
         except TypeError:
-            condition = abs(self.kappa-kappas)<allowed_error
+            condition = abs(self.kappa-kappas) < allowed_error
             passed.append(condition)
         output = False
         for condition in passed:
@@ -91,7 +91,8 @@ class Rod(object):
         Remove rods that are near the border.
         """
         is_in_main = self.is_in_main(allowed_distance_from_border)
-        has_valid_proportions = self.has_valid_proportions(kappas, allowed_kappa_error)
+        has_valid_proportions = self.has_valid_proportions(kappas,
+                                                           allowed_kappa_error)
         output = is_in_main and has_valid_proportions
         return output
 
@@ -138,8 +139,8 @@ class SystemState(object):
         The rod is removed of the group!
         """
         self._number_of_particles -= 1
-        return self._rods.get_next()
         self._changed = True
+        return self._rods.get_next()
 
     def remove_rod(self, rod):
         """
@@ -180,7 +181,8 @@ class SystemState(object):
                     subsystems.append(subsystem)
         self._actual_subdivision = subsystems
 
-    def compute_density_matrix(self, rad, normalized=False, divided_by_area=False):
+    def compute_density_matrix(self, rad=100, normalized=False,
+                               divided_by_area=False):
         """
         Computes density of the system.
         Returns a plotable matrix
@@ -190,10 +192,10 @@ class SystemState(object):
         self._divide_in_circles(rad)
         density = []
         for subsystem in self._actual_subdivision:
-            subdensity = [subsystem.center[0],subsystem.center[1]]
+            subdensity = [subsystem.center[0], subsystem.center[1]]
             dens = subsystem.get_density()
             if divided_by_area:
-                dens /= subsystem._area
+                dens /= subsystem.area
             if normalized:
                 dens /= self._number_of_particles
             subdensity.append(dens)
@@ -234,13 +236,20 @@ class SubsystemState(SystemState):
         self.rad = rad
         self._area = float(math.pi*rad**2)
 
+    @property
+    def area(self):
+        """
+        getter for area
+        """
+        return self._area
+
     def _update_density(self):
         """
         Overrides.
         Computes density of the group.
         """
         self._density = self._number_of_particles
-        
+
 
     def get_density(self):
         """
@@ -274,7 +283,7 @@ def import_files(folder="./", regular_expression='rods_[0-9]*'):
     names = get_file_names(folder=folder, regular_expression=regular_expression)
     files = []
     for name in names:
-        files.append(open(name,'r'))
+        files.append(open(name, 'r'))
     return names, files
 
 
@@ -344,9 +353,9 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
         _file = files[index]
         name = names[index]
         state = SystemState(kappas=kappas,
-                            allowed_kappa_error=allowed_kappa_error,
-                            allowed_distance_from_border=allowed_distance_from_border,
-                            id_string=name)
+                   allowed_kappa_error=allowed_kappa_error,
+                   allowed_distance_from_border=allowed_distance_from_border,
+                   id_string=name)
         data = import_data(_file)
         for dataline in data:
             parameters = tuple(dataline)
@@ -546,6 +555,4 @@ def binary_search(low, high, ordering_function, expected, max_error, max_reps):
         else:
             return mid
     return mid
-
-
 
