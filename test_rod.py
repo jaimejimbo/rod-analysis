@@ -207,7 +207,7 @@ class TestRod(unittest.TestCase):
         """
         Checks rod groups and rod class.
         """
-        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=[5,10,12], allowed_kappa_error=1, radius_correction_ratio=.1)
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=10, allowed_kappa_error=10, radius_correction_ratio=.1)
         for group in rod_groups:
             group.compute_center_and_radius()
         rod = rod_groups[0].get_rod()
@@ -216,8 +216,12 @@ class TestRod(unittest.TestCase):
         self.assertTrue(len(dens_mat) < len(dens_mat2), "There must be more points if rad is smaller.")
         rod_group = rod_groups[0]
         rod_group.compute_g2_g4_matrices(100)
-        print rod_group.g2
-        print rod_group.g4
+        num_of_rods = rod_groups[1]._number_of_rods
+        print rod_groups[1].kappa
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=5, allowed_kappa_error=5, radius_correction_ratio=.1)
+        print rod_groups[1].kappa
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=16, allowed_kappa_error=5, radius_correction_ratio=.1)
+        print rod_groups[1].kappa
 
 
     def test_binary_order(self):

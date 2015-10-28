@@ -107,13 +107,13 @@ class SystemState(object):
         self._radius_correction_ratio = radius_correction_ratio
         self._rad_for_division = -1
         self._actual_subdivision = []
-        self._changed = False
         self._density_matrix = []
         self.id_string = id_string
         self._g2 = None
         self._g4 = None
         self._g2_subsystems = []
         self._g4_subsystems = []
+        self._avg_kappa = -1
         try:
             self._radius = zone_coords[2]
             self._center_x = zone_coords[0]
@@ -128,7 +128,7 @@ class SystemState(object):
         """
         self._rods.join(rod)
         self._number_of_rods += 1
-        self._changed = True
+        self._changed()
 
     def get_rod(self):
         """
@@ -136,7 +136,7 @@ class SystemState(object):
         The rod is removed of the group!
         """
         self._number_of_rods -= 1
-        self._changed = True
+        self._changed()
         return self._rods.get_next()
 
     def remove_rod(self, rod):
@@ -145,7 +145,14 @@ class SystemState(object):
         """
         self._rods.delete(rod)
         self._number_of_rods -= 1
-        self._changed = True
+        self._changed()
+
+    def _changed(self):
+        """
+        Called when system is changed.
+        """
+        self._rad_of_division = -1
+        self._kappa = -1        
 
     def compute_center_and_radius(self):
         """
@@ -186,7 +193,7 @@ class SystemState(object):
         """
         Divides rods into groups contained in circles.
         """
-        if self._rad_for_division == rad and not self._changed:
+        if self._rad_for_division == rad:
             return
         if (rad < 0) or (rad > self._radius):
             print "Use a correct radius (0<rad<main_rad)"
@@ -223,7 +230,7 @@ class SystemState(object):
         """
         Computes density of the system.
         """
-        if self._rad_for_division == rad and not self._changed:
+        if self._rad_for_division == rad:
             return self._density_matrix
         self._divide_in_circles(rad)
         density = []
@@ -290,7 +297,7 @@ class SystemState(object):
         """
         Computes g2 and g4 matrices for subgroups.
         """
-        if self._rad_for_division == rad and not self._changed:
+        if self._rad_for_division == rad:
             return
         self._divide_in_circles(rad)
         for subsystem in self._actual_subdivision:
@@ -329,9 +336,17 @@ class SystemState(object):
             zval.append(subsystem[2])
         return xval, yval, zval
 
-
-
-
+    @property
+    def kappa(self):
+        """
+        Returns kappa average of group.
+        """
+        if self._kappa == -1:
+            self._kappa = 0
+            for rod in list(self._rods):
+                self._kappa += rod.kappa
+            self._kappa /= self._number_of_rods
+        return self._kappa
 
 
 
