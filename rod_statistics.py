@@ -114,6 +114,7 @@ class SystemState(object):
         self._g2_subsystems = []
         self._g4_subsystems = []
         self._avg_kappa = -1
+        self._kappa_dev = -1
         try:
             self._radius = zone_coords[2]
             self._center_x = zone_coords[0]
@@ -152,7 +153,8 @@ class SystemState(object):
         Called when system is changed.
         """
         self._rad_of_division = -1
-        self._kappa = -1        
+        self._avg_kappa = -1 
+        self._kappa_dev = -1       
 
     def compute_center_and_radius(self):
         """
@@ -337,16 +339,29 @@ class SystemState(object):
         return xval, yval, zval
 
     @property
-    def kappa(self):
+    def avg_kappa(self):
         """
         Returns kappa average of group.
         """
-        if self._kappa == -1:
-            self._kappa = 0
+        if self._avg_kappa == -1:
+            self._avg_kappa = 0
             for rod in list(self._rods):
-                self._kappa += rod.kappa
-            self._kappa /= self._number_of_rods
-        return self._kappa
+                self._avg_kappa += rod.kappa
+            self._avg_kappa /= self._number_of_rods
+        return self._avg_kappa
+
+    @property
+    def kappa_dev(self):
+        """
+        Returns sqrt(<kappa^2> - <kappa>^2)
+        """
+        if self._kappa_dev == -1:
+            kappa2 = 0
+            for rod in list(self._rods):
+                kappa2 += rod.kappa**2
+            kappa2 /= self._number_of_rods
+            self._kappa_dev = math.sqrt(kappa2-self.avg_kappa**2)
+        return self._kappa_dev
 
 
 

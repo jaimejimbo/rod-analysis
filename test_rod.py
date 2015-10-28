@@ -217,11 +217,11 @@ class TestRod(unittest.TestCase):
         rod_group = rod_groups[0]
         rod_group.compute_g2_g4_matrices(100)
         num_of_rods = rod_groups[1]._number_of_rods
-        print rod_groups[1].kappa
-        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=5, allowed_kappa_error=5, radius_correction_ratio=.1)
-        print rod_groups[1].kappa
-        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=16, allowed_kappa_error=5, radius_correction_ratio=.1)
-        print rod_groups[1].kappa
+        print rod_groups[1].avg_kappa, rod_groups[1].kappa_dev
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=5.5, allowed_kappa_error=2, radius_correction_ratio=.1)
+        print rod_groups[1].avg_kappa, rod_groups[1].kappa_dev
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=17, allowed_kappa_error=2, radius_correction_ratio=.1)
+        print rod_groups[1].avg_kappa, rod_groups[1].kappa_dev
 
 
     def test_binary_order(self):
