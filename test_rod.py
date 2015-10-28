@@ -2,10 +2,10 @@ import unittest
 import rod_statistics
 import os
 import math
-import pylab
 
 try:
     from mpl_toolkits.mplot3d import Axes3D
+	import pylab
     from matplotlib import cm
     from matplotlib.ticker import LinearLocator, FormatStrFormatter
     import matplotlib.pyplot as plt
