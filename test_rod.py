@@ -216,6 +216,8 @@ class TestRod(unittest.TestCase):
         self.assertTrue(len(dens_mat) < len(dens_mat2), "There must be more points if rad is smaller.")
         rod_group = rod_groups[0]
         rod_group.compute_g2_g4_matrices(100)
+        print rod_group.g2
+        print rod_group.g4
 
 
     def test_binary_order(self):
