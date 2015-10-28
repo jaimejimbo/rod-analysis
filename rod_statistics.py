@@ -87,7 +87,7 @@ class SystemState(object):
     Each image has to be translated into a RodGroup (by this class?)
     """
     def __init__(self, kappas=10, allowed_kappa_error=.5,
-                allowed_distance_from_border=0,
+                radius_correction_ratio=0,
                 id_string="", zone_coords=(0,0,20000)):
         """
         Initialization
@@ -96,7 +96,7 @@ class SystemState(object):
         self._number_of_rods = 0
         self._kappas = kappas
         self._allowed_kappa_error = allowed_kappa_error
-        self._allowed_distance_from_border = allowed_distance_from_border
+        self._radius_correction_ratio = radius_correction_ratio
         self._rad_for_division = -1
         self._actual_subdivision = []
         self._changed = False
@@ -140,6 +140,9 @@ class SystemState(object):
         Computes where the center of the system is and its
         radius.
         """
+        if self._number_of_rods == 0:
+            msg = "center_and_radius can't be computed before adding rods"
+            raise ValueError(msg)
         x_values = []
         y_values = []
         for rod in list(self._rods):
@@ -147,7 +150,8 @@ class SystemState(object):
             y_values.append(rod.y_mid)
         center_x = sum(x_values)*1.0/self._number_of_rods
         center_y = sum(y_values)*1.0/self._number_of_rods
-        radius = (max(x_values)-min(x_values)+max(y_values)-min(y_values))*.9/4.0
+        radius = (max(x_values)-min(x_values)+max(y_values)-min(y_values))
+        radius *= (1-self._radius_correction_ratio)/4.0
         self._center_x = center_x
         self._center_y = center_y
         self._radius = radius
@@ -392,7 +396,7 @@ def import_data(_file, split_char='\t', regular_expression='[0-9]\.?[0-9]*'):
 
 
 def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
-                allowed_distance_from_border=0):
+                radius_correction_ratio=0.1):
     """
     Create one rod for each rod_data and for each file
     returns [RodGroup1, RodGroup2, ...]
@@ -407,7 +411,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
         name = names[index]
         state = SystemState(kappas=kappas,
                    allowed_kappa_error=allowed_kappa_error,
-                   allowed_distance_from_border=allowed_distance_from_border,
+                   radius_correction_ratio=radius_correction_ratio,
                    id_string=name)
         data = import_data(_file)
         for dataline in data:

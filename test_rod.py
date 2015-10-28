@@ -206,7 +206,7 @@ class TestRod(unittest.TestCase):
         """
         Checks rod groups and rod class.
         """
-        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=[5,10,12], allowed_kappa_error=1, allowed_distance_from_border=10)
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=[5,10,12], allowed_kappa_error=1, radius_correction_ratio=.1)
         for group in rod_groups:
             group.compute_center_and_radius()
         rod = rod_groups[0].get_rod()
@@ -214,13 +214,45 @@ class TestRod(unittest.TestCase):
         dens_mat2 = rod_groups[0].compute_density_matrix(100)
         self.assertTrue(len(dens_mat) < len(dens_mat2), "There must be more points if rad is smaller.")
         for rod_group in rod_groups:
-            rod_group.compute_density_matrix(100)
+            x,y,r = rod_group.compute_center_and_radius()
+            rod_group.compute_density_matrix(50)
             xval, yval, zval = rod_group.density_matrix_for_plot()
-            #print [xval,yval,zval]
             fig = plt.figure()
             plt.scatter(xval, yval, zval)
+            axes = plt.gca()
+            axes.set_xlim([x-r,x+r])
+            axes.set_ylim([y-r,y+r])
             file_=rod_group.id_string+"_density.png"
             plt.savefig(file_)
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=[5], allowed_kappa_error=.4, radius_correction_ratio=.1)
+        for group in rod_groups:
+            group.compute_center_and_radius()
+        for rod_group in rod_groups:
+            x,y,r = rod_group.compute_center_and_radius()
+            rod_group.compute_density_matrix(50)
+            xval, yval, zval = rod_group.density_matrix_for_plot()
+            fig = plt.figure()
+            plt.scatter(xval, yval, zval)
+            axes = plt.gca()
+            axes.set_xlim([x-r,x+r])
+            axes.set_ylim([y-r,y+r])
+            file_=rod_group.id_string+"_density_K5.png"
+            plt.savefig(file_)
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=[12], allowed_kappa_error=6, radius_correction_ratio=.1)
+        for group in rod_groups:
+            group.compute_center_and_radius()
+        for rod_group in rod_groups:
+            x,y,r = rod_group.compute_center_and_radius()
+            rod_group.compute_density_matrix(50)
+            xval, yval, zval = rod_group.density_matrix_for_plot()
+            fig = plt.figure()
+            plt.scatter(xval, yval, zval)
+            axes = plt.gca()
+            axes.set_xlim([x-r,x+r])
+            axes.set_ylim([y-r,y+r])
+            file_=rod_group.id_string+"_density_K12.png"
+            plt.savefig(file_)
+
 
     def test_binary_order(self):
         """
