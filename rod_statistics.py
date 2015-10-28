@@ -81,6 +81,14 @@ class Rod(object):
 
 
 
+
+
+
+
+
+
+
+
 class SystemState(object):
     """
     Group of rods in a moment.
@@ -102,6 +110,10 @@ class SystemState(object):
         self._changed = False
         self._density_matrix = []
         self.id_string = id_string
+        self._g2 = None
+        self._g4 = None
+        self._g2_subsystems = []
+        self._g4_subsystems = []
         try:
             self._radius = zone_coords[2]
             self._center_x = zone_coords[0]
@@ -210,7 +222,6 @@ class SystemState(object):
                                divided_by_area=False):
         """
         Computes density of the system.
-        Returns a plotable matrix
         """
         if self._rad_for_division == rad and not self._changed:
             return self._density_matrix
@@ -243,18 +254,92 @@ class SystemState(object):
             z_values.append(row[2])
         return x_values, y_values, z_values
 
-    def average_cos_sin(self):
+    def compute_g2_and_g4(self):
         """
-        
+        Computes g2 and g4 values
         """
         cos2_av, sin2_av, cos4_av, sin4_av = 0,0,0,0
-        for rod in list(self._rods()):
+        for rod in list(self._rods):
             angle = rod.angle*math.pi/180.0
             cos2_av += math.cos(2*angle)/self._number_of_rods
             sin2_av += math.sin(2*angle)/self._number_of_rods
             cos4_av += math.cos(4*angle)/self._number_of_rods
             sin4_av += math.sin(4*angle)/self._number_of_rods
-        return cos2_av, sin2_av, cos4_av, sin4_av
+        self._g2 = math.sqrt(cos2_av**2+sin2_av**2)
+        self._g4 = math.sqrt(cos4_av**2+sin2_av**2)
+
+    @property
+    def g2(self):
+        """
+        g2 getter
+        """
+        if not self._g2:
+            self.compute_g2_and_g4()
+        return self._g2
+
+    @property
+    def g4(self):
+        """
+        g4 getter
+        """
+        if not self._g4:
+            self.compute_g2_and_g4()
+        return self._g4
+
+    def compute_g2_g4_matrices(self, rad):
+        """
+        Computes g2 and g4 matrices for subgroups.
+        """
+        if self._rad_for_division == rad and not self._changed:
+            return
+        self._divide_in_circles(rad)
+        for subsystem in self._actual_subdivision:
+            g2 = [subsystem.center[0], subsystem.center[1]]
+            g4 = [subsystem.center[0], subsystem.center[1]]
+            g2.append(subsystem.g2)
+            g4.append(subsystem.g4)
+            self._g2_subsystems.append(g2)
+            self._g4_subsystems.append(g4)
+
+    @property
+    def g2_plot_matrix(self):
+        """
+        Returns values for plotting g2 matrix.
+        """
+        xval = []
+        yval = []
+        zval = []
+        for subsystem in self._g2_subsystems:
+            xval.append(subsystem[0])
+            yval.append(subsystem[1])
+            zval.append(subsystem[2])
+        return xval, yval, zval
+
+    @property
+    def g4_plot_matrix(self):
+        """
+        Returns values for plotting g2 matrix.
+        """
+        xval = []
+        yval = []
+        zval = []
+        for subsystem in self._g4_subsystems:
+            xval.append(subsystem[0])
+            yval.append(subsystem[1])
+            zval.append(subsystem[2])
+        return xval, yval, zval
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -313,6 +398,12 @@ class SubsystemState(SystemState):
 
 
 
+
+
+
+
+
+
 def import_files(folder="./", regular_expression='rods_[0-9]*'):
     """
     Import all files using glob and checking with reg exp.
@@ -325,6 +416,15 @@ def import_files(folder="./", regular_expression='rods_[0-9]*'):
     for name in names:
         files.append(open(name, 'r'))
     return names, files
+
+
+
+
+
+
+
+
+
 
 
 
@@ -345,6 +445,13 @@ def get_file_names(folder="./", regular_expression='rods_[0-9]*'):
 
 
 
+
+
+
+
+
+
+
 def file_name_ordering_function(name):
     """
     Gets the number in the name of the file.
@@ -355,6 +462,12 @@ def file_name_ordering_function(name):
     for found_element in found:
         output += found_element
     return int(output)
+
+
+
+
+
+
 
 
 
@@ -395,6 +508,12 @@ def import_data(_file, split_char='\t', regular_expression='[0-9]\.?[0-9]*'):
 
 
 
+
+
+
+
+
+
 def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
                 radius_correction_ratio=0.1):
     """
@@ -427,6 +546,14 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
         state.check_rods()
         states.append(state)
     return names, states
+
+
+
+
+
+
+
+
 
 
 
@@ -487,6 +614,14 @@ def segment_area(rad, min_dist):
 
 
 
+
+
+
+
+
+
+
+
 def effective_area(small_rad, small_position_rad, main_rad):
     """
     Computes the area of the small circle intersected with main circle.
@@ -524,6 +659,13 @@ def effective_area(small_rad, small_position_rad, main_rad):
 
 
 
+
+
+
+
+
+
+
 def compute_min_dist(small_rad, small_position_rad, main_rad):
     """
     Computes the distance from small circle center to the line that joins both
@@ -540,6 +682,9 @@ def compute_min_dist(small_rad, small_position_rad, main_rad):
     if abs(min_dist) > small_rad:
         return -small_rad
     return min_dist
+
+
+
 
 
 
@@ -584,6 +729,15 @@ def same_area_rad(small_rad, small_position_rad,
 
 
 
+
+
+
+
+
+
+
+
+
 def is_in_circle(point_x, point_y, center_x, center_y, rad):
     """
     Checks if a point is in a circle
@@ -592,6 +746,12 @@ def is_in_circle(point_x, point_y, center_x, center_y, rad):
     diff_y = abs(point_y-center_y)
     distance = math.sqrt(diff_x**2 + diff_y**2)
     return distance <= rad
+
+
+
+
+
+
 
 
 
@@ -625,6 +785,11 @@ def binary_search(low, high, ordering_function, expected, max_error_ratio=.3, ma
         else:
             return mid
     return mid
+
+
+
+
+
 
 
 

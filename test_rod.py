@@ -224,6 +224,24 @@ class TestRod(unittest.TestCase):
             axes.set_ylim([y-r,y+r])
             file_=rod_group.id_string+"_density.png"
             plt.savefig(file_)
+            x,y,r = rod_group.compute_center_and_radius()
+            rod_group.compute_g2_g4_matrices(50)
+            xval2, yval2, zval2 = rod_group.g2_plot_matrix
+            xval4, yval4, zval4 = rod_group.g4_plot_matrix
+            fig = plt.figure()
+            plt.scatter(xval2, yval2, zval2)
+            axes = plt.gca()
+            axes.set_xlim([x-r,x+r])
+            axes.set_ylim([y-r,y+r])
+            file_=rod_group.id_string+"_g2.png"
+            plt.savefig(file_)
+            fig = plt.figure()
+            plt.scatter(xval4, yval4, zval4)
+            axes = plt.gca()
+            axes.set_xlim([x-r,x+r])
+            axes.set_ylim([y-r,y+r])
+            file_=rod_group.id_string+"_g4.png"
+            plt.savefig(file_)
         names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=[5], allowed_kappa_error=.4, radius_correction_ratio=.1)
         for group in rod_groups:
             group.compute_center_and_radius()
@@ -238,6 +256,24 @@ class TestRod(unittest.TestCase):
             axes.set_ylim([y-r,y+r])
             file_=rod_group.id_string+"_density_K5.png"
             plt.savefig(file_)
+            x,y,r = rod_group.compute_center_and_radius()
+            rod_group.compute_g2_g4_matrices(50)
+            xval2, yval2, zval2 = rod_group.g2_plot_matrix
+            xval4, yval4, zval4 = rod_group.g4_plot_matrix
+            fig = plt.figure()
+            plt.scatter(xval2, yval2, zval2)
+            axes = plt.gca()
+            axes.set_xlim([x-r,x+r])
+            axes.set_ylim([y-r,y+r])
+            file_=rod_group.id_string+"_g2_K5.png"
+            plt.savefig(file_)
+            fig = plt.figure()
+            plt.scatter(xval4, yval4, zval4)
+            axes = plt.gca()
+            axes.set_xlim([x-r,x+r])
+            axes.set_ylim([y-r,y+r])
+            file_=rod_group.id_string+"_g4_K5.png"
+            plt.savefig(file_)
         names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=[12], allowed_kappa_error=6, radius_correction_ratio=.1)
         for group in rod_groups:
             group.compute_center_and_radius()
@@ -251,6 +287,24 @@ class TestRod(unittest.TestCase):
             axes.set_xlim([x-r,x+r])
             axes.set_ylim([y-r,y+r])
             file_=rod_group.id_string+"_density_K12.png"
+            plt.savefig(file_)
+            x,y,r = rod_group.compute_center_and_radius()
+            rod_group.compute_g2_g4_matrices(50)
+            xval2, yval2, zval2 = rod_group.g2_plot_matrix
+            xval4, yval4, zval4 = rod_group.g4_plot_matrix
+            fig = plt.figure()
+            plt.scatter(xval2, yval2, zval2)
+            axes = plt.gca()
+            axes.set_xlim([x-r,x+r])
+            axes.set_ylim([y-r,y+r])
+            file_=rod_group.id_string+"_g2_K12.png"
+            plt.savefig(file_)
+            fig = plt.figure()
+            plt.scatter(xval4, yval4, zval4)
+            axes = plt.gca()
+            axes.set_xlim([x-r,x+r])
+            axes.set_ylim([y-r,y+r])
+            file_=rod_group.id_string+"_g4_K12.png"
             plt.savefig(file_)
 
 
