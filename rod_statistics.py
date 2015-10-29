@@ -22,20 +22,62 @@ class Rod(object):
         Initialization of rod
         """                                    #Column
         self._id = int(ID)                     #0
-        self.area = float(area)                #1
-        self.x_mid = float(xm)                 #2
-        self.y_mid = float(ym)                 #3
-        self.major = float(major)              #4
-        self.minor = float(minor)              #5
-        self.angle = float(angle)              #6
-        self.feret = float(feret)              #7
-        self.feret_x = float(feretx)           #8
-        self.feret_y = float(ferety)           #9
-        self.feret_angle = float(feretangle)   #10
-        self.min_feret = float(minferet)       #11
-        self.x_start = float(xstart)           #12
-        self.y_start = float(ystart)           #13
-        self.kappa = float(self.feret)/self.min_feret
+        self._area = float(area)                #1
+        self._x_mid = float(xm)                 #2
+        self._y_mid = float(ym)                 #3
+        self._major = float(major)              #4
+        self._minor = float(minor)              #5
+        self._angle = float(angle)              #6
+        self._feret = float(feret)              #7
+        self._feret_x = float(feretx)           #8
+        self._feret_y = float(ferety)           #9
+        self._feret_angle = float(feretangle)   #10
+        self._min_feret = float(minferet)       #11
+        self._x_start = float(xstart)           #12
+        self._y_start = float(ystart)           #13
+        self._kappa = float(self.feret)/self.min_feret
+
+    @property
+    def feret(self):
+        """
+        Feret getter.
+        """
+        return self._feret
+
+    @property
+    def min_feret(self):
+        """
+        Feret getter.
+        """
+        return self._min_feret
+
+    @property
+    def x_mid(self):
+        """
+        Feret getter.
+        """
+        return self._x_mid
+
+    @property
+    def y_mid(self):
+        """
+        Feret getter.
+        """
+        return self._y_mid
+
+    @property
+    def kappa(self):
+        """
+        Feret getter.
+        """
+        return self._kappa
+
+    @property
+    def angle(self):
+        """
+        Feret getter.
+        """
+        return self._angle
 
     def is_in_circle(self, center, rad):
         """
