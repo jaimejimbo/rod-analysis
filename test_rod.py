@@ -221,6 +221,7 @@ class TestRod(unittest.TestCase):
         num_of_rods = rod_groups[1]._number_of_rods
         self.assertEqual(rod_group.average_angle, None, "there must be not average angle")
         rod_group.compute_all_matrices(100)
+        
 
 
 

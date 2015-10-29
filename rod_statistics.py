@@ -55,12 +55,18 @@ class Rod(object):
         """
         return self._feret
 
-    def __equals__(self, rod2):
+    def __eq__(self, rod2):
         """
         Check if a rod is the same as another rod.
         Rods must be of the same group.
         """
-        return self.hash == rod2.hash
+        return self.hash_ == rod2.hash_
+
+    def __ne__(self, rod2):
+        """
+        != magic method
+        """
+        return not (self == rod2)
 
     @property
     def id(self):
@@ -70,7 +76,7 @@ class Rod(object):
         return self._id
 
     @property
-    def __hash__(self):
+    def hash_(self):
         """
         Returns an unique number of this rod.
         """
@@ -158,7 +164,7 @@ class Rod(object):
         output = is_in_main and has_valid_proportions
         return output
 
-    def distance_to_another_rod(self, rod):
+    def distance_to_rod(self, rod):
         """
         Returns the distance to another rod.
         """
@@ -173,8 +179,6 @@ class Rod(object):
         angle1 = (self.angle-rod.angle)*math.pi/180
         angle2 = math.pi - (self.angle-rod.angle)*math.pi/180
         return min(angle1, angle2)
-
-
 
 
 
@@ -216,6 +220,9 @@ class SystemState(object):
         self._average_angle = None
         self._angle_matrix = []
         self._density = None
+        self._radial_g2 = None
+        self._radial_g4 = None
+        self._closest_rod_matrix = []
         try:
             self._radius = zone_coords[2]
             self._center_x = zone_coords[0]
@@ -237,7 +244,7 @@ class SystemState(object):
         """
         self._rods.join(rod)
         self._number_of_rods += 1
-        self._changed()
+        self.reset()
 
     def get_rod(self):
         """
@@ -245,7 +252,7 @@ class SystemState(object):
         The rod is removed of the group!
         """
         self._number_of_rods -= 1
-        self._changed()
+        self.reset()
         return self._rods.get_next()
 
     def remove_rod(self, rod):
@@ -254,9 +261,9 @@ class SystemState(object):
         """
         self._rods.delete(rod)
         self._number_of_rods -= 1
-        self._changed()
+        self.reset()
 
-    def _changed(self):
+    def reset(self):
         """
         Called when system is changed.
         """
@@ -272,6 +279,9 @@ class SystemState(object):
         self._average_angle = None
         self._angle_matrix = []
         self._density = None
+        self._radial_g2 = None
+        self._radial_g4 = None
+        self._closest_rod_matrix = []
 
     def compute_center_and_radius(self):
         """
@@ -397,7 +407,8 @@ class SystemState(object):
     @property
     def g2(self):
         """
-        g2 getter
+         __________________________________
+        v<cos(2*angle)>^2+<sin(2*angle)>^2 '
         """
         if not self._g2:
             self.compute_g2_and_g4()
@@ -406,7 +417,8 @@ class SystemState(object):
     @property
     def g4(self):
         """
-        g4 getter
+         __________________________________
+        v<cos(4*angle)>^2+<sin(4*angle)>^2 '
         """
         if not self._g4:
             self.compute_g2_and_g4()
@@ -534,6 +546,7 @@ class SystemState(object):
         self.compute_average_angle_matrix(rad)
         self.compute_g2_g4_matrices(rad)
         self.compute_density_matrix(rad=rad)
+        self.compute_closest_rod_matrix()
 
     @property
     def angle_histogram(self):
@@ -543,9 +556,56 @@ class SystemState(object):
         output = [rod.angle for rod in list(self._rods)]
         return output
 
+    def get_closest_rod(self, rod):
+        """
+        Returns closest rod in group to given rod.
+        """
+        distance = 1e100
+        selected_rod = rod
+        for rod2 in list(self._rods):
+            if rod != rod2:
+                new_distance = rod.distance_to_rod(rod2)
+                if new_distance < distance:
+                    distace = new_distance
+                    selected_rod = rod2
+        return selected_rod
 
+    def compute_closest_rod_matrix(self):
+        """
+        Creates closer rod matrix:
+        [[rod1, closest_rod_to_rod1],
+        [rod2, closest_rod_to_rod2],
+        ...
+        [rodN, closest_rod_to_rodN]]
+        """
+        closest_rod_matrix = []
+        for rod in list(self._rods):
+            new_row = [rod]
+            new_row.append(self.get_closest_rod(rod))
+            closest_rod_matrix.append(new_row)
+        self._closest_rod_matrix = closest_rod_matrix
+            
 
+    @property
+    def closest_rod_matrix(self):
+        """
+        Returns closest rod matrix.
+        See compute_closest_rod_matrix for more info.
+        """
+        if len(self._closest_rod_matrix) == 0:
+            self.compute_closest_rod_matrix()
+        return self._closest_rod_matrix
+        
+        
 
+    @property
+    def radial_g2(self):
+        """
+         __________________________________
+        v<cos(2*angle)>^2+<sin(2*angle)>^2 '
+        Now angle is the relative between rods.
+        """
+        pass
 
 
 
