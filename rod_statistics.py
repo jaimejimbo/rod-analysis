@@ -288,10 +288,11 @@ class SystemState(object):
         self._radial_g2 = None
         self._radial_g4 = None
         self._closest_rod_matrix = []
-        self._radius = None
-        self._center_x = None
-        self._center_y = None
-        self._zone_coords = None
+        if not self._fixed_center_radius:
+            self._radius = None
+            self._center_x = None
+            self._center_y = None
+            self._zone_coords = None
 
     def compute_center_and_radius(self):
         """
