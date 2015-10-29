@@ -40,42 +40,42 @@ class Rod(object):
     @property
     def feret(self):
         """
-        Feret getter.
+        Feret length.
         """
         return self._feret
 
     @property
     def min_feret(self):
         """
-        Feret getter.
+        Minimum Feret length.
         """
         return self._min_feret
 
     @property
     def x_mid(self):
         """
-        Feret getter.
+        Average x of rod.
         """
         return self._x_mid
 
     @property
     def y_mid(self):
         """
-        Feret getter.
+        Average y of rod.
         """
         return self._y_mid
 
     @property
     def kappa(self):
         """
-        Feret getter.
+        L/D of rod.
         """
         return self._kappa
 
     @property
     def angle(self):
         """
-        Feret getter.
+        Angle of rod.
         """
         return self._angle
 
