@@ -20,8 +20,8 @@ class Rod(object):
                         feretangle, minferet, xstart, ystart)):
         """
         Initialization of rod
-        """                                    #Column
-        self._id = int(ID)                     #0
+        """                                     #Column
+        self._id = int(ID)                      #0
         self._area = float(area)                #1
         self._x_mid = float(xm)                 #2
         self._y_mid = float(ym)                 #3
@@ -35,14 +35,53 @@ class Rod(object):
         self._min_feret = float(minferet)       #11
         self._x_start = float(xstart)           #12
         self._y_start = float(ystart)           #13
+        self._hash = 0
         self._kappa = float(self.feret)/self.min_feret
 
     @property
     def feret(self):
         """
         Feret length.
+        (wikipedia) The Feret diameter or Feret's diameter is a measure
+        of an object size along a specified direction. In general, it can
+        be defined as the distance between the two parallel planes restricting
+        the object perpendicular to that direction. It is therefore also called
+        the caliper diameter, referring to the measurement of the object size
+        with a caliper. This measure is used in the analysis of particle sizes,
+        for example in microscopy, where it is applied to projections of a
+        three-dimensional (3D) object on a 2D plane. In such cases, the Feret
+        diameter is defined as the distance between two parallel tangential
+        lines rather than planes.[1][2]
         """
         return self._feret
+
+    def __equals__(self, rod2):
+        """
+        Check if a rod is the same as another rod.
+        Rods must be of the same group.
+        """
+        return self.hash == rod2.hash
+
+    @property
+    def id(self):
+        """
+        Returns an identification number.
+        """
+        return self._id
+
+    @property
+    def __hash__(self):
+        """
+        Returns an unique number of this rod.
+        """
+        output = ""
+        output += str(self.id)
+        output += str(int(self.min_feret))
+        output += str(int(self.x_mid))
+        output += str(int(self.y_mid))
+        output += str(int(self.kappa))
+        return int(output)
+
 
     @property
     def min_feret(self):
@@ -81,14 +120,16 @@ class Rod(object):
 
     def is_in_circle(self, center, rad):
         """
-        Checks if rod is in circle.
+        Checks if rod is in the circle defined by the given center and
+        the given rad.
         """
         return is_in_circle(self.x_mid, self.y_mid,
                             center[0], center[1], rad)
 
     def has_valid_proportions(self, kappas, allowed_error):
         """
-        Checks if rod has valid proportions.
+        Checks if rod has valid L/D (kappas are possibles values
+        for L/D).
         """
         passed = []
         try:
@@ -107,9 +148,8 @@ class Rod(object):
                     allowed_kappa_error,
                     zone_coords):
         """
-        Checks if this is a rod looking at different factors
-        If it is a group of two rods that are very near.
-        Remove rods that are near the border.
+        Check if rod is valid checking L/D and distance to center.
+        TODO: If rods are near, kappa is not correct.
         """
         center = (zone_coords[0], zone_coords[1])
         is_in_main = self.is_in_circle(center, zone_coords[2])
@@ -159,6 +199,7 @@ class SystemState(object):
         self._kappa_dev = None
         self._average_angle = None
         self._angle_matrix = []
+        self._density = None
         try:
             self._radius = zone_coords[2]
             self._center_x = zone_coords[0]
@@ -214,6 +255,7 @@ class SystemState(object):
         self._kappa_dev = None
         self._average_angle = None
         self._angle_matrix = []
+        self._density = None
 
     def compute_center_and_radius(self):
         """
@@ -252,7 +294,7 @@ class SystemState(object):
 
     def _divide_in_circles(self, rad):
         """
-        Divides rods into groups contained in circles.
+        Divides rods into groups contained in circles of given rad.
         """
         if self._rad_for_division == rad:
             return
@@ -289,7 +331,7 @@ class SystemState(object):
     def compute_density_matrix(self, rad=100, normalized=False,
                                divided_by_area=False):
         """
-        Computes density of the system.
+        Computes density matrix of the system.
         """
         if self._rad_for_division == rad:
             return self._density_matrix
@@ -485,6 +527,11 @@ class SystemState(object):
         output = [rod.angle for rod in list(self._rods)]
         return output
 
+    def relative_angle(self):
+        """
+        
+        """
+        pass
 
 
 
@@ -502,7 +549,6 @@ class SubsystemState(SystemState):
         Initialization
         """
         SystemState.__init__(self)
-        self._density = -1
         self.center = center
         self.rad = rad
         self._area = float(math.pi*rad**2)
@@ -510,13 +556,12 @@ class SubsystemState(SystemState):
     @property
     def area(self):
         """
-        getter for area
+        Area of the subsystem.
         """
         return self._area
 
     def _update_density(self):
         """
-        Overrides.
         Computes density of the group.
         """
         self._density = self._number_of_rods
@@ -524,10 +569,10 @@ class SubsystemState(SystemState):
     @property
     def density(self):
         """
-        Returns the density of the group
-        Perhaps sometimes update_density method can be ignored
+        Returns the density of the group.
         """
-        self._update_density()
+        if not self._density:
+            self._update_density()
         return self._density
 
     def add_rods(self, rod_list):
