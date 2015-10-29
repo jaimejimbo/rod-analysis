@@ -166,6 +166,14 @@ class Rod(object):
         diff_y = abs(self.y_mid-rod.y_mid)
         return math.sqrt(diff_x**2+diff_y**2)
 
+    def angle_between_rods(self, rod):
+        """
+        Returns value of angle that formes this rod with another.
+        """
+        return self.angle - rod.angle
+
+
+
 
 
 
@@ -532,12 +540,6 @@ class SystemState(object):
         """
         output = [rod.angle for rod in list(self._rods)]
         return output
-
-    def relative_angle(self):
-        """
-        
-        """
-        pass
 
 
 
