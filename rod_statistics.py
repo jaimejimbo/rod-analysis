@@ -371,7 +371,7 @@ class SystemState(object):
         # Defining zone and distance between points.
         diff = int(rad/2)
         start_x = self.center[0]-self.radius
-        end_x = self._center[0]+self.radius
+        end_x = self.center[0]+self.radius
         start_y = self.center[1]-self.radius
         end_y = self.center[1]+self.radius
         # Getting all possible x and y values.
@@ -451,8 +451,7 @@ class SystemState(object):
     @property
     def g2(self):
         """
-         __________________________________
-        v<cos(2*angle)>^2+<sin(2*angle)>^2 '
+        sqrt(<cos(2*angle)>^2+<sin(2*angle)>^2)
         """
         if not self._g2:
             self.compute_g2_and_g4()
@@ -461,8 +460,7 @@ class SystemState(object):
     @property
     def g4(self):
         """
-         __________________________________
-        v<cos(4*angle)>^2+<sin(4*angle)>^2 '
+        sqrt(<cos(4*angle)>^2+<sin(4*angle)>^2)
         """
         if not self._g4:
             self.compute_g2_and_g4()
@@ -471,7 +469,7 @@ class SystemState(object):
     def compute_g2_g4_matrices(self, rad):
         """
         Computes g2 and g4 matrices for subgroups.
-        """
+        """ 
         self._divide_in_circles(rad)
         for subsystem in self._actual_subdivision:
             g2 = [subsystem.center[0], subsystem.center[1]]
@@ -585,6 +583,7 @@ class SystemState(object):
     def compute_all_matrices(self, rad):
         """
         Computes all possible matrices.
+        O(N^2)
         """
         self.compute_average_angle_matrix(rad)
         self.compute_g2_g4_matrices(rad)
@@ -698,9 +697,23 @@ class SubsystemState(SystemState):
         Initialization
         """
         SystemState.__init__(self)
-        self.center = center
-        self.rad = rad
+        self._center = center
+        self._rad = rad
         self._area = float(math.pi*rad**2)
+
+    @property
+    def center(self):
+        """
+        Center of the subsystem.
+        """
+        return self._center
+
+    @property
+    def radius(self):
+        """
+        Radius of the subsystem
+        """
+        return self._rad
 
     @property
     def area(self):
@@ -730,7 +743,7 @@ class SubsystemState(SystemState):
         """
         try:
             for rod in rod_list:
-                if rod.is_in_circle(self.center, self.rad):
+                if rod.is_in_circle(self.center, self.radius):
                     self.add_rod(rod)
         except TypeError:
             print "Use a rod list in add_rods method"
