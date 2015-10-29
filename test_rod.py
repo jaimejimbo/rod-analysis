@@ -211,17 +211,17 @@ class TestRod(unittest.TestCase):
         for group in rod_groups:
             group.compute_center_and_radius()
         rod = rod_groups[0].get_rod()
-        dens_mat = rod_groups[0].compute_density_matrix(300)
-        dens_mat2 = rod_groups[0].compute_density_matrix(100)
-        self.assertTrue(len(dens_mat) < len(dens_mat2), "There must be more points if rad is smaller.")
+        rod_groups[0].compute_density_matrix(300)
+        dens_mat = rod_groups[0].plottable_density_matrix
+        rod_groups[0].compute_density_matrix(100)
+        dens_mat2 = rod_groups[0].plottable_density_matrix
+        self.assertTrue(len(dens_mat[0]) < len(dens_mat2[0]), "There must be more points if rad is smaller. Obtained: "+str([len(dens_mat[0]),len(dens_mat2[0])]))
         rod_group = rod_groups[0]
         rod_group.compute_g2_g4_matrices(100)
         num_of_rods = rod_groups[1]._number_of_rods
-        print rod_groups[1].avg_kappa, rod_groups[1].kappa_dev
-        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=5.5, allowed_kappa_error=2, radius_correction_ratio=.1)
-        print rod_groups[1].avg_kappa, rod_groups[1].kappa_dev
-        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=17, allowed_kappa_error=2, radius_correction_ratio=.1)
-        print rod_groups[1].avg_kappa, rod_groups[1].kappa_dev
+        self.assertEqual(rod_group.average_angle, None, "there must be not average angle")
+        rod_group.compute_all_matrices(100)
+
 
 
     def test_binary_order(self):
@@ -233,10 +233,4 @@ class TestRod(unittest.TestCase):
         a = [9,8,7,6,5,4,3,2,1,0,-1,-2]
         ordered_a = rod_statistics.binary_order(a, ordering_id)
         self.assertEqual(str(ordered_a),"[-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]","Error in ordering function #1 Obtained: "+str(ordered_a)+" Expected: [-2,-1,0,1,2,3,4,5,6,7,8,9]")
-
-    def test_SubsystemState(self):
-        """
-        Checks rod groups.
-        """
-        pass
 

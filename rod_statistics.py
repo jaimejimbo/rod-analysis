@@ -147,16 +147,18 @@ class SystemState(object):
         self._kappas = kappas
         self._allowed_kappa_error = allowed_kappa_error
         self._radius_correction_ratio = radius_correction_ratio
-        self._rad_for_division = -1
+        self.id_string = id_string
+        self._rad_for_division = None
         self._actual_subdivision = []
         self._density_matrix = []
-        self.id_string = id_string
         self._g2 = None
         self._g4 = None
         self._g2_subsystems = []
         self._g4_subsystems = []
-        self._avg_kappa = -1
-        self._kappa_dev = -1
+        self._average_kappa = None
+        self._kappa_dev = None
+        self._average_angle = None
+        self._angle_matrix = []
         try:
             self._radius = zone_coords[2]
             self._center_x = zone_coords[0]
@@ -164,6 +166,13 @@ class SystemState(object):
             self._zone_coords = zone_coords
         except:
             self.compute_center_and_radius()
+
+    @property
+    def number_of_rods(self):
+        """
+        Returns the number of rods.
+        """
+        return self._number_of_rods
 
     def add_rod(self, rod):
         """
@@ -194,9 +203,17 @@ class SystemState(object):
         """
         Called when system is changed.
         """
-        self._rad_of_division = -1
-        self._avg_kappa = -1 
-        self._kappa_dev = -1       
+        self._rad_for_division = None
+        self._actual_subdivision = []
+        self._density_matrix = []
+        self._g2 = None
+        self._g4 = None
+        self._g2_subsystems = []
+        self._g4_subsystems = []
+        self._average_kappa = None
+        self._kappa_dev = None
+        self._average_angle = None
+        self._angle_matrix = []
 
     def compute_center_and_radius(self):
         """
@@ -288,9 +305,9 @@ class SystemState(object):
             subdensity.append(dens)
             density.append(subdensity)
         self._density_matrix = density
-        return self._density_matrix
 
-    def density_matrix_for_plot(self):
+    @property
+    def plottable_density_matrix(self):
         """
         Returns 3 arrays: one for x, another for y and the last for values.
         """
@@ -381,35 +398,92 @@ class SystemState(object):
         return xval, yval, zval
 
     @property
-    def avg_kappa(self):
+    def average_kappa(self):
         """
         Returns kappa average of group.
         """
-        if self._avg_kappa == -1:
-            self._avg_kappa = 0
+        if not self._average_kappa:
+            self._average_kappa = 0
             for rod in list(self._rods):
-                self._avg_kappa += rod.kappa
-            self._avg_kappa /= self._number_of_rods
-        return self._avg_kappa
+                self._average_kappa += rod.kappa
+            self._average_kappa /= self._number_of_rods
+        return self._average_kappa
 
     @property
     def kappa_dev(self):
         """
         Returns sqrt(<kappa^2> - <kappa>^2)
         """
-        if self._kappa_dev == -1:
+        if not self._kappa_dev:
             kappa2 = 0
             for rod in list(self._rods):
                 kappa2 += rod.kappa**2
             kappa2 /= self._number_of_rods
-            self._kappa_dev = math.sqrt(kappa2-self.avg_kappa**2)
+            self._kappa_dev = math.sqrt(kappa2-self.average_kappa**2)
         return self._kappa_dev
 
+    @property
+    def average_angle(self):
+        """
+        Returns average angle of the system (if exists).
+        """
+        if not self._average_angle: 
+            if self.g2 > 0.3 and self.g4 < 0.3:
+                angle = 0
+                for rod in list(self._rods):
+                    angle2 = rod.angle
+                    if angle2 > math.pi:
+                        angle2 -= math.pi
+                    angle += angle2
+                angle /= self.number_of_rods
+                self._average_angle = angle
+                return angle
+            else:
+                return None
+        else:
+            return self._average_angle
 
+    def compute_average_angle_matrix(self, rad):
+        """
+        Computes average angle matrix
+        """
+        if self._rad_for_division == rad and len(self._angle_matrix):
+            return
+        self._divide_in_circles(rad)
+        for subsystem in self._actual_subdivision:
+            row = [subsystem.center[0], subsystem.center[1]]
+            row.append(subsystem.average_angle)
+            self._angle_matrix.append(row)
 
+    @property
+    def plottable_average_angle_matrix(self):
+        """
+        Returns a plottable average angle matrix.
+        """
+        xval = []
+        yval = []
+        zval = []
+        for subsystem in self._angle_matrix:
+            xval.append(subsystem[0])
+            yval.append(subsystem[1])
+            zval.append(subsystem[2])
+        return xval, yval, zval
 
+    def compute_all_matrices(self, rad):
+        """
+        Computes all possible matrices.
+        """
+        self.compute_average_angle_matrix(rad)
+        self.compute_g2_g4_matrices(rad)
+        self.compute_density_matrix(rad=rad)
 
-
+    @property
+    def angle_histogram(self):
+        """
+        Returns all angles in a list to make an histogram.
+        """
+        output = [rod.angle for rod in list(self._rods)]
+        return output
 
 
 
