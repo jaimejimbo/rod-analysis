@@ -66,7 +66,7 @@ class Rod(object):
         """
         != magic method
         """
-        return not (self == rod2)
+        return not self == rod2
 
     @property
     def id(self):
@@ -200,7 +200,7 @@ class SystemState(object):
     """
     def __init__(self, kappas=10, allowed_kappa_error=.5,
                 radius_correction_ratio=0,
-                id_string="", zone_coords=(0,0,20000)):
+                id_string="", zone_coords=(0, 0, 20000)):
         """
         Initialization
         """
@@ -325,7 +325,7 @@ class SystemState(object):
         """
         Returns center of the system.
         """
-        if self._zone_coords = None:
+        if self._zone_coords == None:
             self.compute_center_and_radius()
         return self._center_x, self._center_y
 
@@ -334,7 +334,7 @@ class SystemState(object):
         """
         Returns radius of the system.
         """
-        if self._zone_coords = None:
+        if self._zone_coords == None:
             self.compute_center_and_radius()
         return self._radius
 
@@ -343,10 +343,10 @@ class SystemState(object):
         """
         Returns a tuple with center and radius.
         """
-        if self._zone_coords = None:
+        if self._zone_coords == None:
             self.compute_center_and_radius()
         return self._zone_coords
-        
+
 
     def check_rods(self):
         """
@@ -438,7 +438,7 @@ class SystemState(object):
         """
         Computes g2 and g4 values
         """
-        cos2_av, sin2_av, cos4_av, sin4_av = 0,0,0,0
+        cos2_av, sin2_av, cos4_av, sin4_av = 0, 0, 0, 0
         for rod in list(self._rods):
             angle = rod.angle*math.pi/180.0
             cos2_av += math.cos(2*angle)/self.number_of_rods
@@ -609,7 +609,7 @@ class SystemState(object):
             if rod != rod2:
                 new_distance = rod.distance_to_rod(rod2)
                 if new_distance < distance:
-                    distace = new_distance
+                    distance = new_distance
                     selected_rod = rod2
         return selected_rod
 
@@ -676,7 +676,7 @@ class SystemState(object):
             cos /= self.number_of_rods
             self._radial_g4 = math.sqrt(sin**2+cos**2)
         return self._radial_g4
-        
+
 
 
 
