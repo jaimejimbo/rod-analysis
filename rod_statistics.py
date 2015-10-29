@@ -238,7 +238,7 @@ class SystemState(object):
         density = []
         for subsystem in self._actual_subdivision:
             subdensity = [subsystem.center[0], subsystem.center[1]]
-            dens = subsystem.get_density()
+            dens = subsystem.density
             if divided_by_area:
                 dens /= subsystem.area
             if normalized:
@@ -405,8 +405,8 @@ class SubsystemState(SystemState):
         """
         self._density = self._number_of_rods
 
-
-    def get_density(self):
+    @property
+    def density(self):
         """
         Returns the density of the group
         Perhaps sometimes update_density method can be ignored
