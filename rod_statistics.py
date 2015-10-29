@@ -158,7 +158,13 @@ class Rod(object):
         output = is_in_main and has_valid_proportions
         return output
 
-
+    def distance_to_another_rod(self, rod):
+        """
+        Returns the distance to another rod.
+        """
+        diff_x = abs(self.x_mid-rod.x_mid)
+        diff_y = abs(self.y_mid-rod.y_mid)
+        return math.sqrt(diff_x**2+diff_y**2)
 
 
 
