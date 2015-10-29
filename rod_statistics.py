@@ -170,7 +170,9 @@ class Rod(object):
         """
         Returns value of angle that formes this rod with another.
         """
-        return self.angle - rod.angle
+        angle1 = (self.angle-rod.angle)*math.pi/180
+        angle2 = math.pi - (self.angle-rod.angle)*math.pi/180
+        return min(angle1, angle2)
 
 
 
@@ -540,6 +542,15 @@ class SystemState(object):
         """
         output = [rod.angle for rod in list(self._rods)]
         return output
+
+
+
+
+
+
+
+
+
 
 
 
