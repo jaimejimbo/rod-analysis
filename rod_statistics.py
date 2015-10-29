@@ -79,6 +79,7 @@ class Rod(object):
     def hash_(self):
         """
         Returns an unique number of this rod.
+        Uses some of rod properties.
         """
         output = ""
         output += str(self.id)
@@ -142,6 +143,7 @@ class Rod(object):
             for kappa in kappas:
                 condition = abs(self.kappa-kappa) < allowed_error
                 passed.append(condition)
+#kappa is not an array, so there is only 1 kappa.
         except TypeError:
             condition = abs(self.kappa-kappas) < allowed_error
             passed.append(condition)
@@ -228,8 +230,10 @@ class SystemState(object):
             self._center_x = zone_coords[0]
             self._center_y = zone_coords[1]
             self._zone_coords = zone_coords
+            self._fixed_center_radius = True
         except:
             self.compute_center_and_radius()
+            self._fixed_center_radius = False
 
     @property
     def number_of_rods(self):
@@ -266,6 +270,8 @@ class SystemState(object):
     def reset(self):
         """
         Called when system is changed.
+        Reset all important values, so they must be
+        computed again, with the new state.
         """
         self._rad_for_division = None
         self._actual_subdivision = []
@@ -282,39 +288,73 @@ class SystemState(object):
         self._radial_g2 = None
         self._radial_g4 = None
         self._closest_rod_matrix = []
+        self._radius = None
+        self._center_x = None
+        self._center_y = None
+        self._zone_coords = None
 
     def compute_center_and_radius(self):
         """
         Computes where the center of the system is and its
         radius.
         """
-        if self._number_of_rods == 0:
-            msg = "center_and_radius can't be computed before adding rods"
-            raise ValueError(msg)
-        x_values = []
-        y_values = []
-        for rod in list(self._rods):
-            x_values.append(rod.x_mid)
-            y_values.append(rod.y_mid)
-        center_x = sum(x_values)*1.0/self._number_of_rods
-        center_y = sum(y_values)*1.0/self._number_of_rods
-        radius = (max(x_values)-min(x_values)+max(y_values)-min(y_values))
-        radius *= (1-self._radius_correction_ratio)/4.0
-        self._center_x = center_x
-        self._center_y = center_y
-        self._radius = radius
-        self._zone_coords = (center_x, center_y, radius)
-        return center_x, center_y, radius
+        if not self._fixed_center_radius:
+            #There must be rods to make statistics.
+            if self._number_of_rods == 0:
+                msg = "center_and_radius can't be computed before adding rods"
+                raise ValueError(msg)
+            x_values = []
+            y_values = []
+            for rod in list(self._rods):
+                x_values.append(rod.x_mid)
+                y_values.append(rod.y_mid)
+            #center is the mean position of all particles.
+            center_x = sum(x_values)*1.0/self._number_of_rods
+            center_y = sum(y_values)*1.0/self._number_of_rods
+            #radius is the average of maximum distances /2.
+            radius = (max(x_values)-min(x_values)+max(y_values)-min(y_values))
+            radius *= (1-self._radius_correction_ratio)/4.0
+            self._center_x = center_x
+            self._center_y = center_y
+            self._radius = radius
+            self._zone_coords = (center_x, center_y, radius)
+
+    @property
+    def center(self):
+        """
+        Returns center of the system.
+        """
+        if self._zone_coords = None:
+            self.compute_center_and_radius()
+        return self._center_x, self._center_y
+
+    @property
+    def radius(self):
+        """
+        Returns radius of the system.
+        """
+        if self._zone_coords = None:
+            self.compute_center_and_radius()
+        return self._radius
+
+    @property
+    def zone_coords(self):
+        """
+        Returns a tuple with center and radius.
+        """
+        if self._zone_coords = None:
+            self.compute_center_and_radius()
+        return self._zone_coords
+        
 
     def check_rods(self):
         """
         Check if rods are correct.
         """
-        self.compute_center_and_radius()
         for rod in list(self._rods):
             valid = rod.is_valid_rod(self._kappas,
                         self._allowed_kappa_error,
-                        self._zone_coords)
+                        self.zone_coords)
             if not valid:
                 self.remove_rod(rod)
 
@@ -324,14 +364,16 @@ class SystemState(object):
         """
         if self._rad_for_division == rad:
             return
-        if (rad < 0) or (rad > self._radius):
+        if (rad < 0) or (rad > self.radius):
             print "Use a correct radius (0<rad<main_rad)"
             raise ValueError
+        # Defining zone and distance between points.
         diff = int(rad/2)
-        start_x = self._center_x-self._radius
-        end_x = self._center_x+self._radius
-        start_y = self._center_y-self._radius
-        end_y = self._center_y+self._radius
+        start_x = self.center[0]-self.radius
+        end_x = self._center[0]+self.radius
+        start_y = self.center[1]-self.radius
+        end_y = self.center[1]+self.radius
+        # Getting all possible x and y values.
         subsystems = []
         max_times = int((end_x-start_x)/diff+1)
         possible_x_values = [start_x + times*diff
@@ -339,15 +381,16 @@ class SystemState(object):
         max_times = int((end_y-start_y)/diff+1)
         possible_y_values = [start_y + times*diff
                              for times in range(max_times)]
+        # Main loops.
         for actual_x in possible_x_values:
             for actual_y in possible_y_values:
                 if is_in_circle(actual_x, actual_y,
-                                self._center_x, self._center_y,
-                                self._radius):
-                    diff_x = abs(actual_x-self._center_x)
-                    diff_y = abs(actual_y-self._center_y)
+                                self.center[0], self.center[1],
+                                self.radius):
+                    diff_x = abs(actual_x-self.center[0])
+                    diff_y = abs(actual_y-self.center[1])
                     pos_rad = math.sqrt(diff_x**2+diff_y**2)
-                    same_area_radius = same_area_rad(rad, pos_rad, self._radius)
+                    same_area_radius = same_area_rad(rad, pos_rad, self.radius)
                     subsystem = SubsystemState((actual_x, actual_y),
                                                same_area_radius)
                     subsystem.add_rods(list(self._rods))
@@ -369,7 +412,7 @@ class SystemState(object):
             if divided_by_area:
                 dens /= subsystem.area
             if normalized:
-                dens /= self._number_of_rods
+                dens /= self.number_of_rods
             subdensity.append(dens)
             density.append(subdensity)
         self._density_matrix = density
@@ -397,10 +440,10 @@ class SystemState(object):
         cos2_av, sin2_av, cos4_av, sin4_av = 0,0,0,0
         for rod in list(self._rods):
             angle = rod.angle*math.pi/180.0
-            cos2_av += math.cos(2*angle)/self._number_of_rods
-            sin2_av += math.sin(2*angle)/self._number_of_rods
-            cos4_av += math.cos(4*angle)/self._number_of_rods
-            sin4_av += math.sin(4*angle)/self._number_of_rods
+            cos2_av += math.cos(2*angle)/self.number_of_rods
+            sin2_av += math.sin(2*angle)/self.number_of_rods
+            cos4_av += math.cos(4*angle)/self.number_of_rods
+            sin4_av += math.sin(4*angle)/self.number_of_rods
         self._g2 = math.sqrt(cos2_av**2+sin2_av**2)
         self._g4 = math.sqrt(cos4_av**2+sin2_av**2)
 
@@ -428,8 +471,6 @@ class SystemState(object):
         """
         Computes g2 and g4 matrices for subgroups.
         """
-        if self._rad_for_division == rad:
-            return
         self._divide_in_circles(rad)
         for subsystem in self._actual_subdivision:
             g2 = [subsystem.center[0], subsystem.center[1]]
@@ -476,7 +517,7 @@ class SystemState(object):
             self._average_kappa = 0
             for rod in list(self._rods):
                 self._average_kappa += rod.kappa
-            self._average_kappa /= self._number_of_rods
+            self._average_kappa /= self.number_of_rods
         return self._average_kappa
 
     @property
@@ -488,7 +529,7 @@ class SystemState(object):
             kappa2 = 0
             for rod in list(self._rods):
                 kappa2 += rod.kappa**2
-            kappa2 /= self._number_of_rods
+            kappa2 /= self.number_of_rods
             self._kappa_dev = math.sqrt(kappa2-self.average_kappa**2)
         return self._kappa_dev
 
@@ -502,6 +543,7 @@ class SystemState(object):
                 angle = 0
                 for rod in list(self._rods):
                     angle2 = rod.angle
+                    # angle = angle + pi (simetry)
                     if angle2 > math.pi:
                         angle2 -= math.pi
                     angle += angle2
