@@ -3,7 +3,7 @@ Analyze rods data
 """
 from queue import Queue
 import re
-import multiprocessing as mp    #for using all cores
+#import multiprocessing as mp    #for using all cores
 import math
 import os
 import matrix
@@ -497,7 +497,7 @@ class SystemState(object):
         """
         Returns average angle of the system (if exists).
         """
-        if not self._average_angle: 
+        if not self._average_angle:
             if self.g2 > 0.3 and self.g4 < 0.3:
                 angle = 0
                 for rod in list(self._rods):
@@ -584,7 +584,7 @@ class SystemState(object):
             new_row.append(self.get_closest_rod(rod))
             closest_rod_matrix.append(new_row)
         self._closest_rod_matrix = closest_rod_matrix
-            
+
 
     @property
     def closest_rod_matrix(self):
@@ -595,18 +595,45 @@ class SystemState(object):
         if len(self._closest_rod_matrix) == 0:
             self.compute_closest_rod_matrix()
         return self._closest_rod_matrix
-        
-        
 
     @property
     def radial_g2(self):
         """
-         __________________________________
-        v<cos(2*angle)>^2+<sin(2*angle)>^2 '
+        sqrt(<cos(2*angle)>^2+<sin(2*angle)>^2)
         Now angle is the relative between rods.
+        N^2
         """
-        pass
+        if self._radial_g2 == None:
+            sin = 0
+            cos = 0
+            for row in self.closest_rod_matrix:
+                angle = row[0].angle_between_rods(row[1])
+                sin += math.sin(2*angle)
+                cos += math.cos(2*angle)
+            sin /= self.number_of_rods
+            cos /= self.number_of_rods
+            self._radial_g2 = math.sqrt(sin**2+cos**2)
+        return self._radial_g2
 
+    @property
+    def radial_g4(self):
+        """
+        sqrt(<cos(4*angle)>^2+<sin(4*angle)>^2)
+        Now angle is the relative between rods.
+        N^2
+        """
+        if self._radial_g4 == None:
+            sin = 0
+            cos = 0
+            for row in self.closest_rod_matrix:
+                angle = row[0].angle_between_rods(row[1])
+                sin += math.sin(4*angle)
+                cos += math.cos(4*angle)
+            sin /= self.number_of_rods
+            cos /= self.number_of_rods
+            self._radial_g4 = math.sqrt(sin**2+cos**2)
+        return self._radial_g4
+        
 
 
 
@@ -905,7 +932,7 @@ def effective_area(small_rad, small_position_rad, main_rad):
     #######
     min_dist = compute_min_dist(small_rad, small_position_rad, main_rad)
     if min_dist >= small_rad:
-        return math.pi*small_rad**2        
+        return math.pi*small_rad**2
     elif abs(min_dist) >= small_rad:
         return 0
     min_dist_main = small_position_rad+min_dist

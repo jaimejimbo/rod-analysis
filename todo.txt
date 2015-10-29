@@ -3,6 +3,7 @@
 - dynamics
     · velocities and temperature
     · density as a function of local temperature.
+- multiprocessing
 - GUI
 - imagej interface
 
