@@ -200,7 +200,7 @@ class SystemState(object):
     """
     def __init__(self, kappas=10, allowed_kappa_error=.5,
                 radius_correction_ratio=0,
-                id_string="", zone_coords=(0, 0, 20000)):
+                id_string="", zone_coords=[]):
         """
         Initialization
         """
@@ -232,7 +232,6 @@ class SystemState(object):
             self._zone_coords = zone_coords
             self._fixed_center_radius = True
         except:
-            self.compute_center_and_radius()
             self._fixed_center_radius = False
 
     @property
@@ -292,18 +291,19 @@ class SystemState(object):
             self._radius = None
             self._center_x = None
             self._center_y = None
-            self._zone_coords = None
+            self._zone_coords = []
 
     def compute_center_and_radius(self):
         """
         Computes where the center of the system is and its
         radius.
         """
-        if not self._fixed_center_radius:
+        
             #There must be rods to make statistics.
-            if self._number_of_rods == 0:
-                msg = "center_and_radius can't be computed before adding rods"
-                raise ValueError(msg)
+        if self._number_of_rods == 0:
+            msg = "center_and_radius can't be computed before adding rods"
+            raise ValueError(msg)
+        if not len(self._zone_coords) and not self._fixed_center_radius:
             x_values = []
             y_values = []
             for rod in list(self._rods):
@@ -319,23 +319,38 @@ class SystemState(object):
             self._center_y = center_y
             self._radius = radius
             self._zone_coords = (center_x, center_y, radius)
+        return self._center_x, self._center_y, self._radius
 
     @property
     def center(self):
         """
         Returns center of the system.
         """
-        if self._zone_coords == None:
-            self.compute_center_and_radius()
+        self.compute_center_and_radius()
         return self._center_x, self._center_y
+
+    @property
+    def center_x(self):
+        """
+        Returns center of the system. (x)
+        """
+        self.compute_center_and_radius()
+        return self._center_x
+
+    @property
+    def center_y(self):
+        """
+        Returns center of the system. (y)
+        """
+        self.compute_center_and_radius()
+        return self._center_y
 
     @property
     def radius(self):
         """
         Returns radius of the system.
         """
-        if self._zone_coords == None:
-            self.compute_center_and_radius()
+        self.compute_center_and_radius()
         return self._radius
 
     @property
@@ -343,8 +358,7 @@ class SystemState(object):
         """
         Returns a tuple with center and radius.
         """
-        if self._zone_coords == None:
-            self.compute_center_and_radius()
+        self.compute_center_and_radius()
         return self._zone_coords
 
 
@@ -370,10 +384,10 @@ class SystemState(object):
             raise ValueError
         # Defining zone and distance between points.
         diff = int(rad/2)
-        start_x = self.center[0]-self.radius
-        end_x = self.center[0]+self.radius
-        start_y = self.center[1]-self.radius
-        end_y = self.center[1]+self.radius
+        start_x = self.center_x-self.radius
+        end_x = self.center_x+self.radius
+        start_y = self.center_y-self.radius
+        end_y = self.center_y+self.radius
         # Getting all possible x and y values.
         subsystems = []
         max_times = int((end_x-start_x)/diff+1)
