@@ -209,9 +209,13 @@ class TestRod(unittest.TestCase):
         """
         names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=10, allowed_kappa_error=10, radius_correction_ratio=.1)
         rod_group = rod_groups[0]
-        rod_group.compute_all_matrices(100)
+        rod_group.compute_all_matrices(30)
         num_of_rods = rod_groups[1].number_of_rods
         self.assertEqual(rod_group.average_angle, None, "there must be not average angle")
+        plt.figure()
+        x, y, z = rod_group.relative_g2_plot_matrix
+        plt.scatter(x,y,z)
+        plt.show()
         
 
 

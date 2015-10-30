@@ -217,13 +217,15 @@ class SystemState(object):
         self._g4 = None
         self._g2_subsystems = []
         self._g4_subsystems = []
+        self._relative_g2_subsystems = []
+        self._relative_g4_subsystems = []
         self._average_kappa = None
         self._kappa_dev = None
         self._average_angle = None
         self._angle_matrix = []
         self._density = None
-        self._radial_g2 = None
-        self._radial_g4 = None
+        self._relative_g2 = None
+        self._relative_g4 = None
         self._closest_rod_matrix = []
         try:
             self._radius = zone_coords[2]
@@ -284,9 +286,11 @@ class SystemState(object):
         self._average_angle = None
         self._angle_matrix = []
         self._density = None
-        self._radial_g2 = None
-        self._radial_g4 = None
+        self._relative_g2 = None
+        self._relative_g4 = None
         self._closest_rod_matrix = []
+        self._relative_g2_subsystems = []
+        self._relative_g4_subsystems = []
         if not self._fixed_center_radius:
             self._radius = None
             self._center_x = None
@@ -567,6 +571,21 @@ class SystemState(object):
                 return None
         else:
             return self._average_angle
+    def compute_g2_g4_matrices(self, rad):
+        """
+        Computes g2 and g4 matrices for subgroups.
+        """ 
+        self._divide_in_circles(rad)
+        len_g2 = len(self._g2_subsystems)
+        len_g4 = len(self._g4_subsystems)
+        if  len_g2 == 0 or len_g4 == 0:
+            for subsystem in self._actual_subdivision:
+                g2 = [subsystem.center[0], subsystem.center[1]]
+                g4 = [subsystem.center[0], subsystem.center[1]]
+                g2.append(subsystem.g2)
+                g4.append(subsystem.g4)
+                self._g2_subsystems.append(g2)
+                self._g4_subsystems.append(g4)
 
     def compute_average_angle_matrix(self, rad):
         """
@@ -603,6 +622,7 @@ class SystemState(object):
         self.compute_g2_g4_matrices(rad)
         self.compute_density_matrix(rad=rad)
         self.compute_closest_rod_matrix()
+        self.compute_relative_g2_g4_matrices(rad)
 
     @property
     def angle_histogram(self):
@@ -659,7 +679,7 @@ class SystemState(object):
         Now angle is the relative between rods.
         N^2
         """
-        if self._radial_g2 == None:
+        if self._relative_g2 == None:
             sin = 0
             cos = 0
             for row in self.closest_rod_matrix:
@@ -668,8 +688,8 @@ class SystemState(object):
                 cos += math.cos(2*angle)
             sin /= self.number_of_rods
             cos /= self.number_of_rods
-            self._radial_g2 = math.sqrt(sin**2+cos**2)
-        return self._radial_g2
+            self._relative_g2 = math.sqrt(sin**2+cos**2)
+        return self._relative_g2
 
     @property
     def relative_g4(self):
@@ -678,7 +698,7 @@ class SystemState(object):
         Now angle is the relative between rods.
         N^2
         """
-        if self._radial_g4 == None:
+        if self._relative_g4 == None:
             sin = 0
             cos = 0
             for row in self.closest_rod_matrix:
@@ -687,11 +707,52 @@ class SystemState(object):
                 cos += math.cos(4*angle)
             sin /= self.number_of_rods
             cos /= self.number_of_rods
-            self._radial_g4 = math.sqrt(sin**2+cos**2)
-        return self._radial_g4
+            self._relative_g4 = math.sqrt(sin**2+cos**2)
+        return self._relative_g4
+        
+    def compute_relative_g2_g4_matrices(self, rad):
+        """
+        Computes g2 and g4 matrices for subgroups.
+        """ 
+        self._divide_in_circles(rad)
+        len_g2 = len(self._relative_g2_subsystems)
+        len_g4 = len(self._relative_g4_subsystems)
+        if  len_g2 == 0 or len_g4 == 0:
+            for subsystem in self._actual_subdivision:
+                g2 = [subsystem.center[0], subsystem.center[1]]
+                g4 = [subsystem.center[0], subsystem.center[1]]
+                g2.append(subsystem.g2)
+                g4.append(subsystem.g4)
+                self._relative_g2_subsystems.append(g2)
+                self._relative_g4_subsystems.append(g4)
 
+    @property
+    def relative_g2_plot_matrix(self):
+        """
+        Returns values for plotting g2 matrix.
+        """
+        xval = []
+        yval = []
+        zval = []
+        for subsystem in self._relative_g2_subsystems:
+            xval.append(subsystem[0])
+            yval.append(subsystem[1])
+            zval.append(subsystem[2])
+        return xval, yval, zval
 
-
+    @property
+    def relative_g4_plot_matrix(self):
+        """
+        Returns values for plotting g2 matrix.
+        """
+        xval = []
+        yval = []
+        zval = []
+        for subsystem in self._relative_g4_subsystems:
+            xval.append(subsystem[0])
+            yval.append(subsystem[1])
+            zval.append(subsystem[2])
+        return xval, yval, zval
 
 
 
