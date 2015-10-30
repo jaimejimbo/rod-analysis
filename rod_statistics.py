@@ -268,9 +268,9 @@ class SystemState(object):
 
     def reset(self):
         """
-        Called when system is changed.
+        Called when system is changed..
         Reset all important values, so they must be
-        computed again, with the new state.
+        computed again.
         """
         self._rad_for_division = None
         self._actual_subdivision = []
@@ -653,7 +653,7 @@ class SystemState(object):
         return self._closest_rod_matrix
 
     @property
-    def radial_g2(self):
+    def relative_g2(self):
         """
         sqrt(<cos(2*angle)>^2+<sin(2*angle)>^2)
         Now angle is the relative between rods.
@@ -672,7 +672,7 @@ class SystemState(object):
         return self._radial_g2
 
     @property
-    def radial_g4(self):
+    def relative_g4(self):
         """
         sqrt(<cos(4*angle)>^2+<sin(4*angle)>^2)
         Now angle is the relative between rods.

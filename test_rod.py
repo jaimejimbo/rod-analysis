@@ -208,12 +208,11 @@ class TestRod(unittest.TestCase):
         Checks rod groups and rod class.
         """
         names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=10, allowed_kappa_error=10, radius_correction_ratio=.1)
-        for group in rod_groups:
-            group.compute_center_and_radius()
         rod_group = rod_groups[0]
-        rod_group.compute_g2_g4_matrices(100)
+        rod_group.compute_all_matrices(100)
         num_of_rods = rod_groups[1].number_of_rods
         self.assertEqual(rod_group.average_angle, None, "there must be not average angle")
+        
 
 
 
