@@ -8,8 +8,6 @@ from rod import Rod
 from methods import binary_order
 from system_state import SystemState
 
-
-
 def import_files(folder="./", regular_expression='rods_[0-9]*'):
     """
     Import all files using glob and checking with reg exp.

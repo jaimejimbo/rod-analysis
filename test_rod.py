@@ -212,10 +212,9 @@ class TestRod(unittest.TestCase):
         rod_group = rod_groups[0]
         num_of_rods = rod_groups[1].number_of_rods
         self.assertEqual(rod_group.average_angle, None, "there must be not average angle")
-        plt.figure()
-        x, y, z = rod_group.relative_g2_plot_matrix(100)
-        plt.scatter(x,y,z)
-        plt.show()
+        rod_group._cluster_finder(list(rod_group._rods)[0], 10, 1)
+        
+        
         
 
 
