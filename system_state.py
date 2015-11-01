@@ -112,7 +112,7 @@ class SystemState(object):
             self._center_y = None
             self._zone_coords = []
 
-    def compute_center_and_radius(self):
+    def _compute_center_and_radius(self):
         """
         Computes where the center of the system is and its
         radius.
@@ -145,7 +145,7 @@ class SystemState(object):
         """
         Returns center of the system.
         """
-        self.compute_center_and_radius()
+        self._compute_center_and_radius()
         return self._center_x, self._center_y
 
     @property
@@ -153,7 +153,7 @@ class SystemState(object):
         """
         Returns radius of the system.
         """
-        self.compute_center_and_radius()
+        self._compute_center_and_radius()
         return self._radius
 
     @property
@@ -161,7 +161,7 @@ class SystemState(object):
         """
         Returns a tuple with center and radius.
         """
-        self.compute_center_and_radius()
+        self._compute_center_and_radius()
         return self._zone_coords
 
 
@@ -169,6 +169,7 @@ class SystemState(object):
         """
         Check if rods are correct.
         """
+        self._compute_center_and_radius()
         for rod in list(self._rods):
             valid = rod.is_valid_rod(self._kappas,
                         self._allowed_kappa_error,
@@ -602,3 +603,4 @@ class SubsystemState(SystemState):
                     self.add_rod(rod)
         except TypeError:
             print "Use a rod list in add_rods method"
+

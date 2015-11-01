@@ -95,21 +95,13 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
         raise ValueError
     states = []
     for index in range(len(files)):
-        state = SystemState(kappas=kappas,
-                   allowed_kappa_error=allowed_kappa_error,
-                   radius_correction_ratio=radius_correction_ratio,
-                   id_string=names[index])
+        state = SystemState(kappas, allowed_kappa_error,
+                   radius_correction_ratio, names[index])
         data = import_data(files[index])
         for dataline in data:
             parameters = tuple(dataline)
-            try:
-                new_rod = Rod(parameters)
-            except ValueError as exception:
-                print parameters
-                print exception.message
-                raise ValueError
+            new_rod = Rod(parameters)
             state.add_rod(new_rod)
-        state.compute_center_and_radius()
         state.check_rods()
         states.append(state)
     return names, states
