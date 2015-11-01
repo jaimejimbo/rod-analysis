@@ -2,6 +2,7 @@ import unittest
 import rod_statistics
 import os
 import math
+from methods import *
 
 try:
     from mpl_toolkits.mplot3d import Axes3D
@@ -123,35 +124,35 @@ class TestRod(unittest.TestCase):
         """
         total_area = math.pi
         half_circle_area = total_area/2
-        computed_area = rod_statistics.segment_area(1,0)
+        computed_area = segment_area(1,0)
         self.assertEqual(computed_area, half_circle_area, msg="Error in segment area computing #1. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area))
-        computed_area = rod_statistics.segment_area(1,0.5)
+        computed_area = segment_area(1,0.5)
         self.assertAlmostEqual(computed_area, half_circle_area/2, msg="Error in segment area computing #2. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area/2), delta=half_circle_area*.2)
-        computed_area = rod_statistics.segment_area(1,0.999999999)
+        computed_area = segment_area(1,0.999999999)
         self.assertAlmostEqual(computed_area, 0, msg="Error in segment area computing #3. Obtained: "+str(computed_area)+" Expected: "+str(0), delta=0.0005)
-        computed_area = rod_statistics.segment_area(1e6,1e6-.1)
+        computed_area = segment_area(1e6,1e6-.1)
         self.assertAlmostEqual(computed_area, 0, msg="Error in segment area computing #4. Obtained: "+str(computed_area)+" Expected: "+str(0), delta=((1e-4)*math.pi*(1e6)**2))
-        computed_area = rod_statistics.segment_area(1e6,1e6-1e-10)
+        computed_area = segment_area(1e6,1e6-1e-10)
         self.assertAlmostEqual(computed_area, 0, msg="Error in segment area computing #5. Obtained: "+str(computed_area)+" Expected: "+str(0), delta=((1e-8)*math.pi*(1e6)**2))
-        computed_area = rod_statistics.segment_area(1,-0.1)
+        computed_area = segment_area(1,-0.1)
         self.assertAlmostEqual(computed_area, half_circle_area, msg="Error in segment area computing #6. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area), delta=half_circle_area*.2)
-        computed_area = rod_statistics.segment_area(1,-0.5)
+        computed_area = segment_area(1,-0.5)
         expected = total_area*3.0/4
         self.assertAlmostEqual(computed_area, expected, msg="Error in segment area computing #7. Obtained: "+str(computed_area)+" Expected: "+str(expected), delta=(expected)*.1)
-        computed_area = rod_statistics.segment_area(1,-0.99999)
+        computed_area = segment_area(1,-0.99999)
         self.assertAlmostEqual(computed_area, total_area, msg="Error in segment area computing #8. Obtained: "+str(computed_area)+" Expected: "+str(0), delta=0.01)
 
     def test_compute_min_dist(self):
         """
         Tests for h computation method
         """
-        computed = rod_statistics.compute_min_dist(1,1e10-.5, 1e10)
+        computed = compute_min_dist(1,1e10-.5, 1e10)
         expected = .5
         self.assertAlmostEqual(computed,expected,delta=.1,msg="Error in compute_min_dist #1: Obtained: "+str(computed)+" Expected: "+str(expected))
-        computed = rod_statistics.compute_min_dist(1,1e10, 1e10)
+        computed = compute_min_dist(1,1e10, 1e10)
         expected = 0
         self.assertAlmostEqual(computed,expected,delta=.1,msg="Error in compute_min_dist #2: Obtained: "+str(computed)+" Expected: "+str(expected))
-        computed = rod_statistics.compute_min_dist(1,1e10+.5, 1e10)
+        computed = compute_min_dist(1,1e10+.5, 1e10)
         expected = -.5
         self.assertAlmostEqual(computed,expected,delta=.1,msg="Error in compute_min_dist #3: Obtained: "+str(computed)+" Expected: "+str(expected))
         
@@ -162,9 +163,9 @@ class TestRod(unittest.TestCase):
         """
         total_area = math.pi
         half_circle_area = total_area/2
-        computed_area = rod_statistics.effective_area(1,1e10,1e10)
+        computed_area = effective_area(1,1e10,1e10)
         self.assertAlmostEqual(computed_area, half_circle_area, msg="Error in effective_area computing #1. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area), delta=half_circle_area*3e-2)
-        computed_area = rod_statistics.effective_area(1,10,10)
+        computed_area = effective_area(1,10,10)
         self.assertAlmostEqual(computed_area, half_circle_area, msg="Error in effective_area computing #2. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area), delta=half_circle_area*3e-2)
 
     def test_same_area_rad(self):
@@ -172,17 +173,17 @@ class TestRod(unittest.TestCase):
         Tests for same area radius method 
         """
         small_rad, small_position_rad, main_rad = 1,9,10
-        rad = rod_statistics.same_area_rad(small_rad, small_position_rad, main_rad)
+        rad = same_area_rad(small_rad, small_position_rad, main_rad)
         self.assertAlmostEqual(rad, small_rad, delta=small_rad*0.05, msg="Error in same_area_rad #1. Initial rad should be returned. Obtained: "+str(rad))
         small_rad, small_position_rad, main_rad = 1,9.5,10
-        rad = rod_statistics.same_area_rad(small_rad, small_position_rad, main_rad)
+        rad = same_area_rad(small_rad, small_position_rad, main_rad)
         expected = small_rad*1.5
         self.assertAlmostEqual(rad, expected, delta=expected*.3, msg="Error in same_area_rad #2. Obtained: "+str(rad)+" Expected: "+str(expected))
-        obtained = rod_statistics.effective_area(rad,9.5,10)
+        obtained = effective_area(rad,9.5,10)
         expected = math.pi
         self.assertAlmostEqual(obtained,expected,delta=math.pi*0.1,msg="Areas should be equivalent: Obtained: "+str(obtained)+" Expected: "+str(expected))
         small_rad, small_position_rad, main_rad = 1,1e6-.3, 1e6
-        obtained = rod_statistics.same_area_rad(small_rad, small_position_rad, main_rad)  
+        obtained = same_area_rad(small_rad, small_position_rad, main_rad)  
         expected = 1.5
         self.assertAlmostEqual(obtained, expected, delta=expected*.3, msg="Error in same_area_rad #3. Obtained: "+str(obtained)+" Expected: "+str(expected))
 
@@ -194,13 +195,13 @@ class TestRod(unittest.TestCase):
         def extract(index):
             return a[int(index)]
         expected = 5
-        obtained = int(rod_statistics.binary_search(0,10,extract,expected,.1,10))
+        obtained = int(binary_search(0,10,extract,expected,.1,10))
         self.assertEqual(obtained, expected, "Error in binary search #1 Obtained: "+str(obtained)+" Expected:"+str(expected))
         expected = 7
-        obtained = int(rod_statistics.binary_search(0,10,extract,expected,.1,10))
+        obtained = int(binary_search(0,10,extract,expected,.1,10))
         self.assertEqual(obtained, expected, "Error in binary search #2 Obtained: "+str(obtained)+" Expected:"+str(expected))
         expected = 8
-        obtained = int(rod_statistics.binary_search(0,10,extract,expected,.1,10))
+        obtained = int(binary_search(0,10,extract,expected,.1,10))
         self.assertEqual(obtained, expected, "Error in binary search #3 Obtained: "+str(obtained)+" Expected:"+str(expected))
 
     def test_SystemState(self):
@@ -209,11 +210,10 @@ class TestRod(unittest.TestCase):
         """
         names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=10, allowed_kappa_error=10, radius_correction_ratio=.1)
         rod_group = rod_groups[0]
-        rod_group.compute_all_matrices(30)
         num_of_rods = rod_groups[1].number_of_rods
         self.assertEqual(rod_group.average_angle, None, "there must be not average angle")
         plt.figure()
-        x, y, z = rod_group.relative_g2_plot_matrix
+        x, y, z = rod_group.relative_g2_plot_matrix(100)
         plt.scatter(x,y,z)
         plt.show()
         

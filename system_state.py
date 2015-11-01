@@ -510,7 +510,6 @@ class SystemState(object):
                 self._relative_g2_subsystems.append(correlation_g2)
                 self._relative_g4_subsystems.append(correlation_g4)
 
-    @property
     def relative_g2_plot_matrix(self, rad):
         """
         Returns values for plotting correlation_g2 matrix.
@@ -525,7 +524,6 @@ class SystemState(object):
             zval.append(subsystem[2])
         return xval, yval, zval
 
-    @property
     def relative_g4_plot_matrix(self, rad):
         """
         Returns values for plotting correlation_g2 matrix.
