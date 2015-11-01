@@ -213,9 +213,9 @@ class SystemState(object):
                 if is_in_circle(actual_x, actual_y,
                                 self.center[0], self.center[1],
                                 self.radius):
-                    diff_x = abs(actual_x-self.center[0])
-                    diff_y = abs(actual_y-self.center[1])
-                    pos_rad = math.sqrt(diff_x**2+diff_y**2)
+                    x_diff = abs(actual_x-self.center[0])
+                    y_diff = abs(actual_y-self.center[1])
+                    pos_rad = math.sqrt(x_diff**2+y_diff**2)
                     same_area_radius = same_area_rad(rad, pos_rad, self.radius)
                     subsystem = SubsystemState((actual_x, actual_y),
                                                same_area_radius)
@@ -536,6 +536,25 @@ class SystemState(object):
             yval.append(subsystem[1])
             zval.append(subsystem[2])
         return xval, yval, zval
+
+    def _cluster_finder(self, reference_rod, max_distance, max_angle_diff):
+        """
+        Gets the closest neighbour to a rod that fulfill some conditions.
+        """
+        selected_rod = None
+        min_distance = max_distance
+        for rod in self._rods:
+            if rod == reference_rod:
+                continue
+            x_diff = abs(rod.x_mid-reference_rod.x_mid)
+            y_diff = abs(rod.y_mid-reference_rod.y_mid)
+            distance = math.sqrt(x_diff**2+y_diff**2)
+            angle_diff = abs(rod.angle-reference_rod.angle)
+            angle_diff = min([angle_diff,180-angle_diff])
+            if angle_diff <= max_angle_diff and distance < min_distance:
+                selected_rod = rod
+                min_distance = distance
+        return selected_rod
 
 
 
