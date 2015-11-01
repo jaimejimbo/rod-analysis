@@ -212,7 +212,11 @@ class TestRod(unittest.TestCase):
         rod_group = rod_groups[0]
         num_of_rods = rod_groups[1].number_of_rods
         self.assertEqual(rod_group.average_angle, None, "there must be not average angle")
-        rod_group._cluster_finder(list(rod_group._rods)[0], 10, 1)
+        initial_rod = list(rod_group._rods)[30]
+        rod_obtained = rod_group._cluster_finder(initial_rod, 300, 0.5)
+        dist = math.sqrt((initial_rod.x_mid-rod_obtained.x_mid)**2 + (initial_rod.y_mid-rod_obtained.y_mid)**2)
+        angle = abs(initial_rod.angle-rod_obtained.angle)
+        print dist, angle
         
         
         

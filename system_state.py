@@ -546,8 +546,8 @@ class SystemState(object):
         for rod in self._rods:
             if rod == reference_rod:
                 continue
-            x_diff = abs(rod.x_mid-reference_rod.x_mid)
-            y_diff = abs(rod.y_mid-reference_rod.y_mid)
+            x_diff = rod.x_mid-reference_rod.x_mid
+            y_diff = rod.y_mid-reference_rod.y_mid
             distance = math.sqrt(x_diff**2+y_diff**2)
             angle_diff = abs(rod.angle-reference_rod.angle)
             angle_diff = min([angle_diff, 180-angle_diff])
@@ -556,16 +556,13 @@ class SystemState(object):
                 min_distance = distance
             if distance <= 1.4*max_distance and angle_diff <= max_angle_diff/2.0:
                 slope = y_diff / x_diff
+                alpha = math.atan(abs(slope))
+                theta = (math.pi*reference_rod.angle)/180
                 if slope > 0:
-                    alpha = math.atan(slope)
-                    theta = math.pi / (180*reference_rod.angle)
                     beta = abs(alpha-theta)
-                    perp_distance = distance*math.sin(beta)
                 else:
-                    alpha = -math.atan(slope)
-                    theta = math.pi / (180*reference_rod.angle)
-                    beta = abs(math.pi-alpha-theta)
-                    perp_distance = distance*math.sin(beta)
+                    beta = abs(math.pi+alpha-theta)
+                perp_distance = distance*math.sin(beta)
                 if perp_distance < min_distance:
                     selected_rod = rod
                     min_distance = perp_distance
