@@ -214,7 +214,7 @@ class SystemState(object):
             for actual_y in possible_y_values:
                 if is_in_circle(actual_x, actual_y,
                                 self.center[0], self.center[1],
-                                self.radius-rad/2):
+                                self.radius-rad):
                     x_diff = abs(actual_x-self.center[0])
                     y_diff = abs(actual_y-self.center[1])
                     pos_rad = math.sqrt(x_diff**2+y_diff**2)
@@ -393,7 +393,6 @@ class SystemState(object):
             row.append(subsystem.average_angle)
             self._angle_matrix.append(row)
 
-    @property
     def plottable_average_angle_matrix(self, rad):
         """
         Returns a plottable average angle matrix.
