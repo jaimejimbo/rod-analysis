@@ -228,9 +228,9 @@ class TestRod(unittest.TestCase):
                 print str(rg.number_of_rods)+"\t"+str(rg.average_kappa)+"\t"+str(rg.kappa_dev)
             except ZeroDivisionError:
                 print "0 rods" """
-        x, y, z = rod_group.plottable_density_matrix(rad=50)
-        size = float(max(x)-min(x))*100/len(x)
-        plt.scatter(x,y,c=z,marker='s',s=size)
+        rad = 30
+        x, y, z = rod_group.plottable_density_matrix(rad=rad)
+        plt.scatter(x,y,c=z,marker='s',s=2*rad)
         plt.colorbar()
         plt.show()
         """xi, yi = numpy.meshgrid(x,y)
