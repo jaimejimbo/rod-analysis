@@ -188,7 +188,7 @@ class SystemState(object):
             raise ValueError
         self._rad_for_division = rad
         # Defining zone and distance between points.
-        diff = int(rad/2)
+        diff = int(2*rad)
         start_x = self.center[0]-self.radius
         end_x = self.center[0]+self.radius
         start_y = self.center[1]-self.radius

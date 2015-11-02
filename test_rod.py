@@ -228,18 +228,26 @@ class TestRod(unittest.TestCase):
                 print str(rg.number_of_rods)+"\t"+str(rg.average_kappa)+"\t"+str(rg.kappa_dev)
             except ZeroDivisionError:
                 print "0 rods" """
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=5.5, allowed_kappa_error=0.3, radius_correction_ratio=.1)
+        rod_group = rod_groups[1]   
         rad = 30
         x, y, z = rod_group.plottable_density_matrix(rad=rad)
+        plt.figure(1)
+        plt.scatter(x,y,c=z,marker='s',s=rad**2/4)
+        plt.colorbar()
+        name = names[1]
+        name += "K5.png"
+        plt.savefig(name)
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=17, allowed_kappa_error=.5, radius_correction_ratio=.1)
+        rod_group = rod_groups[1]   
+        rad = 30
+        x, y, z = rod_group.plottable_density_matrix(rad=rad)
+        plt.figure(2)
         plt.scatter(x,y,c=z,marker='s',s=2*rad)
         plt.colorbar()
-        plt.show()
-        """xi, yi = numpy.meshgrid(x,y)
-        rbf = interpolate.Rbf(x,y,z,function='gaussian')
-        zi = rbf(xi, yi)
-        plt.imshow(zi, vmin=min(z), vmax=max(z), origin='lower', extent=[min(x), max(x), min(y), max(y)])
-        plt.scatter(xi,yi,c=zi)
-        plt.colorbar()
-        plt.show()"""
+        name = names[1]
+        name += "K17.png"
+        plt.savefig(name)
 
 
 
