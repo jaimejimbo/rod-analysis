@@ -7,6 +7,8 @@ from methods import *
 try:
     from mpl_toolkits.mplot3d import Axes3D
     import pylab
+    import numpy
+    from scipy import interpolate
     from matplotlib import cm
     from matplotlib.ticker import LinearLocator, FormatStrFormatter
     import matplotlib.pyplot as plt
@@ -212,14 +214,19 @@ class TestRod(unittest.TestCase):
         rod_group = rod_groups[0]
         num_of_rods = rod_groups[1].number_of_rods
         self.assertEqual(rod_group.average_angle, None, "there must be not average angle")
-        initial_rod = list(rod_group._rods)[30]
+        initial_rod = list(rod_group._rods)[100]
         rod_obtained = rod_group._cluster_finder(initial_rod, 300, 0.5)
         dist = math.sqrt((initial_rod.x_mid-rod_obtained.x_mid)**2 + (initial_rod.y_mid-rod_obtained.y_mid)**2)
         angle = abs(initial_rod.angle-rod_obtained.angle)
-        print dist, angle
-        
-        
-        
+        x, y, z = rod_group.plottable_density_matrix(rad=200)
+        xi, yi = numpy.meshgrid(x,y)
+        rbf = interpolate.Rbf(x,y,z,function='linear')
+        zi = rbf(xi, yi)
+        plt.imshow(zi, vmin=min(z), vmax=max(z), origin='lower', extent=[min(x), max(x), min(y), max(y)])
+        plt.scatter(xi,yi,c=zi)
+        plt.colorbar()
+        plt.show()
+
 
 
 

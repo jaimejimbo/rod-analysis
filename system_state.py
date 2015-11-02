@@ -186,6 +186,7 @@ class SystemState(object):
         if (rad < 0) or (rad > self.radius):
             print "Use a correct radius (0<rad<main_rad)"
             raise ValueError
+        self._rad_for_division = rad
         # Defining zone and distance between points.
         diff = int(rad/2)
         start_x = self.center[0]-self.radius
@@ -194,6 +195,7 @@ class SystemState(object):
         end_y = self.center[1]+self.radius
         # Getting all possible x and y values.
         max_times = int((end_x-start_x)/diff+1)
+    
         possible_x_values = [start_x + times*diff
                              for times in range(max_times)]
         max_times = int((end_y-start_y)/diff+1)
@@ -212,13 +214,13 @@ class SystemState(object):
             for actual_y in possible_y_values:
                 if is_in_circle(actual_x, actual_y,
                                 self.center[0], self.center[1],
-                                self.radius):
+                                self.radius-rad/2):
                     x_diff = abs(actual_x-self.center[0])
                     y_diff = abs(actual_y-self.center[1])
                     pos_rad = math.sqrt(x_diff**2+y_diff**2)
                     same_area_radius = same_area_rad(rad, pos_rad, self.radius)
                     subsystem = SubsystemState((actual_x, actual_y),
-                                               same_area_radius)
+                                               same_area_radius, math.pi*rad**2)
                     subsystem.add_rods(list(self._rods))
                     subsystems.append(subsystem)
         return subsystems
@@ -243,13 +245,12 @@ class SystemState(object):
             density.append(subdensity)
         self._density_matrix = density
 
-    @property
-    def plottable_density_matrix(self):
+    def plottable_density_matrix(self, rad):
         """
         Returns 3 arrays: one for x, another for y and the last for values.
         """
         if len(self._density_matrix) == 0:
-            self._compute_density_matrix()
+            self._compute_density_matrix(rad=rad)
         x_values = []
         y_values = []
         z_values = []
@@ -577,14 +578,14 @@ class SubsystemState(SystemState):
     have something in common.
     """
 
-    def __init__(self, center, rad):
+    def __init__(self, center, rad, area):
         """
         Initialization
         """
         SystemState.__init__(self)
         self._center = center
         self._rad = rad
-        self._area = float(math.pi*rad**2)
+        self._area = area
 
     @property
     def center(self):
