@@ -219,7 +219,7 @@ class TestRod(unittest.TestCase):
         dist = math.sqrt((initial_rod.x_mid-rod_obtained.x_mid)**2 + (initial_rod.y_mid-rod_obtained.y_mid)**2)
         angle = abs(initial_rod.angle-rod_obtained.angle)
         rg = rod_groups[1]
-        print "Amount"+"\t"+"<K>"+"\t\t"+"sigma(K)"
+        """print "Amount"+"\t"+"<K>"+"\t\t"+"sigma(K)"
         print str(rg.number_of_rods)+"\t"+str(rg.average_kappa)+"\t"+str(rg.kappa_dev)
         for kappa in range(1,20):
             names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=kappa, allowed_kappa_error=1, radius_correction_ratio=.1)
@@ -227,10 +227,14 @@ class TestRod(unittest.TestCase):
             try:
                 print str(rg.number_of_rods)+"\t"+str(rg.average_kappa)+"\t"+str(rg.kappa_dev)
             except ZeroDivisionError:
-                print "0 rods"
-        """x, y, z = rod_group.plottable_density_matrix(rad=200)
-        xi, yi = numpy.meshgrid(x,y)
-        rbf = interpolate.Rbf(x,y,z,function='linear')
+                print "0 rods" """
+        x, y, z = rod_group.plottable_density_matrix(rad=50)
+        size = float(max(x)-min(x))*100/len(x)
+        plt.scatter(x,y,c=z,marker='s',s=size)
+        plt.colorbar()
+        plt.show()
+        """xi, yi = numpy.meshgrid(x,y)
+        rbf = interpolate.Rbf(x,y,z,function='gaussian')
         zi = rbf(xi, yi)
         plt.imshow(zi, vmin=min(z), vmax=max(z), origin='lower', extent=[min(x), max(x), min(y), max(y)])
         plt.scatter(xi,yi,c=zi)
