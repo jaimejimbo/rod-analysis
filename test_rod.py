@@ -30,48 +30,6 @@ class TestRod(unittest.TestCase):
         """
         self.longMessage = True
 
-    def test_import_files(self):
-        """
-        Checks if files are imported as expected.
-        """
-        try:
-            os.remove("prueba1.txt")
-            os.remove("prueba2.txt")
-            os.remove("prueba3.txt")
-        except:
-            pass
-        input1 = open('prueba1.txt','w+')
-        input1.write("Hola")
-        input1.close()
-        names, files = rod_statistics.import_files(regular_expression='^prueba1\.txt')
-        line1 = files[0].readline()
-        self.assertEqual(line1.split(), ["Hola"], "Error importing singular file. Obtained: " + str(line1.split()))
-        names, files = rod_statistics.import_files(folder="./../../TFG/rod-analysis/", regular_expression='^prueba1\.txt')
-        line1 = files[0].readline()
-        self.assertEqual(line1.split(), ["Hola"], "Error importing singular file. Obtained: " + str(line1.split()))
-        input2 = open('prueba2.txt','w+')
-        input2.write("Adios\n")
-        input2.close()
-        names, files = rod_statistics.import_files( regular_expression='^prueba*')
-        line1 = files[0].readline()
-        line2 = files[1].readline()
-        self.assertIn(line1.split(), [["Adios"],["Hola"]], "Error importing 2 files. Obtained: " + str(line1.split()))
-        self.assertIn(line2.split(), [["Hola"],["Adios"]], "Error importing 2 files. Obtained: " + str(line2.split()))
-        input3 = open('prueba3.txt','w+')
-        input3.write("Hasta pronto\n")
-        input3.close()
-        names, files = rod_statistics.import_files( regular_expression='^prueba*')
-        line1 = files[0].readline()
-        line2 = files[1].readline()
-        line3 = files[2].readline()
-        self.assertIn(line1.split(), [["Hola"],["Adios"],["Hasta","pronto"]], "Error importing 3 files. Obtained: " + str(line1.split()))
-        self.assertIn(line3.split(), [["Hola"],["Adios"],["Hasta","pronto"]], "Error importing 3 files. Obtained: " + str(line3.split()))
-        self.assertIn(line2.split(), [["Hola"],["Adios"],["Hasta","pronto"]], "Error importing 3 files. Obtained: " + str(line2.split()))
-        os.remove("prueba1.txt")
-        os.remove("prueba2.txt")
-        os.remove("prueba3.txt")
-
-
     def test_import_data(self):
         """
         Checks if data is parsed as expected.
@@ -219,35 +177,47 @@ class TestRod(unittest.TestCase):
         dist = math.sqrt((initial_rod.x_mid-rod_obtained.x_mid)**2 + (initial_rod.y_mid-rod_obtained.y_mid)**2)
         angle = abs(initial_rod.angle-rod_obtained.angle)
         rg = rod_groups[1]
-        """print "Amount"+"\t"+"<K>"+"\t\t"+"sigma(K)"
-        print str(rg.number_of_rods)+"\t"+str(rg.average_kappa)+"\t"+str(rg.kappa_dev)
-        for kappa in range(1,20):
-            names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=kappa, allowed_kappa_error=1, radius_correction_ratio=.1)
-            rg = rod_groups[1]
-            try:
-                print str(rg.number_of_rods)+"\t"+str(rg.average_kappa)+"\t"+str(rg.kappa_dev)
-            except ZeroDivisionError:
-                print "0 rods" """
-        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=5.5, allowed_kappa_error=0.3, radius_correction_ratio=.1)
         rod_group = rod_groups[1]   
-        rad = 30
-        x, y, z = rod_group.plottable_density_matrix(rad=rad)
+        rad = 50
+        x, y, z = rod_group.plottable_density_matrix(rad)
+        x = numpy.matrix(x)
+        y = numpy.matrix(y)
+        z = numpy.matrix(z)
         plt.figure(1)
-        plt.scatter(x,y,c=z,marker='s',s=rad**2/4)
+        z_min = z.min()
+        z_max = z.max()
+        #plt.pcolor(x,y,z, cmap='RdBu', vmin=z_min, vmax=z_max)
+        plt.scatter(x,y,c=z,marker='s',s=(rad/2.0)**2)
+        plt.colorbar()
+        name = names[1]
+        name += "all.png"
+        plt.show()
+        #plt.savefig(name)
+        """x, y, z = rod_group.relative_g2_plot_matrix(rad)
+        plt.figure(4)
+        plt.scatter(x,y,c=z,marker='s',s=(rad/2.0)**2)
+        plt.colorbar()
+        name = names[1]
+        name += "all_g2.png"
+        plt.savefig(name)
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=5.5, allowed_kappa_error=0.3, radius_correction_ratio=.1)
+        rod_group = rod_groups[1]
+        x, y, z = rod_group.plottable_density_matrix(rad=rad)
+        plt.figure(2)
+        plt.scatter(x,y,c=z,marker='s',s=(rad/2.0)**2)
         plt.colorbar()
         name = names[1]
         name += "K5.png"
         plt.savefig(name)
-        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=17, allowed_kappa_error=.5, radius_correction_ratio=.1)
-        rod_group = rod_groups[1]   
-        rad = 30
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=17, allowed_kappa_error=2, radius_correction_ratio=.1)
+        rod_group = rod_groups[1] 
         x, y, z = rod_group.plottable_density_matrix(rad=rad)
-        plt.figure(2)
-        plt.scatter(x,y,c=z,marker='s',s=2*rad)
+        plt.figure(3)
+        plt.scatter(x,y,c=z,marker='s',s=(rad/2.0)**2)
         plt.colorbar()
         name = names[1]
         name += "K17.png"
-        plt.savefig(name)
+        plt.savefig(name)"""
 
 
 
