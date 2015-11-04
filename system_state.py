@@ -44,6 +44,7 @@ class SystemState(object):
         self._relative_g2 = None
         self._relative_g4 = None
         self._closest_rod_matrix = []
+        self._direction_matrix = []
         try:
             self._radius = zone_coords[2]
             self._center_x = zone_coords[0]
@@ -110,6 +111,7 @@ class SystemState(object):
         self._closest_rod_matrix = []
         self._relative_g2_subsystems = []
         self._relative_g4_subsystems = []
+        self._direction_matrix = []
         if not self._fixed_center_radius:
             self._radius = None
             self._center_x = None
@@ -647,6 +649,21 @@ class SystemState(object):
                     selected_rod = rod
                     min_distance = perp_distance
         return selected_rod
+
+    @property
+    def average_angle_2(self):
+        """
+        Returns a matrix with the form:
+           |eix^2-1  eix*eiy |
+        sum|eix*eiy   eiy^2-1|
+        """
+        if len(self._direction_matrix) == 0:
+            self._direction_matrix = matrix.zeros(2,2)
+            for rod in list(self._rods):
+                self._direction_matrix += rod.direction_matrix
+        eigen1, eigen2 = self._direction_matrix.diagonalize_2x2()
+        return eigen1
+        
 
 
 

@@ -318,6 +318,27 @@ class Matrix:
             for col in range(cols):
                 output[row][col] = (-1)**(row+col) * self.det(self.delete(row,col))
         return output
+
+    def diagonalize_2x2(self):
+        """
+        Returns 2 eigenvalues.
+        |a b|
+        |c d|
+        eigen eq : lambda^2 - (a+d)*lambda + a*d-c*b
+        """
+        indep = self[0][0]+self[1][1]
+        sqrt = math.sqrt(indep**2 - 4*self[0][1]+self[1][0])
+        lambda1 = float(indep+sqrt)/2
+        lambda2 = float(indep-sqrt)/2
+        return lambda1, lambda2
+        
+
+    @property
+    def data(self):
+        """
+        Allows to transform a matrix to python vectors representation.
+        """
+        return self._data
             
 def zeros(rows = 1, cols = 1):
     """

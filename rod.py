@@ -191,8 +191,8 @@ class Rod(object):
         if self._direction_matrix == matrix.zeros(2, 2):
             e_x = math.cos(self.angle)
             e_y = math.sin(self.angle)
-            self._direction_matrix[0][0] = e_x**2-1
-            self._direction_matrix[1][1] = e_y**2-1
+            self._direction_matrix[0][0] = 2*e_x**2-1
+            self._direction_matrix[1][1] = 2*e_y**2-1
             self._direction_matrix[1][0] = e_x*e_y
             self._direction_matrix[0][1] = e_x*e_y
         return self._direction_matrix

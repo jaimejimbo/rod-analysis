@@ -175,8 +175,8 @@ class TestRod(unittest.TestCase):
         initial_rod = list(rod_group._rods)[100]
         rod_obtained = rod_group._cluster_finder(initial_rod, 300, 0.5)
         dist = math.sqrt((initial_rod.x_mid-rod_obtained.x_mid)**2 + (initial_rod.y_mid-rod_obtained.y_mid)**2)
-        angle = abs(initial_rod.angle-rod_obtained.angle)
-        rg = rod_groups[1]
+        print rod_group.average_angle_2
+        """rg = rod_groups[1]
         rod_group = rod_groups[1]   
         rad = 50
         x, y, z = rod_group.plottable_density_matrix(rad)
@@ -210,7 +210,7 @@ class TestRod(unittest.TestCase):
         plt.colorbar()
         name = names[1]
         name += "K17.png"
-        plt.savefig(name)
+        plt.savefig(name)"""
 
 
 
