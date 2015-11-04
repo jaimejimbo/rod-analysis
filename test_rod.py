@@ -180,17 +180,13 @@ class TestRod(unittest.TestCase):
         rod_group = rod_groups[1]   
         rad = 50
         x, y, z = rod_group.plottable_density_matrix(rad)
-        #x = numpy.matrix(x)
-        #y = numpy.matrix(y)
-        #z = numpy.matrix(z)
         plt.figure(1)
-        #plt.pcolor(x,y,z, cmap='RdBu', vmin=z_min, vmax=z_max)
         plt.scatter(x,y,c=z,marker='s',s=(rad/2.0)**2)
         plt.colorbar()
         name = names[1]
         name += "all.png"
         plt.savefig(name)
-        """x, y, z = rod_group.relative_g2_plot_matrix(rad)
+        x, y, z = rod_group.relative_g2_plot_matrix(rad)
         plt.figure(4)
         plt.scatter(x,y,c=z,marker='s',s=(rad/2.0)**2)
         plt.colorbar()
@@ -214,7 +210,7 @@ class TestRod(unittest.TestCase):
         plt.colorbar()
         name = names[1]
         name += "K17.png"
-        plt.savefig(name)"""
+        plt.savefig(name)
 
 
 
