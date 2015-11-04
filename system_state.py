@@ -8,7 +8,6 @@ from queue import Queue
 import numpy
 import matrix
 
-
 class SystemState(object):
     """
     Group of rods in a moment.
@@ -45,6 +44,8 @@ class SystemState(object):
         self._relative_g4 = None
         self._closest_rod_matrix = []
         self._direction_matrix = []
+        self._clusters = []
+        self._rods_dict = {}
         try:
             self._radius = zone_coords[2]
             self._center_x = zone_coords[0]
@@ -54,6 +55,13 @@ class SystemState(object):
         except TypeError:
             self._fixed_center_radius = False
             self._zone_cords = []
+
+    @property
+    def rods_dictionary(self):
+        """
+        Returns a dictionary of rods ordered by id.
+        """
+        return self._rods_dict.copy()
 
     @property
     def number_of_rods(self):
@@ -68,6 +76,7 @@ class SystemState(object):
         """
         self._rods.join(rod)
         self._number_of_rods += 1
+        self._rods_dict[rod.identifier] = rod
         self.reset()
 
     def get_rod(self):
@@ -76,6 +85,7 @@ class SystemState(object):
         The rod is removed of the group!
         """
         self._number_of_rods -= 1
+        del self._rods_dict[rod.identifier]
         self.reset()
         return self._rods.get_next()
 
@@ -85,6 +95,7 @@ class SystemState(object):
         """
         self._rods.delete(rod)
         self._number_of_rods -= 1
+        del self._rods_dict[rod.identifier]
         self.reset()
 
     def reset(self):
@@ -112,6 +123,7 @@ class SystemState(object):
         self._relative_g2_subsystems = []
         self._relative_g4_subsystems = []
         self._direction_matrix = []
+        self._clusters = []
         if not self._fixed_center_radius:
             self._radius = None
             self._center_x = None
@@ -442,7 +454,7 @@ class SystemState(object):
         Returns average angle of the system (if exists).
         """
         if not self._average_angle:
-            if self.correlation_g2 > 0.3 and self.correlation_g4 < 0.3:
+            if self.correlation_g2 > 0.5 and self.correlation_g4 < 0.3:
                 angle = 0
                 for rod in list(self._rods):
                     angle2 = rod.angle
@@ -507,7 +519,38 @@ class SystemState(object):
                     selected_rod = rod2
         return selected_rod
 
-    def _compute_closest_rod_matrix(self):
+    def _get_closest_rod_min_angle(self, reference_rod, max_distance, max_angle_diff):
+        """
+        Gets the closest neighbour to a rod that fulfill some conditions.
+        """
+        selected_rod = None
+        min_distance = max_distance
+        for rod in self._rods:
+            if rod == reference_rod:
+                continue
+            x_diff = rod.x_mid-reference_rod.x_mid
+            y_diff = rod.y_mid-reference_rod.y_mid
+            distance = math.sqrt(x_diff**2+y_diff**2)
+            angle_diff = abs(rod.angle-reference_rod.angle)
+            angle_diff = min([angle_diff, 180-angle_diff])
+            if angle_diff <= max_angle_diff and distance < min_distance:
+                selected_rod = rod
+                min_distance = distance
+            if distance <= 1.4*max_distance and angle_diff <= max_angle_diff/2.0:
+                slope = y_diff / x_diff
+                alpha = math.atan(abs(slope))
+                theta = (math.pi*reference_rod.angle)/180
+                if slope > 0:
+                    beta = abs(alpha-theta)
+                else:
+                    beta = abs(math.pi+alpha-theta)
+                perp_distance = distance*math.sin(beta)
+                if perp_distance < min_distance:
+                    selected_rod = rod
+                    min_distance = perp_distance
+        return selected_rod
+
+    def _compute_closest_rod_matrix(self, max_distance=None, max_angle_diff=None):
         """
         Creates closer rod matrix:
         [[rod1, closest_rod_to_rod1],
@@ -515,10 +558,17 @@ class SystemState(object):
         ...
         [rodN, closest_rod_to_rodN]]
         """
+        if not max_distance or not max_angle_diff:
+            function = self._get_closest_rod
+        else:
+            function = self._get_closest_rod_min_angle
         closest_rod_matrix = []
         for rod in list(self._rods):
             new_row = [rod]
-            new_row.append(self._get_closest_rod(rod))
+            closest_rod = function(rod)
+            if not closest_rod:
+                continue
+            new_row.append(closest_rod)
             closest_rod_matrix.append(new_row)
         self._closest_rod_matrix = closest_rod_matrix
 
@@ -532,6 +582,48 @@ class SystemState(object):
         if len(self._closest_rod_matrix) == 0:
             self._compute_closest_rod_matrix()
         return self._closest_rod_matrix
+
+    @property
+    def closest_rod_dict(self):
+        """
+        Returns a dictionary of closest rods.
+        """
+        closest_rod_matrix = self.closest_rod_matrix
+        dictionary = {}
+        for pair in closest_rod_matrix:
+            dictionary[pair[0].identifier] = pair[1]
+        return dictionary
+
+    def _define_clusters(self, max_distance, max_angle_diff):
+        """
+        Create clusters set.
+        """
+        if len(self._clusters) == 0:
+            rods_dict = self.rods_dictionary
+            for identifier in crdict.keys():
+                rod1 = rods_dict[identifier]
+                rod2 = None
+                
+    def _get_cluster(self, rod_id, closest_rod_dict, max_distance, max_angle_diff, previous=None):
+        """
+        Gets the cluster for rod.
+        Recursive method.
+        """
+        self._compute_closest_rod_matrix(max_distance=max_distance,
+                                         max_angle_diff=max_angle_diff)
+        crdict = self.closest_rod_dict
+        cluster = set([])
+        rods_dict = self.rods_dictionary
+        try:
+            next_rod = closest_rod_dict[rod_id]
+        except KeyError:
+            return cluster
+        next_rod = closest_rod_dict[rod_id]
+        if next_rod == previous:
+            return cluster
+        cluster.add(next_rod)
+        cluster.add(self._get_cluster(next_rod._id)) ##NO FunCIONA PORQUE DEVOLVERIA EL ROD ANTERIOR. HAY QUE IR QUITANDO LOS RODS.
+
 
     @property
     def relative_g2(self):
@@ -619,43 +711,11 @@ class SystemState(object):
         #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
 
-    def _cluster_finder(self, reference_rod, max_distance, max_angle_diff):
-        """
-        Gets the closest neighbour to a rod that fulfill some conditions.
-        """
-        selected_rod = None
-        min_distance = max_distance
-        for rod in self._rods:
-            if rod == reference_rod:
-                continue
-            x_diff = rod.x_mid-reference_rod.x_mid
-            y_diff = rod.y_mid-reference_rod.y_mid
-            distance = math.sqrt(x_diff**2+y_diff**2)
-            angle_diff = abs(rod.angle-reference_rod.angle)
-            angle_diff = min([angle_diff, 180-angle_diff])
-            if angle_diff <= max_angle_diff and distance < min_distance:
-                selected_rod = rod
-                min_distance = distance
-            if distance <= 1.4*max_distance and angle_diff <= max_angle_diff/2.0:
-                slope = y_diff / x_diff
-                alpha = math.atan(abs(slope))
-                theta = (math.pi*reference_rod.angle)/180
-                if slope > 0:
-                    beta = abs(alpha-theta)
-                else:
-                    beta = abs(math.pi+alpha-theta)
-                perp_distance = distance*math.sin(beta)
-                if perp_distance < min_distance:
-                    selected_rod = rod
-                    min_distance = perp_distance
-        return selected_rod
-
     @property
-    def average_angle_2(self):
+    def average_angle_using_matrix(self):
         """
-        Returns a matrix with the form:
-           |eix^2-1  eix*eiy |
-        sum|eix*eiy   eiy^2-1|
+        Returns average angle of the system using direction matrices.
+        Value in radians.
         """
         if len(self._direction_matrix) == 0:
             self._direction_matrix = matrix.zeros(2,2)

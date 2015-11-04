@@ -171,11 +171,6 @@ class TestRod(unittest.TestCase):
         names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=20, allowed_kappa_error=20, radius_correction_ratio=.1)
         rod_group = rod_groups[0]
         num_of_rods = rod_groups[1].number_of_rods
-        self.assertEqual(rod_group.average_angle, None, "there must be not average angle")
-        initial_rod = list(rod_group._rods)[100]
-        rod_obtained = rod_group._cluster_finder(initial_rod, 300, 0.5)
-        dist = math.sqrt((initial_rod.x_mid-rod_obtained.x_mid)**2 + (initial_rod.y_mid-rod_obtained.y_mid)**2)
-        print rod_group.average_angle_2
         """rg = rod_groups[1]
         rod_group = rod_groups[1]   
         rad = 50
