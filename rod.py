@@ -5,7 +5,7 @@ It has needed methods and variables.
 
 import math
 from methods import is_in_circle
-
+import matrix
 
 
 class Rod(object):
@@ -34,6 +34,7 @@ class Rod(object):
         self._x_start = float(xstart)           #12
         self._y_start = float(ystart)           #13
         self._hash = 0
+        self._direction_matrix = matrix.zeros(2, 2)
         self._kappa = float(self.feret)/self.min_feret
 
     @property
@@ -179,4 +180,20 @@ class Rod(object):
         angle1 = (self.angle-rod.angle)*math.pi/180
         angle2 = math.pi - (self.angle-rod.angle)*math.pi/180
         return min(angle1, angle2)
+
+    @property
+    def direction_matrix(self):
+        """
+        Returns a matrix with the form:
+        ex^2-1  ex*ey
+        ex*ey   ey^2-1
+        """
+        if self._direction_matrix == matrix.zeros(2, 2):
+            e_x = math.cos(self.angle)
+            e_y = math.sin(self.angle)
+            self._direction_matrix[0][0] = e_x**2-1
+            self._direction_matrix[1][1] = e_y**2-1
+            self._direction_matrix[1][0] = e_x*e_y
+            self._direction_matrix[0][1] = e_x*e_y
+        return self._direction_matrix
 

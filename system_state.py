@@ -6,6 +6,7 @@ import math
 from methods import is_in_circle, same_area_rad
 from queue import Queue
 import numpy
+import matrix
 
 
 class SystemState(object):
