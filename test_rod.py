@@ -4,20 +4,13 @@ import os
 import math
 from methods import *
 
-try:
-    from mpl_toolkits.mplot3d import Axes3D
-    import pylab
-    import numpy
-    from scipy import interpolate
-    from matplotlib import cm
-    from matplotlib.ticker import LinearLocator, FormatStrFormatter
-    import matplotlib.pyplot as plt
-except:
-    os.system('sudo apt-get install python-matplotlib')
-try:
-    import numpy as np
-except:
-    os.system('sudo apt-get install python-numpy')
+from mpl_toolkits.mplot3d import Axes3D
+import pylab
+import numpy
+from scipy import interpolate
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+import numpy as np
 
 class TestRod(unittest.TestCase):
     """
@@ -171,9 +164,9 @@ class TestRod(unittest.TestCase):
         names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=20, allowed_kappa_error=20, radius_correction_ratio=.1)
         rod_group = rod_groups[0]
         num_of_rods = rod_groups[1].number_of_rods
-        """rg = rod_groups[1]
+        rg = rod_groups[1]
         rod_group = rod_groups[1]   
-        rad = 50
+        """rad = 50
         x, y, z = rod_group.plottable_density_matrix(rad)
         plt.figure(1)
         plt.scatter(x,y,c=z,marker='s',s=(rad/2.0)**2)

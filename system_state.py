@@ -46,6 +46,7 @@ class SystemState(object):
         self._direction_matrix = []
         self._clusters = []
         self._rods_dict = {}
+        self._cluster_checked_dict = {}
         try:
             self._radius = zone_coords[2]
             self._center_x = zone_coords[0]
@@ -124,6 +125,8 @@ class SystemState(object):
         self._relative_g4_subsystems = []
         self._direction_matrix = []
         self._clusters = []
+        self._cluster_checked_dict = {}
+        self._rods_dict = {}
         if not self._fixed_center_radius:
             self._radius = None
             self._center_x = None
@@ -522,11 +525,14 @@ class SystemState(object):
     def _get_closest_rod_min_angle(self, reference_rod, max_distance, max_angle_diff):
         """
         Gets the closest neighbour to a rod that fulfill some conditions.
+        This must be called in a loop popping selected rods.
         """
-        selected_rod = None
+        if self._cluster_checked_dict[reference_rod.identifier]:
+            return None
+        rods = set([])
         min_distance = max_distance
         for rod in self._rods:
-            if rod == reference_rod:
+            if self._cluster_checked_dict:
                 continue
             x_diff = rod.x_mid-reference_rod.x_mid
             y_diff = rod.y_mid-reference_rod.y_mid
@@ -534,8 +540,7 @@ class SystemState(object):
             angle_diff = abs(rod.angle-reference_rod.angle)
             angle_diff = min([angle_diff, 180-angle_diff])
             if angle_diff <= max_angle_diff and distance < min_distance:
-                selected_rod = rod
-                min_distance = distance
+                rods.add(rod)
             if distance <= 1.4*max_distance and angle_diff <= max_angle_diff/2.0:
                 slope = y_diff / x_diff
                 alpha = math.atan(abs(slope))
@@ -548,7 +553,8 @@ class SystemState(object):
                 if perp_distance < min_distance:
                     selected_rod = rod
                     min_distance = perp_distance
-        return selected_rod
+        self._cluster_checked_dict[reference_rod.identifier] = True
+        return rods
 
     def _compute_closest_rod_matrix(self, max_distance=None, max_angle_diff=None):
         """
@@ -573,8 +579,7 @@ class SystemState(object):
         self._closest_rod_matrix = closest_rod_matrix
 
 
-    @property
-    def closest_rod_matrix(self):
+    def closest_rod_matrix(self, max_distance=None, max_angle_diff=None):
         """
         Returns closest rod matrix.
         See _compute_closest_rod_matrix for more info.
@@ -583,8 +588,7 @@ class SystemState(object):
             self._compute_closest_rod_matrix()
         return self._closest_rod_matrix
 
-    @property
-    def closest_rod_dict(self):
+    def closest_rod_dict(self, max_distance=None, max_angle_diff=None):
         """
         Returns a dictionary of closest rods.
         """

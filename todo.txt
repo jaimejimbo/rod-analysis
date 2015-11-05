@@ -1,3 +1,4 @@
+- automatize plot
 - clusters
 - tracks?
 - dynamics
