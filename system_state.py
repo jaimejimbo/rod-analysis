@@ -5,7 +5,6 @@
 import math
 from methods import is_in_circle, same_area_rad
 from queue import Queue
-import numpy
 import matrix
 
 class SystemState(object):
@@ -77,7 +76,6 @@ class SystemState(object):
         """
         self._rods.join(rod)
         self._number_of_rods += 1
-        self._rods_dict[rod.identifier] = rod
         self.reset()
 
     def get_rod(self):
@@ -86,7 +84,6 @@ class SystemState(object):
         The rod is removed of the group!
         """
         self._number_of_rods -= 1
-        del self._rods_dict[rod.identifier]
         self.reset()
         return self._rods.get_next()
 
@@ -96,7 +93,6 @@ class SystemState(object):
         """
         self._rods.delete(rod)
         self._number_of_rods -= 1
-        del self._rods_dict[rod.identifier]
         self.reset()
 
     def reset(self):
@@ -127,11 +123,21 @@ class SystemState(object):
         self._clusters = []
         self._cluster_checked_dict = {}
         self._rods_dict = {}
+        self._fill_dicts()
         if not self._fixed_center_radius:
             self._radius = None
             self._center_x = None
             self._center_y = None
             self._zone_coords = []
+
+    def _fill_dicts(self):
+        """
+        Fill dictionaries.
+        """
+        for rod in self._rods:
+            self._rods_dict[rod.identifier] = rod
+            self._cluster_checked_dict[rod.identifier] = False
+
 
     def _compute_center_and_radius(self):
         """
@@ -216,7 +222,7 @@ class SystemState(object):
         end_y = self.center[1]+self.radius
         # Getting all possible x and y values.
         max_times = int(float(end_x-start_x)/diff+1)
-    
+
         possible_x_values = [start_x + times*diff
                              for times in range(max_times)]
         max_times = int(float(end_y-start_y)/diff+1)
@@ -295,9 +301,9 @@ class SystemState(object):
         xmat = []
         ymat = []
         zmat = []
-        matrix = self.subgroups_matrix(rad)
+        matrix_ = self.subgroups_matrix(rad)
         index = 0
-        for row in range(len(matrix)):
+        for row in range(len(matrix_)):
             xrow = []
             yrow = []
             zrow = []
@@ -311,9 +317,6 @@ class SystemState(object):
             xmat.append(xrow)
             ymat.append(yrow)
             zmat.append(zrow)
-        xmat = numpy.array(xmat)
-        ymat = numpy.array(ymat)
-        zmat = numpy.array(zmat)
         return xmat, ymat, zmat
 
 
@@ -327,17 +330,16 @@ class SystemState(object):
         act_sub = self._actual_subdivision
         actual_y = act_sub[0].center[1]
         row = []
-        matrix = []
+        subgroups_matrix = []
         for index in range(len(act_sub)):
             element = act_sub[index]
-            element_x = element.center[0]
             element_y = element.center[1]
             if element_y != actual_y:
-                matrix.append(row)
+                subgroups_matrix.append(row)
                 row = []
                 actual_y = element_y
             row.append(element)
-        self._subdivision_centers = matrix
+        self._subdivision_centers = subgroups_matrix
 
     def subgroups_matrix(self, rad):
         """
@@ -345,7 +347,7 @@ class SystemState(object):
         """
         self._create_subgroups_matrix(rad)
         return self._subdivision_centers
-            
+
 
 
     def _compute_g2_and_g4(self):
@@ -522,15 +524,16 @@ class SystemState(object):
                     selected_rod = rod2
         return selected_rod
 
-    def _get_closest_rod_min_angle(self, reference_rod, max_distance, max_angle_diff):
+    def _get_cluster_members(self, reference_rod,
+                                    max_distance, max_angle_diff):
         """
-        Gets the closest neighbour to a rod that fulfill some conditions.
+        Gets the closest neighbour to a rod that fulfill
+        some conditions.
         This must be called in a loop popping selected rods.
         """
         if self._cluster_checked_dict[reference_rod.identifier]:
             return None
         rods = set([])
-        min_distance = max_distance
         for rod in self._rods:
             if self._cluster_checked_dict:
                 continue
@@ -539,24 +542,43 @@ class SystemState(object):
             distance = math.sqrt(x_diff**2+y_diff**2)
             angle_diff = abs(rod.angle-reference_rod.angle)
             angle_diff = min([angle_diff, 180-angle_diff])
-            if angle_diff <= max_angle_diff and distance < min_distance:
+            if angle_diff <= max_angle_diff and distance < max_distance:
                 rods.add(rod)
+                rods.add(self._get_cluster_members(rod, max_distance,
+                                                         max_angle_diff))
             if distance <= 1.4*max_distance and angle_diff <= max_angle_diff/2.0:
-                slope = y_diff / x_diff
-                alpha = math.atan(abs(slope))
-                theta = (math.pi*reference_rod.angle)/180
-                if slope > 0:
-                    beta = abs(alpha-theta)
-                else:
-                    beta = abs(math.pi+alpha-theta)
-                perp_distance = distance*math.sin(beta)
-                if perp_distance < min_distance:
-                    selected_rod = rod
-                    min_distance = perp_distance
+                rods.add(rod)
+                rods.add(self._get_cluster_members(rod, max_distance,
+                                                         max_angle_diff))
         self._cluster_checked_dict[reference_rod.identifier] = True
         return rods
 
-    def _compute_closest_rod_matrix(self, max_distance=None, max_angle_diff=None):
+
+    def _compute_clusters(self, max_distance, max_angle_diff):
+        """
+        Gets the cluster for rod.
+        Recursive method.
+        """
+        if not len(self._clusters):
+            if len(self._cluster_checked_dict.keys()):
+                self._fill_dicts()
+            clusters = []
+            for rod in self._rods:
+                cluster = self._get_cluster_members(rod,
+                                max_distance, max_angle_diff)
+                if cluster:
+                    clusters.append(cluster)
+            assert len(clusters)>0, "no clusters detected"
+            self._clusters = clusters
+
+    def clusters(self, max_distance, max_angle_diff):
+        """
+        All clusters in system with given atributes.
+        """
+        return self._compute_clusters(max_distance, max_angle_diff)
+
+
+    def _compute_closest_rod_matrix(self):
         """
         Creates closer rod matrix:
         [[rod1, closest_rod_to_rod1],
@@ -564,10 +586,7 @@ class SystemState(object):
         ...
         [rodN, closest_rod_to_rodN]]
         """
-        if not max_distance or not max_angle_diff:
-            function = self._get_closest_rod
-        else:
-            function = self._get_closest_rod_min_angle
+        function = self._get_closest_rod
         closest_rod_matrix = []
         for rod in list(self._rods):
             new_row = [rod]
@@ -579,7 +598,7 @@ class SystemState(object):
         self._closest_rod_matrix = closest_rod_matrix
 
 
-    def closest_rod_matrix(self, max_distance=None, max_angle_diff=None):
+    def closest_rod_matrix(self):
         """
         Returns closest rod matrix.
         See _compute_closest_rod_matrix for more info.
@@ -588,7 +607,7 @@ class SystemState(object):
             self._compute_closest_rod_matrix()
         return self._closest_rod_matrix
 
-    def closest_rod_dict(self, max_distance=None, max_angle_diff=None):
+    def closest_rod_dict(self):
         """
         Returns a dictionary of closest rods.
         """
@@ -597,37 +616,6 @@ class SystemState(object):
         for pair in closest_rod_matrix:
             dictionary[pair[0].identifier] = pair[1]
         return dictionary
-
-    def _define_clusters(self, max_distance, max_angle_diff):
-        """
-        Create clusters set.
-        """
-        if len(self._clusters) == 0:
-            rods_dict = self.rods_dictionary
-            for identifier in crdict.keys():
-                rod1 = rods_dict[identifier]
-                rod2 = None
-                
-    def _get_cluster(self, rod_id, closest_rod_dict, max_distance, max_angle_diff, previous=None):
-        """
-        Gets the cluster for rod.
-        Recursive method.
-        """
-        self._compute_closest_rod_matrix(max_distance=max_distance,
-                                         max_angle_diff=max_angle_diff)
-        crdict = self.closest_rod_dict
-        cluster = set([])
-        rods_dict = self.rods_dictionary
-        try:
-            next_rod = closest_rod_dict[rod_id]
-        except KeyError:
-            return cluster
-        next_rod = closest_rod_dict[rod_id]
-        if next_rod == previous:
-            return cluster
-        cluster.add(next_rod)
-        cluster.add(self._get_cluster(next_rod._id)) ##NO FunCIONA PORQUE DEVOLVERIA EL ROD ANTERIOR. HAY QUE IR QUITANDO LOS RODS.
-
 
     @property
     def relative_g2(self):
@@ -722,12 +710,12 @@ class SystemState(object):
         Value in radians.
         """
         if len(self._direction_matrix) == 0:
-            self._direction_matrix = matrix.zeros(2,2)
+            self._direction_matrix = matrix.zeros(2, 2)
             for rod in list(self._rods):
                 self._direction_matrix += rod.direction_matrix
-        eigen1, eigen2 = self._direction_matrix.diagonalize_2x2()
+        eigen1, dummy_ = self._direction_matrix.diagonalize_2x2()
         return eigen1
-        
+
 
 
 

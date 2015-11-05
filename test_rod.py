@@ -10,6 +10,7 @@ import numpy
 from scipy import interpolate
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
+import matplotlib.pyplot as plt
 import numpy as np
 
 class TestRod(unittest.TestCase):
@@ -166,6 +167,7 @@ class TestRod(unittest.TestCase):
         num_of_rods = rod_groups[1].number_of_rods
         rg = rod_groups[1]
         rod_group = rod_groups[1]   
+        print rod_group.clusters(50,10)
         """rad = 50
         x, y, z = rod_group.plottable_density_matrix(rad)
         plt.figure(1)
