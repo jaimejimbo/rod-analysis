@@ -587,25 +587,11 @@ class SystemState(object):
                                 max_distance, max_angle_diff)
                 if cluster:
                     clusters.append(cluster)
-            assert len(clusters)>0, "no clusters detected"
-            self._clusters = self._erase_one_rod_clusters(clusters)
+            assert len(clusters) > 0, "no clusters detected"
+            self._clusters = erase_one_rod_clusters(clusters)
         return self._clusters
 
-    def _erase_one_rod_clusters(self, clusters):
-        """
-        Erase clusters with 1 rod.
-        """
-        clusters_new = []
-        try:
-            while True:
-                cluster = clusters.pop()
-                if len(cluster) >= 2:
-                    clusters_new.append(cluster)
-        except IndexError:
-            pass
-        return clusters_new
-
-    def average_number_of_rods_in_cluster(self, max_distance=None, max_angle_diff=None):
+    def average_cluster_rod_num(self, max_distance=None, max_angle_diff=None):
         """
         Gets the average number of rods in clusters.
         Angles in grad.
@@ -620,7 +606,7 @@ class SystemState(object):
         """
         Creates a list with the number of rods in each cluster.
         Angles in grad.
-        """        
+        """
         lengths = []
         for cluster in self.clusters(max_distance, max_angle_diff):
             lengths.append(len(cluster))
@@ -630,8 +616,8 @@ class SystemState(object):
         """
         Returns the number of clusters in the system.
         Angles in grad.
-        """    
-        return len(self.clusters(max_distance, max_angle_diff)) 
+        """
+        return len(self.clusters(max_distance, max_angle_diff))
 
     def _compute_closest_rod_matrix(self):
         """
@@ -837,3 +823,19 @@ class SubsystemState(SystemState):
         except TypeError:
             print "Use a rod list in add_rods method"
 
+
+
+
+def erase_one_rod_clusters(clusters):
+    """
+    Erase clusters with 1 rod.
+    """
+    clusters_new = []
+    try:
+        while True:
+            cluster = clusters.pop()
+            if len(cluster) >= 2:
+                clusters_new.append(cluster)
+    except IndexError:
+        pass
+    return clusters_new
