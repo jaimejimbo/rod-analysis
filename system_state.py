@@ -3,7 +3,7 @@
 """
 
 import math
-from methods import is_in_circle, same_area_rad
+from methods import is_in_circle, same_area_rad, erase_length_one_elements
 from queue import Queue
 import matrix
 
@@ -588,7 +588,7 @@ class SystemState(object):
                 if cluster:
                     clusters.append(cluster)
             assert len(clusters) > 0, "no clusters detected"
-            self._clusters = erase_one_rod_clusters(clusters)
+            self._clusters = erase_length_one_elements(clusters)
         return self._clusters
 
     def average_cluster_rod_num(self, max_distance=None, max_angle_diff=None):
@@ -823,19 +823,3 @@ class SubsystemState(SystemState):
         except TypeError:
             print "Use a rod list in add_rods method"
 
-
-
-
-def erase_one_rod_clusters(clusters):
-    """
-    Erase clusters with 1 rod.
-    """
-    clusters_new = []
-    try:
-        while True:
-            cluster = clusters.pop()
-            if len(cluster) >= 2:
-                clusters_new.append(cluster)
-    except IndexError:
-        pass
-    return clusters_new

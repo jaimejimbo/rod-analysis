@@ -285,3 +285,18 @@ def binary_order(array, ordering_id):
         ordered_array.append(element)
     return ordered_array
 
+
+
+def erase_length_one_elements(group, minimum_length=2):
+    """
+    Erase elements of groups of lenght < minimum_length
+    """
+    new_group = []
+    try:
+        while True:
+            element = group.pop()
+            if len(element) >= minimum_length:
+                new_group.append(element)
+    except IndexError:
+        pass
+    return new_grou
