@@ -1,9 +1,12 @@
-- automatize plot
-- clusters
+- density                                               (DONE)
+- average angle                                         (DONE)
+- correlations g2,g4                                    (DONE)
+- clusters                                              (in proccess)
 - tracks?
 - dynamics
     · velocities and temperature
     · density as a function of local temperature.
+- main code (plot and study system)
 - multiprocessing
 - GUI
 - imagej interface
