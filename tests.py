@@ -16,22 +16,24 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-stream = StringIO()
-runner = unittest.TextTestRunner(stream = stream)
+def test():
+	stream = StringIO()
+	runner = unittest.TextTestRunner(stream = stream)
 
-def suite():
-    suites = []
-    suites.append(unittest.TestLoader().loadTestsFromTestCase(TestMatrix))
-    suites.append(unittest.TestLoader().loadTestsFromTestCase(TestRod))
-    suites.append(unittest.TestLoader().loadTestsFromTestCase(TestQueue))
-    return unittest.TestSuite(suites)
+	def suite():
+	    suites = []
+	    suites.append(unittest.TestLoader().loadTestsFromTestCase(TestMatrix))
+	    suites.append(unittest.TestLoader().loadTestsFromTestCase(TestRod))
+	    suites.append(unittest.TestLoader().loadTestsFromTestCase(TestQueue))
+	    return unittest.TestSuite(suites)
 
-result = runner.run(suite())
-print 'Tests run ', result.testsRun
-print bcolors.WARNING + 'ERRORS ' + bcolors.FAIL + bcolors.BOLD + str(result.errors)
-pprint(result.failures)
-stream.seek(0)
-if result.errors==[] and len(result.failures)==0: print bcolors.OKGREEN + bcolors.BOLD + str("NO ERRORS") + bcolors.ENDC
-print bcolors.ENDC+'Test output\n', stream.read() + bcolors.ENDC
-raw_input("Press Enter to end.")
+	result = runner.run(suite())
+	print 'Tests run ', result.testsRun
+	print bcolors.WARNING + 'ERRORS ' + bcolors.FAIL + bcolors.BOLD + str(result.errors)
+	pprint(result.failures)
+	stream.seek(0)
+	if result.errors==[] and len(result.failures)==0: print bcolors.OKGREEN + bcolors.BOLD + str("NO ERRORS") + bcolors.ENDC
+	print bcolors.ENDC+'Test output\n', stream.read() + bcolors.ENDC
+	raw_input("Press Enter to end.")
 
+test()

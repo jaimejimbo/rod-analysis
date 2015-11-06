@@ -167,7 +167,7 @@ class TestRod(unittest.TestCase):
         num_of_rods = rod_groups[1].number_of_rods
         rg = rod_groups[1]
         rod_group = rod_groups[1]   
-        print rod_group.clusters(50,10)
+        clusters = rod_group.clusters(10,5)
         """rad = 50
         x, y, z = rod_group.plottable_density_matrix(rad)
         plt.figure(1)

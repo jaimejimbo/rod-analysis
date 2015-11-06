@@ -529,12 +529,12 @@ class SystemState(object):
         """
         Gets the closest neighbour to a rod that fulfill
         some conditions.
-        This must be called in a loop popping selected rods.
         """
         rods = set([])
         if self._cluster_checked_dict[reference_rod.identifier]:
             return rods
-        for rod in self._rods:
+        self._cluster_checked_dict[reference_rod.identifier] = True
+        for rod in list(self._rods):
             if self._cluster_checked_dict[rod.identifier]:
                 continue
             x_diff = rod.x_mid-reference_rod.x_mid
@@ -546,14 +546,13 @@ class SystemState(object):
                 subrods = self._get_cluster_members(rod, max_distance,
                                                     max_angle_diff)
                 rods.add(rod)
-                rods.add(subrods)
+                rods |= subrods
                 continue
             if distance <= 1.4*max_distance and angle_diff <= max_angle_diff/2.0:
                 subrods = self._get_cluster_members(rod, max_distance,
-                                                    max_angle_diff)
+                                                   max_angle_diff)
                 rods.add(rod)
-                rods.add(subrods)
-        self._cluster_checked_dict[reference_rod.identifier] = True
+                rods |= subrods
         return rods
 
 
@@ -567,13 +566,24 @@ class SystemState(object):
                 self._fill_dicts()
             clusters = []
             for rod in self._rods:
+                if self._cluster_checked_dict[rod.identifier]:
+                    continue
                 cluster = self._get_cluster_members(rod,
                                 max_distance, max_angle_diff)
                 if cluster:
                     clusters.append(cluster)
             assert len(clusters)>0, "no clusters detected"
+            self._erase_one_rod_clusters(clusters)
             self._clusters = clusters
         return clusters
+
+    def _erase_one_rod_clusters(self, clusters):
+        """
+        Erase clusters with length 1.
+        """
+        for cluster in clusters:
+            if len(cluster) <= 1:
+                del cluster
 
     def _compute_closest_rod_matrix(self):
         """
