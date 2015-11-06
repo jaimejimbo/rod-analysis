@@ -166,9 +166,13 @@ class TestRod(unittest.TestCase):
         rod_group = rod_groups[0]
         num_of_rods = rod_groups[1].number_of_rods
         rg = rod_groups[1]
-        rod_group = rod_groups[1]   
-        clusters = rod_group.clusters(10,5)
-        print clusters
+        rod_group = rod_groups[1]
+        average_length = rod_group.average_length_of_clusters(30,10)
+        expected = 2
+        msg = "length must be greater than 2, obtained: "+str(average_length)
+        msg += "\n"
+        msg += str(rod_group.clusters()) + "\n" + str(rod_group.length_of_clusters())
+        self.assertGreaterEqual(average_length, expected, msg)
         """rad = 50
         x, y, z = rod_group.plottable_density_matrix(rad)
         plt.figure(1)

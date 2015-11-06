@@ -46,6 +46,8 @@ class SystemState(object):
         self._clusters = []
         self._rods_dict = {}
         self._cluster_checked_dict = {}
+        self._clusters_max_distance = None
+        self._clusters_max_angle_diff = None
         try:
             self._radius = zone_coords[2]
             self._center_x = zone_coords[0]
@@ -124,6 +126,8 @@ class SystemState(object):
         self._cluster_checked_dict = {}
         self._rods_dict = {}
         self._fill_dicts()
+        self._clusters_max_distance = None
+        self._clusters_max_angle_diff = None
         if not self._fixed_center_radius:
             self._radius = None
             self._center_x = None
@@ -555,13 +559,22 @@ class SystemState(object):
                 rods |= subrods
         return rods
 
-
-    def clusters(self, max_distance, max_angle_diff):
+    def clusters(self, max_distance=None, max_angle_diff=None):
         """
         Gets the cluster for rod.
         Recursive method.
         """
-        if not len(self._clusters):
+        if len(self._clusters) and not max_distance and not max_angle_diff:
+            return self._clusters
+        if not max_distance or not max_angle_diff:
+            msg = "cluster method without args only valid "
+            msg += "when previously computed."
+            raise ValueError(msg)
+        cond2 = (self._clusters_max_distance != max_distance)
+        cond2 = cond2 and (self._clusters_max_angle_diff != max_angle_diff)
+        if not len(self._clusters) or cond2:
+            self._clusters_max_distance = max_distance
+            self._clusters_max_angle_diff = max_angle_diff
             if len(self._cluster_checked_dict.keys()):
                 self._fill_dicts()
             clusters = []
@@ -573,17 +586,47 @@ class SystemState(object):
                 if cluster:
                     clusters.append(cluster)
             assert len(clusters)>0, "no clusters detected"
-            self._erase_one_rod_clusters(clusters)
-            self._clusters = clusters
-        return clusters
+            self._clusters = self._erase_one_rod_clusters(clusters)
+        return self._clusters
 
     def _erase_one_rod_clusters(self, clusters):
         """
         Erase clusters with length 1.
         """
-        for cluster in clusters:
-            if len(cluster) <= 1:
-                del cluster
+        clusters_new = []
+        try:
+            while True:
+                cluster = clusters.pop()
+                if len(cluster) >= 2:
+                    clusters_new.append(cluster)
+        except IndexError:
+            pass
+        return clusters_new
+
+    def average_length_of_clusters(self, max_distance=None, max_angle_diff=None):
+        """
+        Gets the average length of clusters.
+        """
+        lengths = self.length_of_clusters(max_distance, max_angle_diff)
+        try:
+            return float(sum(lengths))/len(lengths)
+        except ZeroDivisionError:
+            print "No clusters detected."
+
+    def length_of_clusters(self, max_distance=None, max_angle_diff=None):
+        """
+        Creates a list with the length of each cluster.
+        """        
+        lengths = []
+        for cluster in self.clusters(max_distance, max_angle_diff):
+            lengths.append(len(cluster))
+        return lengths
+
+    def number_of_clusters(self, max_distance=None, max_angle_diff=None):
+        """
+        Returns the number of clusters in the system.
+        """    
+        return len(self.clusters(max_distance, max_angle_diff)   
 
     def _compute_closest_rod_matrix(self):
         """
