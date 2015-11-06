@@ -533,6 +533,7 @@ class SystemState(object):
         """
         Gets the closest neighbour to a rod that fulfill
         some conditions.
+        Angles in grad.
         """
         rods = set([])
         if self._cluster_checked_dict[reference_rod.identifier]:
@@ -563,6 +564,7 @@ class SystemState(object):
         """
         Gets the cluster for rod.
         Recursive method.
+        Angles in grad.
         """
         if len(self._clusters) and not max_distance and not max_angle_diff:
             return self._clusters
@@ -606,6 +608,7 @@ class SystemState(object):
     def average_length_of_clusters(self, max_distance=None, max_angle_diff=None):
         """
         Gets the average length of clusters.
+        Angles in grad.
         """
         lengths = self.length_of_clusters(max_distance, max_angle_diff)
         try:
@@ -616,6 +619,7 @@ class SystemState(object):
     def length_of_clusters(self, max_distance=None, max_angle_diff=None):
         """
         Creates a list with the length of each cluster.
+        Angles in grad.
         """        
         lengths = []
         for cluster in self.clusters(max_distance, max_angle_diff):
@@ -625,8 +629,9 @@ class SystemState(object):
     def number_of_clusters(self, max_distance=None, max_angle_diff=None):
         """
         Returns the number of clusters in the system.
+        Angles in grad.
         """    
-        return len(self.clusters(max_distance, max_angle_diff)   
+        return len(self.clusters(max_distance, max_angle_diff)) 
 
     def _compute_closest_rod_matrix(self):
         """
