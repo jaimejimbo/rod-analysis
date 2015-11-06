@@ -593,7 +593,7 @@ class SystemState(object):
 
     def _erase_one_rod_clusters(self, clusters):
         """
-        Erase clusters with length 1.
+        Erase clusters with 1 rod.
         """
         clusters_new = []
         try:
@@ -605,20 +605,20 @@ class SystemState(object):
             pass
         return clusters_new
 
-    def average_length_of_clusters(self, max_distance=None, max_angle_diff=None):
+    def average_number_of_rods_in_cluster(self, max_distance=None, max_angle_diff=None):
         """
-        Gets the average length of clusters.
+        Gets the average number of rods in clusters.
         Angles in grad.
         """
-        lengths = self.length_of_clusters(max_distance, max_angle_diff)
+        lengths = self.number_of_rods_in_cluster(max_distance, max_angle_diff)
         try:
             return float(sum(lengths))/len(lengths)
         except ZeroDivisionError:
             print "No clusters detected."
 
-    def length_of_clusters(self, max_distance=None, max_angle_diff=None):
+    def number_of_rods_in_cluster(self, max_distance=None, max_angle_diff=None):
         """
-        Creates a list with the length of each cluster.
+        Creates a list with the number of rods in each cluster.
         Angles in grad.
         """        
         lengths = []
