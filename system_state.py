@@ -531,11 +531,11 @@ class SystemState(object):
         some conditions.
         This must be called in a loop popping selected rods.
         """
-        if self._cluster_checked_dict[reference_rod.identifier]:
-            return None
         rods = set([])
+        if self._cluster_checked_dict[reference_rod.identifier]:
+            return rods
         for rod in self._rods:
-            if self._cluster_checked_dict:
+            if self._cluster_checked_dict[rod.identifier]:
                 continue
             x_diff = rod.x_mid-reference_rod.x_mid
             y_diff = rod.y_mid-reference_rod.y_mid
@@ -543,18 +543,21 @@ class SystemState(object):
             angle_diff = abs(rod.angle-reference_rod.angle)
             angle_diff = min([angle_diff, 180-angle_diff])
             if angle_diff <= max_angle_diff and distance < max_distance:
+                subrods = self._get_cluster_members(rod, max_distance,
+                                                    max_angle_diff)
                 rods.add(rod)
-                rods.add(self._get_cluster_members(rod, max_distance,
-                                                         max_angle_diff))
+                rods.add(subrods)
+                continue
             if distance <= 1.4*max_distance and angle_diff <= max_angle_diff/2.0:
+                subrods = self._get_cluster_members(rod, max_distance,
+                                                    max_angle_diff)
                 rods.add(rod)
-                rods.add(self._get_cluster_members(rod, max_distance,
-                                                         max_angle_diff))
+                rods.add(subrods)
         self._cluster_checked_dict[reference_rod.identifier] = True
         return rods
 
 
-    def _compute_clusters(self, max_distance, max_angle_diff):
+    def clusters(self, max_distance, max_angle_diff):
         """
         Gets the cluster for rod.
         Recursive method.
@@ -570,13 +573,7 @@ class SystemState(object):
                     clusters.append(cluster)
             assert len(clusters)>0, "no clusters detected"
             self._clusters = clusters
-
-    def clusters(self, max_distance, max_angle_diff):
-        """
-        All clusters in system with given atributes.
-        """
-        return self._compute_clusters(max_distance, max_angle_diff)
-
+        return clusters
 
     def _compute_closest_rod_matrix(self):
         """
