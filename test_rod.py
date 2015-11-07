@@ -167,7 +167,7 @@ class TestRod(unittest.TestCase):
         num_of_rods = rod_groups[1].number_of_rods
         rg = rod_groups[1]
         rod_group = rod_groups[1]
-        average_length = rod_group.clone.average_number_of_rods_in_cluster(30,10)
+        average_length = rod_group.average_number_of_rods_in_cluster(30,10)
         expected = 2
         msg = "length must be greater than 2, obtained: "+str(average_length)
         msg += "\n"

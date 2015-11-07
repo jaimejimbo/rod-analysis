@@ -56,16 +56,21 @@ class SystemState(object):
         except TypeError:
             self._fixed_center_radius = False
             self._zone_cords = []
+        except IndexError:
+            print zone_coords
+            raise IndexError
 
     @property
     def clone(self):
         """
         Returns a copy of this object.
         """
+        if not len(self._zone_coords):
+            _zone_coords = None
         clone = SystemState(kappas=self._kappas,
                             allowed_kappa_error=self._allowed_kappa_error,
                             radius_correction_ratio=self._radius_correction_ratio,
-                            id_string=self.id_string, zone_coords=self._zone_coords,
+                            id_string=self.id_string, zone_coords=_zone_coords,
                             rods=self._rods)
         return clone
 
