@@ -11,12 +11,26 @@ class Queue(object):
     Queue class: objects get in through one side and left through the other
     """
     
-    def __init__(self):
+    def __init__(self, queue=None):
         """
         Creator
         """
-        self._data = []
-
+        if queue == None:
+            self._data = []
+        input_type = type(queue)
+        if input_type == "<type 'list'>":
+            self._data = queue
+        elif input_type == "<type 'Queue'>":
+            self._data = []
+            try:
+                self._data.append(queue.get_next())
+            except IndexError:
+                pass
+        else:
+            msg = "Queue input data must be list or another"
+            msg += " queue."
+            raise ValueError(msg)
+            
     def __iter__(self):
         """
         To list converter.

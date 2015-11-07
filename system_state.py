@@ -1,7 +1,6 @@
 """
-    System State. Group of rods in a determined moment.
+        System State. Group of rods in a determined moment.
 """
-
 import math
 from methods import is_in_circle, same_area_rad, erase_length_one_elements
 from queue import Queue
@@ -9,16 +8,16 @@ import matrix
 
 class SystemState(object):
     """
-    Group of rods in a moment.
+        Group of rods in a moment.
     Each image has to be translated into a RodGroup (by this class?)
     """
     def __init__(self, kappas=10, allowed_kappa_error=.5,
-                radius_correction_ratio=0,
-                id_string="", zone_coords=None):
+            radius_correction_ratio=0,
+            id_string="", zone_coords=None, rods=None):
         """
-        Initialization
+            Initialization
         """
-        self._rods = Queue()
+        self._rods = Queue(rods)
         self._number_of_rods = 0
         self._kappas = kappas
         self._allowed_kappa_error = allowed_kappa_error
@@ -59,22 +58,34 @@ class SystemState(object):
             self._zone_cords = []
 
     @property
+    def clone(self):
+        """
+        Returns a copy of this object.
+        """
+        clone = SystemState(kappas=self._kappas,
+                            allowed_kappa_error=self._allowed_kappa_error,
+                            radius_correction_ratio=self._radius_correction_ratio,
+                            id_string=self.id_string, zone_coords=self._zone_coords,
+                            rods=self._rods)
+        return clone
+
+    @property
     def rods_dictionary(self):
         """
-        Returns a dictionary of rods ordered by id.
+            Returns a dictionary of rods ordered by id.
         """
         return self._rods_dict.copy()
 
     @property
     def number_of_rods(self):
         """
-        Returns the number of rods.
+            Returns the number of rods.
         """
         return self._number_of_rods
 
     def add_rod(self, rod):
         """
-        Adds a rod to the group
+            Adds a rod to the group
         """
         self._rods.join(rod)
         self._number_of_rods += 1
@@ -82,7 +93,7 @@ class SystemState(object):
 
     def get_rod(self):
         """
-        Returns the first rod in the queue
+            Returns the first rod in the queue
         The rod is removed of the group!
         """
         self._number_of_rods -= 1
@@ -91,7 +102,7 @@ class SystemState(object):
 
     def remove_rod(self, rod):
         """
-        Removes a rod from the group (queue object mod needed)
+            Removes a rod from the group (queue object mod needed)
         """
         self._rods.delete(rod)
         self._number_of_rods -= 1
@@ -99,7 +110,7 @@ class SystemState(object):
 
     def reset(self):
         """
-        Called when system is changed..
+            Called when system is changed..
         Reset all important values, so they must be
         computed again.
         """
@@ -136,7 +147,7 @@ class SystemState(object):
 
     def _fill_dicts(self):
         """
-        Fill dictionaries.
+            Fill dictionaries.
         """
         for rod in self._rods:
             self._rods_dict[rod.identifier] = rod
@@ -145,11 +156,10 @@ class SystemState(object):
 
     def _compute_center_and_radius(self):
         """
-        Computes where the center of the system is and its
+            Computes where the center of the system is and its
         radius.
         """
-
-            #There must be rods to make statistics.
+        #There must be rods to make statistics.
         if self._number_of_rods == 0:
             msg = "center_and_radius can't be computed before adding rods"
             raise ValueError(msg)
@@ -174,7 +184,7 @@ class SystemState(object):
     @property
     def center(self):
         """
-        Returns center of the system.
+            Returns center of the system.
         """
         self._compute_center_and_radius()
         return self._center_x, self._center_y
@@ -182,7 +192,7 @@ class SystemState(object):
     @property
     def radius(self):
         """
-        Returns radius of the system.
+            Returns radius of the system.
         """
         self._compute_center_and_radius()
         return self._radius
@@ -190,7 +200,7 @@ class SystemState(object):
     @property
     def zone_coords(self):
         """
-        Returns a tuple with center and radius.
+            Returns a tuple with center and radius.
         """
         self._compute_center_and_radius()
         return self._zone_coords
@@ -198,7 +208,7 @@ class SystemState(object):
 
     def check_rods(self):
         """
-        Check if rods are correct.
+            Check if rods are correct.
         """
         self._compute_center_and_radius()
         for rod in list(self._rods):
@@ -210,7 +220,7 @@ class SystemState(object):
 
     def _divide_in_circles(self, rad):
         """
-        Divides rods into groups contained in circles of given rad.
+            Divides rods into groups contained in circles of given rad.
         """
         if self._rad_of_division == rad:
             return
@@ -238,7 +248,7 @@ class SystemState(object):
 
     def _subsystems(self, possible_x_values, possible_y_values, rad):
         """
-        Creates subsystems
+            Creates subsystems
         """
         subsystems = []
         for actual_y in possible_y_values:
@@ -259,7 +269,7 @@ class SystemState(object):
     def _compute_density_matrix(self, rad, normalized=False,
                                divided_by_area=False):
         """
-        Computes density matrix of the system.
+            Computes density matrix of the system.
         """
         if self._rad_of_division != rad:
             self.reset()
@@ -276,14 +286,10 @@ class SystemState(object):
             density.append(subdensity)
         self._density_matrix = density
 
-
-
-
     def plottable_density_matrix(self, rad):
         """
-        Returns 3 arrays: one for x, another for y and the last for values.
+            Returns 3 arrays: one for x, another for y and the last for values.
         """
-
         if len(self._density_matrix) == 0:
             self._compute_density_matrix(rad=rad)
         x_values = []
@@ -296,11 +302,9 @@ class SystemState(object):
         #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
 
-
-
     def _transform_for_pcolor(self, z_values, rad):
         """
-        Transform arrays to a plotable set of arrays.
+            Transform arrays to a plotable set of arrays.
         """
         xmat = []
         ymat = []
@@ -323,10 +327,9 @@ class SystemState(object):
             zmat.append(zrow)
         return xmat, ymat, zmat
 
-
     def _create_subgroups_matrix(self, rad):
         """
-        Put subsystems in a matrix form.
+            Put subsystems in a matrix form.
         """
         if self._rad_of_division != rad:
             self.reset()
@@ -347,7 +350,7 @@ class SystemState(object):
 
     def subgroups_matrix(self, rad):
         """
-        Returns subgroups matrix
+            Returns subgroups matrix
         """
         self._create_subgroups_matrix(rad)
         return self._subdivision_centers
@@ -356,7 +359,7 @@ class SystemState(object):
 
     def _compute_g2_and_g4(self):
         """
-        Computes correlation_g2 and correlation_g4 values
+            Computes correlation_g2 and correlation_g4 values
         """
         cos2_av, sin2_av, cos4_av, sin4_av = 0, 0, 0, 0
         for rod in list(self._rods):
@@ -371,7 +374,7 @@ class SystemState(object):
     @property
     def correlation_g2(self):
         """
-        sqrt(<cos(2*angle)>^2+<sin(2*angle)>^2)
+            sqrt(<cos(2*angle)>^2+<sin(2*angle)>^2)
         """
         if not self._correlation_g2:
             self._compute_g2_and_g4()
@@ -380,7 +383,7 @@ class SystemState(object):
     @property
     def correlation_g4(self):
         """
-        sqrt(<cos(4*angle)>^2+<sin(4*angle)>^2)
+            sqrt(<cos(4*angle)>^2+<sin(4*angle)>^2)
         """
         if not self._correlation_g4:
             self._compute_g2_and_g4()
@@ -388,7 +391,7 @@ class SystemState(object):
 
     def _compute_g2_g4_matrices(self, rad):
         """
-        Computes correlation_g2 and correlation_g4 matrices for subgroups.
+            Computes correlation_g2 and correlation_g4 matrices for subgroups.
         """
         if self._rad_of_division != rad:
             self.reset()
@@ -404,7 +407,7 @@ class SystemState(object):
 
     def correlation_g2_plot_matrix(self, rad):
         """
-        Returns values for plotting correlation_g2 matrix.
+            Returns values for plotting correlation_g2 matrix.
         """
         self._compute_g2_g4_matrices(rad)
         x_values = []
@@ -419,7 +422,7 @@ class SystemState(object):
 
     def correlation_g4_plot_matrix(self, rad):
         """
-        Returns values for plotting correlation_g2 matrix.
+            Returns values for plotting correlation_g2 matrix.
         """
         self._compute_g2_g4_matrices(rad)
         x_values = []
@@ -435,7 +438,7 @@ class SystemState(object):
     @property
     def average_kappa(self):
         """
-        Returns kappa average of group.
+            Returns kappa average of group.
         """
         if not self._average_kappa:
             self._average_kappa = 0
@@ -447,7 +450,7 @@ class SystemState(object):
     @property
     def kappa_dev(self):
         """
-        Returns sqrt(<kappa^2> - <kappa>^2)
+            Returns sqrt(<kappa^2> - <kappa>^2)
         """
         if not self._kappa_dev:
             kappa2 = 0
@@ -460,7 +463,7 @@ class SystemState(object):
     @property
     def average_angle(self):
         """
-        Returns average angle of the system (if exists).
+            Returns average angle of the system (if exists).
         """
         if not self._average_angle:
             if self.correlation_g2 > 0.5 and self.correlation_g4 < 0.3:
@@ -481,7 +484,7 @@ class SystemState(object):
 
     def _compute_average_angle_matrix(self, rad):
         """
-        Computes average angle matrix
+            Computes average angle matrix
         """
         if self._rad_of_division != rad:
             self.reset()
@@ -493,7 +496,7 @@ class SystemState(object):
 
     def plottable_average_angle_matrix(self, rad):
         """
-        Returns a plottable average angle matrix.
+            Returns a plottable average angle matrix.
         """
         self._compute_average_angle_matrix(rad)
         x_values = []
@@ -509,14 +512,14 @@ class SystemState(object):
     @property
     def angle_histogram(self):
         """
-        Returns all angles in a list to make an histogram.
+            Returns all angles in a list to make an histogram.
         """
         output = [rod.angle for rod in list(self._rods)]
         return output
 
     def _get_closest_rod(self, rod):
         """
-        Returns closest rod in group to given rod.
+            Returns closest rod in group to given rod.
         """
         distance = 1e100
         selected_rod = rod
@@ -531,7 +534,7 @@ class SystemState(object):
     def _get_cluster_members(self, reference_rod,
                                     max_distance, max_angle_diff):
         """
-        Gets the closest neighbour to a rod that fulfill
+            Gets the closest neighbour to a rod that fulfill
         some conditions.
         Angles in grad.
         """
@@ -562,7 +565,7 @@ class SystemState(object):
 
     def clusters(self, max_distance=None, max_angle_diff=None):
         """
-        Gets the cluster for rod.
+            Gets the cluster for rod.
         Recursive method.
         Angles in grad.
         """
@@ -593,7 +596,7 @@ class SystemState(object):
 
     def average_cluster_rod_num(self, max_distance=None, max_angle_diff=None):
         """
-        Gets the average number of rods in clusters.
+            Gets the average number of rods in clusters.
         Angles in grad.
         """
         lengths = self.number_of_rods_in_cluster(max_distance, max_angle_diff)
@@ -604,7 +607,7 @@ class SystemState(object):
 
     def number_of_rods_in_cluster(self, max_distance=None, max_angle_diff=None):
         """
-        Creates a list with the number of rods in each cluster.
+            Creates a list with the number of rods in each cluster.
         Angles in grad.
         """
         lengths = []
@@ -614,14 +617,14 @@ class SystemState(object):
 
     def number_of_clusters(self, max_distance=None, max_angle_diff=None):
         """
-        Returns the number of clusters in the system.
+            Returns the number of clusters in the system.
         Angles in grad.
         """
         return len(self.clusters(max_distance, max_angle_diff))
 
     def _compute_closest_rod_matrix(self):
         """
-        Creates closer rod matrix:
+            Creates closer rod matrix:
         [[rod1, closest_rod_to_rod1],
         [rod2, closest_rod_to_rod2],
         ...
@@ -641,7 +644,7 @@ class SystemState(object):
 
     def closest_rod_matrix(self):
         """
-        Returns closest rod matrix.
+            Returns closest rod matrix.
         See _compute_closest_rod_matrix for more info.
         """
         if len(self._closest_rod_matrix) == 0:
@@ -650,7 +653,7 @@ class SystemState(object):
 
     def closest_rod_dict(self):
         """
-        Returns a dictionary of closest rods.
+            Returns a dictionary of closest rods.
         """
         closest_rod_matrix = self.closest_rod_matrix
         dictionary = {}
@@ -661,7 +664,7 @@ class SystemState(object):
     @property
     def relative_g2(self):
         """
-        sqrt(<cos(2*angle)>^2+<sin(2*angle)>^2)
+            sqrt(<cos(2*angle)>^2+<sin(2*angle)>^2)
         Now angle is the relative between rods.
         N^2
         """
@@ -680,7 +683,7 @@ class SystemState(object):
     @property
     def relative_g4(self):
         """
-        sqrt(<cos(4*angle)>^2+<sin(4*angle)>^2)
+            sqrt(<cos(4*angle)>^2+<sin(4*angle)>^2)
         Now angle is the relative between rods.
         N^2
         """
@@ -698,7 +701,7 @@ class SystemState(object):
 
     def _compute_relative_g2_g4_mat(self, rad):
         """
-        Computes correlation_g2 and correlation_g4 matrices for subgroups.
+            Computes correlation_g2 and correlation_g4 matrices for subgroups.
         """
         if self._rad_of_division != rad:
             self.reset()
@@ -716,7 +719,7 @@ class SystemState(object):
 
     def relative_g2_plot_matrix(self, rad):
         """
-        Returns values for plotting correlation_g2 matrix.
+            Returns values for plotting correlation_g2 matrix.
         """
         self._compute_relative_g2_g4_mat(rad)
         x_values = []
@@ -731,7 +734,7 @@ class SystemState(object):
 
     def relative_g4_plot_matrix(self, rad):
         """
-        Returns values for plotting correlation_g2 matrix.
+            Returns values for plotting correlation_g2 matrix.
         """
         self._compute_relative_g2_g4_mat(rad)
         x_values = []
@@ -747,7 +750,7 @@ class SystemState(object):
     @property
     def average_angle_using_matrix(self):
         """
-        Returns average angle of the system using direction matrices.
+            Returns average angle of the system using direction matrices.
         Value in radians.
         """
         if len(self._direction_matrix) == 0:
@@ -763,13 +766,13 @@ class SystemState(object):
 
 class SubsystemState(SystemState):
     """
-    Group of rods. Used to put all rods that are in a zone or
+        Group of rods. Used to put all rods that are in a zone or
     have something in common.
     """
 
     def __init__(self, center, rad, area):
         """
-        Initialization
+            Initialization
         """
         SystemState.__init__(self)
         self._center = center
@@ -779,34 +782,34 @@ class SubsystemState(SystemState):
     @property
     def center(self):
         """
-        Center of the subsystem.
+            Center of the subsystem.
         """
         return self._center
 
     @property
     def radius(self):
         """
-        Radius of the subsystem
+            Radius of the subsystem
         """
         return self._rad
 
     @property
     def area(self):
         """
-        Area of the subsystem.
+            Area of the subsystem.
         """
         return self._area
 
     def _update_density(self):
         """
-        Computes density of the group.
+            Computes density of the group.
         """
         self._density = self._number_of_rods
 
     @property
     def density(self):
         """
-        Returns the density of the group.
+            Returns the density of the group.
         """
         if not self._density:
             self._update_density()
@@ -814,7 +817,7 @@ class SubsystemState(SystemState):
 
     def add_rods(self, rod_list):
         """
-        Add all rods of the list that are inside the circle.
+            Add all rods of the list that are inside the circle.
         """
         try:
             for rod in rod_list:
@@ -822,4 +825,18 @@ class SubsystemState(SystemState):
                     self.add_rod(rod)
         except TypeError:
             print "Use a rod list in add_rods method"
+
+
+
+
+
+
+def _rod_evolution_dictionary(system_state1, system_state2, max_angle_diff,
+                              max_speed, diff_t):
+    """
+        Creates a dictionary where keys are initial rods and values are
+    possible final rods.
+    {initial_rod: set([possible_final_rod1, possible_final_rod2, ...])}
+    """
+    pass
 
