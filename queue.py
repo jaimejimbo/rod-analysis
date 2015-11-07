@@ -5,6 +5,7 @@ Author:   Jaime Perez Aparicio
 Mail:     jaime.91@hotmail.es
 License:  GPL
 """
+import re
 
 class Queue(object):
     """
@@ -15,12 +16,12 @@ class Queue(object):
         """
         Creator
         """
-        if queue == None:
+        input_type = str(type(queue))
+        if re.match(r".*'NoneType'.*",input_type):
             self._data = []
-        input_type = type(queue)
-        if input_type == "<type 'list'>":
+        elif re.match(r'.*list.*',input_type):
             self._data = queue
-        elif input_type == "<type 'Queue'>":
+        elif re.match(r'.*Queue.*',input_type):
             self._data = []
             try:
                 self._data.append(queue.get_next())
@@ -28,7 +29,7 @@ class Queue(object):
                 pass
         else:
             msg = "Queue input data must be list or another"
-            msg += " queue."
+            msg += " queue. "+str(type(queue))
             raise ValueError(msg)
             
     def __iter__(self):
