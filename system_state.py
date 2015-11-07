@@ -60,6 +60,13 @@ class SystemState(object):
             print zone_coords
             raise IndexError
 
+    def __iter__(self):
+        """
+        Magic method for in.
+        """
+        for rod in self._rods:
+            yield rod
+
     @property
     def clone(self):
         """
@@ -828,18 +835,4 @@ class SubsystemState(SystemState):
                     self.add_rod(rod)
         except TypeError:
             print "Use a rod list in add_rods method"
-
-
-
-
-
-
-def _rod_evolution_dictionary(system_state1, system_state2, max_angle_diff,
-                              max_speed, diff_t):
-    """
-        Creates a dictionary where keys are initial rods and values are
-    possible final rods.
-    {initial_rod: set([possible_final_rod1, possible_final_rod2, ...])}
-    """
-    pass
 
