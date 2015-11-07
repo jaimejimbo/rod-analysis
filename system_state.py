@@ -72,6 +72,7 @@ class SystemState(object):
                             radius_correction_ratio=self._radius_correction_ratio,
                             id_string=self.id_string, zone_coords=_zone_coords,
                             rods=self._rods)
+        clone.check_rods()
         return clone
 
     @property

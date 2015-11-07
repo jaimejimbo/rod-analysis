@@ -164,6 +164,9 @@ class TestRod(unittest.TestCase):
         """
         names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=20, allowed_kappa_error=20, radius_correction_ratio=.1)
         rod_group = rod_groups[0].clone
+        rod_group.get_rod
+        original_rod_num = rod_groups[0].number_of_rods
+        clone_rod_num = rod_group.number_of_rods
         num_of_rods = rod_groups[1].number_of_rods
         rg = rod_groups[1]
         rod_group = rod_groups[1]
@@ -176,7 +179,7 @@ class TestRod(unittest.TestCase):
         rod_group.get_rod
         original_rod_num = rod_groups[0].number_of_rods
         clone_rod_num = rod_group.number_of_rods
-        msg = "Original must not change when changing clone!"
+        msg = "Original must not change when changing clone! Computed:" + str(clone_rod_num)+ " Expected:" + str(original_rod_num-1)
         self.assertEqual(clone_rod_num, original_rod_num-1,msg)
         """rad = 50
         x, y, z = rod_group.plottable_density_matrix(rad)
