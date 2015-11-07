@@ -18,7 +18,7 @@ class SystemState(object):
             Initialization
         """
         self._rods = Queue(rods)
-        self._number_of_rods = 0
+        self._number_of_rods = len(self._rods)
         self._kappas = kappas
         self._allowed_kappa_error = allowed_kappa_error
         self._radius_correction_ratio = radius_correction_ratio
@@ -72,7 +72,6 @@ class SystemState(object):
                             radius_correction_ratio=self._radius_correction_ratio,
                             id_string=self.id_string, zone_coords=_zone_coords,
                             rods=self._rods)
-        clone.check_rods()
         return clone
 
     @property
@@ -87,6 +86,7 @@ class SystemState(object):
         """
             Returns the number of rods.
         """
+        self._number_of_rods = len(self._rods)
         return self._number_of_rods
 
     def add_rod(self, rod):
@@ -94,7 +94,6 @@ class SystemState(object):
             Adds a rod to the group
         """
         self._rods.join(rod)
-        self._number_of_rods += 1
         self.reset()
 
     def get_rod(self):
@@ -102,7 +101,6 @@ class SystemState(object):
             Returns the first rod in the queue
         The rod is removed of the group!
         """
-        self._number_of_rods -= 1
         self.reset()
         return self._rods.get_next()
 
@@ -111,7 +109,6 @@ class SystemState(object):
             Removes a rod from the group (queue object mod needed)
         """
         self._rods.delete(rod)
-        self._number_of_rods -= 1
         self.reset()
 
     def reset(self):
@@ -166,7 +163,7 @@ class SystemState(object):
         radius.
         """
         #There must be rods to make statistics.
-        if self._number_of_rods == 0:
+        if self.number_of_rods == 0:
             msg = "center_and_radius can't be computed before adding rods"
             raise ValueError(msg)
         if not len(self._zone_coords) and not self._fixed_center_radius:
@@ -176,8 +173,8 @@ class SystemState(object):
                 x_values.append(rod.x_mid)
                 y_values.append(rod.y_mid)
             #center is the mean position of all particles.
-            center_x = sum(x_values)*1.0/self._number_of_rods
-            center_y = sum(y_values)*1.0/self._number_of_rods
+            center_x = sum(x_values)*1.0/self.number_of_rods
+            center_y = sum(y_values)*1.0/self.number_of_rods
             #radius is the average of maximum distances /2.
             radius = (max(x_values)-min(x_values)+max(y_values)-min(y_values))
             radius *= (1-self._radius_correction_ratio)/4.0
@@ -810,7 +807,7 @@ class SubsystemState(SystemState):
         """
             Computes density of the group.
         """
-        self._density = self._number_of_rods
+        self._density = self.number_of_rods
 
     @property
     def density(self):
