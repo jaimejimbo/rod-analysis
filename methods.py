@@ -299,4 +299,5 @@ def erase_length_one_elements(group, minimum_length=2):
                 new_group.append(element)
     except IndexError:
         pass
-    return new_grou
+    return new_group
+

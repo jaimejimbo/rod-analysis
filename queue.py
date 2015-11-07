@@ -20,18 +20,22 @@ class Queue(object):
         if re.match(r".*'NoneType'.*",input_type):
             self._data = []
         elif re.match(r'.*list.*',input_type):
-            self._data = queue
+            self._data = [element for element in queue]
         elif re.match(r'.*Queue.*',input_type):
-            self._data = []
-            try:
-                self._data.append(queue.get_next())
-            except IndexError:
-                pass
+            self._data = [element for element in queue]
         else:
             msg = "Queue input data must be list or another"
             msg += " queue. "+str(type(queue))
             raise ValueError(msg)
-            
+
+    @property     
+    def clone(self):
+        """
+        Returns a clone of the queue.
+        """
+        clone = Queue(self._data)
+        return clone
+
     def __iter__(self):
         """
         To list converter.
