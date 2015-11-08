@@ -101,14 +101,14 @@ class SystemState(object):
             Adds a rod to the group
         """
         self._rods.join(rod)
-        self.reset()
+        self._reset()
 
     def get_rod(self):
         """
             Returns the first rod in the queue
         The rod is removed of the group!
         """
-        self.reset()
+        self._reset()
         return self._rods.get_next()
 
     def remove_rod(self, rod):
@@ -116,12 +116,12 @@ class SystemState(object):
             Removes a rod from the group (queue object mod needed)
         """
         self._rods.delete(rod)
-        self.reset()
+        self._reset()
 
-    def reset(self):
+    def _reset(self):
         """
             Called when system is changed..
-        Reset all important values, so they must be
+        reset all important values, so they must be
         computed again.
         """
         self._rad_of_division = None
@@ -282,7 +282,7 @@ class SystemState(object):
             Computes density matrix of the system.
         """
         if self._rad_of_division != rad:
-            self.reset()
+            self._reset()
         self._divide_in_circles(rad)
         density = []
         for subsystem in self._actual_subdivision:
@@ -342,7 +342,7 @@ class SystemState(object):
             Put subsystems in a matrix form.
         """
         if self._rad_of_division != rad:
-            self.reset()
+            self._reset()
         self._divide_in_circles(rad)
         act_sub = self._actual_subdivision
         actual_y = act_sub[0].center[1]
@@ -404,7 +404,7 @@ class SystemState(object):
             Computes correlation_g2 and correlation_g4 matrices for subgroups.
         """
         if self._rad_of_division != rad:
-            self.reset()
+            self._reset()
         if not self._correlation_g2 or not self._correlation_g2:
             self._divide_in_circles(rad)
             for subsystem in self._actual_subdivision:
@@ -497,7 +497,7 @@ class SystemState(object):
             Computes average angle matrix
         """
         if self._rad_of_division != rad:
-            self.reset()
+            self._reset()
         self._divide_in_circles(rad)
         for subsystem in self._actual_subdivision:
             row = [subsystem.center[0], subsystem.center[1]]
@@ -714,7 +714,7 @@ class SystemState(object):
             Computes correlation_g2 and correlation_g4 matrices for subgroups.
         """
         if self._rad_of_division != rad:
-            self.reset()
+            self._reset()
         self._divide_in_circles(rad)
         len_correlation_g2 = len(self._relative_g2_subsystems)
         len_correlation_g4 = len(self._relative_g4_subsystems)
