@@ -8,6 +8,7 @@ from methods import *
 import multiprocessing as mp    #for using all cores
 import os
 from system_state import SystemState
+import Queue
 
 
 
@@ -56,12 +57,19 @@ class Experiment(object):
         Looks for rods that have only one possible predecessor.
         """
         processes = []
+        output_queue = mp.Queue()
         for index in range(len(self._states)-1):
             processes.append(mp.Process(target=self._fill_evolution_dicts_process,
-                                        args=(index, max_speed, max_angle_diff)))
+                                        args=(index, max_speed, max_angle_diff, output_queue)))
         run_processes(processes)
+        try:
+            while True:
+                pair = output_queue.get(False)
+                self._evolution_dictionaries[pair[0]] = pair[1]
+        except Queue.Empty:
+            pass
 
-    def _fill_evolution_dicts_process(self, index, max_speed, max_angle_diff):
+    def _fill_evolution_dicts_process(self, index, max_speed, max_angle_diff, output_queue):
         """
         Allows to create a process and use all cores.
         """
@@ -76,42 +84,56 @@ class Experiment(object):
                 speed = float(distance)/self._diff_t
                 if speed <= max_speed and angle <= max_angle_diff:
                     evol_dict[initial_rod.identifier] |= set([final_rod.identifier])
+        output_queue.put([index, evol_dict])
 
     def _clear_evolution_dicts(self):
         """
         Checks if there is only one possible evolution for the rods. If so, 
         delete that possible evolution from the rest of rods.
         """
-        changed = False
-        changes_queue = mp.Queue()
-        processes = []
-        for evol_dict in self._evolution_dictionaries:
-            processes.append(mp.Process(target=self._clear_evolution_dicts_process,
-                                        args=(evol_dict, changes_queue)))
-        run_processes(processes)
-        try:
-            element = changes_queue.get()
-            if element:
-                changed = True
-        except:
-            pass
-        return changed
+        changed = True
+        while changed:
+            changes_queue = mp.Queue()
+            output_queue = mp.Queue()
+            processes = []
+            for index in range(len(self._evolution_dictionaries)):
+                evol_dict = self._evolution_dictionaries[index]
+                processes.append(mp.Process(target=self._clear_evolution_dicts_process,
+                                            args=(index, changes_queue, output_queue)))
+            run_processes(processes)
+            try:
+                while True:
+                    element = changes_queue.get(False)
+                    if element:
+                        changed = True
+            except Queue.Empty:
+                pass
+            try:
+                while True:
+                    pair = output_queue.get(False)
+                    self._evolution_dictionaries[pair[0]] = pair[1]
+            except Queue.Empty:
+                pass
+        
 
-    def _clear_evolution_dicts_process(self, evol_dict, changes_queue):
+    def _clear_evolution_dicts_process(self, index, changes_queue, output_queue):
         """
         Process for method.
         """
+        evol_dict = self._evolution_dictionaries[index]
         changed = False
         for initial_rod_id in evol_dict.keys():
             final_rods = evol_dict[initial_rod_id]
             if len(final_rods) == 1:
-                changed = _remove_final_rod(evol_dict, initial_rod_id, final_rods)
+                changed, evol_dict = self._remove_final_rod(index, initial_rod_id, final_rods)
         changes_queue.put(changed)
+        output_queue.put([index, evol_dict])
 
-    def _remove_final_rod(self, evol_dict, initial_rod_id, final_rod):
+    def _remove_final_rod(self, index, initial_rod_id, final_rod):
         """
         Remove final rod from the rest of rods' evolutions.
         """
+        evol_dict = self._evolution_dictionaries[index]
         changed = False
         for rod_id in evol_dict.keys():
             final = evol_dict[rod_id]
@@ -121,9 +143,9 @@ class Experiment(object):
                 changed = True
             if not len(final):
                 final |= final_rod
-                self._conflictive_final_rods |= final_rod
+                self._conflictive_final_rods[index] |= final_rod
                 changed = False
-        return changed
+        return changed, evol_dict
 
     def evolution_dictionaries(self, max_speed, max_angle_diff):
         """
@@ -137,9 +159,7 @@ class Experiment(object):
         if not len(self._evolution_dictionaries):
             self._create_evolution_dict_keys()
             self._fill_evolution_dicts(max_speed, max_angle_diff)
-            changed = True
-            while changed:
-                changed = self._clear_evolution_dicts()
+            self._clear_evolution_dicts()
         return self._evolution_dictionaries            
 
 
@@ -147,7 +167,8 @@ def run_processes(processes):
     """
     Runs all processes using all cores.
     """
-    cpus = 2*mp.cpu_count()
+    #os.system("taskset -p 0xff %d" % os.getpid())
+    cpus = mp.cpu_count()
     running = []
     try:
         for cpu in range(cpus):
@@ -167,3 +188,4 @@ def run_processes(processes):
         pass
     for process in running:
         process.join()
+
