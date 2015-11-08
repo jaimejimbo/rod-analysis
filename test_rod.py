@@ -3,7 +3,7 @@ import rod_statistics
 import os
 import math
 from methods import *
-
+from experiment import *
 from mpl_toolkits.mplot3d import Axes3D
 import pylab
 import numpy
@@ -158,6 +158,16 @@ class TestRod(unittest.TestCase):
         obtained = int(binary_search(0,10,extract,expected,.1,10))
         self.assertEqual(obtained, expected, "Error in binary search #3 Obtained: "+str(obtained)+" Expected:"+str(expected))
 
+    def test_binary_order(self):
+        """
+        Tests binary order method.
+        """
+        def ordering_id(element):
+            return element
+        a = [9,8,7,6,5,4,3,2,1,0,-1,-2]
+        ordered_a = rod_statistics.binary_order(a, ordering_id)
+        self.assertEqual(str(ordered_a),"[-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]","Error in ordering function #1 Obtained: "+str(ordered_a)+" Expected: [-2,-1,0,1,2,3,4,5,6,7,8,9]")
+
     def test_SystemState(self):
         """
         Checks rod groups and rod class.
@@ -219,16 +229,11 @@ class TestRod(unittest.TestCase):
         name += "K17.png"
         plt.savefig(name)"""
 
-
-
-
-    def test_binary_order(self):
+    def test_Experiment(self):
         """
-        Tests binary order method.
+        Test experiment library.
         """
-        def ordering_id(element):
-            return element
-        a = [9,8,7,6,5,4,3,2,1,0,-1,-2]
-        ordered_a = rod_statistics.binary_order(a, ordering_id)
-        self.assertEqual(str(ordered_a),"[-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]","Error in ordering function #1 Obtained: "+str(ordered_a)+" Expected: [-2,-1,0,1,2,3,4,5,6,7,8,9]")
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=20, allowed_kappa_error=20, radius_correction_ratio=.1)
+        experiment = Experiment(rod_groups)
+        evo_dicts = experiment.evolution_dictionaries
 
