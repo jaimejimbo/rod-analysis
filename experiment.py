@@ -5,7 +5,7 @@
 from system_state import *
 import re
 from methods import *
-#import multiprocessing as mp    #for using all cores
+import multiprocessing as mp    #for using all cores
 import os
 from system_state import SystemState
 

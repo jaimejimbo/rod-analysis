@@ -235,5 +235,6 @@ class TestRod(unittest.TestCase):
         """
         names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=20, allowed_kappa_error=20, radius_correction_ratio=.1)
         experiment = Experiment(rod_groups)
-        evo_dicts = experiment.evolution_dictionaries(50,5)
+        evo_dicts = experiment.evolution_dictionaries(20,5)
+        print evo_dicts
 
