@@ -193,7 +193,7 @@ class TestRod(unittest.TestCase):
         clone_rod_num = rod_group.number_of_rods
         msg = "Seems that rod are not correctly poped. Computed:" + str(clone_rod_num)+ " Expected:" + str(original_rod_num-1)
         self.assertEqual(clone_rod_num, original_rod_num-1,msg)
-        """rad = 50
+        rad = 20
         x, y, z = rod_group.plottable_density_matrix(rad)
         plt.figure(1)
         plt.scatter(x,y,c=z,marker='s',s=(rad/2.0)**2)
@@ -225,7 +225,7 @@ class TestRod(unittest.TestCase):
         plt.colorbar()
         name = names[1]
         name += "K17.png"
-        plt.savefig(name)"""
+        plt.savefig(name)
 
     def test_Experiment(self):
         """
@@ -233,9 +233,7 @@ class TestRod(unittest.TestCase):
         """
         names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=6, allowed_kappa_error=2, radius_correction_ratio=0)
         experiment = Experiment(system_states_name_list=names, system_states_list=rod_groups)
-        print experiment[names[0]].pop_rod().center
-        print experiment[names[1]].pop_rod().center
-        #evo_dicts = experiment.evolution_dictionaries(50,10)
-        #print experiment._conflictive_final_rods
-        #print evo_dicts
+        evo_dicts = experiment.evolution_dictionaries(30,5)
+        print experiment._conflictive_final_rods
+        print evo_dicts
 
