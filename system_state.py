@@ -60,7 +60,7 @@ class SystemState(object):
             print zone_coords
             raise IndexError
 
-    def __getatr__(self, rod_id):
+    def __getitem__(self, rod_id):
         return self._rods_dict[rod_id]
 
     def __iter__(self):
@@ -163,9 +163,9 @@ class SystemState(object):
             Fill dictionaries.
         """
         for rod in self._rods:
-            self._rods_dict[rod.identifier] = rod
-            self._cluster_checked_dict[rod.identifier] = False
-
+            identifier = rod.identifier
+            self._rods_dict[identifier] = rod
+            self._cluster_checked_dict[identifier] = False
 
     def _compute_center_and_radius(self):
         """

@@ -54,6 +54,13 @@ class Rod(object):
         """
         return self._feret
 
+    @property
+    def center(self):
+        """
+        Returns position of the center of the rod.
+        """
+        return self._x_mid, self._y_mid
+
     def __eq__(self, rod2):
         """
         Check if a rod is the same as another rod.

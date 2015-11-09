@@ -232,9 +232,9 @@ class TestRod(unittest.TestCase):
         Test experiment library.
         """
         names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=6, allowed_kappa_error=2, radius_correction_ratio=0)
-        experiment = Experiment(system_states_number_list=names, system_states_list=rod_groups)
-        print experiment[names[0]][1].center
-        print experiment[names[1]][1].center
+        experiment = Experiment(system_states_name_list=names, system_states_list=rod_groups)
+        print experiment[names[0]].pop_rod().center
+        print experiment[names[1]].pop_rod().center
         #evo_dicts = experiment.evolution_dictionaries(50,10)
         #print experiment._conflictive_final_rods
         #print evo_dicts

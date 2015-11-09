@@ -16,7 +16,7 @@ class Experiment(object):
     """
         Has a list of system states, one for each t.
     """
-    def __init__(self, system_states_number_list=None, system_states_list = None, diff_t = 1):
+    def __init__(self, system_states_name_list=None, system_states_list = None, diff_t = 1):
         """
             Creation of experiment object.
         """
@@ -27,11 +27,12 @@ class Experiment(object):
             self._states = system_states_list
         else:
             raise TypeError
-        type_ = str(type(system_states_number_list))
+        type_ = str(type(system_states_name_list))
         if re.match(r'.*NoneType.*', type_):
             self._state_numbers = []
         elif re.match(r'.*list.*', type_):
-            self._state_numbers = system_states_list
+            self._state_numbers = [get_number_from_string(num)
+                                   for num in system_states_name_list]
         else:
             raise TypeError
         self._states_dict = {}
@@ -54,7 +55,7 @@ class Experiment(object):
             identifier = state_num
         else:
             raise ValueError
-        return self._states[identifier]
+        return self._states_dict[identifier]
 
     def _reset(self):
         """
