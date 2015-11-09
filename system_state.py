@@ -682,7 +682,7 @@ class SystemState(object):
             sin = 0
             cos = 0
             for row in self.closest_rod_matrix:
-                angle = row[0].angle_between_rods(row[1])
+                angle = math.radians(row[0].angle_between_rods(row[1]))
                 sin += math.sin(2*angle)
                 cos += math.cos(2*angle)
             sin /= self.number_of_rods
@@ -701,7 +701,7 @@ class SystemState(object):
             sin = 0
             cos = 0
             for row in self.closest_rod_matrix:
-                angle = row[0].angle_between_rods(row[1])
+                angle = math.radians(row[0].angle_between_rods(row[1]))
                 sin += math.sin(4*angle)
                 cos += math.cos(4*angle)
             sin /= self.number_of_rods

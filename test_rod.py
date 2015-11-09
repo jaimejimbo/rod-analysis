@@ -231,7 +231,7 @@ class TestRod(unittest.TestCase):
         """
         Test experiment library.
         """
-        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=6, allowed_kappa_error=2, radius_correction_ratio=.1)
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=6, allowed_kappa_error=2, radius_correction_ratio=0)
         experiment = Experiment(rod_groups)
         evo_dicts = experiment.evolution_dictionaries(5,1)
         print experiment._conflictive_final_rods

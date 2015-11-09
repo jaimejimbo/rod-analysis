@@ -114,9 +114,9 @@ class Experiment(object):
                 pass
             try:
                 while True:
-                    pair = output_queue.get(False)
-                    self._evolution_dictionaries[pair[0]] = pair[1]
-                    self._conflictive_final_rods[pair[0]] |= pair[2]
+                    output = output_queue.get(False)
+                    self._evolution_dictionaries[output[0]] = output[1]
+                    self._conflictive_final_rods[output[0]] |= output[2]
             except Queue.Empty:
                 pass
         
@@ -127,6 +127,7 @@ class Experiment(object):
         """
         evol_dict = self._evolution_dictionaries[index]
         conflicts = set([])
+        changed = False
         for initial_rod_id in evol_dict.keys():
             final_rods = evol_dict[initial_rod_id]
             if len(final_rods) == 1:
@@ -144,10 +145,10 @@ class Experiment(object):
         for rod_id in evol_dict.keys():
             final = evol_dict[rod_id]
             counter = 0
-            if rod_id != initial_rod_id:
+            if rod_id != initial_rod_id and len(final):
                 final -= final_rod
                 changed = True
-            if not len(final):
+            if not len(final) and changed:
                 final |= final_rod
                 conflicts |= final_rod
                 changed = False
