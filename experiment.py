@@ -43,11 +43,18 @@ class Experiment(object):
         self._evolution_dictionaries = []
         self._conflictive_final_rods = []
 
-    def __getatr__(self, state_num):
+    def __getitem__(self, state_num):
         """
         Get the state identified by state_num.
         """
-        return self._states[state_num]
+        type_ = str(type(state_num))
+        if re.match(r'.*str.*', type_):
+            identifier = get_number_from_string(state_num)
+        elif re.match(r'.*int.*', type_):
+            identifier = state_num
+        else:
+            raise ValueError
+        return self._states[identifier]
 
     def _reset(self):
         """

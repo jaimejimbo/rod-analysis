@@ -4,6 +4,7 @@
 
 #import multiprocessing as mp    #for using all cores
 import math
+import re
 
 def segment_area(rad, min_dist):
     """
@@ -330,11 +331,11 @@ def get_file_names(folder="./", regular_expression=r'rods_[0-9]*'):
     for _file in files:
         if reg1.match(_file) and not extension.match(_file):
             names.append(_file)
-    return binary_order(names, file_name_ordering_function)
+    return binary_order(names, get_number_from_string)
 
 
 
-def file_name_ordering_function(name):
+def get_number_from_string(name):
     """
     Gets the number in the name of the file.
     """
