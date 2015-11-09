@@ -86,7 +86,7 @@ class Experiment(object):
                     evol_dict[initial_rod.identifier] |= set([final_rod.identifier])
         output_queue.put([index, evol_dict])
 
-    def _clear_evolution_dicts(self, max_reps=20):
+    def _clear_evolution_dicts(self, max_reps=50):
         """
         Checks if there is only one possible evolution for the rods. If so, 
         delete that possible evolution from the rest of rods.
@@ -104,10 +104,11 @@ class Experiment(object):
                 processes.append(mp.Process(target=self._clear_evolution_dicts_process,
                                             args=(index, changes_queue, output_queue)))
             run_processes(processes)
+            changed = False
             try:
                 while True:
-                    element = changes_queue.get(False)
-                    if element:
+                    system_changed = changes_queue.get(False)
+                    if system_changed:
                         changed = True
             except Queue.Empty:
                 pass
@@ -115,6 +116,7 @@ class Experiment(object):
                 while True:
                     pair = output_queue.get(False)
                     self._evolution_dictionaries[pair[0]] = pair[1]
+                    self._conflictive_final_rods[pair[0]] |= pair[2]
             except Queue.Empty:
                 pass
         
@@ -124,13 +126,13 @@ class Experiment(object):
         Process for method.
         """
         evol_dict = self._evolution_dictionaries[index]
-        changed = False
+        conflicts = set([])
         for initial_rod_id in evol_dict.keys():
             final_rods = evol_dict[initial_rod_id]
             if len(final_rods) == 1:
-                changed, evol_dict = self._remove_final_rod(index, initial_rod_id, final_rods)
+                changed, evol_dict, conflicts = self._remove_final_rod(index, initial_rod_id, final_rods)
         changes_queue.put(changed)
-        output_queue.put([index, evol_dict])
+        output_queue.put([index, evol_dict, conflicts])
 
     def _remove_final_rod(self, index, initial_rod_id, final_rod):
         """
@@ -138,6 +140,7 @@ class Experiment(object):
         """
         evol_dict = self._evolution_dictionaries[index]
         changed = False
+        conflicts = set([])
         for rod_id in evol_dict.keys():
             final = evol_dict[rod_id]
             counter = 0
@@ -146,9 +149,9 @@ class Experiment(object):
                 changed = True
             if not len(final):
                 final |= final_rod
-                self._conflictive_final_rods[index] |= final_rod
+                conflicts |= final_rod
                 changed = False
-        return changed, evol_dict
+        return changed, evol_dict, conflicts
 
     def evolution_dictionaries(self, max_speed, max_angle_diff):
         """

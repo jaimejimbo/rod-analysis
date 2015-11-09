@@ -6,12 +6,10 @@ from methods import *
 from experiment import *
 from mpl_toolkits.mplot3d import Axes3D
 import pylab
-import numpy
 from scipy import interpolate
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import matplotlib.pyplot as plt
-import numpy as np
 
 class TestRod(unittest.TestCase):
     """
@@ -233,8 +231,9 @@ class TestRod(unittest.TestCase):
         """
         Test experiment library.
         """
-        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=20, allowed_kappa_error=20, radius_correction_ratio=.1)
+        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=6, allowed_kappa_error=2, radius_correction_ratio=.1)
         experiment = Experiment(rod_groups)
         evo_dicts = experiment.evolution_dictionaries(5,1)
+        print experiment._conflictive_final_rods
         print evo_dicts
 
