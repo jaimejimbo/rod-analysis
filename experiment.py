@@ -16,7 +16,7 @@ class Experiment(object):
     """
         Has a list of system states, one for each t.
     """
-    def __init__(self, system_states_list = None, diff_t = 1):
+    def __init__(self, system_states_number_list=None, system_states_list = None, diff_t = 1):
         """
             Creation of experiment object.
         """
@@ -26,10 +26,28 @@ class Experiment(object):
         elif re.match(r'.*list.*', type_):
             self._states = system_states_list
         else:
-            raise TypeError;
+            raise TypeError
+        type_ = str(type(system_states_number_list))
+        if re.match(r'.*NoneType.*', type_):
+            self._state_numbers = []
+        elif re.match(r'.*list.*', type_):
+            self._state_numbers = system_states_list
+        else:
+            raise TypeError
+        self._states_dict = {}
+        for index in range(len(self._state_numbers)):
+            number = self._state_numbers[index]
+            state = self._states[index]
+            self._states_dict[number] = state
         self._diff_t = diff_t
         self._evolution_dictionaries = []
         self._conflictive_final_rods = []
+
+    def __getatr__(self, state_num):
+        """
+        Get the state identified by state_num.
+        """
+        return self._states[state_num]
 
     def _reset(self):
         """
@@ -79,8 +97,7 @@ class Experiment(object):
         for initial_rod in initial_state:
             for final_rod in final_state:
                 distance = initial_rod.distance_to_rod(final_rod)
-                angle = abs(initial_rod.angle_between_rods(final_rod))
-                angle = min(angle, abs(180-angle))
+                angle = initial_rod.angle_between_rods(final_rod)
                 speed = float(distance)/self._diff_t
                 if speed <= max_speed and angle <= max_angle_diff:
                     evol_dict[initial_rod.identifier] |= set([final_rod.identifier])
@@ -88,7 +105,7 @@ class Experiment(object):
 
     def _clear_evolution_dicts(self, max_reps=50):
         """
-        Checks if there is only one possible evolution for the rods. If so, 
+        Checks if there is only one possible evolution for the rods. If so,
         delete that possible evolution from the rest of rods.
         """
         changed = True
@@ -119,7 +136,7 @@ class Experiment(object):
                     self._conflictive_final_rods[output[0]] |= output[2]
             except Queue.Empty:
                 pass
-        
+
 
     def _clear_evolution_dicts_process(self, index, changes_queue, output_queue):
         """
@@ -129,9 +146,11 @@ class Experiment(object):
         conflicts = set([])
         changed = False
         for initial_rod_id in evol_dict.keys():
+            conflicts2 = set([])
             final_rods = evol_dict[initial_rod_id]
             if len(final_rods) == 1:
-                changed, evol_dict, conflicts = self._remove_final_rod(index, initial_rod_id, final_rods)
+                changed, evol_dict, conflicts2 = self._remove_final_rod(index, initial_rod_id, final_rods)
+            conflicts |= conflicts2
         changes_queue.put(changed)
         output_queue.put([index, evol_dict, conflicts])
 
@@ -143,16 +162,39 @@ class Experiment(object):
         changed = False
         conflicts = set([])
         for rod_id in evol_dict.keys():
+            last_changed = False
             final = evol_dict[rod_id]
             counter = 0
             if rod_id != initial_rod_id and len(final):
                 final -= final_rod
-                changed = True
-            if not len(final) and changed:
+                last_changed = True
+            if not len(final) and last_changed:
                 final |= final_rod
                 conflicts |= final_rod
-                changed = False
+                last_changed = False
+            if last_changed:
+                changed = True
         return changed, evol_dict, conflicts
+
+    def _leave_only_closer(self, index, initial_rod_id):
+        """
+        If, after clearing, therer are still multiple choices,
+        this erase all but the closest.
+        """
+        evol_dict = self._evolution_dictionaries[index]
+        initial_rod = self._states[index][initial_rod_id]
+        for group_id in evol_dict.keys():
+            finals = evol_dict[group_id]
+            min_distance = 1e100
+            selected_rod = set([])
+            if len(finals) > 1:
+                for final_rod_id in finals:
+                    final_rod = self._states[index+1][finial_rod_id]
+                    distance = initial_rod.distance_to_rod(final_rod)
+                    if distance < min_distance:
+                        min_distance = distance
+                        selected_rod = set([final_rod_id])
+                finals = selected_rod
 
     def evolution_dictionaries(self, max_speed, max_angle_diff):
         """
@@ -167,7 +209,7 @@ class Experiment(object):
             self._create_evolution_dict_keys()
             self._fill_evolution_dicts(max_speed, max_angle_diff)
             self._clear_evolution_dicts()
-        return self._evolution_dictionaries            
+        return self._evolution_dictionaries
 
 
 def run_processes(processes):

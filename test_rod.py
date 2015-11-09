@@ -189,7 +189,7 @@ class TestRod(unittest.TestCase):
         clone_rod_num = rod_group.number_of_rods
         msg = "Original must not change when changing clone! Computed:" + str(clone_rod_num)+ " Expected:" + str(original_rod_num-1)
         self.assertEqual(clone_rod_num, original_rod_num,msg)
-        rod = rod_group.get_rod()
+        rod = rod_group.pop_rod()
         clone_rod_num = rod_group.number_of_rods
         msg = "Seems that rod are not correctly poped. Computed:" + str(clone_rod_num)+ " Expected:" + str(original_rod_num-1)
         self.assertEqual(clone_rod_num, original_rod_num-1,msg)
@@ -233,7 +233,9 @@ class TestRod(unittest.TestCase):
         """
         names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=6, allowed_kappa_error=2, radius_correction_ratio=0)
         experiment = Experiment(rod_groups)
-        evo_dicts = experiment.evolution_dictionaries(5,1)
-        print experiment._conflictive_final_rods
-        print evo_dicts
+        print experiment._states[0][1].center
+        print experiment._states[1][1].center
+        #evo_dicts = experiment.evolution_dictionaries(50,10)
+        #print experiment._conflictive_final_rods
+        #print evo_dicts
 

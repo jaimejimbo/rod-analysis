@@ -60,6 +60,9 @@ class SystemState(object):
             print zone_coords
             raise IndexError
 
+    def __getatr__(self, rod_id):
+        return self._rods_dict[rod_id]
+
     def __iter__(self):
         """
         Magic method for in.
@@ -103,7 +106,7 @@ class SystemState(object):
         self._rods.join(rod)
         self._reset()
 
-    def get_rod(self):
+    def pop_rod(self):
         """
             Returns the first rod in the queue
         The rod is removed of the group!
