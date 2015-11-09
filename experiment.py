@@ -86,18 +86,21 @@ class Experiment(object):
                     evol_dict[initial_rod.identifier] |= set([final_rod.identifier])
         output_queue.put([index, evol_dict])
 
-    def _clear_evolution_dicts(self):
+    def _clear_evolution_dicts(self, max_reps=20):
         """
         Checks if there is only one possible evolution for the rods. If so, 
         delete that possible evolution from the rest of rods.
         """
         changed = True
+        rep = 0
         while changed:
+            rep += 1
+            if rep > max_reps:
+                break
             changes_queue = mp.Queue()
             output_queue = mp.Queue()
             processes = []
             for index in range(len(self._evolution_dictionaries)):
-                evol_dict = self._evolution_dictionaries[index]
                 processes.append(mp.Process(target=self._clear_evolution_dicts_process,
                                             args=(index, changes_queue, output_queue)))
             run_processes(processes)
