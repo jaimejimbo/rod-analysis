@@ -91,7 +91,7 @@ class Experiment(object):
         processes = []
         output_queue = mp.Queue()
         for index in range(len(self._states)-1):
-            processes.append(mp.Process(target=self._fill_dicts_process,
+            processes.append(mp.Process(target=self._fill_dicts_process_limited,
                                         args=(index, max_speed, max_angle_diff, output_queue)))
         run_processes(processes)
         try:
@@ -120,6 +120,33 @@ class Experiment(object):
                 if speed <= max_speed and angle <= max_angle_diff:
                     evol_dict[initial_id] |= set([final_id])
                     relative_dict[initial_id][final_id] = (distance, angle, speed)
+        output_queue.put([index, evol_dict, relative_dict])
+
+    def _fill_dicts_process_limited(self, index, max_speed, max_angle_diff, output_queue):
+        """
+            Allows to create a process and use all cores.
+        It chooses only 5 rods.
+        """
+        initial_state = self._states[index]
+        final_state = self._states[index+1]
+        evol_dict = self._evolution_dictionaries[index]
+        relative_dict = self._relative_dictionaries[index]
+        for initial_rod in initial_state:
+            initial_id = initial_rod.identifier
+            speeds = [(1e100,None) for dummy_ in range(5)]
+            for final_rod in final_state:
+                final_id = final_rod.identifier
+                distance = initial_rod.distance_to_rod(final_rod)
+                angle = initial_rod.angle_between_rods(final_rod)
+                speed = float(distance)/self._diff_t
+                if speed <= max_speed and angle <= max_angle_diff:
+                    speeds.append([speed, final_rod])
+                    speeds.sort()
+                    highest_speed, rod = speeds.pop(-1)
+                    if highest_speed != speed:
+                        evol_dict[initial_id] |= set([final_id])
+                        relative_dict[initial_id][final_id] = (distance, angle, speed)
+                        evol_dict[initial_id] -= set([rod])
         output_queue.put([index, evol_dict, relative_dict])
 
     def _use_unique_evolutions(self, max_reps=50):
@@ -202,6 +229,7 @@ class Experiment(object):
     def _leave_only_closer(self, output_queue):
         """
         Leaves only the closer rod of possible evolutions.
+        It will repeat final rods!
         """
         output_queue = mp.Queue()
         processes = []
@@ -232,10 +260,12 @@ class Experiment(object):
         """
         Process.
         """
+        selected = set([])
         evol_dict = self._evolution_dictionaries[index]
         for initial_rod_id in evol_dict.keys():
-            final_rod_id = self._closer_rod(index, initial_rod_id)
+            final_rod_id = self._closer_rod(index, initial_rod_id, selected)
             output_queue.put([index, initial_rod_id, final_rod_id])
+            selected |= final_rod_id
         
 
     def _closer_rod(self, index, initial_rod_id):
@@ -250,7 +280,7 @@ class Experiment(object):
         for final_rod_id in evol_dict[initial_rod_id]:
             relative_values = relative_dict[initial_rod_id][final_rod_id]
             distance = relative_values[0]
-            if distance < min_distance:
+            if distance < min_distance and final_rod_id not in selected:
                 final_rod = set([final_rod_id])
                 min_distance = distance
         return final_rod_id
@@ -269,8 +299,7 @@ class Experiment(object):
             self._create_dict_keys()
             self._fill_dicts(max_speed, max_angle_diff)
             self._use_unique_evolutions()
-            #self._leave_only_closer()
-            #self._use_unique_evolutions()
+            self._leave_only_closer()
         return self._evolution_dictionaries
 
 
@@ -278,11 +307,8 @@ def run_processes(processes):
     """
         Runs all processes using all cores.
     """
-    #os.system("taskset -p 0xff %d" % os.getpid())
-    cpus = mp.cpu_count()
     running = []
     try:
-        #for cpu in range(cpus):
         while True:
             next_process = processes.pop()
             running.append(next_process)
