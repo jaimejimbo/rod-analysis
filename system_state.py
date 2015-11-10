@@ -61,11 +61,10 @@ class SystemState(object):
             raise IndexError
 
     def __getitem__(self, rod_id):
-        try:
-            return self._rods_dict[rod_id]
-        except KeyError:
-            print rod_id
-            print self._rods_dict
+        #try:
+        return self._rods_dict[rod_id]
+        #except KeyError:
+        #    print rod_id
 
     def __iter__(self):
         """
