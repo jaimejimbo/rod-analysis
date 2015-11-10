@@ -162,23 +162,28 @@ class Experiment(object):
         changes_queue.put(changed)
         output_queue.put([index, evol_dict, conflicts])
 
-    def _remove_final_rod(self, index, initial_rod_id, final_rod):
+    def _remove_final_rod(self, index, initial_rod_id, final_rod_id):
         """
         Remove final rod from the rest of rods' evolutions.
         """
         evol_dict = self._evolution_dictionaries[index]
+        #system_start = self._states[index]
+        system_end = self._states[index+1]
+        #initial_rod = system_start[initial_rod_id]
+        final_rod = system_end[list(final_rod_id)[0]]
         changed = False
         conflicts = set([])
+        final_rod_set = set([final_rod])
         for rod_id in evol_dict.keys():
             last_changed = False
             final = evol_dict[rod_id]
             counter = 0
             if rod_id != initial_rod_id and len(final):
-                final -= final_rod
+                final -= final_rod_set
                 last_changed = True
             if not len(final) and last_changed:
-                final |= final_rod
-                conflicts |= final_rod
+                final |= final_rod_set
+                conflicts |= final_rod_set
                 last_changed = False
             if last_changed:
                 changed = True
@@ -228,19 +233,11 @@ def run_processes(processes):
     cpus = mp.cpu_count()
     running = []
     try:
-        for cpu in range(cpus):
+        #for cpu in range(cpus):
+        while True:
             next_process = processes.pop()
             running.append(next_process)
             next_process.start()
-    except IndexError:
-        pass
-    try:
-        for process in running:
-            if not process.is_alive():
-                running.remove(process)
-                next_process = processes.pop()
-                running.append(next_process)
-                next_process.start()
     except IndexError:
         pass
     for process in running:
