@@ -74,6 +74,16 @@ class Rod(object):
         """
         return not self == rod2
 
+    def __repr__(self):
+        """
+        String transformation.
+        """
+        output = ""
+        output += "id: "+str(self.identifier)+"\n"
+        output += "center: "+str(self.center)+"\n"
+        output += "angle: "+str(self.angle)+"\n"
+        return output
+
     @property
     def identifier(self):
         """

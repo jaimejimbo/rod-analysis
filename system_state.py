@@ -60,11 +60,33 @@ class SystemState(object):
             print zone_coords
             raise IndexError
 
+    @property
+    def kappa_error(self):
+        """
+        Returns kappa error
+        """
+        return self._allowed_kappa_error
+
     def __getitem__(self, rod_id):
-        #try:
-        return self._rods_dict[rod_id]
-        #except KeyError:
-        #    print rod_id
+        """
+        Magic method for [].
+        """
+        try:
+            return self._rods_dict[rod_id]
+        except KeyError:
+            raise IndexError
+
+    def get_rods_range(self, initial_id, final_id):
+        """
+        Returns a list of rods between initial_id and final_id.
+        """
+        output = []
+        for ident in range(initial_id, final_id+1):
+            try:
+                output.append(self[ident])
+            except IndexError:
+                pass
+        return output
 
     def __iter__(self):
         """

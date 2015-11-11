@@ -102,7 +102,7 @@ class Experiment(object):
         except Queue.Empty:
             pass
 
-    def _fill_dicts_process(self, index, max_speed, max_angle_diff, output_queue):
+    def _fill_dicts_process(self, index, max_speed, max_angle_diff, output_queue, amount_of_rods=100):
         """
             Allows to create a process and use all cores.
         """
@@ -112,6 +112,9 @@ class Experiment(object):
         relative_dict = self._relative_dictionaries[index]
         for initial_rod in initial_state:
             initial_id = initial_rod.identifier
+            start_id = initial_id-amount_of_rods/2
+            end_id = initial_id+amount_of_rods/2
+            available_final_rods = final_state.get_rods_range(start_id, end_id)
             for final_rod in final_state:
                 final_id = final_rod.identifier
                 distance = initial_rod.distance_to_rod(final_rod)
@@ -122,10 +125,10 @@ class Experiment(object):
                     relative_dict[initial_id][final_id] = (distance, angle, speed)
         output_queue.put([index, evol_dict, relative_dict])
 
-    def _fill_dicts_process_limited(self, index, max_speed, max_angle_diff, output_queue):
+    def _fill_dicts_process_limited(self, index, max_speed, max_angle_diff, output_queue, limit=5, amount_of_rods= 100):
         """
             Allows to create a process and use all cores.
-        It chooses only 5 rods.
+        It limits possible final rods ammount.
         """
         initial_state = self._states[index]
         final_state = self._states[index+1]
@@ -133,20 +136,36 @@ class Experiment(object):
         relative_dict = self._relative_dictionaries[index]
         for initial_rod in initial_state:
             initial_id = initial_rod.identifier
-            speeds = [(1e100,None) for dummy_ in range(5)]
-            for final_rod in final_state:
+            start_id = initial_id-amount_of_rods/2
+            end_id = initial_id+amount_of_rods/2
+            available_final_rods = final_state.get_rods_range(start_id, end_id)
+            speeds = []
+            initial_kappa = initial_rod.kappa
+            kappa_error = initial_state.kappa_error/2
+            for final_rod in available_final_rods:
+                final_kappa = final_rod.kappa
+                #rods can't change kappa.
+                if initial_kappa-kappa_error > final_kappa or initial_kappa+kappa_error < final_kappa:
+                    continue
                 final_id = final_rod.identifier
                 distance = initial_rod.distance_to_rod(final_rod)
                 angle = initial_rod.angle_between_rods(final_rod)
                 speed = float(distance)/self._diff_t
                 if speed <= max_speed and angle <= max_angle_diff:
-                    speeds.append([speed, final_rod])
+                    speeds.append([speed, final_id])
                     speeds.sort()
-                    highest_speed, rod = speeds.pop(-1)
-                    if highest_speed != speed:
+                    if len(speeds) > limit:
+                        highest_speed, rod_id = speeds.pop(-1)
+                    else:
+                        highest_speed, rod_id = speeds[-1]
                         evol_dict[initial_id] |= set([final_id])
                         relative_dict[initial_id][final_id] = (distance, angle, speed)
-                        evol_dict[initial_id] -= set([rod])
+                        continue
+                    if rod_id != final_id:
+                        evol_dict[initial_id] |= set([final_id])
+                        relative_dict[initial_id][final_id] = (distance, angle, speed)
+                        evol_dict[initial_id] -= set([rod_id])
+                        del relative_dict[initial_id][rod_id]
         output_queue.put([index, evol_dict, relative_dict])
 
     def _use_unique_evolutions(self, max_reps=50):
@@ -226,9 +245,9 @@ class Experiment(object):
         return changed, evol_dict, conflicts
 
 
-    def _leave_only_closer(self, output_queue):
+    def _leave_only_closer(self):
         """
-        Leaves only the closer rod of possible evolutions.
+            Leaves only the closer rod of possible evolutions.
         It will repeat final rods!
         """
         output_queue = mp.Queue()
@@ -237,14 +256,6 @@ class Experiment(object):
             processes.append(mp.Process(target=self._leave_only_closer_process,
                                         args=(index, output_queue)))
         run_processes(processes)
-        changed = False
-        try:
-            while True:
-                system_changed = changes_queue.get(False)
-                if system_changed:
-                    changed = True
-        except Queue.Empty:
-            pass
         try:
             while True:
                 output = output_queue.get(False)
@@ -252,7 +263,7 @@ class Experiment(object):
                 initial_rod_id = output[1]
                 final_rod_id = output[2]
                 evol_dict = self._evolution_dictionaries[index]
-                evol_dict[initial_rod_id] = set([final_rod_id])
+                evol_dict[initial_rod_id] = final_rod_id
         except Queue.Empty:
             pass
 
@@ -268,9 +279,9 @@ class Experiment(object):
             selected |= final_rod_id
         
 
-    def _closer_rod(self, index, initial_rod_id):
+    def _closer_rod(self, index, initial_rod_id, selected):
         """
-                If there are multiple choices,
+            If there are multiple choices,
         this erase all but the closest.
         """
         evol_dict = self._evolution_dictionaries[index]
@@ -281,9 +292,9 @@ class Experiment(object):
             relative_values = relative_dict[initial_rod_id][final_rod_id]
             distance = relative_values[0]
             if distance < min_distance and final_rod_id not in selected:
-                final_rod = set([final_rod_id])
+                final_rod = final_rod_id
                 min_distance = distance
-        return final_rod_id
+        return final_rod
                 
 
     def evolution_dictionaries(self, max_speed, max_angle_diff):
@@ -316,5 +327,5 @@ def run_processes(processes):
     except IndexError:
         pass
     for process in running:
-        process.join()
+        process.join(60)
 
