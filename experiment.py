@@ -128,7 +128,7 @@ class Experiment(object):
     def _fill_dicts_process_limited(self, index, max_speed, max_angle_diff, output_queue, limit=5, amount_of_rods= 100):
         """
             Allows to create a process and use all cores.
-        It limits possible final rods ammount.
+        It limits possible final rods amount.
         """
         initial_state = self._states[index]
         final_state = self._states[index+1]
@@ -276,7 +276,7 @@ class Experiment(object):
         for initial_rod_id in evol_dict.keys():
             final_rod_id = self._closer_rod(index, initial_rod_id, selected)
             output_queue.put([index, initial_rod_id, final_rod_id])
-            selected |= final_rod_id
+            selected |= set([final_rod_id])
         
 
     def _closer_rod(self, index, initial_rod_id, selected):
@@ -287,7 +287,7 @@ class Experiment(object):
         evol_dict = self._evolution_dictionaries[index]
         relative_dict = self._relative_dictionaries[index]
         min_distance = 1e100
-        final_rod = set([])
+        final_rod = None
         for final_rod_id in evol_dict[initial_rod_id]:
             relative_values = relative_dict[initial_rod_id][final_rod_id]
             distance = relative_values[0]
