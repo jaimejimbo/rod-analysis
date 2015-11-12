@@ -9,7 +9,8 @@ for(img_num=4118; img_num<=4119; img_num++){
 		img_name = "0"+img_num;
 	else
 		img_name = img_num;
-	open(folder+"/IMG_"+img_name+".JPG");
+    file = folder+"/IMG_"+img_name+".JPG";
+	open(file);
 	run("Unsharp Mask...", "radius=4 mask=0.90");
 	min=newArray(3);
 	max=newArray(3);

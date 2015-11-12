@@ -5,6 +5,7 @@
 #import multiprocessing as mp    #for using all cores
 import math
 import re
+import os
 
 def segment_area(rad, min_dist):
     """
