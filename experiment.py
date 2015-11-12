@@ -277,6 +277,7 @@ class Experiment(object):
             final_rod_id = self._closer_rod(index, initial_rod_id, selected)
             output_queue.put([index, initial_rod_id, final_rod_id])
             selected |= set([final_rod_id])
+        self._join_untracked_rods(selected, output_queue)
         
 
     def _closer_rod(self, index, initial_rod_id, selected):
@@ -295,9 +296,8 @@ class Experiment(object):
                 final_rod = final_rod_id
                 min_distance = distance
         return final_rod
-                
 
-    def evolution_dictionaries(self, max_speed, max_angle_diff):
+    def evolution_dictionaries(self, max_speed=100, max_angle_diff=90):
         """
                 List of evolution dictionaries.
         Each dictionary has the form:
@@ -312,6 +312,25 @@ class Experiment(object):
             self._use_unique_evolutions()
             self._leave_only_closer()
         return self._evolution_dictionaries
+
+    def _join_untracked_rods(self, selected, output_queue):
+        """
+        After using methods listed before, some rods are unjoined.
+        This joins closest rods.
+        """
+        pass
+
+    def average_quadratic_speed(self, max_speed=100, max_angle_diff=90):
+        """
+        
+        """
+        pass
+
+    def average_quadratic_angular_speed(self, max_speed=100, max_angle_diff=90):
+        """
+        
+        """
+        pass
 
 
 def run_processes(processes):
