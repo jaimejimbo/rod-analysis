@@ -95,6 +95,12 @@ class SystemState(object):
         for rod in self._rods:
             yield rod
 
+    def __len__(self):
+        """
+        Number of rods
+        """
+        return len(self._rods)
+
     @property
     def clone(self):
         """
