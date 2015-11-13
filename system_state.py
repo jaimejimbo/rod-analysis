@@ -5,6 +5,7 @@ import math
 from methods import is_in_circle, same_area_rad, erase_length_one_elements
 from queue import Queue
 import matrix
+import multiprocessing as mp
 
 class SystemState(object):
     """
@@ -180,7 +181,6 @@ class SystemState(object):
         self._clusters = []
         self._cluster_checked_dict = {}
         self._rods_dict = {}
-        self._fill_dicts()
         self._clusters_max_distance = None
         self._clusters_max_angle_diff = None
         if not self._fixed_center_radius:
@@ -193,10 +193,11 @@ class SystemState(object):
         """
             Fill dictionaries.
         """
-        for rod in self._rods:
-            identifier = rod.identifier
-            self._rods_dict[identifier] = rod
-            self._cluster_checked_dict[identifier] = False
+        if not len(self._cluster_checked_dict):
+            for rod in self._rods:
+                identifier = rod.identifier
+                self._rods_dict[identifier] = rod
+                self._cluster_checked_dict[identifier] = False
 
     def _compute_center_and_radius(self):
         """
@@ -255,7 +256,8 @@ class SystemState(object):
             Check if rods are correct.
         """
         self._compute_center_and_radius()
-        for rod in list(self._rods):
+        rods_list = list(self._rods)
+        for rod in rods_list:
             valid = rod.is_valid_rod(self._kappas,
                         self._allowed_kappa_error,
                         self.zone_coords)
@@ -583,6 +585,7 @@ class SystemState(object):
         Angles in grad.
         """
         rods = set([])
+        self._fill_dicts()
         if self._cluster_checked_dict[reference_rod.identifier]:
             return rods
         self._cluster_checked_dict[reference_rod.identifier] = True
@@ -613,6 +616,7 @@ class SystemState(object):
         Recursive method.
         Angles in grad.
         """
+        self._fill_dicts()
         if len(self._clusters) and not max_distance and not max_angle_diff:
             return self._clusters
         if not max_distance or not max_angle_diff:

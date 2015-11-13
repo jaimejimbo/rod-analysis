@@ -2,7 +2,7 @@
     Needed methods for study rod systems.
 """
 
-#import multiprocessing as mp    #for using all cores
+import multiprocessing as mp    #for using all cores
 import math
 import re
 import os
@@ -390,17 +390,49 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
     if len(files) == 0:
         print "No files to import."
         raise ValueError
-    states = []
+    states = [None for dummy_ in range(len(files))]
+    processes = []
+    states_queue = mp.Queue()
     for index in range(len(files)):
-        state = SystemState(kappas, allowed_kappa_error,
-                   radius_correction_ratio, names[index])
-        data = import_data(files[index])
-        for dataline in data:
-            parameters = tuple(dataline)
-            new_rod = Rod(parameters)
-            state.add_rod(new_rod)
-        state.check_rods()
-        states.append(state)
+        process = mp.Process(target=create_rods_process,
+                            args=(kappas, allowed_kappa_error,
+                            radius_correction_ratio, names, index,
+                            states_queue))
+        processes.append(process)
+    run_processes(processes)
+    try:
+        [index, state] = states_queue.get(False)
+        states[index] = state
+    except Queue.Empty:
+        pass    
     return names, states
 
+def create_rods_process(kappas, allowed_kappa_error, radius_correction_ratio, names, index):
+    """
+    Process of method.
+    """
+    state = SystemState(kappas, allowed_kappa_error,
+               radius_correction_ratio, names[index])
+    data = import_data(files[index])
+    for dataline in data:
+        parameters = tuple(dataline)
+        new_rod = Rod(parameters)
+        state.add_rod(new_rod)
+    state.check_rods()
+    states_queue.put([index, state])
+
+def run_processes(processes):
+    """
+        Runs all processes using all cores.
+    """
+    running = []
+    try:
+        while True:
+            next_process = processes.pop()
+            running.append(next_process)
+            next_process.start()
+    except IndexError:
+        pass
+    for process in running:
+        process.join(30)
 

@@ -359,18 +359,3 @@ class Experiment(object):
         pass
 
 
-def run_processes(processes):
-    """
-        Runs all processes using all cores.
-    """
-    running = []
-    try:
-        while True:
-            next_process = processes.pop()
-            running.append(next_process)
-            next_process.start()
-    except IndexError:
-        pass
-    for process in running:
-        process.join(60)
-
