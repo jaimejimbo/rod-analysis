@@ -38,14 +38,15 @@ for line in imagej_template:
 imagej_template.close()
 imagej_script.close()
 
-os.system("imagej ./imagej_script.ijm --headless")
+os.system("imagej ./imagej_script.ijm")
 
 #Imports data
-kappas = [6, 17]
-kappa_error = 2
+kappas = [5.5, 17]
+kappa_error = 1
 names, rod_groups1 = create_rods(kappas=6, allowed_kappa_error=2)
 names, rod_groups2 = create_rods(kappas=17, allowed_kappa_error=2)
 experiment1 = Experiment(system_states_name_list=names, system_states_list=rod_groups1)
 experiment2 = Experiment(system_states_name_list=names, system_states_list=rod_groups2)
-print experiment1.evolution_dictionaries
+
+
 

@@ -1,7 +1,6 @@
 """
     Library for time evolution study.
 """
-
 from system_state import *
 import re
 from methods import *
@@ -9,8 +8,6 @@ import multiprocessing as mp    #for using all cores
 import os
 from system_state import SystemState
 import Queue
-
-
 
 class Experiment(object):
     """
@@ -44,6 +41,10 @@ class Experiment(object):
         self._evolution_dictionaries = []
         self._conflictive_final_rods = []
         self._relative_dictionaries = []
+        self._unjoined_initial_rods = []
+        self._unjoined_final_rods = []
+        self._final_rods = []
+        self._initial_rods = []
 
     def __getitem__(self, state_num):
         """
@@ -65,6 +66,10 @@ class Experiment(object):
         self._evolution_dictionaries = []
         self._conflictive_final_rods = []
         self._relative_dictionaries = []
+        self._unjoined_initial_rods = []
+        self._unjoined_final_rods = []
+        self._final_rods = []
+        self._initial_rods = []
 
     def _create_dict_keys(self):
         """
@@ -75,14 +80,21 @@ class Experiment(object):
             self._evolution_dictionaries.append({})
             self._relative_dictionaries.append({})
             self._conflictive_final_rods.append(set([]))
+            self._final_rods.append(set([]))
+            self._initial_rods.append(set([]))
         for index in range(len(self._states)-1):
             state = self._states[index]
             evol_dict = self._evolution_dictionaries[index]
             relative_dict = self._relative_dictionaries[index]
+            initial_set = self._initial_rods[index]
             for rod in state:
+                initial_set |= set([rod.identifier])
                 rod_id = rod.identifier
                 evol_dict[rod_id] = set([])
                 relative_dict[rod_id] = {}
+        for index in range(len(self._states)-2):
+            final_set = self._final_rods[index]
+            final_set |= self._initial_rods[index+1]
 
     def _fill_dicts(self, max_speed, max_angle_diff):
         """
@@ -202,7 +214,6 @@ class Experiment(object):
             except Queue.Empty:
                 pass
 
-
     def _use_unique_evolutions_process(self, index, changes_queue, output_queue):
         """
             Process for method.
@@ -244,17 +255,17 @@ class Experiment(object):
                 changed = True
         return changed, evol_dict, conflicts
 
-
     def _leave_only_closer(self):
         """
             Leaves only the closer rod of possible evolutions.
         It will repeat final rods!
         """
         output_queue = mp.Queue()
+        selected_queue = mp.Queue()
         processes = []
         for index in range(len(self._evolution_dictionaries)):
             processes.append(mp.Process(target=self._leave_only_closer_process,
-                                        args=(index, output_queue)))
+                                        args=(index, output_queue, selected_queue)))
         run_processes(processes)
         try:
             while True:
@@ -264,6 +275,12 @@ class Experiment(object):
                 final_rod_id = output[2]
                 evol_dict = self._evolution_dictionaries[index]
                 evol_dict[initial_rod_id] = final_rod_id
+        except Queue.Empty:
+            pass
+        try:
+            while True:
+                selected = selected_queue.get(False)
+                index = selected[0]
         except Queue.Empty:
             pass
 
@@ -277,8 +294,7 @@ class Experiment(object):
             final_rod_id = self._closer_rod(index, initial_rod_id, selected)
             output_queue.put([index, initial_rod_id, final_rod_id])
             selected |= set([final_rod_id])
-        self._join_untracked_rods(selected, output_queue)
-        
+        selected_queue.put([index, selected])
 
     def _closer_rod(self, index, initial_rod_id, selected):
         """
@@ -322,13 +338,11 @@ class Experiment(object):
 
     def average_quadratic_speed(self, max_speed=100, max_angle_diff=90):
         """
-        
         """
         pass
 
     def average_quadratic_angular_speed(self, max_speed=100, max_angle_diff=90):
         """
-        
         """
         pass
 
