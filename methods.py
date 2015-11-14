@@ -421,18 +421,30 @@ def create_rods_process(kappas, allowed_kappa_error, radius_correction_ratio, na
     state.check_rods()
     states_queue.put([index, state])
 
-def run_processes(processes):
+def run_processes(processes, time_out=30):
     """
         Runs all processes using all cores.
     """
     running = []
+    cpus = 2*mp.cpu_count()
     try:
-        while True:
+        for cpu in range(cpus):
             next_process = processes.pop()
             running.append(next_process)
             next_process.start()
     except IndexError:
         pass
+    try:
+        while True:
+            process = running.pop()
+            if process.is_alive():
+                running.append(process)
+            else:
+                next_process = processes.pop()
+                running.append(next_process)
+                next_process.start()
+    except IndexError:
+        pass
     for process in running:
-        process.join(30)
+        process.join(time_out)
 

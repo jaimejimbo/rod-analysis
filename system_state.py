@@ -2,7 +2,7 @@
         System State. Group of rods in a determined moment.
 """
 import math
-from methods import is_in_circle, same_area_rad, erase_length_one_elements
+from methods import *
 from queue import Queue
 import matrix
 import multiprocessing as mp
@@ -251,18 +251,64 @@ class SystemState(object):
         return self._zone_coords
 
 
-    def check_rods(self):
+    def check_rods(self, all_cores=False):
         """
             Check if rods are correct.
         """
-        self._compute_center_and_radius()
-        rods_list = list(self._rods)
-        for rod in rods_list:
-            valid = rod.is_valid_rod(self._kappas,
-                        self._allowed_kappa_error,
-                        self.zone_coords)
-            if not valid:
-                self.remove_rod(rod)
+        if all_cores:
+            """self._compute_center_and_radius()
+            rod_list = list(self._rods)
+            pool = mp.Pool(processes=mp.cpu_count())
+            valid_array = pool.map(self._check_rod_for_pool, rod_list)
+            for pair in valid_array:
+                valid = pair[0]
+                rod = pair[1]
+                if not valid:
+                    self.remove_rod(pair[1])"""
+            self._compute_center_and_radius()
+            rods_list = list(self._rods)
+            unvalid_rod_queue = mp.Queue()
+            processes = []
+            for rod in rods_list:
+                process = mp.Process(target=self._check_rod,
+                                     args=(unvalid_rod_queue, rod))
+                processes.append(process)
+            run_processes(processes, time_out=0.01)
+            try:
+                while True:
+                    unvalid_rod = unvalid_rod_queue.get(False)
+                    self.remove_rod(unvalid_rod)
+            except Queue.Empty:
+                pass
+        else:
+            self._compute_center_and_radius()
+            rods_list = list(self._rods)
+            for rod in rods_list:
+                valid = rod.is_valid_rod(self._kappas,
+                            self._allowed_kappa_error,
+                            self.zone_coords)
+                if not valid:
+                    self.remove_rod(rod)
+
+    def _check_rod(self, unvalid_rod_queue, rod):
+        """
+        Check rod process.
+        """
+        valid = rod.is_valid_rod(self._kappas,
+                    self._allowed_kappa_error,
+                    self.zone_coords)
+        if not valid:
+            unvalid_rod_queue.put(rod)
+
+    def _check_rod_for_pool(self, rod):
+        """
+        Check rod process.
+        """
+        valid = rod.is_valid_rod(self._kappas,
+                    self._allowed_kappa_error,
+                    self.zone_coords)
+        return [valid, rod]
+        
 
     def _divide_in_circles(self, rad):
         """

@@ -137,7 +137,7 @@ class Experiment(object):
                     relative_dict[initial_id][final_id] = (distance, angle, speed)
         output_queue.put([index, evol_dict, relative_dict])
 
-    def _fill_dicts_process_limited(self, index, max_speed, max_angle_diff, output_queue, limit=5, amount_of_rods= 100):
+    def _fill_dicts_process_limited(self, index, max_speed, max_angle_diff, output_queue, limit=5, amount_of_rods=100):
         """
             Allows to create a process and use all cores.
         It limits possible final rods amount.
@@ -326,9 +326,9 @@ class Experiment(object):
         if not len(self._evolution_dictionaries):
             self._create_dict_keys()
             self._fill_dicts(max_speed, max_angle_diff)
-            self._use_unique_evolutions()
-            self._leave_only_closer()
-            self._join_rods_left()
+            #self._use_unique_evolutions()
+            #self._leave_only_closer()
+            #self._join_rods_left()
         return self._evolution_dictionaries
 
     def _join_rods_left(self):
@@ -343,10 +343,6 @@ class Experiment(object):
                 if not evol_dict[initial_rod]:
                     initial_rods |= set([initial_rod])
             self._initial_rods[index] = initial_rods
-        print len(self._initial_rods[0])
-        print len(self._final_rods[0])
-        print len(self._states[0])
-        print "\n"
 
     def average_quadratic_speed(self, max_speed=100, max_angle_diff=90):
         """
