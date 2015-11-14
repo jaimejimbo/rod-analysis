@@ -428,13 +428,14 @@ def run_processes(processes, time_out=10):
     running = []
     cpus = mp.cpu_count()
     try:
-        for cpu in range(cpus):
+        while True:
+        #for cpu in range(cpus):
             next_process = processes.pop()
             running.append(next_process)
             next_process.start()
     except IndexError:
         pass
-    try:
+    """try:
         while True:
             process = running.pop()
             if process.is_alive():
@@ -444,7 +445,7 @@ def run_processes(processes, time_out=10):
                 running.append(next_process)
                 next_process.start()
     except IndexError:
-        pass
+        pass"""
     for process in running:
         process.join(time_out)
 

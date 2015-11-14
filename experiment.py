@@ -115,7 +115,7 @@ class Experiment(object):
         except Queue.Empty:
             pass
 
-    def _fill_dicts_process(self, index, max_speed, max_angle_diff, output_queue, amount_of_rods=100):
+    def _fill_dicts_process(self, index, max_speed, max_angle_diff, output_queue, amount_of_rods=None):
         """
             Allows to create a process and use all cores.
         """
@@ -125,9 +125,12 @@ class Experiment(object):
         relative_dict = self._relative_dictionaries[index]
         for initial_rod in initial_state:
             initial_id = initial_rod.identifier
-            start_id = initial_id-amount_of_rods/2
-            end_id = initial_id+amount_of_rods/2
-            available_final_rods = final_state.get_rods_range(start_id, end_id)
+            if not amount_of_rods:
+                final_state = get_rods_range(0, final_states.number_of_rods)
+            else:
+                start_id = initial_id-amount_of_rods/2
+                end_id = initial_id+amount_of_rods/2
+                available_final_rods = final_state.get_rods_range(start_id, end_id)
             for final_rod in final_state:
                 final_id = final_rod.identifier
                 distance = initial_rod.distance_to_rod(final_rod)
@@ -138,7 +141,7 @@ class Experiment(object):
                     relative_dict[initial_id][final_id] = (distance, angle, speed)
         output_queue.put([index, evol_dict, relative_dict])
 
-    def _fill_dicts_process_limited(self, index, max_speed, max_angle_diff, output_queue, limit, amount_of_rods):
+    def _fill_dicts_process_limited(self, index, max_speed, max_angle_diff, output_queue, limit=5, amount_of_rods=None):
         """
             Allows to create a process and use all cores.
         It limits possible final rods amount.
