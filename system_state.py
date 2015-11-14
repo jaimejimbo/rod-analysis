@@ -96,6 +96,13 @@ class SystemState(object):
         for rod in self._rods:
             yield rod
 
+    def __list__(self):
+        """
+        Returns a list of rods
+        """
+        output = [rod for rod in self]
+        return output
+
     def __len__(self):
         """
         Number of rods

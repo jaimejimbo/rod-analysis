@@ -236,6 +236,4 @@ class TestRod(unittest.TestCase):
         evo_dicts = experiment.evolution_dictionaries(300, 90)
         #print experiment._conflictive_final_rods
         #print evo_dicts
-        print experiment[4118][51]
-        print experiment[4119][51]
 

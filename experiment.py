@@ -96,7 +96,7 @@ class Experiment(object):
             final_set = self._final_rods[index]
             final_set |= self._initial_rods[index+1]
 
-    def _fill_dicts(self, max_speed, max_angle_diff):
+    def _fill_dicts(self, max_speed, max_angle_diff, limit=5, amount_of_rods=None):
         """
             Looks for rods that have only one possible predecessor.
         """
@@ -104,7 +104,8 @@ class Experiment(object):
         output_queue = mp.Queue()
         for index in range(len(self._states)-1):
             processes.append(mp.Process(target=self._fill_dicts_process_limited,
-                                        args=(index, max_speed, max_angle_diff, output_queue)))
+                                        args=(index, max_speed, max_angle_diff,
+                                            output_queue, limit, amount_of_rods)))
         run_processes(processes)
         try:
             while True:
@@ -137,7 +138,7 @@ class Experiment(object):
                     relative_dict[initial_id][final_id] = (distance, angle, speed)
         output_queue.put([index, evol_dict, relative_dict])
 
-    def _fill_dicts_process_limited(self, index, max_speed, max_angle_diff, output_queue, limit=5, amount_of_rods=100):
+    def _fill_dicts_process_limited(self, index, max_speed, max_angle_diff, output_queue, limit, amount_of_rods):
         """
             Allows to create a process and use all cores.
         It limits possible final rods amount.
@@ -148,15 +149,18 @@ class Experiment(object):
         relative_dict = self._relative_dictionaries[index]
         for initial_rod in initial_state:
             initial_id = initial_rod.identifier
-            start_id = initial_id-amount_of_rods/2
-            end_id = initial_id+amount_of_rods/2
-            available_final_rods = final_state.get_rods_range(start_id, end_id)
+            if not amount_of_rods:
+                available_final_rods = list(final_state)
+            else:
+                start_id = initial_id-amount_of_rods/2
+                end_id = initial_id+amount_of_rods/2
+                available_final_rods = final_state.get_rods_range(start_id, end_id)
             speeds = []
             initial_kappa = initial_rod.kappa
             kappa_error = initial_state.kappa_error/2
             for final_rod in available_final_rods:
                 final_kappa = final_rod.kappa
-                #rods can't change kappa.
+                #rods can't change of kappa.
                 if initial_kappa-kappa_error > final_kappa or initial_kappa+kappa_error < final_kappa:
                     continue
                 final_id = final_rod.identifier
@@ -314,7 +318,7 @@ class Experiment(object):
                 min_distance = distance
         return final_rod
 
-    def evolution_dictionaries(self, max_speed=100, max_angle_diff=90):
+    def evolution_dictionaries(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=None):
         """
                 List of evolution dictionaries.
         Each dictionary has the form:
@@ -325,7 +329,7 @@ class Experiment(object):
         """
         if not len(self._evolution_dictionaries):
             self._create_dict_keys()
-            self._fill_dicts(max_speed, max_angle_diff)
+            self._fill_dicts(max_speed, max_angle_diff, limit=limit, amount_of_rods=amount_of_rods)
             #self._use_unique_evolutions()
             #self._leave_only_closer()
             #self._join_rods_left()

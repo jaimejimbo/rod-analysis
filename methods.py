@@ -421,12 +421,12 @@ def create_rods_process(kappas, allowed_kappa_error, radius_correction_ratio, na
     state.check_rods()
     states_queue.put([index, state])
 
-def run_processes(processes, time_out=30):
+def run_processes(processes, time_out=10):
     """
         Runs all processes using all cores.
     """
     running = []
-    cpus = 2*mp.cpu_count()
+    cpus = mp.cpu_count()
     try:
         for cpu in range(cpus):
             next_process = processes.pop()
