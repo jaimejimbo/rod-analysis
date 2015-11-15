@@ -1,9 +1,7 @@
 #!/usr/bin/python
-from methods import *
 import re
 import os
 import math
-from methods import *
 from experiment import *
 from mpl_toolkits.mplot3d import Axes3D
 import pylab

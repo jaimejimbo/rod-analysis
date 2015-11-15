@@ -7,7 +7,7 @@ import math
 import re
 import os
 import Queue
-from system_state import SystemState
+from system_state import *
 
 def segment_area(rad, min_dist):
     """
@@ -398,8 +398,8 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
     for index in range(len(files)):
         process = mp.Process(target=create_rods_process,
                             args=(kappas, allowed_kappa_error,
-                            radius_correction_ratio, names, index,
-                            states_queue))
+                            radius_correction_ratio, names,
+                            files, index, states_queue))
         processes.append(process)
     run_processes(processes)
     try:
@@ -411,7 +411,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
 
 def create_rods_process(kappas, allowed_kappa_error,
                         radius_correction_ratio, names,
-                        index, states_queue):
+                        files, index, states_queue):
     """
     Process of method.
     """
