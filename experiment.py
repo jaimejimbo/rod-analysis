@@ -349,10 +349,10 @@ class Experiment(object):
                 if not evol_dict[initial_rod]:
                     initial_rods |= set([initial_rod])
             self._initial_rods[index] = initial_rods
-        """print "Initial unjoined rods:"
-        print self._initial_rods
+        print "Initial unjoined rods:"
+        print self._initial_rods[0]
         print "\n\nFinal unjoined rods"
-        print self._final_rods"""
+        print self._final_rods[0]
 
     def average_quadratic_speed(self, max_speed=100, max_angle_diff=90):
         """
