@@ -282,12 +282,12 @@ class Experiment(object):
                 final_rod_id = output[2]
                 distance = output[3]
                 angle_diff = output[4]
+                evol_dict = self._evolution_dictionaries[index]
+                evol_dict[initial_rod_id] = final_rod_id
                 if final_rod_id:
-                    evol_dict = self._evolution_dictionaries[index]
                     relative_dict = self._relative_dictionaries[index]
                     relative_dict[initial_rod_id] = {}
                     relative_dict[initial_rod_id][final_rod_id] = (distance, angle_diff)
-                    evol_dict[initial_rod_id] = final_rod_id
         except Queue.Empty:
             pass
         try:
@@ -394,14 +394,14 @@ class Experiment(object):
                     min_distance = distance
                     selected_rod_id = initial_rod_id
                     selected_rod = initial_rod
-            evol_dict[selected_rod] = final_rod_id
+            evol_dict[selected_rod_id] = final_rod_id
             angle_diff = None
             try:
                 angle_diff = final_rod.angle_between_rods(selected_rod)
             except:
                 pass
-            relative_dict[selected_rod] = {}
-            relative_dict[selected_rod][final_rod] = [min_distance, angle_diff]
+            relative_dict[selected_rod_id] = {}
+            relative_dict[selected_rod_id][final_rod_id] = [min_distance, angle_diff]
             initial_rods -= set([selected_rod_id])
         output_queue.put([index, evol_dict])
 
