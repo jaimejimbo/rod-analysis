@@ -333,9 +333,9 @@ class Experiment(object):
         if not len(self._evolution_dictionaries):
             self._create_dict_keys()
             self._fill_dicts(max_speed, max_angle_diff, limit=limit, amount_of_rods=amount_of_rods)
-            #self._use_unique_evolutions()
-            #self._leave_only_closer()
-            #self._join_rods_left()
+            self._use_unique_evolutions()
+            self._leave_only_closer()
+            self._join_rods_left()
         return self._evolution_dictionaries
 
     def _join_rods_left(self):
@@ -343,13 +343,17 @@ class Experiment(object):
         After using methods listed before, some rods are unjoined.
         This joins closest rods.
         """
-        for index in range(len(self._evolution_dictionaries)-1):
+        for index in range(len(self._evolution_dictionaries)):
             evol_dict = self._evolution_dictionaries[index]
             initial_rods = set([])
             for initial_rod in evol_dict.keys():
                 if not evol_dict[initial_rod]:
                     initial_rods |= set([initial_rod])
             self._initial_rods[index] = initial_rods
+        print "Initial unjoined rods:"
+        print self._initial_rods
+        print "\n\nFinal unjoined rods"
+        print self._final_rods
 
     def average_quadratic_speed(self, max_speed=100, max_angle_diff=90):
         """
