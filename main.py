@@ -38,7 +38,9 @@ for line in imagej_template:
 imagej_template.close()
 imagej_script.close()
 
-os.system("imagej ./imagej_script.ijm")
+run_imagej = input("Run imagej script?(Yn)")
+if run_imagej == "y" or not run_imagej:
+    os.system("imagej ./imagej_script.ijm")
 
 #Imports data
 kappas = [5.5, 17]
