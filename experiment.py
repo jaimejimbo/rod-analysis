@@ -76,13 +76,13 @@ class Experiment(object):
             Create evolucion dictionaries keys.
         Each key is a rod's id.
         """
-        for dummy_index in range(len(self._states)-1):
+        for dummy_index in range(len(self._states)):
             self._evolution_dictionaries.append({})
             self._relative_dictionaries.append({})
             self._conflictive_final_rods.append(set([]))
             self._final_rods.append(set([]))
             self._initial_rods.append(set([]))
-        for index in range(len(self._states)-1):
+        for index in range(len(self._states)):
             state = self._states[index]
             evol_dict = self._evolution_dictionaries[index]
             relative_dict = self._relative_dictionaries[index]
@@ -92,9 +92,8 @@ class Experiment(object):
                 rod_id = rod.identifier
                 evol_dict[rod_id] = set([])
                 relative_dict[rod_id] = {}
-        for index in range(len(self._states)-2):
-            final_set = self._final_rods[index]
-            final_set |= self._initial_rods[index+1]
+        for index in range(len(self._states)-1):
+            self._final_rods[index] = self._initial_rods[index+1].copy()
 
     def _fill_dicts(self, max_speed, max_angle_diff, limit=5, amount_of_rods=None):
         """
@@ -350,10 +349,10 @@ class Experiment(object):
                 if not evol_dict[initial_rod]:
                     initial_rods |= set([initial_rod])
             self._initial_rods[index] = initial_rods
-        print "Initial unjoined rods:"
+        """print "Initial unjoined rods:"
         print self._initial_rods
         print "\n\nFinal unjoined rods"
-        print self._final_rods
+        print self._final_rods"""
 
     def average_quadratic_speed(self, max_speed=100, max_angle_diff=90):
         """
