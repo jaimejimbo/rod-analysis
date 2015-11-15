@@ -407,7 +407,9 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
         pass    
     return names, states
 
-def create_rods_process(kappas, allowed_kappa_error, radius_correction_ratio, names, index):
+def create_rods_process(kappas, allowed_kappa_error,
+                        radius_correction_ratio, names,
+                        index, states_queue):
     """
     Process of method.
     """

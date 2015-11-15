@@ -38,7 +38,7 @@ for line in imagej_template:
 imagej_template.close()
 imagej_script.close()
 
-run_imagej = input("Run imagej script?(Yn)")
+run_imagej = raw_input("Run imagej script?(Yn)")
 if run_imagej == "y" or not run_imagej:
     os.system("imagej ./imagej_script.ijm")
 
