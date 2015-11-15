@@ -386,7 +386,7 @@ class Experiment(object):
             min_distance = 1e100
             selected_rod = None
             selected_rod_id = None
-            final_rod = final_state[final_rod_id]       #BUG IndexError
+            final_rod = final_state[final_rod_id]
             for initial_rod_id in initial_rods:
                 initial_rod = initial_state[initial_rod_id]
                 distance = final_rod.distance_to_rod(initial_rod)
@@ -404,6 +404,8 @@ class Experiment(object):
             relative_dict[selected_rod][final_rod] = [min_distance, angle_diff]
             initial_rods -= set([selected_rod_id])
         output_queue.put([index, evol_dict])
+
+
 
     def average_quadratic_speed(self, max_speed=100, max_angle_diff=90):
         """
