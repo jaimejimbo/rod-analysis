@@ -367,7 +367,7 @@ class Experiment(object):
                         min_distance = distance
                         selected_rod = initial_rod_id
                 evol_dict[selected_rod] = final_rod_id
-                initial_rods -= selected_rod
+                initial_rods -= set([selected_rod])
 
     def average_quadratic_speed(self, max_speed=100, max_angle_diff=90):
         """
