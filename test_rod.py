@@ -233,7 +233,6 @@ class TestRod(unittest.TestCase):
         """
         names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=6, allowed_kappa_error=2, radius_correction_ratio=0)
         experiment = Experiment(system_states_name_list=names, system_states_list=rod_groups)
-        evo_dicts = experiment.evolution_dictionaries(300, 90, amount_of_rods=None)
-        #print experiment._conflictive_final_rods
-        print evo_dicts[0]
+        print experiment.average_quadratic_speed()
+        
 
