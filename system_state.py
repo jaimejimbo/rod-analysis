@@ -72,10 +72,13 @@ class SystemState(object):
         """
         Magic method for [].
         """
+        self.fill_dicts()
         try:
             return self._rods_dict[rod_id]
         except KeyError:
-            raise IndexError
+            msg = str(rod_id)
+            msg += " " + str(self._rods_dict.keys())    #There are not keys! -> Dict not filled.
+            raise IndexError(msg)
 
     def get_rods_range(self, initial_id, final_id):
         """
@@ -196,7 +199,7 @@ class SystemState(object):
             self._center_y = None
             self._zone_coords = []
 
-    def _fill_dicts(self):
+    def fill_dicts(self):
         """
             Fill dictionaries.
         """
@@ -638,7 +641,7 @@ class SystemState(object):
         Angles in grad.
         """
         rods = set([])
-        self._fill_dicts()
+        self.fill_dicts()
         if self._cluster_checked_dict[reference_rod.identifier]:
             return rods
         self._cluster_checked_dict[reference_rod.identifier] = True
@@ -669,7 +672,7 @@ class SystemState(object):
         Recursive method.
         Angles in grad.
         """
-        self._fill_dicts()
+        self.fill_dicts()
         if len(self._clusters) and not max_distance and not max_angle_diff:
             return self._clusters
         if not max_distance or not max_angle_diff:
@@ -682,7 +685,7 @@ class SystemState(object):
             self._clusters_max_distance = max_distance
             self._clusters_max_angle_diff = max_angle_diff
             if len(self._cluster_checked_dict.keys()):
-                self._fill_dicts()
+                self.fill_dicts()
             clusters = []
             for rod in self._rods:
                 if self._cluster_checked_dict[rod.identifier]:

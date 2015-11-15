@@ -13,7 +13,8 @@ class Experiment(object):
     """
         Has a list of system states, one for each t.
     """
-    def __init__(self, system_states_name_list=None, system_states_list = None, diff_t = 1):
+    def __init__(self, system_states_name_list=None,
+                system_states_list=None, diff_t=1):
         """
             Creation of experiment object.
         """
@@ -29,7 +30,7 @@ class Experiment(object):
             self._state_numbers = []
         elif re.match(r'.*list.*', type_):
             self._state_numbers = [get_number_from_string(num)
-                                   for num in system_states_name_list]
+                            for num in system_states_name_list]
         else:
             raise TypeError
         self._states_dict = {}
@@ -349,10 +350,24 @@ class Experiment(object):
                 if not evol_dict[initial_rod]:
                     initial_rods |= set([initial_rod])
             self._initial_rods[index] = initial_rods
-        print "Initial unjoined rods:"
-        print self._initial_rods[0]
-        print "\n\nFinal unjoined rods"
-        print self._final_rods[0]
+        for index in range(len(self._evolution_dictionaries)-1):
+            initial_rods = self._initial_rods[index]
+            evol_dict = self._evolution_dictionaries[index]
+            final_rods = self._final_rods[index]
+            initial_state = self._states[index]
+            final_state = self._states[index+1]
+            for final_rod_id in final_rods:
+                min_distance = 1e100
+                selected_rod = None
+                final_rod = final_state[final_rod_id]       #BUG IndexError
+                for initial_rod_id in initial_rods:
+                    initial_rod = initial_state[initial_rod_id]
+                    distance = final_rod.distance_to_rod(initial_rod)
+                    if distance < min_distance:
+                        min_distance = distance
+                        selected_rod = initial_rod_id
+                evol_dict[selected_rod] = final_rod_id
+                initial_rods -= selected_rod
 
     def average_quadratic_speed(self, max_speed=100, max_angle_diff=90):
         """
