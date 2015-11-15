@@ -7,6 +7,7 @@ import math
 import re
 import os
 import Queue
+from system_state import SystemState
 
 def segment_area(rad, min_dist):
     """
