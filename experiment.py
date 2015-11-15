@@ -343,31 +343,48 @@ class Experiment(object):
         After using methods listed before, some rods are unjoined.
         This joins closest rods.
         """
-        for index in range(len(self._evolution_dictionaries)):
-            evol_dict = self._evolution_dictionaries[index]
-            initial_rods = set([])
-            for initial_rod in evol_dict.keys():
-                if not evol_dict[initial_rod]:
-                    initial_rods |= set([initial_rod])
-            self._initial_rods[index] = initial_rods
+        output_queue = mp.Queue()
+        processes = []
         for index in range(len(self._evolution_dictionaries)-1):
-            initial_rods = self._initial_rods[index]
-            evol_dict = self._evolution_dictionaries[index]
-            final_rods = self._final_rods[index]
-            initial_state = self._states[index]
-            final_state = self._states[index+1]
-            for final_rod_id in final_rods:
-                min_distance = 1e100
-                selected_rod = None
-                final_rod = final_state[final_rod_id]       #BUG IndexError
-                for initial_rod_id in initial_rods:
-                    initial_rod = initial_state[initial_rod_id]
-                    distance = final_rod.distance_to_rod(initial_rod)
-                    if distance < min_distance:
-                        min_distance = distance
-                        selected_rod = initial_rod_id
-                evol_dict[selected_rod] = final_rod_id
-                initial_rods -= set([selected_rod])
+            process = mp.Process(target=self._join_rods_left_process,
+                                 args=(index, output_queue))
+            processes.append(process)
+        run_processes(processes)
+        try:
+            while True:
+                output = output_queue.get(False)
+                index = output[0]
+                evol_dict = output[1]
+                self._evolution_dictionaries[index] = evol_dict
+        except Queue.Empty:
+            pass
+
+    def _join_rods_left_process(self, index, output_queue):
+        """
+        Process for method.
+        """
+        evol_dict = self._evolution_dictionaries[index]
+        initial_rods = set([])
+        for initial_rod in evol_dict.keys():
+            if not evol_dict[initial_rod]:
+                initial_rods |= set([initial_rod])
+        self._initial_rods[index] = initial_rods
+        final_rods = self._final_rods[index]
+        initial_state = self._states[index]
+        final_state = self._states[index+1]
+        for final_rod_id in final_rods:
+            min_distance = 1e100
+            selected_rod = None
+            final_rod = final_state[final_rod_id]       #BUG IndexError
+            for initial_rod_id in initial_rods:
+                initial_rod = initial_state[initial_rod_id]
+                distance = final_rod.distance_to_rod(initial_rod)
+                if distance < min_distance:
+                    min_distance = distance
+                    selected_rod = initial_rod_id
+            evol_dict[selected_rod] = final_rod_id
+            initial_rods -= set([selected_rod])
+        output_queue.put([index, evol_dict])
 
     def average_quadratic_speed(self, max_speed=100, max_angle_diff=90):
         """

@@ -235,5 +235,5 @@ class TestRod(unittest.TestCase):
         experiment = Experiment(system_states_name_list=names, system_states_list=rod_groups)
         evo_dicts = experiment.evolution_dictionaries(300, 90, amount_of_rods=None)
         #print experiment._conflictive_final_rods
-        print evo_dicts
+        #print evo_dicts
 
