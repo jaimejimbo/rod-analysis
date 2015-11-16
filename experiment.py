@@ -1,12 +1,10 @@
 """
     Library for time evolution study.
 """
-from system_state import *
+from base_classes import *
 import re
-from methods import *
 import multiprocessing as mp    #for using all cores
 import os
-from system_state import SystemState
 import Queue
 
 class Experiment(object):

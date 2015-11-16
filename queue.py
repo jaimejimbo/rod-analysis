@@ -43,19 +43,19 @@ class Queue(object):
         for element in self._data:
             yield element
         
-    def join(self, element):
+    def put(self, element):
         """
         Adds something to the Queue
         """
         self._data.append(element)
         
-    def get_next(self):
+    def get(self):
         """
         Returns next element
         """
         return self._data.pop(0)
         
-    def get_pos(self, element):
+    def get_possition(self, element):
         """
         Returns position of the element
         """
@@ -71,5 +71,5 @@ class Queue(object):
         """
         Deletes an element from the queue.
         """
-        pos = self.get_pos(element)
+        pos = self.get_possition(element)
         del self._data[pos-1]

@@ -1,9 +1,8 @@
 import unittest
-import rod_statistics
 import os
 import math
-from methods import *
 from experiment import *
+from base_classes import *
 from mpl_toolkits.mplot3d import Axes3D
 import pylab
 from scipy import interpolate
@@ -36,28 +35,28 @@ class TestRod(unittest.TestCase):
         input3.write("Hasta pronto")
         input3.close()
         input3 = open('prueba3.txt','r')
-        data = rod_statistics.import_data(input3, " ", '[a-zA-Z]*?')
+        data = import_data(input3, " ", '[a-zA-Z]*?')
         self.assertEqual(data, [["Hasta","pronto"]],"Import data failed with strings and \" \" separator. Obtained: "+str(data))
         input3.close()
         input2 = open('prueba2.txt','w+')
         input2.write("hola-hasta-pronto")
         input2.close()
         input2 = open('prueba2.txt','r')
-        data = rod_statistics.import_data(input2, "-", '[a-zA-Z]*?')
+        data = import_data(input2, "-", '[a-zA-Z]*?')
         self.assertEqual(data, [["hola","hasta","pronto"]],"Import data failed with strings and \"-\" separator. Obtained: "+str(data))        
         input2.close()
         input2 = open('prueba2.txt','w+')
         input2.write("hola\thasta\tpronto\nnueva\tlinea")
         input2.close()
         input2 = open('prueba2.txt','r')
-        data = rod_statistics.import_data(input2, "\t", '[a-zA-Z]*?')
+        data = import_data(input2, "\t", '[a-zA-Z]*?')
         self.assertEqual(data, [["hola","hasta","pronto"],["nueva","linea"]],"Import data failed with strings and \"\\t\" separator. Obtained: "+str(data))        
         input2.close()
         input1 = open('prueba1.txt','w+')
         input1.write("0.1123\t0.12312\t123123.123\n5.4\t323.123\t213.555\n5\t4\t3")
         input1.close()
         input1 = open('prueba1.txt','r')
-        data = rod_statistics.import_data(input1, "\t", '[0-9]*?\.?[0-9]*')
+        data = import_data(input1, "\t", '[0-9]*?\.?[0-9]*')
         self.assertEqual(data, [["0.1123","0.12312","123123.123"],["5.4","323.123","213.555"],["5","4","3"]],"Import data failed with strings and \"\\t\" separator. Obtained: "+str(data))        
         input1.close()
         os.remove("prueba1.txt")
@@ -163,14 +162,14 @@ class TestRod(unittest.TestCase):
         def ordering_id(element):
             return element
         a = [9,8,7,6,5,4,3,2,1,0,-1,-2]
-        ordered_a = rod_statistics.binary_order(a, ordering_id)
+        ordered_a = binary_order(a, ordering_id)
         self.assertEqual(str(ordered_a),"[-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]","Error in ordering function #1 Obtained: "+str(ordered_a)+" Expected: [-2,-1,0,1,2,3,4,5,6,7,8,9]")
 
     def test_SystemState(self):
         """
         Checks rod groups and rod class.
         """
-        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=20, allowed_kappa_error=20, radius_correction_ratio=.1)
+        names, rod_groups = create_rods(folder="../rod-analysis", kappas=20, allowed_kappa_error=20, radius_correction_ratio=.1)
         original_rod_num = rod_groups[0].number_of_rods
         rod_group = rod_groups[0].clone
         clone_rod_num = rod_group.number_of_rods
@@ -183,13 +182,13 @@ class TestRod(unittest.TestCase):
         msg += "\n"
         msg += str(rod_group.clusters()) + "\n" + str(average_length)
         self.assertGreaterEqual(average_length, expected, msg)
-        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=20, allowed_kappa_error=20, radius_correction_ratio=.1)
+        names, rod_groups = create_rods(folder="../rod-analysis", kappas=20, allowed_kappa_error=20, radius_correction_ratio=.1)
         rod_group = rod_groups[0].clone
         original_rod_num = rod_groups[0].number_of_rods
         clone_rod_num = rod_group.number_of_rods
         msg = "Original must not change when changing clone! Computed:" + str(clone_rod_num)+ " Expected:" + str(original_rod_num-1)
         self.assertEqual(clone_rod_num, original_rod_num,msg)
-        rod = rod_group.pop_rod()
+        rod = rod_group.get_rod()
         clone_rod_num = rod_group.number_of_rods
         msg = "Seems that rod are not correctly poped. Computed:" + str(clone_rod_num)+ " Expected:" + str(original_rod_num-1)
         self.assertEqual(clone_rod_num, original_rod_num-1,msg)
@@ -208,7 +207,7 @@ class TestRod(unittest.TestCase):
         name = names[1]
         name += "all_g2.png"
         plt.savefig(name)
-        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=5.5, allowed_kappa_error=0.3, radius_correction_ratio=.1)
+        names, rod_groups = create_rods(folder="../rod-analysis", kappas=5.5, allowed_kappa_error=0.3, radius_correction_ratio=.1)
         rod_group = rod_groups[1]
         x, y, z = rod_group.plottable_density_matrix(rad=rad)
         plt.figure(2)
@@ -217,7 +216,7 @@ class TestRod(unittest.TestCase):
         name = names[1]
         name += "K5.png"
         plt.savefig(name)
-        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=17, allowed_kappa_error=2, radius_correction_ratio=.1)
+        names, rod_groups = create_rods(folder="../rod-analysis", kappas=17, allowed_kappa_error=2, radius_correction_ratio=.1)
         rod_group = rod_groups[1] 
         x, y, z = rod_group.plottable_density_matrix(rad=rad)
         plt.figure(3)
@@ -231,8 +230,9 @@ class TestRod(unittest.TestCase):
         """
         Test experiment library.
         """
-        names, rod_groups = rod_statistics.create_rods(folder="../rod-analysis", kappas=6, allowed_kappa_error=2, radius_correction_ratio=0)
-        experiment = Experiment(system_states_name_list=names, system_states_list=rod_groups)
-        print experiment.average_quadratic_speed()
+        names, rod_groups = create_rods(folder="../rod-analysis", kappas=6, allowed_kappa_error=2, radius_correction_ratio=0)
+        #print rod_groups #[group, None]
+        #experiment = Experiment(system_states_name_list=names, system_states_list=rod_groups)
+        #print experiment.average_quadratic_speed()
         
 

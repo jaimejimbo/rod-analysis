@@ -2,9 +2,12 @@
         System State. Group of rods in a determined moment.
 """
 import math
-from queue import Queue
+import queue
+import Queue
 import matrix
 import multiprocessing as mp
+import re
+import os
 
 #######################################################################
 #######################################################################
@@ -246,7 +249,7 @@ class SystemState(object):
         """
             Initialization
         """
-        self._rods = Queue(rods)
+        self._rods = queue.Queue(rods)
         self._number_of_rods = len(self._rods)
         self._kappas = kappas
         self._allowed_kappa_error = allowed_kappa_error
@@ -369,20 +372,20 @@ class SystemState(object):
         self._number_of_rods = len(self._rods)
         return self._number_of_rods
 
-    def add_rod(self, rod):
+    def put_rod(self, rod):
         """
             Adds a rod to the group
         """
-        self._rods.join(rod)
+        self._rods.put(rod)
         self._reset()
 
-    def pop_rod(self):
+    def get_rod(self):
         """
             Returns the first rod in the queue
         The rod is removed of the group!
         """
         self._reset()
-        return self._rods.get_next()
+        return self._rods.get()
 
     def remove_rod(self, rod):
         """
@@ -592,7 +595,7 @@ class SystemState(object):
                     same_area_radius = same_area_rad(rad, pos_rad, self.radius)
                     subsystem = SubsystemState((actual_x, actual_y),
                                                same_area_radius, math.pi*rad**2)
-                    subsystem.add_rods(list(self._rods))
+                    subsystem.put_rods(list(self._rods))
                     subsystems.append(subsystem)
         return subsystems
 
@@ -1158,16 +1161,16 @@ class SubsystemState(SystemState):
             self._update_density()
         return self._density
 
-    def add_rods(self, rod_list):
+    def put_rods(self, rod_list):
         """
             Add all rods of the list that are inside the circle.
         """
         try:
             for rod in rod_list:
                 if rod.is_in_circle(self.center, self.radius):
-                    self.add_rod(rod)
+                    self.put_rod(rod)
         except TypeError:
-            print "Use a rod list in add_rods method"
+            print "Use a rod list in put_rods method"
 
 
 #######################################################################
@@ -1528,6 +1531,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
     returns [RodGroup1, RodGroup2, ...]
     """
     names, files = import_files(folder=folder)
+    print names
     if len(files) == 0:
         print "No files to import."
         raise ValueError
@@ -1563,7 +1567,7 @@ def create_rods_process(kappas, allowed_kappa_error,
     for dataline in data:
         parameters = tuple(dataline)
         new_rod = Rod(parameters)
-        state.add_rod(new_rod)
+        state.put_rod(new_rod)
     state.check_rods()
     states_queue.put([index, state])
 
