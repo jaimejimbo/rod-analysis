@@ -1492,19 +1492,28 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
     processes = []
     states_queue = mp.Queue()
     for index in range(len(files)):
+        """state = SystemState(kappas, allowed_kappa_error,
+                   radius_correction_ratio, names[index])
+        data = import_data(files[index])
+        for dataline in data:
+            parameters = tuple(dataline)
+            new_rod = Rod(parameters)
+            state.put_rod(new_rod)
+        state.check_rods()
+        states[index] = state"""
         process = mp.Process(target=create_rods_process,
                             args=(kappas, allowed_kappa_error,
                             radius_correction_ratio, names,
                             files, index, states_queue))
         processes.append(process)
-    run_processes(processes)        #This part seem to take a lot of time.
+    run_processes(processes)        #blocked
     print "DONE"
     try:
         while True:
             [index, state] = states_queue.get(False)
             states[index] = state
     except Queue.Empty:
-        pass    
+        pass
     return names, states
 
 #######################################################################
@@ -1525,7 +1534,6 @@ def create_rods_process(kappas, allowed_kappa_error,
         state.put_rod(new_rod)
     state.check_rods()
     states_queue.put([index, state])
-    states_queue.cancel_join_thread()
 
 #######################################################################
 #######################################################################
