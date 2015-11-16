@@ -1509,13 +1509,13 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
         processes.append(process)
     running = run_processes(processes)        #blocked
     while True:
+        for process in running:
+            if not process.is_alive():
+                running.remove(process)
         if not len(running):
             break
         [index, state] = states_queue.get()
         states[index] = state
-        for process in running:
-            if not process.is_alive():
-                running.remove(process)
     return names, states
 
 #######################################################################
