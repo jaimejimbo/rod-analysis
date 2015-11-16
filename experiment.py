@@ -6,6 +6,7 @@ import re
 import multiprocessing as mp    #for using all cores
 import os
 import Queue
+import time
 
 class Experiment(object):
     """
@@ -199,7 +200,6 @@ class Experiment(object):
         changed = True
         rep = 0
         while changed:
-            print rep
             rep += 1
             if rep >= max_reps:
                 break
@@ -224,6 +224,7 @@ class Experiment(object):
                 self._conflictive_final_rods[index] |= output[2]
                 if system_changed:
                     changed = True
+                
 
     def _use_unique_evolutions_process(self, index, changes_queue, output_queue):
         """
@@ -274,7 +275,7 @@ class Experiment(object):
         output_queue = mp.Queue()
         selected_queue = mp.Queue()
         processes = []
-        for index in range(len(self._evolution_dictionaries)):
+        for index in range(len(self._evolution_dictionaries)-1):
             processes.append(mp.Process(target=self._leave_only_closer_process,
                                         args=(index, output_queue, selected_queue)))
         running = run_processes(processes)
