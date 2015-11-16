@@ -382,10 +382,10 @@ class SystemState(object):
     def get_rod(self):
         """
             Returns the first rod in the queue
-        The rod is removed of the group!
         """
-        self._reset()
-        return self._rods.get()
+        rod = self._rods.get()
+        self._rods.put(rod)
+        return rod
 
     def remove_rod(self, rod):
         """
@@ -496,59 +496,13 @@ class SystemState(object):
         """
             Check if rods are correct.
         """
-        if all_cores:
-            """self._compute_center_and_radius()
-            rod_list = list(self._rods)
-            pool = mp.Pool(processes=mp.cpu_count())
-            valid_array = pool.map(self._check_rod_for_pool, rod_list)
-            for pair in valid_array:
-                valid = pair[0]
-                rod = pair[1]
-                if not valid:
-                    self.remove_rod(pair[1])"""
-            self._compute_center_and_radius()
-            rods_list = list(self._rods)
-            unvalid_rod_queue = mp.Queue()
-            processes = []
-            for rod in rods_list:
-                process = mp.Process(target=self._check_rod,
-                                     args=(unvalid_rod_queue, rod))
-                processes.append(process)
-            run_processes(processes, time_out=0.01)
-            try:
-                while True:
-                    unvalid_rod = unvalid_rod_queue.get(False)
-                    self.remove_rod(unvalid_rod)
-            except Queue.Empty:
-                pass
-        else:
-            self._compute_center_and_radius()
-            rods_list = list(self._rods)
-            for rod in rods_list:
-                valid = rod.is_valid_rod(self._kappas,
-                            self._allowed_kappa_error,
-                            self.zone_coords)
-                if not valid:
-                    self.remove_rod(rod)
-
-    def _check_rod(self, unvalid_rod_queue, rod):
-        """
-        Check rod process.
-        """
-        valid = rod.is_valid_rod(self._kappas,
-                    self._allowed_kappa_error,
-                    self.zone_coords)
-        if not valid:
-            unvalid_rod_queue.put(rod)
-
-    def _check_rod_for_pool(self, rod):
-        """
-        Check rod process.
-        """
-        valid = rod.is_valid_rod(self._kappas,
-                    self._allowed_kappa_error,
-                    self.zone_coords)
-        return [valid, rod]
+        zone_coords = [coord for coord in self.zone_coords]
+        for rod in self._rods:
+            valid = rod.is_valid_rod(self._kappas,
+                        self._allowed_kappa_error,
+                        zone_coords)
+            if not valid:
+                self.remove_rod(rod)
         
 
     def _divide_in_circles(self, rad):
@@ -1543,7 +1497,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
                             radius_correction_ratio, names,
                             files, index, states_queue))
         processes.append(process)
-    run_processes(processes, 40)        #This part seem to take a lot of time.
+    run_processes(processes)        #This part seem to take a lot of time.
     try:
         while True:
             [index, state] = states_queue.get(False)
@@ -1574,21 +1528,21 @@ def create_rods_process(kappas, allowed_kappa_error,
 #######################################################################
 #######################################################################
 
-def run_processes(processes, time_out=20):
+def run_processes(processes, time_out=None):
     """
         Runs all processes using all cores.
     """
     running = []
     cpus = mp.cpu_count()
     try:
-        while True:
-        #for cpu in range(cpus):
+        #while True:
+        for cpu in range(cpus):
             next_process = processes.pop()
             running.append(next_process)
             next_process.start()
     except IndexError:
         pass
-    """try:
+    try:
         while True:
             process = running.pop()
             if process.is_alive():
@@ -1598,6 +1552,15 @@ def run_processes(processes, time_out=20):
                 running.append(next_process)
                 next_process.start()
     except IndexError:
-        pass"""
-    for process in running:
-        process.join(time_out)
+        pass
+    if not time_out:
+        while True:
+            for process in running:
+                if not process.is_alive():
+                    running.remove(process)
+            if not len(running):
+                break
+    else:
+        for process in running:
+            process.join(time_out)
+
