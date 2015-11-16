@@ -1491,6 +1491,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
     states = [None for dummy_ in range(len(files))]
     processes = []
     states_queue = mp.Queue()
+    task_queue = mp.JoinableQueue()
     for index in range(len(files)):
         """state = SystemState(kappas, allowed_kappa_error,
                    radius_correction_ratio, names[index])
@@ -1504,16 +1505,17 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
         process = mp.Process(target=create_rods_process,
                             args=(kappas, allowed_kappa_error,
                             radius_correction_ratio, names,
-                            files, index, states_queue))
+                            files, index, states_queue, task_queue))
         processes.append(process)
-    run_processes(processes)        #blocked
-    print "DONE"
-    try:
-        while True:
-            [index, state] = states_queue.get(False)
-            states[index] = state
-    except Queue.Empty:
-        pass
+    running = run_processes(processes)        #blocked
+    while True:
+        if not len(running):
+            break
+        [index, state] = states_queue.get()
+        states[index] = state
+        for process in running:
+            if not process.is_alive():
+                running.remove(process)
     return names, states
 
 #######################################################################
@@ -1521,7 +1523,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
 
 def create_rods_process(kappas, allowed_kappa_error,
                         radius_correction_ratio, names,
-                        files, index, states_queue):
+                        files, index, states_queue, task_queue):
     """
     Process of method.
     """
@@ -1551,14 +1553,5 @@ def run_processes(processes, time_out=None):
             next_process.start()
     except IndexError:
         pass
-    if not time_out:
-        while True:
-            for process in running:
-                if not process.is_alive():
-                    running.remove(process)
-            if not len(running):
-                break
-    else:
-        for process in running:
-            process.join(time_out)
+    return running
 
