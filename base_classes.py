@@ -1531,7 +1531,6 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
     returns [RodGroup1, RodGroup2, ...]
     """
     names, files = import_files(folder=folder)
-    print names
     if len(files) == 0:
         print "No files to import."
         raise ValueError
@@ -1546,8 +1545,9 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
         processes.append(process)
     run_processes(processes)
     try:
-        [index, state] = states_queue.get(False)
-        states[index] = state
+        while True:
+            [index, state] = states_queue.get(False)
+            states[index] = state
     except Queue.Empty:
         pass    
     return names, states
