@@ -2,13 +2,14 @@
 - average angle                                         (DONE)
 - correlations g2,g4                                    (DONE)
 - clusters                                              (DONE)
-- tracks?                                               (in progress)
-- dynamics                                              (not started)
-    · velocities and temperature                        (not started)
-    · density as a function of local temperature.       (not started)
-- main code (plot and study system)                     (not started)
-- multiprocessing                                       (not started)
+- tracks?                                               (DONE)
+- dynamics                                              (in progress)
+    · velocities and temperature                        (in progress)
+    · density as a function of local temperature.       (in progress)
+- main code (plot and study system)                     (in progress)
+- multiprocessing                                       (in progress)
 - GUI                                                   (not started)
-- imagej interface                                      (not started)
+- imagej interface                                      (DONE)
 
 BUGS
+Multiprocessing issues.
