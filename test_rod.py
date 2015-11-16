@@ -62,6 +62,7 @@ class TestRod(unittest.TestCase):
         os.remove("prueba1.txt")
         os.remove("prueba2.txt")
         os.remove("prueba3.txt")
+        print "import data tested!"
 
     def test_CreateRods(self):
         """
@@ -92,6 +93,7 @@ class TestRod(unittest.TestCase):
         self.assertAlmostEqual(computed_area, expected, msg="Error in segment area computing #7. Obtained: "+str(computed_area)+" Expected: "+str(expected), delta=(expected)*.1)
         computed_area = segment_area(1,-0.99999)
         self.assertAlmostEqual(computed_area, total_area, msg="Error in segment area computing #8. Obtained: "+str(computed_area)+" Expected: "+str(0), delta=0.01)
+        print "segment_area tested!"
 
     def test_compute_min_dist(self):
         """
@@ -106,6 +108,7 @@ class TestRod(unittest.TestCase):
         computed = compute_min_dist(1,1e10+.5, 1e10)
         expected = -.5
         self.assertAlmostEqual(computed,expected,delta=.1,msg="Error in compute_min_dist #3: Obtained: "+str(computed)+" Expected: "+str(expected))
+        print "compute_min_dist tested!"
         
 
     def test_effective_area(self):
@@ -118,6 +121,7 @@ class TestRod(unittest.TestCase):
         self.assertAlmostEqual(computed_area, half_circle_area, msg="Error in effective_area computing #1. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area), delta=half_circle_area*3e-2)
         computed_area = effective_area(1,10,10)
         self.assertAlmostEqual(computed_area, half_circle_area, msg="Error in effective_area computing #2. Obtained: "+str(computed_area)+" Expected: "+str(half_circle_area), delta=half_circle_area*3e-2)
+        print "efective_area tested!"
 
     def test_same_area_rad(self):
         """
@@ -137,6 +141,7 @@ class TestRod(unittest.TestCase):
         obtained = same_area_rad(small_rad, small_position_rad, main_rad)  
         expected = 1.5
         self.assertAlmostEqual(obtained, expected, delta=expected*.3, msg="Error in same_area_rad #3. Obtained: "+str(obtained)+" Expected: "+str(expected))
+        print "same_area_rad tested!"
 
     def test_binary_search(self):
         """
@@ -154,6 +159,7 @@ class TestRod(unittest.TestCase):
         expected = 8
         obtained = int(binary_search(0,10,extract,expected,.1,10))
         self.assertEqual(obtained, expected, "Error in binary search #3 Obtained: "+str(obtained)+" Expected:"+str(expected))
+        print "binary search tested!"
 
     def test_binary_order(self):
         """
@@ -164,6 +170,7 @@ class TestRod(unittest.TestCase):
         a = [9,8,7,6,5,4,3,2,1,0,-1,-2]
         ordered_a = binary_order(a, ordering_id)
         self.assertEqual(str(ordered_a),"[-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]","Error in ordering function #1 Obtained: "+str(ordered_a)+" Expected: [-2,-1,0,1,2,3,4,5,6,7,8,9]")
+        print "Binary order tested!"
 
     def test_SystemState(self):
         """
@@ -224,7 +231,8 @@ class TestRod(unittest.TestCase):
         plt.colorbar()
         name = names[1]
         name += "K17.png"
-        plt.savefig(name)"""
+        plt.savefig(name)"""    
+        print "SystemState tested!"
 
     def test_Experiment(self):
         """
@@ -233,6 +241,8 @@ class TestRod(unittest.TestCase):
         names, rod_groups = create_rods(folder="../rod-analysis", kappas=6, allowed_kappa_error=2, radius_correction_ratio=0)
         #print rod_groups #[group, None]
         experiment = Experiment(system_states_name_list=names, system_states_list=rod_groups)
+        print "entering in average_quadratic_speed computation"
         print experiment.average_quadratic_speed()
+        print "experiment tested!"
         
 

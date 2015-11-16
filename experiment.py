@@ -108,14 +108,16 @@ class Experiment(object):
             processes.append(mp.Process(target=self._fill_dicts_process_limited,
                                         args=(index, max_speed, max_angle_diff,
                                             output_queue, limit, amount_of_rods)))
-        run_processes(processes)
-        try:
-            while True:
-                output_row = output_queue.get(False)
-                self._evolution_dictionaries[output_row[0]] = output_row[1]
-                self._relative_dictionaries[output_row[0]] = output_row[2]
-        except Queue.Empty:
-            pass
+        running = run_processes(processes)
+        while True:
+            if not len(running):
+                break
+            output_row = output_queue.get()
+            self._evolution_dictionaries[output_row[0]] = output_row[1]
+            self._relative_dictionaries[output_row[0]] = output_row[2]
+            for process in running:
+                if not process.is_alive():
+                    running.remove(process)
 
     def _fill_dicts_process(self, index, max_speed, max_angle_diff, output_queue, amount_of_rods=None):
         """
@@ -206,22 +208,20 @@ class Experiment(object):
             for index in range(len(self._evolution_dictionaries)):
                 processes.append(mp.Process(target=self._use_unique_evolutions_process,
                                             args=(index, changes_queue, output_queue)))
-            run_processes(processes)
+            running = run_processes(processes)
             changed = False
-            try:
-                while True:
-                    system_changed = changes_queue.get(False)
-                    if system_changed:
-                        changed = True
-            except Queue.Empty:
-                pass
-            try:
-                while True:
-                    output = output_queue.get(False)
-                    self._evolution_dictionaries[output[0]] = output[1]
-                    self._conflictive_final_rods[output[0]] |= output[2]
-            except Queue.Empty:
-                pass
+            while True:
+                if not len(running):
+                    break
+                output = output_queue.get()
+                self._evolution_dictionaries[output[0]] = output[1]
+                self._conflictive_final_rods[output[0]] |= output[2]
+                system_changed = changes_queue.get(False)
+                if system_changed:
+                    changed = True
+                for process in running:
+                    if not process.is_alive():
+                        running.remove(process)
 
     def _use_unique_evolutions_process(self, index, changes_queue, output_queue):
         """
@@ -275,29 +275,27 @@ class Experiment(object):
         for index in range(len(self._evolution_dictionaries)):
             processes.append(mp.Process(target=self._leave_only_closer_process,
                                         args=(index, output_queue, selected_queue)))
-        run_processes(processes)
-        try:
-            while True:
-                output = output_queue.get(False)
-                index = output[0]
-                initial_rod_id = output[1]
-                final_rod_id = output[2]
-                distance = output[3]
-                angle_diff = output[4]
-                evol_dict = self._evolution_dictionaries[index]
-                evol_dict[initial_rod_id] = final_rod_id
-                if final_rod_id:
-                    relative_dict = self._relative_dictionaries[index]
-                    relative_dict[initial_rod_id] = (distance, angle_diff)
-        except Queue.Empty:
-            pass
-        try:
-            while True:
-                selected = selected_queue.get(False)
-                index = selected[0]
-                self._final_rods[index] -= selected[1]
-        except Queue.Empty:
-            pass
+        running = run_processes(processes)
+        while True:
+            if not len(running):
+                break
+            output = output_queue.get()
+            selected = selected_queue.get()
+            index = output[0]
+            initial_rod_id = output[1]
+            final_rod_id = output[2]
+            distance = output[3]
+            angle_diff = output[4]
+            evol_dict = self._evolution_dictionaries[index]
+            evol_dict[initial_rod_id] = final_rod_id
+            if final_rod_id:
+                relative_dict = self._relative_dictionaries[index]
+                relative_dict[initial_rod_id] = (distance, angle_diff)
+            index = selected[0]
+            self._final_rods[index] -= selected[1]
+            for process in running:
+                if not process.is_alive():
+                    running.remove(process)
 
     def _leave_only_closer_process(self, index, output_queue, selected_queue):
         """
@@ -370,17 +368,19 @@ class Experiment(object):
             process = mp.Process(target=self._join_left_rods_process,
                                  args=(index, output_queue))
             processes.append(process)
-        run_processes(processes)
-        try:
-            while True:
-                output = output_queue.get(False)
-                index = output[0]
-                evol_dict = output[1]
-                relative_dict = output[2]
-                self._evolution_dictionaries[index] = evol_dict
-                self._relative_dictionaries[index] = relative_dict
-        except Queue.Empty:
-            pass
+        running = run_processes(processes)
+        while True:
+            if not len(running):
+                break
+            output = output_queue.get()
+            index = output[0]
+            evol_dict = output[1]
+            relative_dict = output[2]
+            self._evolution_dictionaries[index] = evol_dict
+            self._relative_dictionaries[index] = relative_dict
+            for process in running:
+                if not process.is_alive():
+                    running.remove(process)
 
     def _join_left_rods_process(self, index, output_queue):
         """
@@ -433,15 +433,17 @@ class Experiment(object):
                 process = mp.Process(target=self._compute_speeds_process,
                                      args=(index, speeds_queue, angular_speeds_queue))
                 processes.append(process)
-            run_processes(processes)
-            try:
-                while True:
-                    speeds = speeds_queue.get(False)
-                    angular_speeds = angular_speeds_queue.get(False)
-                    self._speeds.append(speeds)
-                    self._angular_speeds.append(angular_speeds)
-            except Queue.Empty:
-                pass
+            running = run_processes(processes)
+            while True:
+                if not len(running):
+                    break
+                speeds = speeds_queue.get()
+                angular_speeds = angular_speeds_queue.get()
+                self._speeds.append(speeds)
+                self._angular_speeds.append(angular_speeds)
+                for process in running:
+                    if not process.is_alive():
+                        running.remove(process)
 
     def _compute_speeds_process(self, index, speeds_queue, angular_speeds_queue):
         """
