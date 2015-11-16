@@ -1498,6 +1498,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
                             files, index, states_queue))
         processes.append(process)
     run_processes(processes)        #This part seem to take a lot of time.
+    print "DONE"
     try:
         while True:
             [index, state] = states_queue.get(False)
@@ -1524,6 +1525,7 @@ def create_rods_process(kappas, allowed_kappa_error,
         state.put_rod(new_rod)
     state.check_rods()
     states_queue.put([index, state])
+    states_queue.cancel_join_thread()
 
 #######################################################################
 #######################################################################
@@ -1535,22 +1537,10 @@ def run_processes(processes, time_out=None):
     running = []
     cpus = mp.cpu_count()
     try:
-        #while True:
-        for cpu in range(cpus):
+        while True:
             next_process = processes.pop()
             running.append(next_process)
             next_process.start()
-    except IndexError:
-        pass
-    try:
-        while True:
-            process = running.pop()
-            if process.is_alive():
-                running.append(process)
-            else:
-                next_process = processes.pop()
-                running.append(next_process)
-                next_process.start()
     except IndexError:
         pass
     if not time_out:
