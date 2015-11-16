@@ -213,12 +213,15 @@ class Experiment(object):
             while True:
                 if not len(running):
                     break
-                output = output_queue.get()
-                self._evolution_dictionaries[output[0]] = output[1]
-                self._conflictive_final_rods[output[0]] |= output[2]
-                system_changed = changes_queue.get(False)
-                if system_changed:
-                    changed = True
+                try:
+                    output = output_queue.get(False)
+                    system_changed = changes_queue.get(False)
+                    self._evolution_dictionaries[output[0]] = output[1]
+                    self._conflictive_final_rods[output[0]] |= output[2]
+                    if system_changed:
+                        changed = True
+                except Queue.Empty:
+                    pass
                 for process in running:
                     if not process.is_alive():
                         running.remove(process)
@@ -437,7 +440,7 @@ class Experiment(object):
             while True:
                 if not len(running):
                     break
-                speeds = speeds_queue.get()
+                speeds = speeds_queue.get(  )
                 angular_speeds = angular_speeds_queue.get()
                 self._speeds.append(speeds)
                 self._angular_speeds.append(angular_speeds)
