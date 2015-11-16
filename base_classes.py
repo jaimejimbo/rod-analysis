@@ -1543,7 +1543,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
                             radius_correction_ratio, names,
                             files, index, states_queue))
         processes.append(process)
-    run_processes(processes)
+    run_processes(processes, 40)        #This part seem to take a lot of time.
     try:
         while True:
             [index, state] = states_queue.get(False)
@@ -1574,7 +1574,7 @@ def create_rods_process(kappas, allowed_kappa_error,
 #######################################################################
 #######################################################################
 
-def run_processes(processes, time_out=10):
+def run_processes(processes, time_out=20):
     """
         Runs all processes using all cores.
     """

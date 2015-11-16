@@ -232,7 +232,7 @@ class TestRod(unittest.TestCase):
         """
         names, rod_groups = create_rods(folder="../rod-analysis", kappas=6, allowed_kappa_error=2, radius_correction_ratio=0)
         #print rod_groups #[group, None]
-        #experiment = Experiment(system_states_name_list=names, system_states_list=rod_groups)
-        #print experiment.average_quadratic_speed()
+        experiment = Experiment(system_states_name_list=names, system_states_list=rod_groups)
+        print experiment.average_quadratic_speed()
         
 
