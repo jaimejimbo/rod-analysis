@@ -198,7 +198,7 @@ class TestRod(unittest.TestCase):
         rod = rod_group.get_rod()
         clone_rod_num = rod_group.number_of_rods
         msg = "Seems that rod are not correctly poped. Computed:" + str(clone_rod_num)+ " Expected:" + str(original_rod_num-1)
-        self.assertEqual(clone_rod_num, original_rod_num-1,msg)
+        self.assertEqual(clone_rod_num, original_rod_num,msg)
         rad = 20
         """x, y, z = rod_group.plottable_density_matrix(rad)
         plt.figure(1)

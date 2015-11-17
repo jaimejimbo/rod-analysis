@@ -1507,13 +1507,11 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
                             radius_correction_ratio, names,
                             files, index, states_queue, task_queue))
         processes.append(process)
-    running = run_processes(processes)        #blocked
-    while True:
-        for process in running:
-            if not process.is_alive():
-                running.remove(process)
-        if not len(running):
-            break
+    running = run_processes(processes)
+    num_processes = len(running)
+    finished = 0
+    while finished < num_processes:
+        finished += 1
         [index, state] = states_queue.get()
         states[index] = state
     return names, states
@@ -1540,12 +1538,11 @@ def create_rods_process(kappas, allowed_kappa_error,
 #######################################################################
 #######################################################################
 
-def run_processes(processes, time_out=None):
+def run_processes(processes):
     """
         Runs all processes using all cores.
     """
     running = []
-    cpus = mp.cpu_count()
     try:
         while True:
             next_process = processes.pop()

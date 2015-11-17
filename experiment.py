@@ -110,12 +110,10 @@ class Experiment(object):
                                         args=(index, max_speed, max_angle_diff,
                                             output_queue, limit, amount_of_rods)))
         running = run_processes(processes)
-        while True:
-            for process in running:
-                if not process.is_alive():
-                    running.remove(process)
-            if not len(running):
-                break
+        num_processes = len(running)
+        finished = 0
+        while finished < num_processes:
+            finished += 1
             output_row = output_queue.get()
             self._evolution_dictionaries[output_row[0]] = output_row[1]
             self._relative_dictionaries[output_row[0]] = output_row[2]
@@ -211,12 +209,10 @@ class Experiment(object):
                                             args=(index, changes_queue, output_queue)))
             running = run_processes(processes)
             changed = False
-            while True:
-                for process in running:
-                    if not process.is_alive():
-                        running.remove(process)
-                if not len(running):
-                    break
+            num_processes = len(running)
+            finished = 0
+            while finished < num_processes:
+                finished += 1
                 output = output_queue.get()
                 system_changed = changes_queue.get()
                 index = output[0]
@@ -279,12 +275,10 @@ class Experiment(object):
             processes.append(mp.Process(target=self._leave_only_closer_process,
                                         args=(index, output_queue, selected_queue)))
         running = run_processes(processes)
-        while True:
-            for process in running:
-                if not process.is_alive():
-                    running.remove(process)
-            if not len(running):
-                break
+        num_processes = len(running)
+        finished = 0
+        while finished < num_processes:
+            finished += 1
             output = output_queue.get()
             selected = selected_queue.get()
             index = output[0]
@@ -294,9 +288,8 @@ class Experiment(object):
             angle_diff = output[4]
             evol_dict = self._evolution_dictionaries[index]
             evol_dict[initial_rod_id] = final_rod_id
-            if final_rod_id:
-                relative_dict = self._relative_dictionaries[index]
-                relative_dict[initial_rod_id] = (distance, angle_diff)
+            relative_dict = self._relative_dictionaries[index]
+            relative_dict[initial_rod_id] = (distance, angle_diff)
             index = selected[0]
             self._final_rods[index] -= selected[1]
 
@@ -372,12 +365,10 @@ class Experiment(object):
                                  args=(index, output_queue))
             processes.append(process)
         running = run_processes(processes)
-        while True:
-            for process in running:
-                if not process.is_alive():
-                    running.remove(process)
-            if not len(running):
-                break
+        num_processes = len(running)
+        finished = 0
+        while finished < num_processes:
+            finished += 1
             output = output_queue.get()
             index = output[0]
             evol_dict = output[1]
@@ -437,12 +428,10 @@ class Experiment(object):
                                      args=(index, speeds_queue, angular_speeds_queue))
                 processes.append(process)
             running = run_processes(processes)
-            while True:
-                for process in running:
-                    if not process.is_alive():
-                        running.remove(process)
-                if not len(running):
-                    break
+            num_processes = len(running)
+            finished = 0
+            while finished < num_processes:
+                finished += 1
                 speeds = speeds_queue.get(  )
                 angular_speeds = angular_speeds_queue.get()
                 self._speeds.append(speeds)
@@ -457,6 +446,7 @@ class Experiment(object):
         angular_speeds = []
         for initial_rod_id in rel_dict.keys():
             values = rel_dict[initial_rod_id]
+            print values
             speed = float(values[0])/self._diff_t
             angular_speed = float(values[0])/self._diff_t
             speeds.append(speed)
