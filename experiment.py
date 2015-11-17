@@ -331,7 +331,7 @@ class Experiment(object):
         evol_dict = self._evolution_dictionaries[index]
         final_rods = evol_dict[initial_rod_id]
         relative_dict = self._relative_dictionaries[index][initial_rod_id]        
-        min_distance = 1e99
+        min_distance = None
         final_rod = None
         final_rod_list = list(final_rods)
         if len(final_rod_list) == 1:
@@ -421,13 +421,17 @@ class Experiment(object):
         initial_state = self._states[index]
         final_state = self._states[index+1]
         for final_rod_id in final_rods:
-            min_distance = 1e100
+            min_distance = None
             selected_rod = None
             selected_rod_id = None
             final_rod = final_state[final_rod_id]
             for initial_rod_id in initial_rods:
                 initial_rod = initial_state[initial_rod_id]
                 distance = final_rod.distance_to_rod(initial_rod)
+                if not distance:
+                    min_distance = distance
+                    selected_rod_id = initial_rod_id
+                    selected_rod = initial_rod
                 if distance < min_distance:
                     min_distance = distance
                     selected_rod_id = initial_rod_id
@@ -437,7 +441,8 @@ class Experiment(object):
             try:
                 angle_diff = final_rod.angle_between_rods(selected_rod)
             except:
-                pass
+                min_distance = -1
+                angle_diff = -1
             relative_dict[selected_rod_id] = (min_distance, angle_diff)
             initial_rods -= set([selected_rod_id])
         output_queue.put([index, evol_dict, relative_dict])
@@ -476,10 +481,13 @@ class Experiment(object):
         angular_speeds = []
         for initial_rod_id in rel_dict.keys():
             values = rel_dict[initial_rod_id]
-            speed = float(values[0])/self._diff_t
-            angular_speed = float(values[0])/self._diff_t
-            speeds.append(speed)
-            angular_speeds.append(angular_speed)
+            try:
+                speed = float(values[0])/self._diff_t
+                angular_speed = float(values[0])/self._diff_t
+                speeds.append(speed)
+                angular_speeds.append(angular_speed)
+            except TypeError:
+                print values
         speeds_queue.put(speeds)
         angular_speeds_queue.put(angular_speeds)
 
@@ -490,9 +498,9 @@ class Experiment(object):
         self._compute_speeds()
         output = []
         for index in range(len(self._speeds)):
-            num_of_rods = self._states[index].number_of_rods
+            num_of_rods = len(self._speeds[index])
             output.append(0)
-            for index2 in range(len(self._speeds[index])):
+            for index2 in range(num_of_rods):
                 output[index] += self._speeds[index][index2]**2/num_of_rods
         return output
 
@@ -503,9 +511,9 @@ class Experiment(object):
         self._compute_speeds()
         output = []
         for index in range(len(self._angular_speeds)):
-            num_of_rods = self._states[index].number_of_rods
+            num_of_rods = len(self._speeds[index])
             output.append(0)
-            for index2 in range(len(self._angular_speeds[index])):
+            for index2 in range(num_of_rods):
                 output[index] += self._angular_speeds[index][index2]**2/num_of_rods
         return output
 

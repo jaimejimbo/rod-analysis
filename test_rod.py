@@ -200,7 +200,7 @@ class TestRod(unittest.TestCase):
         msg = "Seems that rod are not correctly poped. Computed:" + str(clone_rod_num)+ " Expected:" + str(original_rod_num-1)
         self.assertEqual(clone_rod_num, original_rod_num,msg)
         rad = 20
-        """x, y, z = rod_group.plottable_density_matrix(rad)
+        x, y, z = rod_group.plottable_density_matrix(rad)
         plt.figure(1)
         plt.scatter(x,y,c=z,marker='s',s=(rad/2.0)**2)
         plt.colorbar()
@@ -231,7 +231,7 @@ class TestRod(unittest.TestCase):
         plt.colorbar()
         name = names[1]
         name += "K17.png"
-        plt.savefig(name)"""    
+        plt.savefig(name)   
         print "SystemState tested!"
 
     def test_Experiment(self):
@@ -241,7 +241,6 @@ class TestRod(unittest.TestCase):
         names, rod_groups = create_rods(folder="../rod-analysis", kappas=6, allowed_kappa_error=2, radius_correction_ratio=0)
         #print rod_groups #[group, None]
         experiment = Experiment(system_states_name_list=names, system_states_list=rod_groups)
-        print "entering in average_quadratic_speed computation"
         print experiment.average_quadratic_speed()
         print "experiment tested!"
         
