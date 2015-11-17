@@ -1514,6 +1514,10 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
         finished += 1
         [index, state] = states_queue.get()
         states[index] = state
+        if len(processes_left):
+            finished -= 1
+            new_process = processes_left.pop()
+            new_process.start()
     return names, states
 
 #######################################################################
