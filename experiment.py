@@ -368,7 +368,7 @@ class Experiment(object):
                 angle_diff = None
         return final_rod, min_distance, angle_diff
 
-    def _compute_dictionaries(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
+    def compute_dictionaries(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
         """
                 List of evolution dictionaries.
         Each dictionary has the form:
@@ -393,7 +393,7 @@ class Experiment(object):
              ...
              initial_rod_idN: set([final_rod_idN1,final_rod_idN2,...])}
         """
-        self._compute_dictionaries(max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200)
+        self.compute_dictionaries(max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200)
         return self._evolution_dictionaries
 
     def _join_left_rods(self, max_distance=50):
@@ -463,7 +463,7 @@ class Experiment(object):
         This joins closest rods.
         """
         if not len(self._evolution_dictionaries):
-            self._compute_dictionaries()
+            self.compute_dictionaries()
         if not len(self._speeds):
             speeds_queue = mp.Queue()
             angular_speeds_queue = mp.Queue()

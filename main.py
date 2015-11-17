@@ -1,15 +1,22 @@
-#!/usr/bin/python
-import os
-import math
-from experiment import *
-from base_classes import *
-from mpl_toolkits.mplot3d import Axes3D
-import pylab
-from scipy import interpolate
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
-import matplotlib.pyplot as plt
+#!/usr/bin/python -i
 
+while True:
+    try:
+        import math
+        from experiment import *
+        from base_classes import *
+        from mpl_toolkits.mplot3d import Axes3D
+        import pylab
+        from scipy import interpolate
+        from matplotlib import cm
+        from matplotlib.ticker import LinearLocator, FormatStrFormatter
+        import matplotlib.pyplot as plt
+        import os
+        break
+    except:
+        import os
+        print "Installing dependancies (Ubuntu 14.04 or simmilar)"
+        os.system("sudo apt-get install python-dev python-pip libfreetype6-dev python-matplotlib python-numpy python-scipy")
 
 
 #Gets rods_####.txt archives.
@@ -46,12 +53,15 @@ except ValueError:
 #Imports data
 kappas = [5.5, 17]
 kappa_error = 1
-names, rod_groupsK5 = create_rods(kappas=6, allowed_kappa_error=2)
+names, rod_groupsK5 = create_rods(kappas=5.5, allowed_kappa_error=2)
 names, rod_groupsK17 = create_rods(kappas=17, allowed_kappa_error=2)
 experimentK5 = Experiment(system_states_name_list=names, system_states_list=rod_groupsK5)
 experimentK17 = Experiment(system_states_name_list=names, system_states_list=rod_groupsK17)
+experimentK5.compute_dictionaries()
+experimentK17.compute_dictionaries()
 
-print experimentK5.average_quadratic_speed()
+
+
 
 
 
