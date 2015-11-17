@@ -109,7 +109,7 @@ class Experiment(object):
             processes.append(mp.Process(target=self._fill_dicts_process_limited,
                                         args=(index, max_speed, max_angle_diff,
                                             output_queue, limit, amount_of_rods)))
-        running = run_processes(processes)
+        running, processes_left = run_processes(processes)
         num_processes = len(running)
         finished = 0
         while finished < num_processes:
@@ -117,6 +117,10 @@ class Experiment(object):
             output_row = output_queue.get()
             self._evolution_dictionaries[output_row[0]] = output_row[1]
             self._relative_dictionaries[output_row[0]] = output_row[2]
+            if len(processes_left):
+                finished -= 1
+                new_process = processes_left.pop()
+                new_process.start()
 
     def _fill_dicts_process(self, index, max_speed, max_angle_diff, output_queue, amount_of_rods=None):
         """
@@ -215,7 +219,7 @@ class Experiment(object):
             for index in range(len(self._evolution_dictionaries)-1):
                 processes.append(mp.Process(target=self._use_unique_evolutions_process,
                                             args=(index, changes_queue, output_queue)))
-            running = run_processes(processes)
+            running, processes_left = run_processes(processes)
             changed = False
             num_processes = len(running)
             finished = 0
@@ -229,6 +233,10 @@ class Experiment(object):
                 self._conflictive_final_rods[index] |= output[3]
                 if system_changed:
                     changed = True
+                if len(processes_left):
+                    finished -= 1
+                    new_process = processes_left.pop()
+                    new_process.start()
                 
 
     def _use_unique_evolutions_process(self, index, changes_queue, output_queue):
@@ -291,7 +299,7 @@ class Experiment(object):
         for index in range(len(self._evolution_dictionaries)-1):
             processes.append(mp.Process(target=self._leave_only_closer_process,
                                         args=(index, output_queue, selected_queue, max_distance)))
-        running = run_processes(processes)
+        running, processes_left = run_processes(processes)
         num_processes = len(running)
         finished = 0
         while finished < num_processes:
@@ -305,6 +313,10 @@ class Experiment(object):
             self._relative_dictionaries[index] = relative_dict
             index = selected[0]
             self._final_rods[index] -= selected[1]
+            if len(processes_left):
+                finished -= 1
+                new_process = processes_left.pop()
+                new_process.start()
 
     def _leave_only_closer_process(self, index, output_queue, selected_queue, max_distance):
         """
@@ -395,7 +407,7 @@ class Experiment(object):
             process = mp.Process(target=self._join_left_rods_process,
                                  args=(index, output_queue, max_distance))
             processes.append(process)
-        running = run_processes(processes)
+        running, processes_left = run_processes(processes)
         num_processes = len(running)
         finished = 0
         while finished < num_processes:
@@ -406,6 +418,10 @@ class Experiment(object):
             relative_dict = output[2]
             self._evolution_dictionaries[index] = evol_dict
             self._relative_dictionaries[index] = relative_dict
+            if len(processes_left):
+                finished -= 1
+                new_process = processes_left.pop()
+                new_process.start()
 
     def _join_left_rods_process(self, index, output_queue, max_distance=50):
         """
@@ -456,7 +472,7 @@ class Experiment(object):
                 process = mp.Process(target=self._compute_speeds_process,
                                      args=(index, speeds_queue, angular_speeds_queue))
                 processes.append(process)
-            running = run_processes(processes)
+            running, processes_left = run_processes(processes)
             num_processes = len(running)
             finished = 0
             while finished < num_processes:
@@ -465,6 +481,10 @@ class Experiment(object):
                 angular_speeds = angular_speeds_queue.get()
                 self._speeds.append(speeds)
                 self._angular_speeds.append(angular_speeds)
+                if len(processes_left):
+                    finished -= 1
+                    new_process = processes_left.pop()
+                    new_process.start()
 
     def _compute_speeds_process(self, index, speeds_queue, angular_speeds_queue):
         """

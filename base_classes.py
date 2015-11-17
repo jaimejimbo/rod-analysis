@@ -1507,7 +1507,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
                             radius_correction_ratio, names,
                             files, index, states_queue, task_queue))
         processes.append(process)
-    running = run_processes(processes)
+    running, processes_left = run_processes(processes)
     num_processes = len(running)
     finished = 0
     while finished < num_processes:
@@ -1543,12 +1543,13 @@ def run_processes(processes):
         Runs all processes using all cores.
     """
     running = []
+    cpus = mp.cpu_count()
     try:
-        while True:
+        for cpu in range(cpus):
             next_process = processes.pop()
             running.append(next_process)
             next_process.start()
     except IndexError:
         pass
-    return running
+    return running, processes
 
