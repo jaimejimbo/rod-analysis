@@ -493,7 +493,7 @@ class Experiment(object):
         output = []
         for index in range(len(self._speeds)):
             num_of_rods = len(self._speeds[index])
-            print str(index) + ": " + str(num_of_rods) + " of " + str(self._states[index].number_of_rods)
+            #print str(index) + ": " + str(num_of_rods) + " of " + str(self._states[index].number_of_rods)
             output.append(0)
             for index2 in range(num_of_rods):
                 output[index] += self._speeds[index][index2]**2/num_of_rods
@@ -511,5 +511,4 @@ class Experiment(object):
             for index2 in range(num_of_rods):
                 output[index] += self._angular_speeds[index][index2]**2/num_of_rods
         return output
-
 
