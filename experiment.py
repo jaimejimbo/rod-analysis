@@ -142,6 +142,10 @@ class Experiment(object):
                 if speed <= max_speed and angle <= max_angle_diff:
                     evol_dict[initial_id] |= set([final_id])
                     relative_dict[initial_id][final_id] = (distance, angle, speed)
+        for initial_id in relative_dict.keys():
+            if len(relative_dict[initial_id]) == 1:
+                value = relative_dict[initial_id].values()
+                relative_dict[initial_id] = value
         output_queue.put([index, evol_dict, relative_dict])
 
     def _fill_dicts_process_limited(self, index, max_speed, max_angle_diff, output_queue, limit=5, amount_of_rods=None):
@@ -188,6 +192,10 @@ class Experiment(object):
                         relative_dict[initial_id][final_id] = (distance, angle)
                         evol_dict[initial_id] -= set([rod_id])
                         del relative_dict[initial_id][rod_id]
+        for initial_id in relative_dict.keys():
+            if len(relative_dict[initial_id]) == 1:
+                value = relative_dict[initial_id].values()[0]
+                relative_dict[initial_id] = value
         output_queue.put([index, evol_dict, relative_dict])
 
     def _use_unique_evolutions(self, max_reps=50):
@@ -217,7 +225,8 @@ class Experiment(object):
                 system_changed = changes_queue.get()
                 index = output[0]
                 self._evolution_dictionaries[index] = output[1]
-                self._conflictive_final_rods[index] |= output[2]
+                self._relative_dictionaries[index] = output[2]
+                self._conflictive_final_rods[index] |= output[3]
                 if system_changed:
                     changed = True
                 
@@ -227,16 +236,24 @@ class Experiment(object):
             Process for method.
         """
         evol_dict = self._evolution_dictionaries[index]
+        relative_dict = self._relative_dictionaries[index]
         conflicts = set([])
         changed = False
         for initial_rod_id in evol_dict.keys():
             conflicts2 = set([])
+            ordered_values = relative_dict[initial_rod_id]
             final_rods = evol_dict[initial_rod_id]
             if len(final_rods) == 1:
+                rel_dict = relative_dict[initial_rod_id]
+                final_rod_id = list(final_rods)[0]
+                values = ordered_values[final_rod_id]
+                rel_dict = (values[0], values[1])
                 changed, evol_dict, conflicts2 = self._remove_final_rod(index, initial_rod_id, final_rods)
+            if len(final_rods) == 0:
+                values = None
             conflicts |= conflicts2
         changes_queue.put(changed)
-        output_queue.put([index, evol_dict, conflicts])
+        output_queue.put([index, evol_dict, relative_dict, conflicts])
 
     def _remove_final_rod(self, index, initial_rod_id, final_rod_id):
         """
@@ -282,14 +299,10 @@ class Experiment(object):
             output = output_queue.get()
             selected = selected_queue.get()
             index = output[0]
-            initial_rod_id = output[1]
-            final_rod_id = output[2]
-            distance = output[3]
-            angle_diff = output[4]
-            evol_dict = self._evolution_dictionaries[index]
-            evol_dict[initial_rod_id] = final_rod_id
-            relative_dict = self._relative_dictionaries[index]
-            relative_dict[initial_rod_id] = (distance, angle_diff)
+            evol_dict = output[1]
+            relative_dict = output[2]
+            self._evolution_dictionaries[index] = evol_dict
+            self._relative_dictionaries[index] = relative_dict
             index = selected[0]
             self._final_rods[index] -= selected[1]
 
@@ -299,10 +312,15 @@ class Experiment(object):
         """
         selected = set([])
         evol_dict = self._evolution_dictionaries[index]
+        relative_dict = self._relative_dictionaries[index]
         for initial_rod_id in evol_dict.keys():
             final_rod_id, distance, angle_diff = self._closer_rod(index, initial_rod_id, selected)
-            output_queue.put([index, initial_rod_id, final_rod_id, distance, angle_diff])
+            evol_dict[initial_rod_id] = final_rod_id
+            relative_dict[initial_rod_id] = None
+            if distance:
+                relative_dict[initial_rod_id] = (distance, angle_diff)
             selected |= set([final_rod_id])
+        output_queue.put([index, evol_dict, relative_dict])
         selected_queue.put([index, selected])
 
     def _closer_rod(self, index, initial_rod_id, selected):
@@ -311,18 +329,30 @@ class Experiment(object):
         this erase all but the closest.
         """
         evol_dict = self._evolution_dictionaries[index]
-        relative_dict = self._relative_dictionaries[index]
-        min_distance = 1e100
+        final_rods = evol_dict[initial_rod_id]
+        relative_dict = self._relative_dictionaries[index][initial_rod_id]        
+        min_distance = 1e99
         final_rod = None
-        for final_rod_id in evol_dict[initial_rod_id]:
-            relative_values = relative_dict[initial_rod_id][final_rod_id]
-            distance = relative_values[0]
-            if (distance < min_distance) and (final_rod_id not in selected):
-                final_rod = final_rod_id
-                min_distance = distance
-        angle_diff = None
-        if final_rod:
-            angle_diff = relative_dict[initial_rod_id][final_rod][1]
+        final_rod_list = list(final_rods)
+        if len(final_rod_list) == 1:
+            final_rod = final_rod_list[0]
+            distance = relative_dict[0]
+            angle_diff = relative_dict[1]
+        elif len(final_rod_list) == 0:
+            return None, None, None
+        else:
+            for final_rod_id in final_rods:
+                relative_values = relative_dict[final_rod_id]
+                distance = relative_values[0]
+                if (distance < min_distance) and (final_rod_id not in selected):
+                    final_rod = final_rod_id
+                    min_distance = distance
+            if final_rod:
+                angle_diff = relative_dict[final_rod][1]
+            else:
+                final_rod = None
+                min_distance = None
+                angle_diff = None
         return final_rod, min_distance, angle_diff
 
     def _compute_dictionaries(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
@@ -337,9 +367,9 @@ class Experiment(object):
         if not len(self._evolution_dictionaries):
             self._create_dict_keys()
             self._fill_dicts(max_speed, max_angle_diff, limit=limit, amount_of_rods=amount_of_rods)
-            self._use_unique_evolutions()
+            #self._use_unique_evolutions()
             self._leave_only_closer()
-            self._join_left_rods()
+            self._join_left_rods()        
 
     def evolution_dictionaries(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
         """
@@ -446,7 +476,6 @@ class Experiment(object):
         angular_speeds = []
         for initial_rod_id in rel_dict.keys():
             values = rel_dict[initial_rod_id]
-            print values
             speed = float(values[0])/self._diff_t
             angular_speed = float(values[0])/self._diff_t
             speeds.append(speed)
