@@ -46,10 +46,12 @@ except ValueError:
 #Imports data
 kappas = [5.5, 17]
 kappa_error = 1
-names, rod_groups1 = create_rods(kappas=6, allowed_kappa_error=2)
-names, rod_groups2 = create_rods(kappas=17, allowed_kappa_error=2)
-experiment1 = Experiment(system_states_name_list=names, system_states_list=rod_groups1)
-experiment2 = Experiment(system_states_name_list=names, system_states_list=rod_groups2)
+names, rod_groupsK5 = create_rods(kappas=6, allowed_kappa_error=2)
+names, rod_groupsK17 = create_rods(kappas=17, allowed_kappa_error=2)
+experimentK5 = Experiment(system_states_name_list=names, system_states_list=rod_groupsK5)
+experimentK17 = Experiment(system_states_name_list=names, system_states_list=rod_groupsK17)
+
+print experimentK5.average_quadratic_speed()
 
 
 
