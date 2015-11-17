@@ -280,7 +280,7 @@ class Experiment(object):
                 changed = True
         return changed, evol_dict, conflicts
 
-    def _leave_only_closer(self):
+    def _leave_only_closer(self, max_distance=50):
         """
             Leaves only the closer rod of possible evolutions.
         It will repeat final rods!
@@ -290,7 +290,7 @@ class Experiment(object):
         processes = []
         for index in range(len(self._evolution_dictionaries)-1):
             processes.append(mp.Process(target=self._leave_only_closer_process,
-                                        args=(index, output_queue, selected_queue)))
+                                        args=(index, output_queue, selected_queue, max_distance)))
         running = run_processes(processes)
         num_processes = len(running)
         finished = 0
@@ -306,7 +306,7 @@ class Experiment(object):
             index = selected[0]
             self._final_rods[index] -= selected[1]
 
-    def _leave_only_closer_process(self, index, output_queue, selected_queue):
+    def _leave_only_closer_process(self, index, output_queue, selected_queue, max_distance):
         """
         Process.
         """
@@ -314,7 +314,8 @@ class Experiment(object):
         evol_dict = self._evolution_dictionaries[index]
         relative_dict = self._relative_dictionaries[index]
         for initial_rod_id in evol_dict.keys():
-            final_rod_id, distance, angle_diff = self._closer_rod(index, initial_rod_id, selected)
+            final_rod_id, distance, angle_diff = self._closer_rod(index,
+                                          initial_rod_id, selected, max_distance)
             evol_dict[initial_rod_id] = final_rod_id
             relative_dict[initial_rod_id] = None
             if distance:
@@ -323,7 +324,7 @@ class Experiment(object):
         output_queue.put([index, evol_dict, relative_dict])
         selected_queue.put([index, selected])
 
-    def _closer_rod(self, index, initial_rod_id, selected):
+    def _closer_rod(self, index, initial_rod_id, selected, max_distance=50):
         """
             If there are multiple choices,
         this erase all but the closest.
@@ -331,7 +332,7 @@ class Experiment(object):
         evol_dict = self._evolution_dictionaries[index]
         final_rods = evol_dict[initial_rod_id]
         relative_dict = self._relative_dictionaries[index][initial_rod_id]        
-        min_distance = None
+        min_distance = max_distance
         final_rod = None
         final_rod_list = list(final_rods)
         if len(final_rod_list) == 1:
@@ -368,8 +369,8 @@ class Experiment(object):
             self._create_dict_keys()
             self._fill_dicts(max_speed, max_angle_diff, limit=limit, amount_of_rods=amount_of_rods)
             #self._use_unique_evolutions()
-            self._leave_only_closer()
-            self._join_left_rods()        
+            self._leave_only_closer(max_distance=max_speed)
+            self._join_left_rods(max_distance=max_speed)        
 
     def evolution_dictionaries(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
         """
@@ -383,7 +384,7 @@ class Experiment(object):
         self._compute_dictionaries(max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200)
         return self._evolution_dictionaries
 
-    def _join_left_rods(self):
+    def _join_left_rods(self, max_distance=50):
         """
         After using methods listed before, some rods are unjoined.
         This joins closest rods.
@@ -392,7 +393,7 @@ class Experiment(object):
         processes = []
         for index in range(len(self._evolution_dictionaries)-1):
             process = mp.Process(target=self._join_left_rods_process,
-                                 args=(index, output_queue))
+                                 args=(index, output_queue, max_distance))
             processes.append(process)
         running = run_processes(processes)
         num_processes = len(running)
@@ -406,32 +407,25 @@ class Experiment(object):
             self._evolution_dictionaries[index] = evol_dict
             self._relative_dictionaries[index] = relative_dict
 
-    def _join_left_rods_process(self, index, output_queue):
+    def _join_left_rods_process(self, index, output_queue, max_distance=50):
         """
         Process for method.
         """
         evol_dict = self._evolution_dictionaries[index]
         initial_rods = set([])
         relative_dict = self._relative_dictionaries[index]
-        for initial_rod in evol_dict.keys():
-            if not evol_dict[initial_rod]:
-                initial_rods |= set([initial_rod])
         self._initial_rods[index] = initial_rods
         final_rods = self._final_rods[index]
         initial_state = self._states[index]
         final_state = self._states[index+1]
         for final_rod_id in final_rods:
-            min_distance = None
+            min_distance = max_distance
             selected_rod = None
             selected_rod_id = None
             final_rod = final_state[final_rod_id]
             for initial_rod_id in initial_rods:
                 initial_rod = initial_state[initial_rod_id]
                 distance = final_rod.distance_to_rod(initial_rod)
-                if not distance:
-                    min_distance = distance
-                    selected_rod_id = initial_rod_id
-                    selected_rod = initial_rod
                 if distance < min_distance:
                     min_distance = distance
                     selected_rod_id = initial_rod_id
@@ -487,7 +481,7 @@ class Experiment(object):
                 speeds.append(speed)
                 angular_speeds.append(angular_speed)
             except TypeError:
-                print values
+                pass
         speeds_queue.put(speeds)
         angular_speeds_queue.put(angular_speeds)
 
@@ -499,6 +493,7 @@ class Experiment(object):
         output = []
         for index in range(len(self._speeds)):
             num_of_rods = len(self._speeds[index])
+            print str(index) + ": " + str(num_of_rods) + " of " + str(self._states[index].number_of_rods)
             output.append(0)
             for index2 in range(num_of_rods):
                 output[index] += self._speeds[index][index2]**2/num_of_rods
