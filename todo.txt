@@ -4,12 +4,10 @@
 - clusters                                              (DONE)
 - tracks?                                               (DONE)
 - dynamics                                              (in progress)
-    · velocities and temperature                        (in progress)
-    · density as a function of local temperature.       (in progress)
+    · velocities and temperature                        (DONE)
+    · local velocities/temperature			            (not started)
+    · density as a function of local temperature.       (not started)
 - main code (plot and study system)                     (in progress)
-- multiprocessing                                       (in progress)
+- multiprocessing                                       (DONE)
 - GUI                                                   (not started)
 - imagej interface                                      (DONE)
-
-BUGS
-Multiprocessing issues.
