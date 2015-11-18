@@ -16,7 +16,7 @@ for dummy_ in range(2):
     except:
         import os
         print "Installing dependancies (Ubuntu 14.04 or simmilar)"
-        os.system("sudo apt-get install python-dev python-pip libfreetype6-dev python-matplotlib python-numpy python-scipy")
+        os.system("sudo apt-get install python-dev python-pip libfreetype6-dev python-matplotlib python-numpy python-scipy imagej")
 
 
 #Gets rods_####.txt archives.

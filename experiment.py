@@ -586,13 +586,6 @@ class Experiment(object):
         return output
 
 #######################################################################################################
-    def create_videos(self):
-        """
-        Creates a video per property of the system that shows evolution.
-        """
-        pass
-
-#######################################################################################################
     def local_speeds(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200, rad=50):
         """
         Creates an array of matrices. Each matrix's entry is a dictionariy such as
@@ -729,4 +722,11 @@ class Experiment(object):
         """
         self._compute_local_average_speeds(max_speed, max_angle_diff, limit, amount_of_rods, rad)
         return self._local_average_quadratic_angular_speeds
+
+#######################################################################################################
+    def create_videos(self):
+        """
+        Creates a video per property of the system that shows evolution.
+        """
+        pass
 
