@@ -47,6 +47,10 @@ class Experiment(object):
         self._initial_rods = []
         self._speeds = []
         self._angular_speeds = []
+        self._max_speed = None
+        self._max_angle_diff = None
+        self._limit = None
+        self._amount_of_rods = None
 
     def __getitem__(self, state_num):
         """
@@ -74,6 +78,10 @@ class Experiment(object):
         self._initial_rods = []
         self._speeds = []
         self._angular_speeds = []
+        self._max_speed = None
+        self._max_angle_diff = None
+        self._limit = None
+        self._amount_of_rods = None
 
     def _create_dict_keys(self):
         """
@@ -103,6 +111,9 @@ class Experiment(object):
         """
             Looks for rods that have only one possible predecessor.
         """
+        (self._max_speed, self._max_angle_diff, 
+        self._limit, self._amount_of_rods) = (max_speed, max_angle_diff, 
+                                                limit, amount_of_rods)
         processes = []
         output_queue = mp.Queue()
         for index in range(len(self._states)-1):
@@ -379,6 +390,9 @@ class Experiment(object):
              ...
              initial_rod_idN: set([final_rod_idN1,final_rod_idN2,...])}
         """
+        if (max_speed, max_angle_diff, limit, amount_of_rods) != (self._max_speed, 
+                    self._max_angle_diff, self._limit, self._amount_of_rods):
+            self._reset()
         if not len(self._evolution_dictionaries):
             self._create_dict_keys()
             self._fill_dicts(max_speed, max_angle_diff, limit=limit, amount_of_rods=amount_of_rods)
@@ -460,13 +474,15 @@ class Experiment(object):
             initial_rods -= set([selected_rod_id])
         output_queue.put([index, evol_dict, relative_dict])
 
-    def _compute_speeds(self):
+    def _compute_speeds(self, max_speed, max_angle_diff, limit, amount_of_rods):
         """
         After using methods listed before, some rods are unjoined.
         This joins closest rods.
         """
-        if not len(self._evolution_dictionaries):
-            self.compute_dictionaries()
+        if (max_speed, max_angle_diff, limit, amount_of_rods) != (self._max_speed, 
+                    self._max_angle_diff, self._limit, self._amount_of_rods):
+            self._reset()
+        self.compute_dictionaries(max_speed, max_angle_diff, limit, amount_of_rods)
         if not len(self._speeds):
             speeds_queue = mp.Queue()
             angular_speeds_queue = mp.Queue()
@@ -494,43 +510,63 @@ class Experiment(object):
         Returns an array of speeds.
         """
         rel_dict = self._relative_dictionaries[index]
-        speeds = []
-        angular_speeds = []
+        speeds = {}
+        angular_speeds = {}
         for initial_rod_id in rel_dict.keys():
             values = rel_dict[initial_rod_id]
             try:
                 speed = float(values[0])/self._diff_t
                 angular_speed = float(values[1])/self._diff_t
-                speeds.append(speed)
-                angular_speeds.append(angular_speed)
+                speeds[initial_rod_id] = speed
+                angular_speeds[initial_rod_id] = angular_speed
             except TypeError:
                 pass
         speeds_queue.put(speeds)
         angular_speeds_queue.put(angular_speeds)
 
-    def average_quadratic_speed(self, max_speed=100, max_angle_diff=90):
+    def speeds(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
+        """
+        Returns [speeds, angular_speeds] where both outputs are array with one
+        value for each rod.
+        """
+        self._compute_speeds(max_speed, max_angle_diff, limit, amount_of_rods)
+        return [self._speeds, self._angular_speeds]
+
+    def average_quadratic_speed(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
         """
         Returns average quadratic speeds
         """
-        self._compute_speeds()
+        self._compute_speeds(max_speed, max_angle_diff, limit, amount_of_rods)
         output = []
         for index in range(len(self._speeds)):
             num_of_rods = len(self._speeds[index])
             output.append(0)
-            for index2 in range(num_of_rods):
-                output[index] += self._speeds[index][index2]**2/num_of_rods
+            for speed in self._speeds[index].values():
+                output[index] += speed**2/num_of_rods
         return output
 
-    def average_quadratic_angular_speed(self, max_speed=100, max_angle_diff=90):
+    def average_quadratic_angular_speed(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
         """
         Returns average quadratic angular speed
         """
-        self._compute_speeds()
+        self._compute_speeds(max_speed, max_angle_diff, limit, amount_of_rods)
         output = []
         for index in range(len(self._angular_speeds)):
             num_of_rods = len(self._angular_speeds[index])
             output.append(0)
-            for index2 in range(num_of_rods):
-                output[index] += self._angular_speeds[index][index2]**2/num_of_rods
+            for angular_speed in self._angular_speeds[index].values():
+                output[index] += angular_speed**2/num_of_rods
         return output
 
+    def create_videos(self):
+        """
+        Creates a video per property of the system that shows evolution.
+        """
+        pass
+
+    def local_average_quadratic_speed(self):
+        """
+        Returns a array of matrices. Each matrix represents
+        local average quadratic speed values.
+        """
+        pass

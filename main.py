@@ -1,6 +1,6 @@
 #!/usr/bin/python -i
 
-while True:
+for dummy_ in range(2):
     try:
         import math
         from experiment import *
