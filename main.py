@@ -61,7 +61,6 @@ experimentK5.compute_dictionaries()
 experimentK17.compute_dictionaries()
 
 
-
-
-
+print experimentK5.local_average_quadratic_speed()
+print experimentK5.local_average_quadratic_angular_speed()
 

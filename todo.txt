@@ -5,7 +5,7 @@
 - tracks?                                               (DONE)
 - dynamics                                              (in progress)
     · velocities and temperature                        (DONE)
-    · local velocities/temperature			            (not started)
+    · local velocities/temperature			            (DONE)
     · density as a function of local temperature.       (not started)
 - main code (plot and study system)                     (in progress)
 - multiprocessing                                       (DONE)
