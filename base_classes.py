@@ -203,9 +203,10 @@ class Rod(object):
         """
         Returns value of angle that formes this rod with another.
         """
-        angle1 = abs(self.angle-rod.angle)
-        angle2 = 180 - angle1
-        return min(angle1, angle2)
+        angle = abs(self.angle-rod.angle)
+        angle = min([angle, 360-angle])
+        angle = min([angle, 180-angle])
+        return angle
 
     @property
     def direction_matrix(self):

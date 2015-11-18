@@ -142,6 +142,7 @@ class Experiment(object):
                 final_id = final_rod.identifier
                 distance = initial_rod.distance_to_rod(final_rod)
                 angle = initial_rod.angle_between_rods(final_rod)
+                angle = min([angle, 180-angle])
                 speed = float(distance)/self._diff_t
                 if speed <= max_speed and angle <= max_angle_diff:
                     evol_dict[initial_id] |= set([final_id])
@@ -180,6 +181,7 @@ class Experiment(object):
                 final_id = final_rod.identifier
                 distance = initial_rod.distance_to_rod(final_rod)
                 angle = initial_rod.angle_between_rods(final_rod)
+                angle = min([angle, 180-angle])
                 speed = float(distance)/self._diff_t
                 if speed <= max_speed and angle <= max_angle_diff:
                     speeds.append([speed, final_id])
@@ -450,6 +452,7 @@ class Experiment(object):
             angle_diff = None
             try:
                 angle_diff = final_rod.angle_between_rods(selected_rod)
+                angle_diff = min([angle_diff, 180-angle_diff])
             except:
                 min_distance = -1
                 angle_diff = -1
@@ -497,7 +500,7 @@ class Experiment(object):
             values = rel_dict[initial_rod_id]
             try:
                 speed = float(values[0])/self._diff_t
-                angular_speed = float(values[0])/self._diff_t
+                angular_speed = float(values[1])/self._diff_t
                 speeds.append(speed)
                 angular_speeds.append(angular_speed)
             except TypeError:
@@ -513,7 +516,6 @@ class Experiment(object):
         output = []
         for index in range(len(self._speeds)):
             num_of_rods = len(self._speeds[index])
-            #print str(index) + ": " + str(num_of_rods) + " of " + str(self._states[index].number_of_rods)
             output.append(0)
             for index2 in range(num_of_rods):
                 output[index] += self._speeds[index][index2]**2/num_of_rods
@@ -526,7 +528,7 @@ class Experiment(object):
         self._compute_speeds()
         output = []
         for index in range(len(self._angular_speeds)):
-            num_of_rods = len(self._speeds[index])
+            num_of_rods = len(self._angular_speeds[index])
             output.append(0)
             for index2 in range(num_of_rods):
                 output[index] += self._angular_speeds[index][index2]**2/num_of_rods
