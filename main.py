@@ -77,10 +77,5 @@ experimentK17 = Experiment(system_states_name_list=names, system_states_list=rod
 experimentK5.compute_dictionaries()
 experimentK17.compute_dictionaries()
 
-[densities_array, temperatures_array] = experimentK5.density_vs_temperature()
-densities = densities_array[0]
-temperatures = temperatures_array[0]
-plt.figure(1)
-plt.plot(densities, temperatures)
-plt.show()
+experimentK5.create_gifs(rad=50)
 

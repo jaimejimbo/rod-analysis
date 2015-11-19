@@ -11,11 +11,6 @@ import os
 
 
 
-
-
-
-
-
 class Rod(object):
     """
     Rod object.
@@ -291,6 +286,13 @@ class SystemState(object):
         except IndexError:
             print zone_coords
             raise IndexError
+
+    @property
+    def kappas(self):
+        """
+        Returns kappas of system.
+        """
+        return self._kappas
 
     @property
     def kappa_error(self):
@@ -573,7 +575,7 @@ class SystemState(object):
             density.append(subdensity)
         self._density_matrix = density
 
-    def plottable_density_matrix(self, rad):
+    def plottable_density_matrix(self, rad=50):
         """
             Returns 3 arrays: one for x, another for y and the last for values.
         """

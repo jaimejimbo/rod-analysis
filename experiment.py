@@ -7,6 +7,16 @@ import multiprocessing as mp
 import os
 import Queue
 import time
+import pandas as pd
+from matplotlib import animation
+import math
+from mpl_toolkits.mplot3d import Axes3D
+import pylab
+from scipy import interpolate
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 class Experiment(object):
@@ -203,7 +213,6 @@ class Experiment(object):
             kappa_error = initial_state.kappa_error/2
             for final_rod in available_final_rods:
                 final_kappa = final_rod.kappa
-                #rods can't change of kappa.
                 if initial_kappa-kappa_error > final_kappa or initial_kappa+kappa_error < final_kappa:
                     continue
                 final_id = final_rod.identifier
@@ -725,7 +734,7 @@ class Experiment(object):
         self._compute_local_average_speeds(max_speed, max_angle_diff, limit, amount_of_rods, rad)
         return self._local_average_quadratic_angular_speeds
 
-    def density_vs_temperature(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200, rad=50):
+    def density_and_quad_speed(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200, rad=50):
         """
         Returns 2 arrays: density values and temperature
         """
@@ -740,7 +749,7 @@ class Experiment(object):
             output_queue = mp.Queue()
             processes = []
             for index in range(len(self._states)-1):
-                process = mp.Process(target=self._density_vs_temperature_process,
+                process = mp.Process(target=self._density_and_quad_speed_process,
                             args=(index, output_queue, quad_speeds_array, ang_speeds_array, rad))
                 processes.append(process)
             running, processes_left = run_processes(processes)
@@ -762,7 +771,7 @@ class Experiment(object):
         return [self._densities_array, self._quad_speeds_array]
         
 
-    def _density_vs_temperature_process(self, index, output_queue, quad_speeds_array, ang_speeds_array, rad):
+    def _density_and_quad_speed_process(self, index, output_queue, quad_speeds_array, ang_speeds_array, rad):
         """
         Process
         """
@@ -771,22 +780,94 @@ class Experiment(object):
         state = self._states[index]
         subgroups = state.subgroups_matrix(rad)
         densities = []
-        quad_speeds = []
-        #empty outputs
+        speeds = []
         for row in range(len(quad_speeds)):
             for col in range(len(quad_speeds[row])):
-                quad_speed = quad_speeds[row][col]
-                ang_speed = ang_speeds[row][col]
-                soubgroup = subgroups[row][col]
-                density = subgroup.density
-                total_quad_speed = ang_speed + quad_speed
+                subgroup = subgroups[row][col]
+                num_rods = subgroup.number_of_rods
+                if num_rods > 0:
+                    quad_speed = quad_speeds[row][col]
+                    ang_speed = ang_speeds[row][col]
+                    density = subgroup.density
+                    total_quad_speed = float(ang_speed + quad_speed)/num_rods
+                else:
+                    density = 0
+                    total_quad_speed = 0
                 densities.append(density)
-                quad_speeds.append(total_quad_speed)
-        output_queue.put([densities, quad_speeds])
+                speeds.append(total_quad_speed)
+        output_queue.put([densities, speeds])
 
-    def create_videos(self):
+    def create_density_gif(self, rad=50, folder="./", fps=1):
         """
-        Creates a video per property of the system that shows evolution.
+        Creates a gif of density's evolution.
         """
-        pass
+        frames = len(self._states)
+        function_name = 'plottable_density_matrix'
+        kappas = self._states[0].kappas
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
+        self._generic_scatter_animator(frames, name, function_name,
+                            rad, folder=folder, fps=fps)
+
+    def create_relative_g2_gif(self, rad=50, folder="./", fps=1):
+        """
+        Creates a gif of correlation g2 evolution.
+        """
+        frames = len(self._states)
+        function_name = 'relative_g2_plot_matrix'
+        kappas = self._states[0].kappas
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
+        self._generic_scatter_animator(frames, name, function_name,
+                            rad, folder=folder, fps=fps)
+
+    def create_relative_g4_gif(self, rad=50, folder="./", fps=1):
+        """
+        Creates a gif of correlation g4 evolution.
+        """
+        frames = len(self._states)
+        function_name = 'relative_g4_plot_matrix'
+        kappas = self._states[0].kappas
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
+        self._generic_scatter_animator(frames, name, function_name,
+                            rad, folder=folder, fps=fps)
+
+    def create_average_angle_gif(self, rad=50, folder="./", fps=1):
+        """
+        Creates a gif of average angle evolution.
+        """
+        frames = len(self._states)
+        function_name = 'plottable_average_angle_matrix'
+        kappas = self._states[0].kappas
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
+        self._generic_scatter_animator(frames, name, function_name,
+                            rad, folder=folder, fps=fps)
+
+    def _generic_scatter_animator(self, frames, name, function_name, rad, folder="./", fps=1):
+        """
+        Generic animator
+        """
+        self.colorbar = None
+        def animate(index):
+            """
+            Specific animator.
+            """
+            state = self._states[index]
+            function = getattr(state, function_name)
+            x_val, y_val, z_val = function(rad)
+            plt.cla()
+            plt.clf()
+            size = (0.8*rad/2.0)**2
+            plt.scatter(x_val, y_val, c=z_val, s=size, marker='s')
+            plt.colorbar()
+        fig = plt.figure()
+        anim = animation.FuncAnimation(fig, animate, frames=frames)
+        anim.save(name, writer='imagemagick', fps=fps);
+
+    def create_gifs(self, rad=50, folder="./", fps=1):
+        """
+        Creates a gif per property of the system that shows evolution.
+        """
+        self.create_density_gif(rad=rad, folder=folder, fps=fps)
+        self.create_relative_g2_gif(rad=rad, folder=folder, fps=fps)
+        self.create_relative_g4_gif(rad=rad, folder=folder, fps=fps)
+        #self.create_average_angle_gif(rad=rad, folder=folder, fps=fps)
 
