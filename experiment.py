@@ -8,7 +8,7 @@ import os
 import Queue
 import time
 
-#######################################################################################################
+
 class Experiment(object):
     """
         Has a list of system states, one for each t.
@@ -56,7 +56,7 @@ class Experiment(object):
         self._local_average_quadratic_speeds = []
         self._local_average_quadratic_angular_speeds = []
 
-#######################################################################################################
+
     def __getitem__(self, state_num):
         """
             Get the state identified by state_num.
@@ -70,7 +70,7 @@ class Experiment(object):
             raise ValueError
         return self._states_dict[identifier]
 
-#######################################################################################################
+
     def _reset(self):
         """
             Resets all variables, so they must be computed again.
@@ -92,7 +92,7 @@ class Experiment(object):
         self._local_average_quadratic_speeds = []
         self._local_average_quadratic_angular_speeds = []
 
-#######################################################################################################
+
     def _create_dict_keys(self):
         """
             Create evolucion dictionaries keys.
@@ -117,7 +117,7 @@ class Experiment(object):
         for index in range(len(self._states)-1):
             self._final_rods[index] = self._initial_rods[index+1].copy()
 
-#######################################################################################################
+
     def _fill_dicts(self, max_speed, max_angle_diff, limit=5, amount_of_rods=None):
         """
             Looks for rods that have only one possible predecessor.
@@ -144,7 +144,7 @@ class Experiment(object):
                 new_process = processes_left.pop()
                 new_process.start()
 
-#######################################################################################################
+
     def _fill_dicts_process(self, index, max_speed, max_angle_diff, output_queue, amount_of_rods=None):
         """
             Allows to create a process and use all cores.
@@ -176,7 +176,7 @@ class Experiment(object):
                 relative_dict[initial_id] = value
         output_queue.put([index, evol_dict, relative_dict])
 
-#######################################################################################################
+
     def _fill_dicts_process_limited(self, index, max_speed, max_angle_diff, output_queue, limit=5, amount_of_rods=None):
         """
             Allows to create a process and use all cores.
@@ -228,7 +228,7 @@ class Experiment(object):
                 relative_dict[initial_id] = value
         output_queue.put([index, evol_dict, relative_dict])
 
-#######################################################################################################
+
     def _use_unique_evolutions(self, max_reps=50):
         """
             Checks if there is only one possible evolution for the rods. If so,
@@ -265,7 +265,7 @@ class Experiment(object):
                     new_process = processes_left.pop()
                     new_process.start()
 
-#######################################################################################################
+
     def _use_unique_evolutions_process(self, index, changes_queue, output_queue):
         """
             Process for method.
@@ -290,7 +290,7 @@ class Experiment(object):
         changes_queue.put(changed)
         output_queue.put([index, evol_dict, relative_dict, conflicts])
 
-#######################################################################################################
+
     def _remove_final_rod(self, index, initial_rod_id, final_rod_id):
         """
             Remove final rod from the rest of rods' evolutions.
@@ -316,7 +316,7 @@ class Experiment(object):
                 changed = True
         return changed, evol_dict, conflicts
 
-#######################################################################################################
+
     def _leave_only_closer(self, max_distance=50):
         """
             Leaves only the closer rod of possible evolutions.
@@ -347,7 +347,7 @@ class Experiment(object):
                 new_process = processes_left.pop()
                 new_process.start()
 
-#######################################################################################################
+
     def _leave_only_closer_process(self, index, output_queue, selected_queue, max_distance):
         """
         Process.
@@ -366,7 +366,7 @@ class Experiment(object):
         output_queue.put([index, evol_dict, relative_dict])
         selected_queue.put([index, selected])
 
-#######################################################################################################
+
     def _closer_rod(self, index, initial_rod_id, selected, max_distance=50):
         """
             If there are multiple choices,
@@ -399,7 +399,7 @@ class Experiment(object):
                 angle_diff = None
         return final_rod, min_distance, angle_diff
 
-#######################################################################################################
+
     def compute_dictionaries(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
         """
                 List of evolution dictionaries.
@@ -419,7 +419,7 @@ class Experiment(object):
             self._leave_only_closer(max_distance=max_speed)
             self._join_left_rods(max_distance=max_speed)
 
-#######################################################################################################
+
     def evolution_dictionaries(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
         """
             List of evolution dictionaries.
@@ -432,7 +432,7 @@ class Experiment(object):
         self.compute_dictionaries(max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200)
         return self._evolution_dictionaries
 
-#######################################################################################################
+
     def _join_left_rods(self, max_distance=50):
         """
         After using methods listed before, some rods are unjoined.
@@ -460,7 +460,7 @@ class Experiment(object):
                 new_process = processes_left.pop()
                 new_process.start()
 
-#######################################################################################################
+
     def _join_left_rods_process(self, index, output_queue, max_distance=50):
         """
         Process for method.
@@ -496,7 +496,7 @@ class Experiment(object):
             initial_rods -= set([selected_rod_id])
         output_queue.put([index, evol_dict, relative_dict])
 
-#######################################################################################################
+
     def _compute_speeds(self, max_speed, max_angle_diff, limit, amount_of_rods):
         """
         After using methods listed before, some rods are unjoined.
@@ -528,7 +528,7 @@ class Experiment(object):
                     new_process = processes_left.pop()
                     new_process.start()
 
-#######################################################################################################
+
     def _compute_speeds_process(self, index, speeds_queue, angular_speeds_queue):
         """
         Returns an array of speeds.
@@ -548,7 +548,7 @@ class Experiment(object):
         speeds_queue.put(speeds)
         angular_speeds_queue.put(angular_speeds)
 
-#######################################################################################################
+
     def speeds(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
         """
         Returns [speeds, angular_speeds] where both outputs are array with one
@@ -557,7 +557,7 @@ class Experiment(object):
         self._compute_speeds(max_speed, max_angle_diff, limit, amount_of_rods)
         return [self._speeds, self._angular_speeds]
 
-#######################################################################################################
+
     def average_quadratic_speed(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
         """
         Returns average quadratic speeds
@@ -571,7 +571,7 @@ class Experiment(object):
                 output[index] += speed**2/num_of_rods
         return output
 
-#######################################################################################################
+
     def average_quadratic_angular_speed(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
         """
         Returns average quadratic angular speed
@@ -585,7 +585,7 @@ class Experiment(object):
                 output[index] += angular_speed**2/num_of_rods
         return output
 
-#######################################################################################################
+
     def local_speeds(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200, rad=50):
         """
         Creates an array of matrices. Each matrix's entry is a dictionariy such as
@@ -596,7 +596,7 @@ class Experiment(object):
             self._compute_local_speeds(rad)
         return self._local_speeds
 
-#######################################################################################################
+
     def _compute_local_speeds(self, rad):
         """
         Creates an array of matrices. Each matrix's entry is a dictionariy such as
@@ -623,7 +623,7 @@ class Experiment(object):
                 new_process = processes_left.pop()
                 new_process.start()
 
-#######################################################################################################
+
     def _compute_local_speeds_process(self, index, output_queue, rad):
         """
         Process
@@ -647,7 +647,7 @@ class Experiment(object):
             speeds_matrix.append(speeds_row)
         output_queue.put([index, speeds_matrix])
 
-#######################################################################################################
+
     def _compute_local_average_speeds(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200, rad=50):
         """
         Compute local average speeds.
@@ -680,7 +680,7 @@ class Experiment(object):
                     new_process = processes_left.pop()
                     new_process.start()
 
-#######################################################################################################
+
     def _compute_local_average_speeds_process(self, index, output_queue, rad, local_speeds):
         """
         Process
@@ -704,7 +704,7 @@ class Experiment(object):
             angular_speeds_matrix.append(angular_speeds_row)
         output_queue.put([index, speeds_matrix, angular_speeds_matrix])
 
-#######################################################################################################
+
     def local_average_quadratic_speed(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200, rad=50):
         """
         Returns a array of matrices. Each matrix represents
@@ -714,7 +714,7 @@ class Experiment(object):
         return self._local_average_quadratic_speeds
         
 
-#######################################################################################################
+
     def local_average_quadratic_angular_speed(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200, rad=50):
         """
         Returns a array of matrices. Each matrix represents
@@ -723,7 +723,7 @@ class Experiment(object):
         self._compute_local_average_speeds(max_speed, max_angle_diff, limit, amount_of_rods, rad)
         return self._local_average_quadratic_angular_speeds
 
-#######################################################################################################
+
     def create_videos(self):
         """
         Creates a video per property of the system that shows evolution.

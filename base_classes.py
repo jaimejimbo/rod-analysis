@@ -8,19 +8,19 @@ import matrix
 import multiprocessing as mp
 import re
 import os
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
+
+
+
+
 class Rod(object):
     """
     Rod object.
     """
-#######################################################################
+
     def __init__(self, (ID, area, xm, ym, major, minor,
                         angle, feret, feretx, ferety,
                         feretangle, minferet, xstart, ystart)):
@@ -44,7 +44,7 @@ class Rod(object):
         self._hash = 0
         self._direction_matrix = matrix.zeros(2, 2)
         self._kappa = float(self.feret)/self.min_feret
-#######################################################################
+
     @property
     def feret(self):
         """
@@ -61,27 +61,27 @@ class Rod(object):
         lines rather than planes.[1][2]
         """
         return self._feret
-#######################################################################
+
     @property
     def center(self):
         """
         Returns position of the center of the rod.
         """
         return self._x_mid, self._y_mid
-#######################################################################
+
     def __eq__(self, rod2):
         """
         Check if a rod is the same as another rod.
         Rods must be of the same group.
         """
         return self.hash_ == rod2.hash_
-#######################################################################
+
     def __ne__(self, rod2):
         """
         != magic method
         """
         return not self == rod2
-#######################################################################
+
     def __repr__(self):
         """
         String transformation.
@@ -91,14 +91,14 @@ class Rod(object):
         output += "center: "+str(self.center)+"\n"
         output += "angle: "+str(self.angle)+"\n"
         return output
-#######################################################################
+
     @property
     def identifier(self):
         """
         Returns an identification number.
         """
         return self._id
-#######################################################################
+
     @property
     def hash_(self):
         """
@@ -112,7 +112,7 @@ class Rod(object):
         output += str(int(self.y_mid))
         output += str(int(self.kappa))
         return int(output)
-#######################################################################
+
 
     @property
     def min_feret(self):
@@ -120,35 +120,35 @@ class Rod(object):
         Minimum Feret length.
         """
         return self._min_feret
-#######################################################################
+
     @property
     def x_mid(self):
         """
         Average x of rod.
         """
         return self._x_mid
-#######################################################################
+
     @property
     def y_mid(self):
         """
         Average y of rod.
         """
         return self._y_mid
-#######################################################################
+
     @property
     def kappa(self):
         """
         L/D of rod.
         """
         return self._kappa
-#######################################################################
+
     @property
     def angle(self):
         """
         Angle of rod.
         """
         return self._angle
-#######################################################################
+
     def is_in_circle(self, center, rad):
         """
         Checks if rod is in the circle defined by the given center and
@@ -156,7 +156,7 @@ class Rod(object):
         """
         return is_in_circle(self.x_mid, self.y_mid,
                             center[0], center[1], rad)
-#######################################################################
+
     def has_valid_proportions(self, kappas, allowed_error):
         """
         Checks if rod has valid L/D (kappas are possibles values
@@ -175,7 +175,7 @@ class Rod(object):
         for condition in passed:
             output = output or condition
         return output
-#######################################################################
+
     def is_valid_rod(self, kappas,
                     allowed_kappa_error,
                     zone_coords):
@@ -189,7 +189,7 @@ class Rod(object):
                                                            allowed_kappa_error)
         output = is_in_main and has_valid_proportions
         return output
-#######################################################################
+
     def distance_to_rod(self, rod):
         """
         Returns the distance to another rod.
@@ -197,7 +197,7 @@ class Rod(object):
         diff_x = abs(self.x_mid-rod.x_mid)
         diff_y = abs(self.y_mid-rod.y_mid)
         return math.sqrt(diff_x**2+diff_y**2)
-#######################################################################
+
     def angle_between_rods(self, rod):
         """
         Returns value of angle that formes this rod with another.
@@ -206,7 +206,7 @@ class Rod(object):
         angle = min([angle, 360-angle])
         angle = min([angle, 180-angle])
         return angle
-#######################################################################
+
     @property
     def direction_matrix(self):
         """
@@ -222,22 +222,22 @@ class Rod(object):
             self._direction_matrix[1][0] = e_x*e_y
             self._direction_matrix[0][1] = e_x*e_y
         return self._direction_matrix
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class SystemState(object):
     """
         Group of rods in a moment.
@@ -291,14 +291,14 @@ class SystemState(object):
         except IndexError:
             print zone_coords
             raise IndexError
-#######################################################################
+
     @property
     def kappa_error(self):
         """
         Returns kappa error
         """
         return self._allowed_kappa_error
-#######################################################################
+
     def __getitem__(self, rod_id):
         """
         Magic method for [].
@@ -310,7 +310,7 @@ class SystemState(object):
             msg = str(rod_id)
             msg += " " + str(self._rods_dict.keys())    #There are not keys! -> Dict not filled.
             raise IndexError(msg)
-#######################################################################
+
     def get_rods_range(self, initial_id, final_id):
         """
         Returns a list of rods between initial_id and final_id.
@@ -322,27 +322,27 @@ class SystemState(object):
             except IndexError:
                 pass
         return output
-#######################################################################
+
     def __iter__(self):
         """
         Magic method for in.
         """
         for rod in self._rods:
             yield rod
-#######################################################################
+
     def __list__(self):
         """
         Returns a list of rods
         """
         output = [rod for rod in self]
         return output
-#######################################################################
+
     def __len__(self):
         """
         Number of rods
         """
         return len(self._rods)
-#######################################################################
+
     @property
     def clone(self):
         """
@@ -356,14 +356,14 @@ class SystemState(object):
                             id_string=self.id_string, zone_coords=_zone_coords,
                             rods=self._rods)
         return clone
-#######################################################################
+
     @property
     def rods_dictionary(self):
         """
             Returns a dictionary of rods ordered by id.
         """
         return self._rods_dict.copy()
-#######################################################################
+
     @property
     def number_of_rods(self):
         """
@@ -371,14 +371,14 @@ class SystemState(object):
         """
         self._number_of_rods = len(self._rods)
         return self._number_of_rods
-#######################################################################
+
     def put_rod(self, rod):
         """
             Adds a rod to the group
         """
         self._rods.put(rod)
         self._reset()
-#######################################################################
+
     def get_rod(self):
         """
             Returns the first rod in the queue
@@ -386,14 +386,14 @@ class SystemState(object):
         rod = self._rods.get()
         self._rods.put(rod)
         return rod
-#######################################################################
+
     def remove_rod(self, rod):
         """
             Removes a rod from the group (queue object mod needed)
         """
         self._rods.delete(rod)
         self._reset()
-#######################################################################
+
     def _reset(self):
         """
             Called when system is changed..
@@ -429,7 +429,7 @@ class SystemState(object):
             self._center_x = None
             self._center_y = None
             self._zone_coords = []
-#######################################################################
+
     def fill_dicts(self):
         """
             Fill dictionaries.
@@ -439,7 +439,7 @@ class SystemState(object):
                 identifier = rod.identifier
                 self._rods_dict[identifier] = rod
                 self._cluster_checked_dict[identifier] = False
-#######################################################################
+
     def _compute_center_and_radius(self):
         """
             Computes where the center of the system is and its
@@ -466,7 +466,7 @@ class SystemState(object):
             self._radius = radius
             self._zone_coords = (center_x, center_y, radius)
         return self._center_x, self._center_y, self._radius
-#######################################################################
+
     @property
     def center(self):
         """
@@ -474,7 +474,7 @@ class SystemState(object):
         """
         self._compute_center_and_radius()
         return self._center_x, self._center_y
-#######################################################################
+
     @property
     def radius(self):
         """
@@ -482,7 +482,7 @@ class SystemState(object):
         """
         self._compute_center_and_radius()
         return self._radius
-#######################################################################
+
     @property
     def zone_coords(self):
         """
@@ -490,7 +490,7 @@ class SystemState(object):
         """
         self._compute_center_and_radius()
         return self._zone_coords
-#######################################################################
+
 
     def check_rods(self, all_cores=False):
         """
@@ -503,7 +503,7 @@ class SystemState(object):
                         zone_coords)
             if not valid:
                 self.remove_rod(rod)
-#######################################################################
+
 
     def _divide_in_circles(self, rad):
         """
@@ -523,7 +523,7 @@ class SystemState(object):
         end_y = self.center[1]+self.radius
         # Getting all possible x and y values.
         max_times = int(float(end_x-start_x)/diff+1)
-#######################################################################
+
         possible_x_values = [start_x + times*diff
                              for times in range(max_times)]
         max_times = int(float(end_y-start_y)/diff+1)
@@ -532,7 +532,7 @@ class SystemState(object):
         subsystems = self._subsystems(possible_x_values, possible_y_values,
                                       rad)
         self._actual_subdivision = subsystems
-#######################################################################
+
     def _subsystems(self, possible_x_values, possible_y_values, rad):
         """
             Creates subsystems
@@ -552,7 +552,7 @@ class SystemState(object):
                     subsystem.put_rods(list(self._rods))
                     subsystems.append(subsystem)
         return subsystems
-#######################################################################
+
     def _compute_density_matrix(self, rad, normalized=False,
                                divided_by_area=False):
         """
@@ -572,7 +572,7 @@ class SystemState(object):
             subdensity.append(dens)
             density.append(subdensity)
         self._density_matrix = density
-#######################################################################
+
     def plottable_density_matrix(self, rad):
         """
             Returns 3 arrays: one for x, another for y and the last for values.
@@ -588,7 +588,7 @@ class SystemState(object):
             z_values.append(row[2])
         #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
-#######################################################################
+
     def _transform_for_pcolor(self, z_values, rad):
         """
             Transform arrays to a plotable set of arrays.
@@ -613,7 +613,7 @@ class SystemState(object):
             ymat.append(yrow)
             zmat.append(zrow)
         return xmat, ymat, zmat
-#######################################################################
+
     def _create_subgroups_matrix(self, rad):
         """
             Put subsystems in a matrix form.
@@ -634,14 +634,14 @@ class SystemState(object):
                 actual_y = element_y
             row.append(element)
         self._subdivision_centers = subgroups_matrix
-#######################################################################
+
     def subgroups_matrix(self, rad):
         """
             Returns subgroups matrix
         """
         self._create_subgroups_matrix(rad)
         return self._subdivision_centers
-#######################################################################
+
     def _compute_g2_and_g4(self):
         """
             Computes correlation_g2 and correlation_g4 values
@@ -655,7 +655,7 @@ class SystemState(object):
             sin4_av += math.sin(4*angle)/self.number_of_rods
         self._correlation_g2 = math.sqrt(cos2_av**2+sin2_av**2)
         self._correlation_g4 = math.sqrt(cos4_av**2+sin4_av**2)
-#######################################################################
+
     @property
     def correlation_g2(self):
         """
@@ -664,7 +664,7 @@ class SystemState(object):
         if not self._correlation_g2:
             self._compute_g2_and_g4()
         return self._correlation_g2
-#######################################################################
+
     @property
     def correlation_g4(self):
         """
@@ -673,7 +673,7 @@ class SystemState(object):
         if not self._correlation_g4:
             self._compute_g2_and_g4()
         return self._correlation_g4
-#######################################################################
+
     def _compute_g2_g4_matrices(self, rad):
         """
             Computes correlation_g2 and correlation_g4 matrices for subgroups.
@@ -689,7 +689,7 @@ class SystemState(object):
                 correlation_g4.append(subsystem.correlation_g4)
                 self._correlation_g2_subsystems.append(correlation_g2)
                 self._correlation_g4_subsystems.append(correlation_g4)
-#######################################################################
+
     def correlation_g2_plot_matrix(self, rad):
         """
             Returns values for plotting correlation_g2 matrix.
@@ -704,7 +704,7 @@ class SystemState(object):
             z_values.append(subsystem[2])
         #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
-#######################################################################
+
     def correlation_g4_plot_matrix(self, rad):
         """
             Returns values for plotting correlation_g2 matrix.
@@ -719,7 +719,7 @@ class SystemState(object):
             z_values.append(subsystem[2])
         #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
-#######################################################################
+
     @property
     def average_kappa(self):
         """
@@ -731,7 +731,7 @@ class SystemState(object):
                 self._average_kappa += rod.kappa
             self._average_kappa /= self.number_of_rods
         return self._average_kappa
-#######################################################################
+
     @property
     def kappa_dev(self):
         """
@@ -744,7 +744,7 @@ class SystemState(object):
             kappa2 /= self.number_of_rods
             self._kappa_dev = math.sqrt(kappa2-self.average_kappa**2)
         return self._kappa_dev
-#######################################################################
+
     @property
     def average_angle(self):
         """
@@ -766,7 +766,7 @@ class SystemState(object):
                 return None
         else:
             return self._average_angle
-#######################################################################
+
     def _compute_average_angle_matrix(self, rad):
         """
             Computes average angle matrix
@@ -778,7 +778,7 @@ class SystemState(object):
             row = [subsystem.center[0], subsystem.center[1]]
             row.append(subsystem.average_angle)
             self._angle_matrix.append(row)
-#######################################################################
+
     def plottable_average_angle_matrix(self, rad):
         """
             Returns a plottable average angle matrix.
@@ -793,7 +793,7 @@ class SystemState(object):
             z_values.append(subsystem[2])
         #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
-#######################################################################
+
     @property
     def angle_histogram(self):
         """
@@ -801,7 +801,7 @@ class SystemState(object):
         """
         output = [rod.angle for rod in list(self._rods)]
         return output
-#######################################################################
+
     def _get_closest_rod(self, rod):
         """
             Returns closest rod in group to given rod.
@@ -815,7 +815,7 @@ class SystemState(object):
                     distance = new_distance
                     selected_rod = rod2
         return selected_rod
-#######################################################################
+
     def _get_cluster_members(self, reference_rod,
                                     max_distance, max_angle_diff):
         """
@@ -848,7 +848,7 @@ class SystemState(object):
                 rods.add(rod)
                 rods |= subrods
         return rods
-#######################################################################
+
     def clusters(self, max_distance=None, max_angle_diff=None):
         """
             Gets the cluster for rod.
@@ -880,7 +880,7 @@ class SystemState(object):
             assert len(clusters) > 0, "no clusters detected"
             self._clusters = erase_length_one_elements(clusters)
         return self._clusters
-#######################################################################
+
     def average_cluster_rod_num(self, max_distance=None, max_angle_diff=None):
         """
             Gets the average number of rods in clusters.
@@ -891,7 +891,7 @@ class SystemState(object):
             return float(sum(lengths))/len(lengths)
         except ZeroDivisionError:
             print "No clusters detected."
-#######################################################################
+
     def number_of_rods_in_cluster(self, max_distance=None, max_angle_diff=None):
         """
             Creates a list with the number of rods in each cluster.
@@ -901,14 +901,14 @@ class SystemState(object):
         for cluster in self.clusters(max_distance, max_angle_diff):
             lengths.append(len(cluster))
         return lengths
-#######################################################################
+
     def number_of_clusters(self, max_distance=None, max_angle_diff=None):
         """
             Returns the number of clusters in the system.
         Angles in grad.
         """
         return len(self.clusters(max_distance, max_angle_diff))
-#######################################################################
+
     def _compute_closest_rod_matrix(self):
         """
             Creates closer rod matrix:
@@ -927,7 +927,7 @@ class SystemState(object):
             new_row.append(closest_rod)
             closest_rod_matrix.append(new_row)
         self._closest_rod_matrix = closest_rod_matrix
-#######################################################################
+
 
     def closest_rod_matrix(self):
         """
@@ -937,7 +937,7 @@ class SystemState(object):
         if len(self._closest_rod_matrix) == 0:
             self._compute_closest_rod_matrix()
         return self._closest_rod_matrix
-#######################################################################
+
     def closest_rod_dict(self):
         """
             Returns a dictionary of closest rods.
@@ -947,7 +947,7 @@ class SystemState(object):
         for pair in closest_rod_matrix:
             dictionary[pair[0].identifier] = pair[1]
         return dictionary
-#######################################################################
+
     @property
     def relative_g2(self):
         """
@@ -966,7 +966,7 @@ class SystemState(object):
             cos /= self.number_of_rods
             self._relative_g2 = math.sqrt(sin**2+cos**2)
         return self._relative_g2
-#######################################################################
+
     @property
     def relative_g4(self):
         """
@@ -985,7 +985,7 @@ class SystemState(object):
             cos /= self.number_of_rods
             self._relative_g4 = math.sqrt(sin**2+cos**2)
         return self._relative_g4
-#######################################################################
+
     def _compute_relative_g2_g4_mat(self, rad):
         """
             Computes correlation_g2 and correlation_g4 matrices for subgroups.
@@ -1003,7 +1003,7 @@ class SystemState(object):
                 correlation_g4.append(subsystem.correlation_g4)
                 self._relative_g2_subsystems.append(correlation_g2)
                 self._relative_g4_subsystems.append(correlation_g4)
-#######################################################################
+
     def relative_g2_plot_matrix(self, rad):
         """
             Returns values for plotting correlation_g2 matrix.
@@ -1018,7 +1018,7 @@ class SystemState(object):
             z_values.append(subsystem[2])
         #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
-#######################################################################
+
     def relative_g4_plot_matrix(self, rad):
         """
             Returns values for plotting correlation_g2 matrix.
@@ -1033,7 +1033,7 @@ class SystemState(object):
             z_values.append(subsystem[2])
         #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
-#######################################################################
+
     @property
     def average_angle_using_matrix(self):
         """
@@ -1046,28 +1046,28 @@ class SystemState(object):
                 self._direction_matrix += rod.direction_matrix
         eigen1, dummy_ = self._direction_matrix.diagonalize_2x2()
         return eigen1
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class SubsystemState(SystemState):
     """
         Group of rods. Used to put all rods that are in a zone or
     have something in common.
     """
-#######################################################################
+
     def __init__(self, center, rad, area):
         """
             Initialization
@@ -1076,34 +1076,34 @@ class SubsystemState(SystemState):
         self._center = center
         self._rad = rad
         self._area = area
-#######################################################################
+
     @property
     def center(self):
         """
             Center of the subsystem.
         """
         return self._center
-#######################################################################
+
     @property
     def radius(self):
         """
             Radius of the subsystem
         """
         return self._rad
-#######################################################################
+
     @property
     def area(self):
         """
             Area of the subsystem.
         """
         return self._area
-#######################################################################
+
     def _update_density(self):
         """
             Computes density of the group.
         """
         self._density = self.number_of_rods
-#######################################################################
+
     @property
     def density(self):
         """
@@ -1112,7 +1112,7 @@ class SubsystemState(SystemState):
         if not self._density:
             self._update_density()
         return self._density
-#######################################################################
+
     def put_rods(self, rod_list):
         """
             Add all rods of the list that are inside the circle.
@@ -1123,26 +1123,26 @@ class SubsystemState(SystemState):
                     self.put_rod(rod)
         except TypeError:
             print "Use a rod list in put_rods method"
-#######################################################################
 
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
+
+
+
+
+
+
+
+
 #####################################################################
-#########################################################################
+##
 # METHODS
-#########################################################################
-#######################################################################
+##
 
-#######################################################################
+
+
 def segment_area(rad, min_dist):
     """
     Computes the area of an intersection of a circle with a line
@@ -1193,10 +1193,10 @@ def segment_area(rad, min_dist):
     assert output > 0, msg
     #######
     return output
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
 def effective_area(small_rad, small_position_rad, main_rad):
     """
     Computes the area of the small circle intersected with main circle.
@@ -1229,10 +1229,10 @@ def effective_area(small_rad, small_position_rad, main_rad):
     #######
     output = math.pi*small_rad**2 - section_area + correction
     return output
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
 def compute_min_dist(small_rad, small_position_rad, main_rad):
     """
     Computes the distance from small circle center to the line that joins both
@@ -1249,10 +1249,10 @@ def compute_min_dist(small_rad, small_position_rad, main_rad):
     if abs(min_dist) > small_rad:
         return -small_rad
     return min_dist
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
 def same_area_rad(small_rad, small_position_rad,
                     main_rad, allowed_error_ratio=.2,
                     max_reps=10):
@@ -1286,10 +1286,10 @@ def same_area_rad(small_rad, small_position_rad,
     return binary_search(low_rad, high_rad,
                         area, wanted_area,
                         allowed_error, max_reps)
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
 def is_in_circle(point_x, point_y, center_x, center_y, rad):
     """
     Checks if a point is in a circle
@@ -1298,10 +1298,10 @@ def is_in_circle(point_x, point_y, center_x, center_y, rad):
     diff_y = abs(point_y-center_y)
     distance = math.sqrt(diff_x**2 + diff_y**2)
     return distance <= rad
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
 def binary_search(low, high, ordering_function, expected,
                   max_error_ratio=.3, max_reps=1e4):
     """
@@ -1331,10 +1331,10 @@ def binary_search(low, high, ordering_function, expected,
         else:
             return mid
     return mid
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
 def binary_order(array, ordering_id):
     """
     Orders an array using ordering_function.
@@ -1377,10 +1377,10 @@ def binary_order(array, ordering_id):
     for element in unemptied_array:
         ordered_array.append(element)
     return ordered_array
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
 def erase_length_one_elements(group, minimum_length=2):
     """
     Erase elements of groups of lenght < minimum_length
@@ -1394,10 +1394,10 @@ def erase_length_one_elements(group, minimum_length=2):
     except IndexError:
         pass
     return new_group
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
 def import_files(folder="./", regular_expression=r'rods_[0-9]*'):
     """
     Import all files using glob and checking with reg exp.
@@ -1410,7 +1410,7 @@ def import_files(folder="./", regular_expression=r'rods_[0-9]*'):
     for name in names:
         files.append(open(name, 'r'))
     return names, files
-#######################################################################
+
 
 def get_file_names(folder="./", regular_expression=r'rods_[0-9]*'):
     """
@@ -1424,10 +1424,10 @@ def get_file_names(folder="./", regular_expression=r'rods_[0-9]*'):
         if reg1.match(_file) and not extension.match(_file):
             names.append(_file)
     return binary_order(names, get_number_from_string)
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
 def get_number_from_string(name):
     """
     Gets the number in the name of the file.
@@ -1438,10 +1438,10 @@ def get_number_from_string(name):
     for found_element in found:
         output += found_element
     return int(output)
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
 def import_data(_file, split_char='\t', regular_expression=r'[0-9]\.?[0-9]*'):
     """
     Import data of a file
@@ -1472,10 +1472,10 @@ def import_data(_file, split_char='\t', regular_expression=r'[0-9]\.?[0-9]*'):
         print "Error importing files (empty list)"
         raise IndexError
     return data
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
 def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
                 radius_correction_ratio=0.1):
     """
@@ -1491,15 +1491,6 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
     states_queue = mp.Queue()
     task_queue = mp.JoinableQueue()
     for index in range(len(files)):
-        """state = SystemState(kappas, allowed_kappa_error,
-                   radius_correction_ratio, names[index])
-        data = import_data(files[index])
-        for dataline in data:
-            parameters = tuple(dataline)
-            new_rod = Rod(parameters)
-            state.put_rod(new_rod)
-        state.check_rods()
-        states[index] = state"""
         process = mp.Process(target=create_rods_process,
                             args=(kappas, allowed_kappa_error,
                             radius_correction_ratio, names,
@@ -1517,10 +1508,10 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
             new_process = processes_left.pop()
             new_process.start()
     return names, states
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
 def create_rods_process(kappas, allowed_kappa_error,
                         radius_correction_ratio, names,
                         files, index, states_queue, task_queue):
@@ -1536,10 +1527,10 @@ def create_rods_process(kappas, allowed_kappa_error,
         state.put_rod(new_rod)
     state.check_rods()
     states_queue.put([index, state])
-#######################################################################
-#######################################################################
-#######################################################################
-#######################################################################
+
+
+
+
 def run_processes(processes):
     """
         Runs all processes using all cores.
