@@ -55,6 +55,8 @@ class Experiment(object):
         self._local_speeds = []
         self._local_average_quadratic_speeds = []
         self._local_average_quadratic_angular_speeds = []
+        self._densities_array = []
+        self._quad_speeds_array = []
 
 
     def __getitem__(self, state_num):
@@ -91,6 +93,8 @@ class Experiment(object):
         self._local_speeds = []
         self._local_average_quadratic_speeds = []
         self._local_average_quadratic_angular_speeds = []
+        self._densities_array = []
+        self._quad_speeds_array = []
 
 
     def _create_dict_keys(self):
@@ -712,8 +716,6 @@ class Experiment(object):
         """
         self._compute_local_average_speeds(max_speed, max_angle_diff, limit, amount_of_rods, rad)
         return self._local_average_quadratic_speeds
-        
-
 
     def local_average_quadratic_angular_speed(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200, rad=50):
         """
@@ -723,6 +725,64 @@ class Experiment(object):
         self._compute_local_average_speeds(max_speed, max_angle_diff, limit, amount_of_rods, rad)
         return self._local_average_quadratic_angular_speeds
 
+    def density_vs_temperature(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200, rad=50):
+        """
+        Returns 2 arrays: density values and temperature
+        """
+        if (max_speed, max_angle_diff, limit, amount_of_rods) != (self._max_speed,
+                    self._max_angle_diff, self._limit, self._amount_of_rods):
+            self._reset()
+        if not len(self._densities_array):
+            quad_speeds_array = self.local_average_quadratic_speed(max_speed=max_speed, max_angle_diff=max_angle_diff,
+                                                          limit=limit, amount_of_rods=amount_of_rods, rad=rad)
+            ang_speeds_array = self.local_average_quadratic_angular_speed(max_speed=max_speed, max_angle_diff=max_angle_diff,
+                                                          limit=limit, amount_of_rods=amount_of_rods, rad=rad)
+            output_queue = mp.Queue()
+            processes = []
+            for index in range(len(self._states)-1):
+                process = mp.Process(target=self._density_vs_temperature_process,
+                            args=(index, output_queue, quad_speeds_array, ang_speeds_array, rad))
+                processes.append(process)
+            running, processes_left = run_processes(processes)
+            num_processes = len(running)
+            finished = 0
+            densities = []
+            quad_speeds = []
+            while finished < num_processes:
+                finished += 1
+                output = output_queue.get()
+                densities.append(output[0])
+                quad_speeds.append(output[1])
+                if len(processes_left):
+                    finished -= 1
+                    new_process = processes_left.pop()
+                    new_process.start()
+            self._densities_array = densities
+            self._quad_speeds_array = quad_speeds
+        return [self._densities_array, self._quad_speeds_array]
+        
+
+    def _density_vs_temperature_process(self, index, output_queue, quad_speeds_array, ang_speeds_array, rad):
+        """
+        Process
+        """
+        quad_speeds = quad_speeds_array[index]
+        ang_speeds = ang_speeds_array[index]
+        state = self._states[index]
+        subgroups = state.subgroups_matrix(rad)
+        densities = []
+        quad_speeds = []
+        #empty outputs
+        for row in range(len(quad_speeds)):
+            for col in range(len(quad_speeds[row])):
+                quad_speed = quad_speeds[row][col]
+                ang_speed = ang_speeds[row][col]
+                soubgroup = subgroups[row][col]
+                density = subgroup.density
+                total_quad_speed = ang_speed + quad_speed
+                densities.append(density)
+                quad_speeds.append(total_quad_speed)
+        output_queue.put([densities, quad_speeds])
 
     def create_videos(self):
         """

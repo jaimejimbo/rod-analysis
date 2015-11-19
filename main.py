@@ -1,6 +1,6 @@
 #!/usr/bin/python -i
-
-for dummy_ in range(2):
+"""
+while True:
     try:
         import math
         from experiment import *
@@ -13,14 +13,27 @@ for dummy_ in range(2):
         import matplotlib.pyplot as plt
         import os
         import pandas as pd
-        import pymc as mc
         from matplotlib import animation
         import numpy as np
         break
     except:
         import os
         print "Installing dependancies (Ubuntu 14.04 or simmilar)"
-        os.system("sudo apt-get install python-dev python-pip libfreetype6-dev python-matplotlib python-numpy python-scipy imagej")
+        os.system("sudo apt-get install python-dev python-pip libfreetype6-dev python-matplotlib python-numpy python-scipy imagej")"""
+
+import math
+from experiment import *
+from base_classes import *
+from mpl_toolkits.mplot3d import Axes3D
+import pylab
+from scipy import interpolate
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+import matplotlib.pyplot as plt
+import os
+import pandas as pd
+from matplotlib import animation
+import numpy as np
 
 
 #Gets rods_####.txt archives.
@@ -64,7 +77,10 @@ experimentK17 = Experiment(system_states_name_list=names, system_states_list=rod
 experimentK5.compute_dictionaries()
 experimentK17.compute_dictionaries()
 
-
-print experimentK5.local_average_quadratic_speed()
-print experimentK5.local_average_quadratic_angular_speed()
+[densities_array, temperatures_array] = experimentK5.density_vs_temperature()
+densities = densities_array[0]
+temperatures = temperatures_array[0]
+plt.figure(1)
+plt.plot(densities, temperatures)
+plt.show()
 

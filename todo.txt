@@ -6,7 +6,7 @@
 - dynamics                                              (in progress)
     · velocities and temperature                        (DONE)
     · local velocities/temperature			            (DONE)
-    · density as a function of local temperature.       (not started)
+    · density as a function of local temperature.       (in progress)
 - main code (plot and study system)                     (in progress)
 - multiprocessing                                       (DONE)
 - GUI                                                   (not started)
