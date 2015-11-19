@@ -1531,6 +1531,42 @@ def create_rods_process(kappas, allowed_kappa_error,
     states_queue.put([index, state])
 
 
+def imagej():
+    """
+    Creates and run imagej script to get data of images.
+    """
+    image_names = get_file_names(regular_expression=r'IMG_[0-9]{4}.JPG')
+    numbers = [get_number_from_string(image) for image in image_names]
+    try:
+        start = min(numbers)
+        end = max(numbers)
+
+        imagej_template = open("./acquisition_v4.ijm", 'r')
+        imagej_script = open("./imagej_script.ijm", 'w')
+
+        current_folder = os.getcwd()
+
+        for line in imagej_template:
+            output_line = line
+            if re.match(r'.*for.img.*', line):
+                output_line = "for(img_num="
+                output_line += str(start) + "; img_num<="
+                output_line += str(end)+ "; img_num++){\n"
+            if re.match(r'.*\"\.\".*', line):
+                output_line = "\tfolder = \""+str(current_folder)+"\";"
+            imagej_script.write(output_line)
+
+        imagej_template.close()
+        imagej_script.close()
+
+        run_imagej = raw_input("Run imagej script?(Yn)")
+        if run_imagej == "y" or not run_imagej:
+            os.system("imagej ./imagej_script.ijm")
+    except ValueError:
+        pass
+
+
+
 
 
 def run_processes(processes):
