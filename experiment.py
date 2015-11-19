@@ -872,8 +872,25 @@ class Experiment(object):
         """
         Creates a gif per property of the system that shows evolution.
         """
-        self.create_density_gif(rad=rad, folder=folder, fps=fps)
-        self.create_relative_g2_gif(rad=rad, folder=folder, fps=fps)
-        self.create_relative_g4_gif(rad=rad, folder=folder, fps=fps)
-        #self.create_average_angle_gif(rad=rad, folder=folder, fps=fps)
+        processes = []
+        processes.append(mp.Process(target=self.create_density_gif,
+                         args=(rad, folder, fps)))
+        processes.append(mp.Process(target=self.create_relative_g2_gif,
+                         args=(rad, folder, fps)))
+        processes.append(mp.Process(target=self.create_relative_g4_gif,
+                         args=(rad, folder, fps)))
+        running, processes_left = run_processes(processes)
+        num_processes = len(running)
+        finished = 0
+        while finished < num_processes:
+            for process in running:
+                if not process.is_alive():
+                    finished += 1
+                    try:
+                        new_process = processes_left.pop()
+                        new_process.start()
+                        running.append(new_process)
+                        finished -= 1
+                    except:
+                        pass
 
