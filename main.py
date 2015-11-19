@@ -12,6 +12,10 @@ for dummy_ in range(2):
         from matplotlib.ticker import LinearLocator, FormatStrFormatter
         import matplotlib.pyplot as plt
         import os
+        import pandas as pd
+        import pymc as mc
+        from matplotlib import animation
+        import numpy as np
         break
     except:
         import os
