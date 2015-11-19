@@ -857,6 +857,12 @@ class Experiment(object):
             plt.clf()
             size = (0.8*rad/2.0)**2
             plt.scatter(x_val, y_val, c=z_val, s=size, marker='s')
+            xmin = min(x_val)-rad
+            xmax = max(x_val)+rad
+            ymin = min(y_val)-rad
+            ymax = max(y_val)+rad
+            plt.xlim((xmin, xmax))
+            plt.ylim((ymin, ymax))
             plt.colorbar()
         fig = plt.figure()
         anim = animation.FuncAnimation(fig, animate, frames=frames)
