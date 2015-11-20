@@ -14,7 +14,10 @@
 - multiprocessing                                       (DONE)
 - GUI                                                   (not started)
 - imagej interface                                      (DONE)
-- Times (get time of image?)                            (not started)
+- Times (get time of image?)                            (in progress)
+    · get times from images                             (DONE)
+    · save times in a file                              (DONE)
+    · allow to load dates from file.                    (in progress)
     15s raf. 5img 3 sec
     15min raf
 - Invert y axis.                                        (not started)
@@ -26,6 +29,6 @@ Segregation
 - T(x,y)                                                (not started)
 - T in border                                           (not started)
 - Order param                                           (not started)
-    ·Evolution                                          (not started)
+    · Evolution                                         (not started)
 - Cluster area                                          (not started)
 

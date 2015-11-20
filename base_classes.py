@@ -8,6 +8,7 @@ import matrix
 import multiprocessing as mp
 import re
 import os
+from PIL import Image
 
 
 
@@ -1540,12 +1541,9 @@ def imagej():
     try:
         start = min(numbers)
         end = max(numbers)
-
         imagej_template = open("./acquisition_v4.ijm", 'r')
         imagej_script = open("./imagej_script.ijm", 'w')
-
         current_folder = os.getcwd()
-
         for line in imagej_template:
             output_line = line
             if re.match(r'.*for.img.*', line):
@@ -1565,6 +1563,60 @@ def imagej():
     except ValueError:
         pass
 
+
+
+def get_image_dates(folder="./"):
+    """
+    Returns a dictionary:
+    {image_number: date}
+    """
+    image_names = get_file_names(regular_expression=r'IMG_[0-9]{4}.JPG')
+    numbers = [get_number_from_string(image) for image in image_names]
+    dates = {}
+    for index in range(len(image_names)):
+        name = image_names[index]
+        number = numbers[index]
+        date = get_date_taken(name, folder=folder)
+        dates[number] = date
+    return dates
+
+
+
+def export_image_dates(file_name="dates.txt", folder="./"):
+    """
+    Saves all dates in a file.
+    Creates a file with dates of images:
+    image_name      date
+    """
+    file_path = str(folder) + str(file_name)
+    output_file = open(file_path, 'w')
+    dates = get_image_dates(folder)
+    for image_number in dates.keys():
+        line = str(image_number) + "\t"
+        date = dates[image_number]
+        line += str(date) + "\n"
+        output_file.write(line)
+    output_file.close()
+
+
+def import_image_dates(file_name="dates.txt", folder="./", 
+            reg_exp = r'([0-9]{4})\t[0-9]{4}:[0-9]{2}:[0-9]{2}'):
+    """
+    Get dates from a file.
+    """
+    file_path = str(folder) + str(file_name)
+    output_file = open(file_path, 'r')
+    
+
+
+
+
+def get_date_taken(img_name, folder="./"):
+    """
+    Returns date info about a image.
+    """
+    image = str(folder) + str(img_name)
+    return Image.open(image)._getexif()[36867]
 
 
 
