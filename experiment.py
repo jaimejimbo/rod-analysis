@@ -28,6 +28,7 @@ class Experiment(object):
         """
             Creation of experiment object.
         """
+
         type_ = str(type(system_states_list))
         if re.match(r'.*NoneType.*', type_):
             self._states = []
@@ -35,6 +36,7 @@ class Experiment(object):
             self._states = system_states_list
         else:
             raise TypeError
+
         type_ = str(type(system_states_name_list))
         if re.match(r'.*NoneType.*', type_):
             self._state_numbers = []
@@ -43,11 +45,13 @@ class Experiment(object):
                             for num in system_states_name_list]
         else:
             raise TypeError
+
         self._states_dict = {}
         for index in range(len(self._state_numbers)):
             number = self._state_numbers[index]
             state = self._states[index]
             self._states_dict[number] = state
+
         self._diff_t = diff_t
         self._evolution_dictionaries = []
         self._conflictive_final_rods = []
@@ -873,12 +877,14 @@ class Experiment(object):
         Creates a gif per property of the system that shows evolution.
         """
         processes = []
+
         processes.append(mp.Process(target=self.create_density_gif,
                          args=(rad, folder, fps)))
         processes.append(mp.Process(target=self.create_relative_g2_gif,
                          args=(rad, folder, fps)))
         processes.append(mp.Process(target=self.create_relative_g4_gif,
                          args=(rad, folder, fps)))
+
         running, processes_left = run_processes(processes)
         num_processes = len(running)
         finished = 0
