@@ -14,3 +14,18 @@
 - multiprocessing                                       (DONE)
 - GUI                                                   (not started)
 - imagej interface                                      (DONE)
+- Times (get time of image?)                            (not started)
+    15s raf. 5img 3 sec
+    15min raf
+- Invert y axis.                                        (not started)
+- Multiply density by kappa                             (not started)
+- g2, g4: divide by number of rods?                     (not started)
+- g2=g4=0 if number of rods = 0                         (not started)
+
+Segregation
+- T(x,y)                                                (not started)
+- T in border                                           (not started)
+- Order param                                           (not started)
+    ·Evolution                                          (not started)
+- Cluster area                                          (not started)
+
