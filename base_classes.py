@@ -1600,12 +1600,19 @@ def export_image_dates(file_name="dates.txt", folder="./"):
 
 
 def import_image_dates(file_name="dates.txt", folder="./", 
-            reg_exp = r'([0-9]{4})\t[0-9]{4}:[0-9]{2}:[0-9]{2}'):
+            reg_exp = r'.*?[0-9].*?'):
     """
     Get dates from a file.
     """
     file_path = str(folder) + str(file_name)
     output_file = open(file_path, 'r')
+    reg = re.compile(reg_exp)
+    dates = {}
+    for line in output_file:
+        if reg.match(line):
+            data = line.strip('\t')
+            dates[int(data[0])] = str(data[1])
+    return dates
     
 
 
