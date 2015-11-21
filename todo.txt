@@ -25,6 +25,7 @@
 - g2, g4: divide by number of rods?                     (DONE)
 - g2=g4=0 if number of rods = 0                         (DONE)
 - Use averages over bursts                              (in progress)
+    · use states ids instead of indices                 (in progress)
 
 Segregation
 - T(x,y)                                                (not started)

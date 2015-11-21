@@ -149,6 +149,9 @@ class Experiment(object):
                                                 limit, amount_of_rods)
         processes = []
         output_queue = mp.Queue()
+        #for state_id in self._states_dict.keys():
+        # Hay que cambiar la forma de acceder en el proceso.
+        # o hacer un dict {index: identifier}
         for index in range(len(self._states)-1):
             processes.append(mp.Process(target=self._fill_dicts_process_limited,
                                         args=(index, max_speed, max_angle_diff,
@@ -159,8 +162,9 @@ class Experiment(object):
         while finished < num_processes:
             finished += 1
             output_row = output_queue.get()
-            self._evolution_dictionaries[output_row[0]] = output_row[1]
-            self._relative_dictionaries[output_row[0]] = output_row[2]
+            index = output_row[0]
+            self._evolution_dictionaries[index] = output_row[1]
+            self._relative_dictionaries[index] = output_row[2]
             if len(processes_left):
                 finished -= 1
                 new_process = processes_left.pop()
