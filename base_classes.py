@@ -1602,7 +1602,6 @@ def import_image_dates(file_name="dates.txt", folder="./"):
     """
     file_path = str(folder) + str(file_name)
     output_file = open(file_path, 'r')
-    image_number_reg = re.compile(r'^[0-9]{4}')
     dates = {}
     for line in output_file:
         data = line.strip('\n')
