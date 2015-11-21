@@ -892,15 +892,22 @@ class Experiment(object):
         running, processes_left = run_processes(processes)
         num_processes = len(running)
         finished = 0
+        all_popped = False
         while finished < num_processes:
-            for process in running:
-                if not process.is_alive():
+            process = running.pop()
+            if not process.is_alive():
+                finished += 1
+                try:
+                    new_process = processes_left.pop()
+                    new_process.start()
+                    running.append(new_process)
+                    finished -= 1
+                except:
+                    all_popped = True
+            else:
+                if all_popped:
+                    process.join()
                     finished += 1
-                    try:
-                        new_process = processes_left.pop()
-                        new_process.start()
-                        running.append(new_process)
-                        finished -= 1
-                    except:
-                        pass
+                else:
+                    running.append(process)
 

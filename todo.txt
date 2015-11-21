@@ -22,8 +22,9 @@
     15min raf                                           (---)
 - Invert y axis.                                        (not started)
 - Multiply density by kappa                             (DONE)
-- g2, g4: divide by number of rods?                     (not started)
-- g2=g4=0 if number of rods = 0                         (not started)
+- g2, g4: divide by number of rods?                     (DONE)
+- g2=g4=0 if number of rods = 0                         (DONE)
+- Use averages over bursts                              (in progress)
 
 Segregation
 - T(x,y)                                                (not started)
