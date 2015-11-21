@@ -1580,8 +1580,6 @@ def get_image_dates(folder="./"):
         dates[number] = date
     return dates
 
-
-
 def export_image_dates(file_name="dates.txt", folder="./"):
     """
     Saves all dates in a file.
@@ -1598,25 +1596,19 @@ def export_image_dates(file_name="dates.txt", folder="./"):
         output_file.write(line)
     output_file.close()
 
-
-def import_image_dates(file_name="dates.txt", folder="./", 
-            reg_exp = r'.*?[0-9].*?'):
+def import_image_dates(file_name="dates.txt", folder="./"):
     """
     Get dates from a file.
     """
     file_path = str(folder) + str(file_name)
     output_file = open(file_path, 'r')
-    reg = re.compile(reg_exp)
+    image_number_reg = re.compile(r'^[0-9]{4}')
     dates = {}
     for line in output_file:
-        if reg.match(line):
-            data = line.strip('\t')
-            dates[int(data[0])] = str(data[1])
+        data = line.strip('\n')
+        data = data.split('\t')
+        dates[int(data[0])] = data[1]
     return dates
-    
-
-
-
 
 def get_date_taken(img_name, folder="./"):
     """
