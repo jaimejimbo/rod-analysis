@@ -14,12 +14,12 @@
 - multiprocessing                                       (DONE)
 - GUI                                                   (not started)
 - imagej interface                                      (DONE)
-- Times (get time of image?)                            (in progress)
+- Times (get time of image?)                            (DONE)
     · get times from images                             (DONE)
     · save times in a file                              (DONE)
-    · allow to load dates from file.                    (in progress)
-    15s raf. 5img 3 sec
-    15min raf
+    · allow to load dates from file.                    (DONE)
+    15s raf. 5img 3 sec                                 (---)
+    15min raf                                           (---)
 - Invert y axis.                                        (not started)
 - Multiply density by kappa                             (not started)
 - g2, g4: divide by number of rods?                     (not started)
