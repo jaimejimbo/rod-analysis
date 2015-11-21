@@ -1616,8 +1616,36 @@ def get_date_taken(img_name, folder="./"):
     image = str(folder) + str(img_name)
     return Image.open(image)._getexif()[36867]
 
-
-
+def is_in_burst(dates, image_num_1, image_num_2):
+    """
+    Return True if image 1 and image 2 are in a burst.
+    Image 2 must be the next to image 1
+    """
+    image_num_1 = int(image_num_1)
+    image_num_2 = int(image_num_2)    
+    if image_num_2 != image_num_1+1:
+        msg = "Image 2 must be the next to image 1."
+        raise ValueError(msg)
+    date1 = dates[image_num_1]
+    date2 = dates[image_num_2]
+    date1 = date1.split(' ')
+    date2 = date2.split(' ')
+    if date1[0] != date2[0]:
+        return False
+    time1 = date1[1].split(':')
+    time2 = date2[1].split(':')
+    time1 = [int(time_part) for time_part in time1]
+    time2 = [int(time_part) for time_part in time2]
+    for index in [2, 1]:
+        part = time1[index]
+        if int(part) >= 59:
+            part = part-60
+            time1[index-1] += 1
+    if time2[2] != time1[2]+1 and time2[2] != time1[2]:
+        return False
+    if time2[1] != time1[1]:
+        return False
+    return True
 
 def run_processes(processes):
     """
