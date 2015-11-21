@@ -229,7 +229,7 @@ class Matrix:
         """
         return self._rows, self._cols 
             
-    def det(self,matrix):
+    def det(self, matrix):
         """
         Returns the determinant
         """
@@ -326,10 +326,11 @@ class Matrix:
         |c d|
         eigen eq : lambda^2 - (a+d)*lambda + a*d-c*b
         """
-        indep = self[0][0]+self[1][1]
-        sqrt = math.sqrt(indep**2 - 4*self[0][1]+self[1][0])
-        lambda1 = float(indep+sqrt)/2
-        lambda2 = float(indep-sqrt)/2
+        coef1 = -(self[0][0]+self[1][1])
+        coef2 = self.det(self)
+        sqrt = math.sqrt(coef1**2-4*coef2)
+        lambda1 = float(coef+sqrt)/2
+        lambda2 = float(coef-sqrt)/2
         return lambda1, lambda2
         
 
