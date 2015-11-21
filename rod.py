@@ -1,9 +1,7 @@
 """
 Rod object.
 """
-import math
-import methods
-import matrix
+import math, methods, matrix
 
 class Rod(object):
     """

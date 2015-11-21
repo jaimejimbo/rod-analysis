@@ -8,8 +8,8 @@ import matrix
 import multiprocessing as mp
 import re
 import os
-from rod import *
-from methods import *
+import methods
+import rod
 from PIL import Image
 
 
@@ -322,15 +322,15 @@ class SystemState(object):
         subsystems = []
         for actual_y in possible_y_values:
             for actual_x in possible_x_values:
-                if is_in_circle(actual_x, actual_y,
+                if methods.is_in_circle(actual_x, actual_y,
                                 self.center[0], self.center[1],
                                 self.radius-rad/2):
                     x_diff = abs(actual_x-self.center[0])
                     y_diff = abs(actual_y-self.center[1])
                     pos_rad = math.sqrt(x_diff**2+y_diff**2)
-                    same_area_radius = same_area_rad(rad, pos_rad, self.radius)
+                    methods.same_area_radius = methods.same_area_rad(rad, pos_rad, self.radius)
                     subsystem = SubsystemState((actual_x, actual_y),
-                                               same_area_radius, math.pi*rad**2)
+                                               methods.same_area_radius, math.pi*rad**2)
                     subsystem.put_rods(list(self._rods))
                     subsystems.append(subsystem)
         return subsystems
@@ -486,7 +486,6 @@ class SystemState(object):
             x_values.append(subsystem[0])
             y_values.append(subsystem[1])
             z_values.append(subsystem[2])
-        #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
 
     def correlation_g4_plot_matrix(self, rad):
@@ -662,7 +661,7 @@ class SystemState(object):
                 if cluster:
                     clusters.append(cluster)
             assert len(clusters) > 0, "no clusters detected"
-            self._clusters = erase_length_one_elements(clusters)
+            self._clusters = methods.erase_length_one_elements(clusters)
         return self._clusters
 
     def average_cluster_rod_num(self, max_distance=None, max_angle_diff=None):
@@ -910,7 +909,7 @@ class SubsystemState(SystemState):
         """
         try:
             for rod in rod_list:
-                if rod.is_in_circle(self.center, self.radius):
+                if rod.methods.is_in_circle(self.center, self.radius):
                     self.put_rod(rod)
         except TypeError:
             print "Use a rod list in put_rods method"
@@ -925,7 +924,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
     Create one rod for each rod_data and for each file
     returns [RodGroup1, RodGroup2, ...]
     """
-    names, files = import_files(folder=folder)
+    names, files = methods.import_files(folder=folder)
     if len(files) == 0:
         print "No files to import."
         raise ValueError
@@ -939,7 +938,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
                             radius_correction_ratio, names,
                             files, index, states_queue, task_queue))
         processes.append(process)
-    running, processes_left = run_processes(processes)
+    running, processes_left = methods.run_processes(processes)
     num_processes = len(running)
     finished = 0
     while finished < num_processes:
@@ -963,10 +962,10 @@ def create_rods_process(kappas, allowed_kappa_error,
     """
     state = SystemState(kappas, allowed_kappa_error,
                radius_correction_ratio, names[index])
-    data = import_data(files[index])
+    data = methods.import_data(files[index])
     for dataline in data:
         parameters = tuple(dataline)
-        new_rod = Rod(parameters)
+        new_rod = rod.Rod(parameters)
         state.put_rod(new_rod)
     state.check_rods()
     states_queue.put([index, state])

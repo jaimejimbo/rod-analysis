@@ -34,3 +34,6 @@ Segregation
     · Evolution                                         (not started)
 - Cluster area                                          (not started)
 
+
+bugs:
+    - All Cpus used in the end.

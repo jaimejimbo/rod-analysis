@@ -1,22 +1,11 @@
 """
     Library for time evolution study.
 """
-from base_classes import *
 import re
 import multiprocessing as mp
-import os
-import Queue
-import time
-import pandas as pd
+import methods
 from matplotlib import animation
-import math
-from mpl_toolkits.mplot3d import Axes3D
-import pylab
-from scipy import interpolate
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import matplotlib.pyplot as plt
-import numpy as np
 
 
 class Experiment(object):
@@ -41,7 +30,7 @@ class Experiment(object):
         if re.match(r'.*NoneType.*', type_):
             self._state_numbers = []
         elif re.match(r'.*list.*', type_):
-            self._state_numbers = [get_number_from_string(num)
+            self._state_numbers = [methods.get_number_from_string(num)
                             for num in system_states_name_list]
         else:
             raise TypeError
@@ -83,7 +72,7 @@ class Experiment(object):
         """
         type_ = str(type(state_num))
         if re.match(r'.*str.*', type_):
-            identifier = get_number_from_string(state_num)
+            identifier = methods.get_number_from_string(state_num)
         elif re.match(r'.*int.*', type_):
             identifier = state_num
         else:
@@ -156,7 +145,7 @@ class Experiment(object):
             processes.append(mp.Process(target=self._fill_dicts_process_limited,
                                         args=(index, max_speed, max_angle_diff,
                                             output_queue, limit, amount_of_rods)))
-        running, processes_left = run_processes(processes)
+        running, processes_left = methods.run_processes(processes)
         num_processes = len(running)
         finished = 0
         while finished < num_processes:
@@ -171,7 +160,8 @@ class Experiment(object):
                 new_process.start()
 
 
-    def _fill_dicts_process(self, index, max_speed, max_angle_diff, output_queue, amount_of_rods=None):
+    def _fill_dicts_process(self, index, max_speed, max_angle_diff,
+                            output_queue, amount_of_rods=None):
         """
             Allows to create a process and use all cores.
         """
@@ -182,11 +172,13 @@ class Experiment(object):
         for initial_rod in initial_state:
             initial_id = initial_rod.identifier
             if not amount_of_rods:
-                final_state = get_rods_range(0, final_states.number_of_rods)
+                available_final_rods = final_state.get_rods_range(0,
+                                        final_state.number_of_rods)
             else:
                 start_id = initial_id-amount_of_rods/2
                 end_id = initial_id+amount_of_rods/2
-                available_final_rods = final_state.get_rods_range(start_id, end_id)
+                available_final_rods = final_state.get_rods_range(start_id,
+                                                                    end_id)
             for final_rod in final_state:
                 final_id = final_rod.identifier
                 distance = initial_rod.distance_to_rod(final_rod)
@@ -195,7 +187,8 @@ class Experiment(object):
                 speed = float(distance)/self._diff_t
                 if speed <= max_speed and angle <= max_angle_diff:
                     evol_dict[initial_id] |= set([final_id])
-                    relative_dict[initial_id][final_id] = (distance, angle, speed)
+                    relative_dict[initial_id][final_id] = (distance,
+                                                        angle, speed)
         for initial_id in relative_dict.keys():
             if len(relative_dict[initial_id]) == 1:
                 value = relative_dict[initial_id].values()
@@ -203,7 +196,9 @@ class Experiment(object):
         output_queue.put([index, evol_dict, relative_dict])
 
 
-    def _fill_dicts_process_limited(self, index, max_speed, max_angle_diff, output_queue, limit=5, amount_of_rods=None):
+    def _fill_dicts_process_limited(self, index, max_speed,
+                                max_angle_diff, output_queue,
+                                limit=5, amount_of_rods=None):
         """
             Allows to create a process and use all cores.
         It limits possible final rods amount.
@@ -236,9 +231,9 @@ class Experiment(object):
                     speeds.append([speed, final_id])
                     speeds.sort()
                     if len(speeds) > limit:
-                        highest_speed, rod_id = speeds.pop(-1)
+                        dummy, rod_id = speeds.pop(-1)
                     else:
-                        highest_speed, rod_id = speeds[-1]
+                        dummy, rod_id = speeds[-1]
                         evol_dict[initial_id] |= set([final_id])
                         relative_dict[initial_id][final_id] = (distance, angle)
                         continue
@@ -271,7 +266,7 @@ class Experiment(object):
             for index in range(len(self._evolution_dictionaries)-1):
                 processes.append(mp.Process(target=self._use_unique_evolutions_process,
                                             args=(index, changes_queue, output_queue)))
-            running, processes_left = run_processes(processes)
+            running, processes_left = methods.run_processes(processes)
             changed = False
             num_processes = len(running)
             finished = 0
@@ -353,7 +348,7 @@ class Experiment(object):
         for index in range(len(self._evolution_dictionaries)-1):
             processes.append(mp.Process(target=self._leave_only_closer_process,
                                         args=(index, output_queue, selected_queue, max_distance)))
-        running, processes_left = run_processes(processes)
+        running, processes_left = methods.run_processes(processes)
         num_processes = len(running)
         finished = 0
         while finished < num_processes:
@@ -469,7 +464,7 @@ class Experiment(object):
             process = mp.Process(target=self._join_left_rods_process,
                                  args=(index, output_queue, max_distance))
             processes.append(process)
-        running, processes_left = run_processes(processes)
+        running, processes_left = methods.run_processes(processes)
         num_processes = len(running)
         finished = 0
         while finished < num_processes:
@@ -539,7 +534,7 @@ class Experiment(object):
                 process = mp.Process(target=self._compute_speeds_process,
                                      args=(index, speeds_queue, angular_speeds_queue))
                 processes.append(process)
-            running, processes_left = run_processes(processes)
+            running, processes_left = methods.run_processes(processes)
             num_processes = len(running)
             finished = 0
             while finished < num_processes:
@@ -634,7 +629,7 @@ class Experiment(object):
                                 args=(index, output_queue, rad))
             self._local_speeds.append({})
             processes.append(process)
-        running, processes_left = run_processes(processes)
+        running, processes_left = methods.run_processes(processes)
         num_processes = len(running)
         finished = 0
         while finished < num_processes:
@@ -685,11 +680,11 @@ class Experiment(object):
             for index in range(len(self._evolution_dictionaries)-1):
                 local_speeds_ = local_speeds[index]
                 process = mp.Process(target=self._compute_local_average_speeds_process,
-                                    args=(index, output_queue, rad, local_speeds_))
+                                    args=(index, output_queue, local_speeds_))
                 self._local_average_quadratic_speeds.append(None)
                 self._local_average_quadratic_angular_speeds.append(None)
                 processes.append(process)
-            running, processes_left = run_processes(processes)
+            running, processes_left = methods.run_processes(processes)
             num_processes = len(running)
             finished = 0
             while finished < num_processes:
@@ -706,7 +701,7 @@ class Experiment(object):
                     new_process.start()
 
 
-    def _compute_local_average_speeds_process(self, index, output_queue, rad, local_speeds):
+    def _compute_local_average_speeds_process(self, index, output_queue, local_speeds):
         """
         Process
         """
@@ -721,8 +716,8 @@ class Experiment(object):
                 quadratic_angular_speed = 0
                 num_rods = len(dictionary)
                 for speeds in dictionary.values():
-                      quadratic_speed += float(speeds[0]**2)/num_rods
-                      quadratic_angular_speed += float(speeds[1]**2)/num_rods
+                    quadratic_speed += float(speeds[0]**2)/num_rods
+                    quadratic_angular_speed += float(speeds[1]**2)/num_rods
                 speeds_row.append(quadratic_speed)
                 angular_speeds_row.append(quadratic_angular_speed)
             speeds_matrix.append(speeds_row)
@@ -762,9 +757,10 @@ class Experiment(object):
             processes = []
             for index in range(len(self._states)-1):
                 process = mp.Process(target=self._density_and_quad_speed_process,
-                            args=(index, output_queue, quad_speeds_array, ang_speeds_array, rad))
+                            args=(index, output_queue, quad_speeds_array,
+                                  ang_speeds_array, rad))
                 processes.append(process)
-            running, processes_left = run_processes(processes)
+            running, processes_left = methods.run_processes(processes)
             num_processes = len(running)
             finished = 0
             densities = []
@@ -781,9 +777,10 @@ class Experiment(object):
             self._densities_array = densities
             self._quad_speeds_array = quad_speeds
         return [self._densities_array, self._quad_speeds_array]
-        
 
-    def _density_and_quad_speed_process(self, index, output_queue, quad_speeds_array, ang_speeds_array, rad):
+
+    def _density_and_quad_speed_process(self, index, output_queue,
+                                    quad_speeds_array, ang_speeds_array, rad):
         """
         Process
         """
@@ -878,22 +875,20 @@ class Experiment(object):
             plt.colorbar()
         fig = plt.figure()
         anim = animation.FuncAnimation(fig, animate, frames=frames)
-        anim.save(name, writer='imagemagick', fps=fps);
+        anim.save(name, writer='imagemagick', fps=fps)
 
     def create_gifs(self, rad=50, folder="./", fps=1):
         """
         Creates a gif per property of the system that shows evolution.
         """
         processes = []
-
         processes.append(mp.Process(target=self.create_density_gif,
                          args=(rad, folder, fps)))
         processes.append(mp.Process(target=self.create_relative_g2_gif,
                          args=(rad, folder, fps)))
         processes.append(mp.Process(target=self.create_relative_g4_gif,
                          args=(rad, folder, fps)))
-
-        running, processes_left = run_processes(processes)
+        running, processes_left = methods.run_processes(processes)
         num_processes = len(running)
         finished = 0
         all_popped = False
@@ -906,7 +901,7 @@ class Experiment(object):
                     new_process.start()
                     running.append(new_process)
                     finished -= 1
-                except:
+                except IndexError:
                     all_popped = True
             else:
                 if all_popped:
