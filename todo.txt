@@ -36,4 +36,4 @@ Segregation
 
 
 bugs:
-    - All Cpus used in the end.
+    - All Cpus used at the end.

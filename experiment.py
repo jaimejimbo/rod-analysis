@@ -881,7 +881,7 @@ class Experiment(object):
         """
         Creates a gif per property of the system that shows evolution.
         """
-        processes = []
+        """processes = []
         processes.append(mp.Process(target=self.create_density_gif,
                          args=(rad, folder, fps)))
         processes.append(mp.Process(target=self.create_relative_g2_gif,
@@ -908,5 +908,8 @@ class Experiment(object):
                     process.join()
                     finished += 1
                 else:
-                    running.append(process)
+                    running.append(process)"""
+        self.create_density_gif(rad, folder, fps)
+        self.create_relative_g2_gif(rad, folder, fps)
+        self.create_relative_g4_gif(rad, folder, fps)
 
