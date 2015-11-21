@@ -24,7 +24,7 @@ class Experiment(object):
         Has a list of system states, one for each t.
     """
     def __init__(self, system_states_name_list=None,
-                system_states_list=None, diff_t=1):
+                system_states_list=None, diff_t=1, dates=None):
         """
             Creation of experiment object.
         """
@@ -51,6 +51,10 @@ class Experiment(object):
             number = self._state_numbers[index]
             state = self._states[index]
             self._states_dict[number] = state
+        if not dates:
+            msg = "Time evolution needs dates file.\n"
+            msg = "To create one run export_image_dates().\n"
+            raise ValueError(msg)
 
         self._diff_t = diff_t
         self._evolution_dictionaries = []

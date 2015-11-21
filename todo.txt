@@ -21,7 +21,7 @@
     15s raf. 5img 3 sec                                 (---)
     15min raf                                           (---)
 - Invert y axis.                                        (not started)
-- Multiply density by kappa                             (not started)
+- Multiply density by kappa                             (DONE)
 - g2, g4: divide by number of rods?                     (not started)
 - g2=g4=0 if number of rods = 0                         (not started)
 

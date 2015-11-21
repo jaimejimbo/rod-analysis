@@ -1105,7 +1105,10 @@ class SubsystemState(SystemState):
         """
             Computes density of the group.
         """
-        self._density = self.number_of_rods
+        density = 0
+        for rod in self:
+            density += rod.kappa
+        self._density = float(density)/self.area
 
     @property
     def density(self):
