@@ -33,7 +33,7 @@ def main():
                                         system_states_list=rod_groups_17,
                                         dates=dates, diff_t=5/3.0)
 
-    experiment_5.create_gifs(divisions=100)
-    experiment_17.create_gifs(divisions=100)
+    experiment_5.create_gifs(divisions=5)
+    experiment_17.create_gifs(divisions=5)
 
 main()

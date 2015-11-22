@@ -327,8 +327,13 @@ class SystemState(object):
         for actual_y in possible_y_values:
             for actual_x in possible_x_values:
                 center = (actual_x, actual_y)
+                distance = methods.distance_between_points(center,
+                                                     self.center)
                 subsystem = SubsystemState(center, rad, self.zone_coords)
-                subsystem.put_rods(list(self._rods))
+                if distance < self._radius:
+                    subsystem.put_rods(list(self._rods))
+                else:
+                    pass
                 subsystems.append(subsystem)
         return subsystems
 

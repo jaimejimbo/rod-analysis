@@ -567,7 +567,7 @@ class Experiment(object):
 
 
     def local_speeds(self, max_speed=100, max_angle_diff=90, limit=5,
-                            amount_of_rods=200, divisions=50):
+                            amount_of_rods=200, divisions=5):
         """
         Returns local_speeds array.
         """
@@ -629,7 +629,7 @@ class Experiment(object):
 
 
     def _compute_local_average_speeds(self, max_speed=100, max_angle_diff=90,
-                                      limit=5, amount_of_rods=200, divisions=50):
+                                      limit=5, amount_of_rods=200, divisions=5):
         """
         Compute local average speeds.
         """
@@ -662,7 +662,7 @@ class Experiment(object):
                     new_process.start()
 
     def local_average_quadratic_speed(self, max_speed=100, max_angle_diff=90,
-                                        limit=5, amount_of_rods=200, divisions=50):
+                                        limit=5, amount_of_rods=200, divisions=5):
         """
         Returns a array of matrices. Each matrix represents
         local average quadratic speed values.
@@ -673,7 +673,7 @@ class Experiment(object):
 
     def local_average_quadratic_angular_speed(self, max_speed=100,
                                         max_angle_diff=90, limit=5,
-                                        amount_of_rods=200, divisions=50):
+                                        amount_of_rods=200, divisions=5):
         """
         Returns a array of matrices. Each matrix represents
         local average quadratic angular speed values.
@@ -683,7 +683,7 @@ class Experiment(object):
         return self._local_average_quadratic_angular_speeds
 
     def density_and_quad_speed(self, max_speed=100, max_angle_diff=90,
-                                limit=5, amount_of_rods=200, divisions=50):
+                                limit=5, amount_of_rods=200, divisions=5):
         """
         Returns 2 arrays: density values and temperature
         """
@@ -754,7 +754,7 @@ class Experiment(object):
                 speeds.append(total_quad_speed)
         output_queue.put([densities, speeds])
 
-    def create_density_gif(self, divisions=50, folder="./", fps=1):
+    def create_density_gif(self, divisions=5, folder="./", fps=1):
         """
         Creates a gif of density's evolution.
         """
@@ -765,7 +765,7 @@ class Experiment(object):
         self._generic_scatter_animator(frames, name, function_name,
                             divisions, fps=fps)
 
-    def create_relative_g2_gif(self, divisions=50, folder="./", fps=1):
+    def create_relative_g2_gif(self, divisions=5, folder="./", fps=1):
         """
         Creates a gif of correlation g2 evolution.
         """
@@ -776,7 +776,7 @@ class Experiment(object):
         self._generic_scatter_animator(frames, name, function_name,
                             divisions, fps=fps)
 
-    def create_relative_g4_gif(self, divisions=50, folder="./", fps=1):
+    def create_relative_g4_gif(self, divisions=5, folder="./", fps=1):
         """
         Creates a gif of correlation g4 evolution.
         """
@@ -787,7 +787,7 @@ class Experiment(object):
         self._generic_scatter_animator(frames, name, function_name,
                             divisions, fps=fps)
 
-    def create_average_angle_gif(self, divisions=50, folder="./", fps=1):
+    def create_average_angle_gif(self, divisions=5, folder="./", fps=1):
         """
         Creates a gif of average angle evolution.
         """
@@ -870,7 +870,7 @@ class Experiment(object):
         image2_id = methods.get_number_from_string(image2_id_str)
         return image1_id, image2_id
 
-    def create_gifs(self, divisions=50, folder="./", fps=1):
+    def create_gifs(self, divisions=5, folder="./", fps=1):
         """
         Creates a gif per property of the system that shows evolution.
         """
