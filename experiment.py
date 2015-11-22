@@ -840,7 +840,11 @@ class Experiment(object):
                 index += 1
                 break
         if len(z_vals) > 1:
-            z_val = methods.array_average(z_vals)
+            try:
+                z_val = methods.array_average(z_vals)
+            except TypeError:
+                print function_name
+                print z_vals
         if len(z_val):
             plt.cla()
             plt.clf()

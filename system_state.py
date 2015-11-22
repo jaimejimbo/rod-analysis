@@ -401,8 +401,6 @@ class SystemState(object):
             Computes correlation_g2 and correlation_g4 values
         """
         cos2_av, sin2_av, cos4_av, sin4_av = 0, 0, 0, 0
-        if not self.number_of_rods:
-            return
         for rod_ in list(self._rods):
             angle = rod_.angle*math.pi/180.0
             cos2_av += math.cos(2*angle)/self.number_of_rods
