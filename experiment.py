@@ -827,34 +827,6 @@ class Experiment(object):
         self.create_density_gif(rad, folder, fps)
         self.create_relative_g2_gif(rad, folder, fps)
         self.create_relative_g4_gif(rad, folder, fps)
-        """processes = []
-        processes.append(mp.Process(target=self.create_density_gif,
-                         args=(rad, folder, fps)))
-        processes.append(mp.Process(target=self.create_relative_g2_gif,
-                         args=(rad, folder, fps)))
-        processes.append(mp.Process(target=self.create_relative_g4_gif,
-                         args=(rad, folder, fps)))
-        running, processes_left = methods.run_processes(processes)
-        num_processes = len(running)
-        finished = 0
-        all_popped = False
-        while finished < num_processes:
-            process = running.pop()
-            if not process.is_alive():
-                finished += 1
-                try:
-                    new_process = processes_left.pop()
-                    new_process.start()
-                    running.append(new_process)
-                    finished -= 1
-                except IndexError:
-                    all_popped = True
-            else:
-                if all_popped:
-                    process.join()
-                    finished += 1
-                else:
-                    running.append(process)"""
 
 
 
