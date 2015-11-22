@@ -845,25 +845,15 @@ class Experiment(object):
             except TypeError:
                 print function_name
                 print z_vals
-        if len(z_val):
-            plt.cla()
-            plt.clf()
-            rad = 2000.0/divisions
-            size = (rad/8)**2
-            plt.scatter(x_val, y_val, s=size, c=z_val, marker='s')
-            """xmin = min(x_val)-rad
-            xmax = max(x_val)+rad
-            ymin = min(y_val)-rad
-            ymax = max(y_val)+rad
-            plt.xlim((xmin, xmax))
-            plt.ylim((ymin, ymax))"""
-            try:
-                plt.colorbar()
-            except TypeError as e:
-                print e
-                print "Colorbar exception: "
-                print len(x_val), len(y_val), len(z_val)
-                print "\n\n"
+        plt.cla()
+        plt.clf()
+        rad = 2000.0/divisions
+        size = (rad/8)**2
+        print function_name
+        print z_val
+        print "\n\n"
+        plt.scatter(x_val, y_val, s=size, c=z_val, marker='s')
+        plt.colorbar()
         return index
 
     def _get_image_ids(self, index):
@@ -880,10 +870,37 @@ class Experiment(object):
         """
         Creates a gif per property of the system that shows evolution.
         """
-        self.create_density_gif(divisions, folder, fps)
+        """self.create_density_gif(divisions, folder, fps)
         self.create_relative_g2_gif(divisions, folder, fps)
-        self.create_relative_g4_gif(divisions, folder, fps)
-
+        self.create_relative_g4_gif(divisions, folder, fps)"""
+        processes = []
+        processes.append(mp.Process(target=self.create_density_gif,
+                         args=(divisions, folder, fps)))
+        processes.append(mp.Process(target=self.create_relative_g2_gif,
+                         args=(divisions, folder, fps)))
+        processes.append(mp.Process(target=self.create_relative_g4_gif,
+                         args=(divisions, folder, fps)))
+        running, processes_left = methods.run_processes(processes)
+        num_processes = len(running)
+        finished = 0
+        all_popped = False
+        while finished < num_processes:
+            process = running.pop()
+            if not process.is_alive():
+                finished += 1
+                try:
+                    new_process = processes_left.pop()
+                    new_process.start()
+                    running.append(new_process)
+                    finished -= 1
+                except IndexError:
+                    all_popped = True
+            else:
+                if all_popped:
+                    process.join()
+                    finished += 1
+                else:
+                    running.append(process)
 
 
 def compute_local_average_speeds_process(index, output_queue, local_speeds):
