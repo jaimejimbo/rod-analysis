@@ -567,17 +567,17 @@ class Experiment(object):
 
 
     def local_speeds(self, max_speed=100, max_angle_diff=90, limit=5,
-                            amount_of_rods=200, rad=50):
+                            amount_of_rods=200, divisions=50):
         """
         Returns local_speeds array.
         """
         self._compute_speeds(max_speed, max_angle_diff, limit, amount_of_rods)
         if len(self._local_speeds) == 0:
-            self._compute_local_speeds(rad)
+            self._compute_local_speeds(divisions)
         return self._local_speeds
 
 
-    def _compute_local_speeds(self, rad):
+    def _compute_local_speeds(self, divisions):
         """
         Creates an array of matrices. Each matrix's entry is a dictionariy such
         as {rod_id: (speed, angular_speed)}
@@ -586,7 +586,7 @@ class Experiment(object):
         processes = []
         for index in range(len(self._evolution_dictionaries)-1):
             process = mp.Process(target=self._compute_local_speeds_process,
-                                args=(index, output_queue, rad))
+                                args=(index, output_queue, divisions))
             self._local_speeds.append({})
             processes.append(process)
         running, processes_left = methods.run_processes(processes)
@@ -604,12 +604,12 @@ class Experiment(object):
                 new_process.start()
 
 
-    def _compute_local_speeds_process(self, index, output_queue, rad):
+    def _compute_local_speeds_process(self, index, output_queue, divisions):
         """
         Process
         """
         state = self._states[index]
-        subgroups_matrix = state.subgroups_matrix(rad)
+        subgroups_matrix = state.subgroups_matrix(divisions)
         speeds_matrix = []
         for row in subgroups_matrix:
             speeds_row = []
@@ -629,17 +629,17 @@ class Experiment(object):
 
 
     def _compute_local_average_speeds(self, max_speed=100, max_angle_diff=90,
-                                      limit=5, amount_of_rods=200, rad=50):
+                                      limit=5, amount_of_rods=200, divisions=50):
         """
         Compute local average speeds.
         """
         self.local_speeds(max_speed, max_angle_diff, limit,
-                            amount_of_rods, rad)
+                            amount_of_rods, divisions)
         if not len(self._local_average_quadratic_speeds):
             output_queue = mp.Queue()
             processes = []
             local_speeds = self.local_speeds(max_speed, max_angle_diff,
-                                            limit, amount_of_rods, rad)
+                                            limit, amount_of_rods, divisions)
             for index in range(len(self._evolution_dictionaries)-1):
                 local_speeds_ = local_speeds[index]
                 process = mp.Process(target=compute_local_average_speeds_process,
@@ -662,28 +662,28 @@ class Experiment(object):
                     new_process.start()
 
     def local_average_quadratic_speed(self, max_speed=100, max_angle_diff=90,
-                                        limit=5, amount_of_rods=200, rad=50):
+                                        limit=5, amount_of_rods=200, divisions=50):
         """
         Returns a array of matrices. Each matrix represents
         local average quadratic speed values.
         """
         self._compute_local_average_speeds(max_speed, max_angle_diff, limit,
-                                            amount_of_rods, rad)
+                                            amount_of_rods, divisions)
         return self._local_average_quadratic_speeds
 
     def local_average_quadratic_angular_speed(self, max_speed=100,
                                         max_angle_diff=90, limit=5,
-                                        amount_of_rods=200, rad=50):
+                                        amount_of_rods=200, divisions=50):
         """
         Returns a array of matrices. Each matrix represents
         local average quadratic angular speed values.
         """
         self._compute_local_average_speeds(max_speed, max_angle_diff,
-                                            limit, amount_of_rods, rad)
+                                            limit, amount_of_rods, divisions)
         return self._local_average_quadratic_angular_speeds
 
     def density_and_quad_speed(self, max_speed=100, max_angle_diff=90,
-                                limit=5, amount_of_rods=200, rad=50):
+                                limit=5, amount_of_rods=200, divisions=50):
         """
         Returns 2 arrays: density values and temperature
         """
@@ -695,18 +695,18 @@ class Experiment(object):
             quad_speeds_array = laqs(max_speed=max_speed,
                                 max_angle_diff=max_angle_diff,
                                 limit=limit, amount_of_rods=amount_of_rods,
-                                rad=rad)
+                                divisions=divisions)
             laqas = self.local_average_quadratic_angular_speed
             ang_speeds_array = laqas(max_speed=max_speed,
                                     max_angle_diff=max_angle_diff,
                                     limit=limit, amount_of_rods=amount_of_rods,
-                                    rad=rad)
+                                    divisions=divisions)
             output_queue = mp.Queue()
             processes = []
             for index in range(len(self._states)-1):
                 process = mp.Process(target=self._density_and_quad_speed_process,
                             args=(index, output_queue, quad_speeds_array,
-                                  ang_speeds_array, rad))
+                                  ang_speeds_array, divisions))
                 processes.append(process)
             running, processes_left = methods.run_processes(processes)
             num_processes = len(running)
@@ -728,14 +728,14 @@ class Experiment(object):
 
 
     def _density_and_quad_speed_process(self, index, output_queue,
-                                    quad_speeds_array, ang_speeds_array, rad):
+                                    quad_speeds_array, ang_speeds_array, divisions):
         """
         Process
         """
         quad_speeds = quad_speeds_array[index]
         ang_speeds = ang_speeds_array[index]
         state = self._states[index]
-        subgroups = state.subgroups_matrix(rad)
+        subgroups = state.subgroups_matrix(divisions)
         densities = []
         speeds = []
         for row in range(len(quad_speeds)):
@@ -754,7 +754,7 @@ class Experiment(object):
                 speeds.append(total_quad_speed)
         output_queue.put([densities, speeds])
 
-    def create_density_gif(self, rad=50, folder="./", fps=1):
+    def create_density_gif(self, divisions=50, folder="./", fps=1):
         """
         Creates a gif of density's evolution.
         """
@@ -763,9 +763,9 @@ class Experiment(object):
         kappas = self._states[0].kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
         self._generic_scatter_animator(frames, name, function_name,
-                            rad, fps=fps)
+                            divisions, fps=fps)
 
-    def create_relative_g2_gif(self, rad=50, folder="./", fps=1):
+    def create_relative_g2_gif(self, divisions=50, folder="./", fps=1):
         """
         Creates a gif of correlation g2 evolution.
         """
@@ -774,9 +774,9 @@ class Experiment(object):
         kappas = self._states[0].kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
         self._generic_scatter_animator(frames, name, function_name,
-                            rad, fps=fps)
+                            divisions, fps=fps)
 
-    def create_relative_g4_gif(self, rad=50, folder="./", fps=1):
+    def create_relative_g4_gif(self, divisions=50, folder="./", fps=1):
         """
         Creates a gif of correlation g4 evolution.
         """
@@ -785,9 +785,9 @@ class Experiment(object):
         kappas = self._states[0].kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
         self._generic_scatter_animator(frames, name, function_name,
-                            rad, fps=fps)
+                            divisions, fps=fps)
 
-    def create_average_angle_gif(self, rad=50, folder="./", fps=1):
+    def create_average_angle_gif(self, divisions=50, folder="./", fps=1):
         """
         Creates a gif of average angle evolution.
         """
@@ -796,10 +796,10 @@ class Experiment(object):
         kappas = self._states[0].kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
         self._generic_scatter_animator(frames, name, function_name,
-                            rad, fps=fps)
+                            divisions, fps=fps)
 
     def _generic_scatter_animator(self, frames, name, function_name,
-                                    rad, fps=1):
+                                    divisions, fps=1):
         """
         Generic animator
         """
@@ -811,11 +811,11 @@ class Experiment(object):
             """
             if self._last_index != -1:
                 self._last_index = self._animate_scatter(function_name,
-                                                rad, self._last_index)
+                                                divisions, self._last_index)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
 
-    def _animate_scatter(self, function_name, rad, last_index):
+    def _animate_scatter(self, function_name, divisions, last_index):
         """
         Specific animator.
         """
@@ -830,7 +830,7 @@ class Experiment(object):
         while True:
             state = self._states[index]
             function = getattr(state, function_name)
-            x_val, y_val, z_val = function(rad)
+            x_val, y_val, z_val = function(divisions)
             z_vals.append(z_val)
             index += 1
             if index == number_of_states-2:
@@ -844,14 +844,13 @@ class Experiment(object):
         if len(z_val):
             plt.cla()
             plt.clf()
-            size = (0.8*rad/2.0)**2
-            plt.scatter(x_val, y_val, c=z_val, s=size, marker='s')
-            xmin = min(x_val)-rad
+            plt.scatter(x_val, y_val, c=z_val, marker='s')
+            """xmin = min(x_val)-rad
             xmax = max(x_val)+rad
             ymin = min(y_val)-rad
             ymax = max(y_val)+rad
             plt.xlim((xmin, xmax))
-            plt.ylim((ymin, ymax))
+            plt.ylim((ymin, ymax))"""
             try:
                 plt.colorbar()
             except TypeError as e:
@@ -871,13 +870,13 @@ class Experiment(object):
         image2_id = methods.get_number_from_string(image2_id_str)
         return image1_id, image2_id
 
-    def create_gifs(self, rad=50, folder="./", fps=1):
+    def create_gifs(self, divisions=50, folder="./", fps=1):
         """
         Creates a gif per property of the system that shows evolution.
         """
-        self.create_density_gif(rad, folder, fps)
-        self.create_relative_g2_gif(rad, folder, fps)
-        self.create_relative_g4_gif(rad, folder, fps)
+        self.create_density_gif(divisions, folder, fps)
+        self.create_relative_g2_gif(divisions, folder, fps)
+        self.create_relative_g4_gif(divisions, folder, fps)
 
 
 
