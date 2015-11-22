@@ -308,12 +308,12 @@ class SystemState(object):
             start_x = self.center[0]-self.radius
             end_x = self.center[0]+self.radius
             start_y = self.center[1]-self.radius
-            diff = float(abs(start_x - end_x))/divisions
+            diff = float(abs(start_x - end_x))/(divisions-1)
             # Getting all possible x and y values.
             possible_x_values = [start_x + times*diff
-                                 for times in range(divisions+1)]
+                                 for times in range(divisions)]
             possible_y_values = [start_y + times*diff
-                                 for times in range(divisions+1)]
+                                 for times in range(divisions)]
             rad = diff*math.sqrt(2)/2
             subsystems = self._subsystems(possible_x_values, possible_y_values,
                                           rad)

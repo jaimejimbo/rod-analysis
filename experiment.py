@@ -848,7 +848,9 @@ class Experiment(object):
         if len(z_val):
             plt.cla()
             plt.clf()
-            plt.scatter(x_val, y_val, c=z_val, marker='s')
+            rad = 2000.0/divisions
+            size = (rad/8)**2
+            plt.scatter(x_val, y_val, s=size, c=z_val, marker='s')
             """xmin = min(x_val)-rad
             xmax = max(x_val)+rad
             ymin = min(y_val)-rad
