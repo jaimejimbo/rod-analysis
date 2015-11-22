@@ -467,7 +467,7 @@ def array_average(array_of_arrays):
     output = [0 for dummy in range(array_length)]
     for array in array_of_arrays:
         if len(array) != array_length:
-            print array_of_arrays
+            print len(array), array_length
             msg = "Arrays are not of same length."
             raise ValueError(msg)
         for index in range(len(array)):
