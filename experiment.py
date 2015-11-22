@@ -654,10 +654,8 @@ class Experiment(object):
                 finished += 1
                 output = output_queue.get()
                 index = output[0]
-                local_avg_quad_speeds_matrix = output[1]
-                local_avg_quad_angular_speeds_matrix = output[2]
-                self._local_average_quadratic_speeds[index] = local_avg_quad_speeds_matrix
-                self._local_average_quadratic_angular_speeds[index] = local_avg_quad_angular_speeds_matrix
+                self._local_average_quadratic_speeds[index] = output[1]
+                self._local_average_quadratic_angular_speeds[index] = output[2]
                 if len(processes_left):
                     finished -= 1
                     new_process = processes_left.pop()
@@ -693,10 +691,16 @@ class Experiment(object):
                     self._max_angle_diff, self._limit, self._amount_of_rods):
             self._reset()
         if not len(self._densities_array):
-            quad_speeds_array = self.local_average_quadratic_speed(max_speed=max_speed, max_angle_diff=max_angle_diff,
-                                                          limit=limit, amount_of_rods=amount_of_rods, rad=rad)
-            ang_speeds_array = self.local_average_quadratic_angular_speed(max_speed=max_speed, max_angle_diff=max_angle_diff,
-                                                          limit=limit, amount_of_rods=amount_of_rods, rad=rad)
+            laqs = self.local_average_quadratic_speed
+            quad_speeds_array = laqs(max_speed=max_speed,
+                                max_angle_diff=max_angle_diff,
+                                limit=limit, amount_of_rods=amount_of_rods,
+                                rad=rad)
+            laqas = self.local_average_quadratic_angular_speed
+            ang_speeds_array = laqas(max_speed=max_speed,
+                                    max_angle_diff=max_angle_diff,
+                                    limit=limit, amount_of_rods=amount_of_rods,
+                                    rad=rad)
             output_queue = mp.Queue()
             processes = []
             for index in range(len(self._states)-1):
