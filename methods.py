@@ -57,7 +57,7 @@ def effective_area(small_rad, small_position_rad, main_rad):
     # circle completely included in the bigger one
     if small_rad+small_position_rad <= main_rad:
         return math.pi*small_rad**2
-    assert small_position_rad <= main_rad, "Circle is outside the bigger one"
+    # assert small_position_rad <= main_rad, "Circle is outside the bigger one"
     min_dist = compute_min_dist(small_rad, small_position_rad, main_rad)
     if min_dist >= small_rad:
         return math.pi*small_rad**2
@@ -135,14 +135,24 @@ def same_area_rad(small_rad, small_position_rad,
 
 
 
+def distance_between_points(point1, point2):
+    """
+    Distance between points.
+    """
+    diff_x = abs(point1[0]-point2[0])
+    diff_y = abs(point1[1]-point2[1])
+    distance = math.sqrt(diff_x**2 + diff_y**2)
+    return distance
+
+
 
 def is_in_circle(point_x, point_y, center_x, center_y, rad):
     """
     Checks if a point is in a circle
     """
-    diff_x = abs(point_x-center_x)
-    diff_y = abs(point_y-center_y)
-    distance = math.sqrt(diff_x**2 + diff_y**2)
+    point = (point_x, point_y)
+    center = (center_x, center_y)
+    distance = distance_between_points(point, center)
     return distance <= rad
 
 
@@ -410,7 +420,7 @@ def is_in_burst(dates, image_num_1, image_num_2):
     Image 2 must be the next to image 1
     """
     image_num_1 = int(image_num_1)
-    image_num_2 = int(image_num_2)    
+    image_num_2 = int(image_num_2)
     if image_num_2 != image_num_1+1:
         msg = "Image 2 must be the next to image 1."
         raise ValueError(msg)
@@ -440,7 +450,7 @@ def run_processes(processes):
     running = []
     cpus = mp.cpu_count()/2
     try:
-        for cpu in range(cpus):
+        for dummy in range(cpus):
             next_process = processes.pop()
             running.append(next_process)
             next_process.start()

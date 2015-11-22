@@ -298,14 +298,13 @@ class SystemState(object):
             raise ValueError
         self._rad_of_division = rad
         # Defining zone and distance between points.
-        diff = 2*rad
+        diff = 2*rad/math.sqrt(2)   #sqrt(2) to get all rods.
         start_x = self.center[0]-self.radius
         end_x = self.center[0]+self.radius
         start_y = self.center[1]-self.radius
         end_y = self.center[1]+self.radius
         # Getting all possible x and y values.
         max_times = int(float(end_x-start_x)/diff+1)
-
         possible_x_values = [start_x + times*diff
                              for times in range(max_times)]
         max_times = int(float(end_y-start_y)/diff+1)
@@ -322,19 +321,10 @@ class SystemState(object):
         subsystems = []
         for actual_y in possible_y_values:
             for actual_x in possible_x_values:
-                if methods.is_in_circle(actual_x, actual_y,
-                                self.center[0], self.center[1],
-                                self.radius-rad/2):
-                    x_diff = abs(actual_x-self.center[0])
-                    y_diff = abs(actual_y-self.center[1])
-                    pos_rad = math.sqrt(x_diff**2+y_diff**2)
-                    methods.same_area_radius = methods.same_area_rad(rad,
-                                                pos_rad, self.radius)
-                    subsystem = SubsystemState((actual_x, actual_y),
-                                                methods.same_area_radius,
-                                                math.pi*rad**2)
-                    subsystem.put_rods(list(self._rods))
-                    subsystems.append(subsystem)
+                center = (actual_x, actual_y)
+                subsystem = SubsystemState(center, rad, self.zone_coords)
+                subsystem.put_rods(list(self._rods))
+                subsystems.append(subsystem)
         return subsystems
 
     def _compute_density_matrix(self, rad, normalized=False,
@@ -859,14 +849,19 @@ class SubsystemState(SystemState):
     have something in common.
     """
 
-    def __init__(self, center, rad, area):
+    def __init__(self, center, rad, zone_coords):
         """
             Initialization
         """
         SystemState.__init__(self)
         self._center = center
         self._rad = rad
-        self._area = area
+        self._main_center = (zone_coords[0], zone_coords[1])
+        self._main_rad = zone_coords[2]
+        self._position_rad = methods.distance_between_points(self._main_center,
+                                            self._center)
+        self._area = methods.effective_area(self._rad,
+                                    self._position_rad, self._main_rad)
 
     @property
     def center(self):
@@ -896,7 +891,10 @@ class SubsystemState(SystemState):
         density = 0
         for rod_ in self:
             density += rod_.kappa
-        self._density = float(density)/self.area
+        if not self.area:
+            self._density = 0
+        else:
+            self._density = float(density)/self.area
 
     @property
     def density(self):
