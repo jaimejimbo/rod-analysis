@@ -47,6 +47,7 @@ class SystemState(object):
         self._cluster_checked_dict = {}
         self._clusters_max_distance = None
         self._clusters_max_angle_diff = None
+        self._divisions = None
         try:
             self._radius = zone_coords[2]
             self._center_x = zone_coords[0]
@@ -206,6 +207,7 @@ class SystemState(object):
         self._rods_dict = {}
         self._clusters_max_distance = None
         self._clusters_max_angle_diff = None
+        self._divisions = None
         if not self._fixed_center_radius:
             self._radius = None
             self._center_x = None
@@ -286,33 +288,36 @@ class SystemState(object):
             if not valid:
                 self.remove_rod(rod_)
 
+    def divide_in_circles(self, divisions):
+        """
+        Wrapper
+        """
+        if self._divisions != divisions:
+            self._reset()
+        self.divide_in_circles(divisions)
 
-    def _divide_in_circles(self, rad):
+
+    def _divide_in_circles(self, divisions):
         """
-            Divides rods into groups contained in circles of given rad.
+            Creates a grid over system with
+            "divisions" rows and columns.
         """
-        if self._rad_of_division == rad:
-            return
-        if (rad < 0) or (rad > self.radius):
-            print "Use a correct radius (0<rad<main_rad)"
-            raise ValueError
-        self._rad_of_division = rad
-        # Defining zone and distance between points.
-        diff = 2*rad/math.sqrt(2)   #sqrt(2) to get all rods.
-        start_x = self.center[0]-self.radius
-        end_x = self.center[0]+self.radius
-        start_y = self.center[1]-self.radius
-        end_y = self.center[1]+self.radius
-        # Getting all possible x and y values.
-        max_times = int(float(end_x-start_x)/diff+1)
-        possible_x_values = [start_x + times*diff
-                             for times in range(max_times)]
-        max_times = int(float(end_y-start_y)/diff+1)
-        possible_y_values = [start_y + times*diff
-                             for times in range(max_times)]
-        subsystems = self._subsystems(possible_x_values, possible_y_values,
-                                      rad)
-        self._actual_subdivision = subsystems
+        if divisions != self._divisions:
+            self._divisions = divisions
+            # Defining zone and distance between points.
+            start_x = self.center[0]-self.radius
+            end_x = self.center[0]+self.radius
+            start_y = self.center[1]-self.radius
+            diff = float(abs(start_x - end_x))/divisions
+            # Getting all possible x and y values.
+            possible_x_values = [start_x + times*diff
+                                 for times in range(divisions+1)]
+            possible_y_values = [start_y + times*diff
+                                 for times in range(divisions+1)]
+            rad = diff*math.sqrt(2)/2
+            subsystems = self._subsystems(possible_x_values, possible_y_values,
+                                          rad)
+            self._actual_subdivision = subsystems
 
     def _subsystems(self, possible_x_values, possible_y_values, rad):
         """
@@ -327,14 +332,12 @@ class SystemState(object):
                 subsystems.append(subsystem)
         return subsystems
 
-    def _compute_density_matrix(self, rad, normalized=False,
+    def _compute_density_matrix(self, divisions, normalized=False,
                                divided_by_area=False):
         """
             Computes density matrix of the system.
         """
-        if self._rad_of_division != rad:
-            self._reset()
-        self._divide_in_circles(rad)
+        self.divide_in_circles(divisions)
         density = []
         for subsystem in self._actual_subdivision:
             subdensity = [subsystem.center[0], subsystem.center[1]]
@@ -347,12 +350,12 @@ class SystemState(object):
             density.append(subdensity)
         self._density_matrix = density
 
-    def plottable_density_matrix(self, rad=50):
+    def plottable_density_matrix(self, divisions=50):
         """
             Returns 3 arrays: one for x, another for y and the last for values.
         """
         if len(self._density_matrix) == 0:
-            self._compute_density_matrix(rad=rad)
+            self._compute_density_matrix(divisions=divisions)
         x_values = []
         y_values = []
         z_values = []
@@ -360,41 +363,13 @@ class SystemState(object):
             x_values.append(row[0])
             y_values.append(row[1])
             z_values.append(row[2])
-        #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
 
-    def _transform_for_pcolor(self, z_values, rad):
-        """
-            Transform arrays to a plotable set of arrays.
-        """
-        xmat = []
-        ymat = []
-        zmat = []
-        matrix_ = self.subgroups_matrix(rad)
-        index = 0
-        for row in range(len(matrix_)):
-            xrow = []
-            yrow = []
-            zrow = []
-            for col in range(len(matrix[row])):
-                element = matrix[row][col]
-                xrow.append(element.center[0]-rad)
-                yrow.append(element.center[1]-rad)
-                zrow.append(z_values[index])
-            xrow.append(element.center[0]+rad)
-            yrow.append(element.center[1]+rad)
-            xmat.append(xrow)
-            ymat.append(yrow)
-            zmat.append(zrow)
-        return xmat, ymat, zmat
-
-    def _create_subgroups_matrix(self, rad):
+    def _create_subgroups_matrix(self, divisions):
         """
             Put subsystems in a matrix form.
         """
-        if self._rad_of_division != rad:
-            self._reset()
-        self._divide_in_circles(rad)
+        self.divide_in_circles(divisions)
         act_sub = self._actual_subdivision
         actual_y = act_sub[0].center[1]
         row = []
@@ -409,11 +384,11 @@ class SystemState(object):
             row.append(element)
         self._subdivision_centers = subgroups_matrix
 
-    def subgroups_matrix(self, rad):
+    def subgroups_matrix(self, divisions):
         """
             Returns subgroups matrix
         """
-        self._create_subgroups_matrix(rad)
+        self._create_subgroups_matrix(divisions)
         return self._subdivision_centers
 
     def _compute_g2_and_g4(self):
@@ -450,14 +425,12 @@ class SystemState(object):
             self._compute_g2_and_g4()
         return self._correlation_g4
 
-    def _compute_g2_g4_matrices(self, rad):
+    def _compute_g2_g4_matrices(self, divisions):
         """
             Computes correlation_g2 and correlation_g4 matrices for subgroups.
         """
-        if self._rad_of_division != rad:
-            self._reset()
+        self.divide_in_circles(divisions)
         if not self._correlation_g2 or not self._correlation_g2:
-            self._divide_in_circles(rad)
             for subsystem in self._actual_subdivision:
                 correlation_g2 = [subsystem.center[0], subsystem.center[1]]
                 correlation_g4 = [subsystem.center[0], subsystem.center[1]]
@@ -466,11 +439,11 @@ class SystemState(object):
                 self._correlation_g2_subsystems.append(correlation_g2)
                 self._correlation_g4_subsystems.append(correlation_g4)
 
-    def correlation_g2_plot_matrix(self, rad):
+    def correlation_g2_plot_matrix(self, divisions):
         """
             Returns values for plotting correlation_g2 matrix.
         """
-        self._compute_g2_g4_matrices(rad)
+        self._compute_g2_g4_matrices(divisions)
         x_values = []
         y_values = []
         z_values = []
@@ -480,11 +453,11 @@ class SystemState(object):
             z_values.append(subsystem[2])
         return x_values, y_values, z_values
 
-    def correlation_g4_plot_matrix(self, rad):
+    def correlation_g4_plot_matrix(self, divisions):
         """
             Returns values for plotting correlation_g2 matrix.
         """
-        self._compute_g2_g4_matrices(rad)
+        self._compute_g2_g4_matrices(divisions)
         x_values = []
         y_values = []
         z_values = []
@@ -542,23 +515,21 @@ class SystemState(object):
         else:
             return self._average_angle
 
-    def _compute_average_angle_matrix(self, rad):
+    def _compute_average_angle_matrix(self, divisions):
         """
             Computes average angle matrix
         """
-        if self._rad_of_division != rad:
-            self._reset()
-        self._divide_in_circles(rad)
+        self.divide_in_circles(divisions)
         for subsystem in self._actual_subdivision:
             row = [subsystem.center[0], subsystem.center[1]]
             row.append(subsystem.average_angle)
             self._angle_matrix.append(row)
 
-    def plottable_average_angle_matrix(self, rad):
+    def plottable_average_angle_matrix(self, divisions):
         """
             Returns a plottable average angle matrix.
         """
-        self._compute_average_angle_matrix(rad)
+        self._compute_average_angle_matrix(divisions)
         x_values = []
         y_values = []
         z_values = []
@@ -767,13 +738,11 @@ class SystemState(object):
             self._relative_g4 = math.sqrt(sin**2+cos**2)
         return self._relative_g4
 
-    def _compute_relative_g2_g4_mat(self, rad):
+    def _compute_relative_g2_g4_mat(self, divisions):
         """
             Computes correlation_g2 and correlation_g4 matrices for subgroups.
         """
-        if self._rad_of_division != rad:
-            self._reset()
-        self._divide_in_circles(rad)
+        self.divide_in_circles(divisions)
         len_correlation_g2 = len(self._relative_g2_subsystems)
         len_correlation_g4 = len(self._relative_g4_subsystems)
         if  len_correlation_g2 == 0 or len_correlation_g4 == 0:
@@ -785,11 +754,11 @@ class SystemState(object):
                 self._relative_g2_subsystems.append(correlation_g2)
                 self._relative_g4_subsystems.append(correlation_g4)
 
-    def relative_g2_plot_matrix(self, rad):
+    def relative_g2_plot_matrix(self, divisions):
         """
             Returns values for plotting correlation_g2 matrix.
         """
-        self._compute_relative_g2_g4_mat(rad)
+        self._compute_relative_g2_g4_mat(divisions)
         x_values = []
         y_values = []
         z_values = []
@@ -800,11 +769,11 @@ class SystemState(object):
         #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
 
-    def relative_g4_plot_matrix(self, rad):
+    def relative_g4_plot_matrix(self, divisions):
         """
             Returns values for plotting correlation_g2 matrix.
         """
-        self._compute_relative_g2_g4_mat(rad)
+        self._compute_relative_g2_g4_mat(divisions)
         x_values = []
         y_values = []
         z_values = []
