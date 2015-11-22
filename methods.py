@@ -3,6 +3,7 @@ Methods library.
 """
 import re, math, os
 import multiprocessing as mp
+from PIL import Image
 
 def segment_area(rad, min_dist):
     """
@@ -18,41 +19,31 @@ def segment_area(rad, min_dist):
     elif abs(min_dist) >= rad:
         return math.pi*rad**2
     phi = math.acos(abs(min_dist)/rad)
-    #DEBUG#
     assert 0 <= phi <= math.pi/2, "Error in angle"
-    #######
     if phi <= 1e-10:
         if min_dist > 0:
             return 0
         else:
             return math.pi*rad**2
     section = phi*rad**2
-    #DEBUG#
     assert section >= 0, "segment_area: Section is negative"
-    #######
     distance_between_intersections = 2*min_dist*math.tan(phi)
-    #DEBUG#
     msg = "segment_area: distance between "
     msg += "intersections can't be greater than diameter"
     assert distance_between_intersections <= 2*rad, msg
-    #######
     triangle_area = distance_between_intersections*min_dist/2.0
-    #DEBUG#
     msg = "segment_area: Triangle area must be smaller than section area"
     msg += "\nRatio="+str(triangle_area*1.0/section)
     assert triangle_area < section, msg
-    ######
     if min_dist >= 0:
         output = section - triangle_area
     else:
         output = math.pi*rad**2 - section + triangle_area
-    #DEBUG#
     msg = "segment_area: Obtained area is negative. "
     msg += "Values: rad:"+str(rad)
     msg += " min_dist:"+str(min_dist)+" rat:"+str(min_dist/rad)
     msg += " phi:"+str(phi)+" area:"+str(output)
     assert output > 0, msg
-    #######
     return output
 
 
@@ -66,9 +57,7 @@ def effective_area(small_rad, small_position_rad, main_rad):
     # circle completely included in the bigger one
     if small_rad+small_position_rad <= main_rad:
         return math.pi*small_rad**2
-    #DEBUG#
     assert small_position_rad <= main_rad, "Circle is outside the bigger one"
-    #######
     min_dist = compute_min_dist(small_rad, small_position_rad, main_rad)
     if min_dist >= small_rad:
         return math.pi*small_rad**2
@@ -76,18 +65,14 @@ def effective_area(small_rad, small_position_rad, main_rad):
         return 0
     min_dist_main = small_position_rad+min_dist
     correction = segment_area(main_rad, min_dist_main)
-    #DEBUG#
     msg = "effective_area: Correction must be smaller than small circle's area"
     assert correction < math.pi*small_rad**2, msg
-    #######
     section_area = segment_area(small_rad, min_dist)
     small_area = math.pi*small_rad**2
-    #DEBUG#
     msg = "In the limit, h=-rad has to return total area"
     assert small_area == segment_area(small_rad, -small_rad), msg
     msg = "Correction too high: Ration: "+str(float(correction)/small_area)
     assert correction < small_area, msg
-    #######
     output = math.pi*small_rad**2 - section_area + correction
     return output
 
@@ -227,7 +212,7 @@ def binary_order(array, ordering_id):
                 ordered_array.append(element_2)
                 unemptied_array = array_2
                 break
-        else:   #If id_1==id_2 order isn't important
+        else:
             ordered_array.append(element_2)
             try:
                 element_2 = array_2.pop(0)

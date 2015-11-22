@@ -1,16 +1,9 @@
 """
         System State. Group of rods in a determined moment.
 """
-import math
-import queue
-import Queue
-import matrix
+import math, queue, matrix
 import multiprocessing as mp
-import re
-import os
-import methods
-import rod
-from PIL import Image
+import methods, rod
 
 
 class SystemState(object):
@@ -90,7 +83,7 @@ class SystemState(object):
             return self._rods_dict[rod_id]
         except KeyError:
             msg = str(rod_id)
-            msg += " " + str(self._rods_dict.keys())    #There are not keys! -> Dict not filled.
+            msg += " " + str(self._rods_dict.keys())
             raise IndexError(msg)
 
     def get_rods_range(self, initial_id, final_id):
@@ -109,14 +102,14 @@ class SystemState(object):
         """
         Magic method for in.
         """
-        for rod in self._rods:
-            yield rod
+        for rod_ in self._rods:
+            yield rod_
 
     def __list__(self):
         """
         Returns a list of rods
         """
-        output = [rod for rod in self]
+        output = [rod_ for rod_ in self]
         return output
 
     def __len__(self):
@@ -133,10 +126,10 @@ class SystemState(object):
         if not len(self._zone_coords):
             _zone_coords = None
         clone = SystemState(kappas=self._kappas,
-                            allowed_kappa_error=self._allowed_kappa_error,
-                            radius_correction_ratio=self._radius_correction_ratio,
-                            id_string=self.id_string, zone_coords=_zone_coords,
-                            rods=self._rods)
+                        allowed_kappa_error=self._allowed_kappa_error,
+                        radius_correction_ratio=self._radius_correction_ratio,
+                        id_string=self.id_string, zone_coords=_zone_coords,
+                        rods=self._rods)
         return clone
 
     @property
@@ -154,26 +147,26 @@ class SystemState(object):
         self._number_of_rods = len(self._rods)
         return self._number_of_rods
 
-    def put_rod(self, rod):
+    def put_rod(self, rod_):
         """
             Adds a rod to the group
         """
-        self._rods.put(rod)
+        self._rods.put(rod_)
         self._reset()
 
     def get_rod(self):
         """
             Returns the first rod in the queue
         """
-        rod = self._rods.get()
-        self._rods.put(rod)
-        return rod
+        rod_ = self._rods.get()
+        self._rods.put(rod_)
+        return rod_
 
-    def remove_rod(self, rod):
+    def remove_rod(self, rod_):
         """
             Removes a rod from the group (queue object mod needed)
         """
-        self._rods.delete(rod)
+        self._rods.delete(rod_)
         self._reset()
 
     def _reset(self):
@@ -217,9 +210,9 @@ class SystemState(object):
             Fill dictionaries.
         """
         if not len(self._cluster_checked_dict):
-            for rod in self._rods:
-                identifier = rod.identifier
-                self._rods_dict[identifier] = rod
+            for rod_ in self._rods:
+                identifier = rod_.identifier
+                self._rods_dict[identifier] = rod_
                 self._cluster_checked_dict[identifier] = False
 
     def _compute_center_and_radius(self):
@@ -234,9 +227,9 @@ class SystemState(object):
         if not len(self._zone_coords) and not self._fixed_center_radius:
             x_values = []
             y_values = []
-            for rod in list(self._rods):
-                x_values.append(rod.x_mid)
-                y_values.append(rod.y_mid)
+            for rod_ in list(self._rods):
+                x_values.append(rod_.x_mid)
+                y_values.append(rod_.y_mid)
             #center is the mean position of all particles.
             center_x = sum(x_values)*1.0/self.number_of_rods
             center_y = sum(y_values)*1.0/self.number_of_rods
@@ -274,17 +267,17 @@ class SystemState(object):
         return self._zone_coords
 
 
-    def check_rods(self, all_cores=False):
+    def check_rods(self):
         """
             Check if rods are correct.
         """
         zone_coords = [coord for coord in self.zone_coords]
-        for rod in self._rods:
-            valid = rod.is_valid_rod(self._kappas,
+        for rod_ in self._rods:
+            valid = rod_.is_valid_rod(self._kappas,
                         self._allowed_kappa_error,
                         zone_coords)
             if not valid:
-                self.remove_rod(rod)
+                self.remove_rod(rod_)
 
 
     def _divide_in_circles(self, rad):
@@ -328,9 +321,11 @@ class SystemState(object):
                     x_diff = abs(actual_x-self.center[0])
                     y_diff = abs(actual_y-self.center[1])
                     pos_rad = math.sqrt(x_diff**2+y_diff**2)
-                    methods.same_area_radius = methods.same_area_rad(rad, pos_rad, self.radius)
+                    methods.same_area_radius = methods.same_area_rad(rad,
+                                                pos_rad, self.radius)
                     subsystem = SubsystemState((actual_x, actual_y),
-                                               methods.same_area_radius, math.pi*rad**2)
+                                                methods.same_area_radius,
+                                                math.pi*rad**2)
                     subsystem.put_rods(list(self._rods))
                     subsystems.append(subsystem)
         return subsystems
@@ -431,8 +426,8 @@ class SystemState(object):
         cos2_av, sin2_av, cos4_av, sin4_av = 0, 0, 0, 0
         if not self.number_of_rods:
             return
-        for rod in list(self._rods):
-            angle = rod.angle*math.pi/180.0
+        for rod_ in list(self._rods):
+            angle = rod_.angle*math.pi/180.0
             cos2_av += math.cos(2*angle)/self.number_of_rods
             sin2_av += math.sin(2*angle)/self.number_of_rods
             cos4_av += math.cos(4*angle)/self.number_of_rods
@@ -510,8 +505,8 @@ class SystemState(object):
         """
         if not self._average_kappa:
             self._average_kappa = 0
-            for rod in list(self._rods):
-                self._average_kappa += rod.kappa
+            for rod_ in list(self._rods):
+                self._average_kappa += rod_.kappa
             self._average_kappa /= self.number_of_rods
         return self._average_kappa
 
@@ -522,8 +517,8 @@ class SystemState(object):
         """
         if not self._kappa_dev:
             kappa2 = 0
-            for rod in list(self._rods):
-                kappa2 += rod.kappa**2
+            for rod_ in list(self._rods):
+                kappa2 += rod_.kappa**2
             kappa2 /= self.number_of_rods
             self._kappa_dev = math.sqrt(kappa2-self.average_kappa**2)
         return self._kappa_dev
@@ -536,8 +531,8 @@ class SystemState(object):
         if not self._average_angle:
             if self.correlation_g2 > 0.5 and self.correlation_g4 < 0.3:
                 angle = 0
-                for rod in list(self._rods):
-                    angle2 = rod.angle
+                for rod_ in list(self._rods):
+                    angle2 = rod_.angle
                     # angle = angle + pi (simetry)
                     if angle2 > math.pi:
                         angle2 -= math.pi
@@ -582,18 +577,18 @@ class SystemState(object):
         """
             Returns all angles in a list to make an histogram.
         """
-        output = [rod.angle for rod in list(self._rods)]
+        output = [rod_.angle for rod_ in list(self._rods)]
         return output
 
-    def _get_closest_rod(self, rod):
+    def _get_closest_rod(self, rod_):
         """
             Returns closest rod in group to given rod.
         """
         distance = 1e100
-        selected_rod = rod
+        selected_rod = rod_
         for rod2 in list(self._rods):
-            if rod != rod2:
-                new_distance = rod.distance_to_rod(rod2)
+            if rod_ != rod2:
+                new_distance = rod_.distance_to_rod(rod2)
                 if new_distance < distance:
                     distance = new_distance
                     selected_rod = rod2
@@ -611,24 +606,26 @@ class SystemState(object):
         if self._cluster_checked_dict[reference_rod.identifier]:
             return rods
         self._cluster_checked_dict[reference_rod.identifier] = True
-        for rod in list(self._rods):
-            if self._cluster_checked_dict[rod.identifier]:
+        for rod_ in list(self._rods):
+            if self._cluster_checked_dict[rod_.identifier]:
                 continue
-            x_diff = rod.x_mid-reference_rod.x_mid
-            y_diff = rod.y_mid-reference_rod.y_mid
+            x_diff = rod_.x_mid-reference_rod.x_mid
+            y_diff = rod_.y_mid-reference_rod.y_mid
             distance = math.sqrt(x_diff**2+y_diff**2)
-            angle_diff = abs(rod.angle-reference_rod.angle)
+            angle_diff = abs(rod_.angle-reference_rod.angle)
             angle_diff = min([angle_diff, 180-angle_diff])
             if angle_diff <= max_angle_diff and distance < max_distance:
-                subrods = self._get_cluster_members(rod, max_distance,
+                subrods = self._get_cluster_members(rod_, max_distance,
                                                     max_angle_diff)
-                rods.add(rod)
+                rods.add(rod_)
                 rods |= subrods
                 continue
-            if distance <= 1.4*max_distance and angle_diff <= max_angle_diff/2.0:
-                subrods = self._get_cluster_members(rod, max_distance,
+            cond1 = distance <= 1.4*max_distance
+            cond2 = angle_diff <= max_angle_diff/2.0
+            if cond1 and cond2:
+                subrods = self._get_cluster_members(rod_, max_distance,
                                                    max_angle_diff)
-                rods.add(rod)
+                rods.add(rod_)
                 rods |= subrods
         return rods
 
@@ -653,10 +650,10 @@ class SystemState(object):
             if len(self._cluster_checked_dict.keys()):
                 self.fill_dicts()
             clusters = []
-            for rod in self._rods:
-                if self._cluster_checked_dict[rod.identifier]:
+            for rod_ in self._rods:
+                if self._cluster_checked_dict[rod_.identifier]:
                     continue
-                cluster = self._get_cluster_members(rod,
+                cluster = self._get_cluster_members(rod_,
                                 max_distance, max_angle_diff)
                 if cluster:
                     clusters.append(cluster)
@@ -702,9 +699,9 @@ class SystemState(object):
         """
         function = self._get_closest_rod
         closest_rod_matrix = []
-        for rod in list(self._rods):
-            new_row = [rod]
-            closest_rod = function(rod)
+        for rod_ in list(self._rods):
+            new_row = [rod_]
+            closest_rod = function(rod_)
             if not closest_rod:
                 continue
             new_row.append(closest_rod)
@@ -829,8 +826,8 @@ class SystemState(object):
         """
         if len(self._direction_matrix) == 0:
             self._direction_matrix = matrix.zeros(2, 2)
-            for rod in list(self._rods):
-                self._direction_matrix += rod.direction_matrix
+            for rod_ in list(self._rods):
+                self._direction_matrix += rod_.direction_matrix
         eigen1, dummy_ = self._direction_matrix.diagonalize_2x2()
         return eigen1
 
@@ -890,8 +887,8 @@ class SubsystemState(SystemState):
             Computes density of the group.
         """
         density = 0
-        for rod in self:
-            density += rod.kappa
+        for rod_ in self:
+            density += rod_.kappa
         self._density = float(density)/self.area
 
     @property
@@ -908,9 +905,9 @@ class SubsystemState(SystemState):
             Add all rods of the list that are inside the circle.
         """
         try:
-            for rod in rod_list:
-                if rod.methods.is_in_circle(self.center, self.radius):
-                    self.put_rod(rod)
+            for rod_ in rod_list:
+                if rod_.is_in_circle(self.center, self.radius):
+                    self.put_rod(rod_)
         except TypeError:
             print "Use a rod list in put_rods method"
 
@@ -931,12 +928,11 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
     states = [None for dummy_ in range(len(files))]
     processes = []
     states_queue = mp.Queue()
-    task_queue = mp.JoinableQueue()
     for index in range(len(files)):
         process = mp.Process(target=create_rods_process,
                             args=(kappas, allowed_kappa_error,
                             radius_correction_ratio, names,
-                            files, index, states_queue, task_queue))
+                            files, index, states_queue))
         processes.append(process)
     running, processes_left = methods.run_processes(processes)
     num_processes = len(running)
@@ -956,7 +952,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
 
 def create_rods_process(kappas, allowed_kappa_error,
                         radius_correction_ratio, names,
-                        files, index, states_queue, task_queue):
+                        files, index, states_queue):
     """
     Process of method.
     """

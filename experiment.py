@@ -1,9 +1,8 @@
 """
     Library for time evolution study.
 """
-import re
+import re, methods
 import multiprocessing as mp
-import methods
 from matplotlib import animation
 import matplotlib.pyplot as plt
 
@@ -119,9 +118,8 @@ class Experiment(object):
             state = self._states[index]
             evol_dict = self._evolution_dictionaries[index]
             relative_dict = self._relative_dictionaries[index]
-            initial_set = self._initial_rods[index]
             for rod in state:
-                initial_set |= set([rod.identifier])
+                self._initial_rods[index] |= set([rod.identifier])
                 rod_id = rod.identifier
                 evol_dict[rod_id] = set([])
                 relative_dict[rod_id] = {}
@@ -129,7 +127,8 @@ class Experiment(object):
             self._final_rods[index] = self._initial_rods[index+1].copy()
 
 
-    def _fill_dicts(self, max_speed, max_angle_diff, limit=5, amount_of_rods=None):
+    def _fill_dicts(self, max_speed, max_angle_diff,
+                    limit=5, amount_of_rods=None):
         """
             Looks for rods that have only one possible predecessor.
         """
@@ -143,8 +142,8 @@ class Experiment(object):
         # o hacer un dict {index: identifier}
         for index in range(len(self._states)-1):
             processes.append(mp.Process(target=self._fill_dicts_process_limited,
-                                        args=(index, max_speed, max_angle_diff,
-                                            output_queue, limit, amount_of_rods)))
+                                    args=(index, max_speed, max_angle_diff,
+                                        output_queue, limit, amount_of_rods)))
         running, processes_left = methods.run_processes(processes)
         num_processes = len(running)
         finished = 0
@@ -179,7 +178,7 @@ class Experiment(object):
                 end_id = initial_id+amount_of_rods/2
                 available_final_rods = final_state.get_rods_range(start_id,
                                                                     end_id)
-            for final_rod in final_state:
+            for final_rod in available_final_rods:
                 final_id = final_rod.identifier
                 distance = initial_rod.distance_to_rod(final_rod)
                 angle = initial_rod.angle_between_rods(final_rod)
@@ -214,13 +213,16 @@ class Experiment(object):
             else:
                 start_id = initial_id-amount_of_rods/2
                 end_id = initial_id+amount_of_rods/2
-                available_final_rods = final_state.get_rods_range(start_id, end_id)
+                available_final_rods = final_state.get_rods_range(start_id,
+                                                                  end_id)
             speeds = []
             initial_kappa = initial_rod.kappa
             kappa_error = initial_state.kappa_error/2
             for final_rod in available_final_rods:
                 final_kappa = final_rod.kappa
-                if initial_kappa-kappa_error > final_kappa or initial_kappa+kappa_error < final_kappa:
+                cond1 = initial_kappa-kappa_error > final_kappa
+                cond2 = initial_kappa+kappa_error < final_kappa
+                if cond1 or cond2:
                     continue
                 final_id = final_rod.identifier
                 distance = initial_rod.distance_to_rod(final_rod)
@@ -248,69 +250,6 @@ class Experiment(object):
                 relative_dict[initial_id] = value
         output_queue.put([index, evol_dict, relative_dict])
 
-
-    def _use_unique_evolutions(self, max_reps=50):
-        """
-            Checks if there is only one possible evolution for the rods. If so,
-        delete that possible evolution from the rest of rods.
-        """
-        changed = True
-        rep = 0
-        while changed:
-            rep += 1
-            if rep >= max_reps:
-                break
-            changes_queue = mp.Queue()
-            output_queue = mp.Queue()
-            processes = []
-            for index in range(len(self._evolution_dictionaries)-1):
-                processes.append(mp.Process(target=self._use_unique_evolutions_process,
-                                            args=(index, changes_queue, output_queue)))
-            running, processes_left = methods.run_processes(processes)
-            changed = False
-            num_processes = len(running)
-            finished = 0
-            while finished < num_processes:
-                finished += 1
-                output = output_queue.get()
-                system_changed = changes_queue.get()
-                index = output[0]
-                self._evolution_dictionaries[index] = output[1]
-                self._relative_dictionaries[index] = output[2]
-                self._conflictive_final_rods[index] |= output[3]
-                if system_changed:
-                    changed = True
-                if len(processes_left):
-                    finished -= 1
-                    new_process = processes_left.pop()
-                    new_process.start()
-
-
-    def _use_unique_evolutions_process(self, index, changes_queue, output_queue):
-        """
-            Process for method.
-        """
-        evol_dict = self._evolution_dictionaries[index]
-        relative_dict = self._relative_dictionaries[index]
-        conflicts = set([])
-        changed = False
-        for initial_rod_id in evol_dict.keys():
-            conflicts2 = set([])
-            ordered_values = relative_dict[initial_rod_id]
-            final_rods = evol_dict[initial_rod_id]
-            if len(final_rods) == 1:
-                rel_dict = relative_dict[initial_rod_id]
-                final_rod_id = list(final_rods)[0]
-                values = ordered_values[final_rod_id]
-                rel_dict = (values[0], values[1])
-                changed, evol_dict, conflicts2 = self._remove_final_rod(index, initial_rod_id, final_rods)
-            if len(final_rods) == 0:
-                values = None
-            conflicts |= conflicts2
-        changes_queue.put(changed)
-        output_queue.put([index, evol_dict, relative_dict, conflicts])
-
-
     def _remove_final_rod(self, index, initial_rod_id, final_rod_id):
         """
             Remove final rod from the rest of rods' evolutions.
@@ -324,7 +263,6 @@ class Experiment(object):
         for rod_id in evol_dict.keys():
             last_changed = False
             final_rods = evol_dict[rod_id]
-            counter = 0
             if rod_id != initial_rod_id and len(final_rods):
                 final_rods -= final_rod_set
                 last_changed = True
@@ -347,7 +285,8 @@ class Experiment(object):
         processes = []
         for index in range(len(self._evolution_dictionaries)-1):
             processes.append(mp.Process(target=self._leave_only_closer_process,
-                                        args=(index, output_queue, selected_queue, max_distance)))
+                                        args=(index, output_queue,
+                                              selected_queue, max_distance)))
         running, processes_left = methods.run_processes(processes)
         num_processes = len(running)
         finished = 0
@@ -368,7 +307,8 @@ class Experiment(object):
                 new_process.start()
 
 
-    def _leave_only_closer_process(self, index, output_queue, selected_queue, max_distance):
+    def _leave_only_closer_process(self, index, output_queue,
+                                selected_queue, max_distance):
         """
         Process.
         """
@@ -377,7 +317,8 @@ class Experiment(object):
         relative_dict = self._relative_dictionaries[index]
         for initial_rod_id in evol_dict.keys():
             final_rod_id, distance, angle_diff = self._closer_rod(index,
-                                          initial_rod_id, selected, max_distance)
+                                          initial_rod_id, selected,
+                                            max_distance)
             evol_dict[initial_rod_id] = final_rod_id
             relative_dict[initial_rod_id] = None
             if distance:
@@ -408,7 +349,9 @@ class Experiment(object):
             for final_rod_id in final_rods:
                 relative_values = relative_dict[final_rod_id]
                 distance = relative_values[0]
-                if (distance < min_distance) and (final_rod_id not in selected):
+                cond1 = (distance < min_distance)
+                cond2 = (final_rod_id not in selected)
+                if cond1 and cond2:
                     final_rod = final_rod_id
                     min_distance = distance
             if final_rod:
@@ -420,7 +363,8 @@ class Experiment(object):
         return final_rod, min_distance, angle_diff
 
 
-    def compute_dictionaries(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
+    def compute_dictionaries(self, max_speed=100, max_angle_diff=90,
+                            limit=5, amount_of_rods=200):
         """
                 List of evolution dictionaries.
         Each dictionary has the form:
@@ -429,18 +373,22 @@ class Experiment(object):
              ...
              initial_rod_idN: set([final_rod_idN1,final_rod_idN2,...])}
         """
-        if (max_speed, max_angle_diff, limit, amount_of_rods) != (self._max_speed,
-                    self._max_angle_diff, self._limit, self._amount_of_rods):
+        tuple1 = (max_speed, max_angle_diff, limit, amount_of_rods)
+        tuple2 = (self._max_speed, self._max_angle_diff,
+                    self._limit, self._amount_of_rods)
+        if tuple1 != tuple2:
             self._reset()
         if not len(self._evolution_dictionaries):
             self._create_dict_keys()
-            self._fill_dicts(max_speed, max_angle_diff, limit=limit, amount_of_rods=amount_of_rods)
+            self._fill_dicts(max_speed, max_angle_diff, limit=limit,
+                                amount_of_rods=amount_of_rods)
             #self._use_unique_evolutions()
             self._leave_only_closer(max_distance=max_speed)
             self._join_left_rods(max_distance=max_speed)
 
 
-    def evolution_dictionaries(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
+    def evolution_dictionaries(self, max_speed=100, max_angle_diff=90,
+                                limit=5, amount_of_rods=200):
         """
             List of evolution dictionaries.
         Each dictionary has the form:
@@ -449,7 +397,10 @@ class Experiment(object):
              ...
              initial_rod_idN: set([final_rod_idN1,final_rod_idN2,...])}
         """
-        self.compute_dictionaries(max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200)
+        self.compute_dictionaries(max_speed=max_speed,
+                                  max_angle_diff=max_angle_diff,
+                                  limit=limit,
+                                  amount_of_rods=amount_of_rods)
         return self._evolution_dictionaries
 
 
@@ -509,7 +460,7 @@ class Experiment(object):
             try:
                 angle_diff = final_rod.angle_between_rods(selected_rod)
                 angle_diff = min([angle_diff, 180-angle_diff])
-            except:
+            except AttributeError:
                 min_distance = -1
                 angle_diff = -1
             relative_dict[selected_rod_id] = (min_distance, angle_diff)
@@ -522,17 +473,21 @@ class Experiment(object):
         After using methods listed before, some rods are unjoined.
         This joins closest rods.
         """
-        if (max_speed, max_angle_diff, limit, amount_of_rods) != (self._max_speed,
-                    self._max_angle_diff, self._limit, self._amount_of_rods):
+        tuple1 = (max_speed, max_angle_diff, limit, amount_of_rods)
+        tuple2 = (self._max_speed, self._max_angle_diff,
+                    self._limit, self._amount_of_rods)
+        if tuple1 != tuple2:
             self._reset()
-        self.compute_dictionaries(max_speed, max_angle_diff, limit, amount_of_rods)
+        self.compute_dictionaries(max_speed, max_angle_diff,
+                                limit, amount_of_rods)
         if not len(self._speeds):
             speeds_queue = mp.Queue()
             angular_speeds_queue = mp.Queue()
             processes = []
             for index in range(len(self._evolution_dictionaries)-1):
                 process = mp.Process(target=self._compute_speeds_process,
-                                     args=(index, speeds_queue, angular_speeds_queue))
+                                     args=(index, speeds_queue,
+                                            angular_speeds_queue))
                 processes.append(process)
             running, processes_left = methods.run_processes(processes)
             num_processes = len(running)
@@ -549,7 +504,8 @@ class Experiment(object):
                     new_process.start()
 
 
-    def _compute_speeds_process(self, index, speeds_queue, angular_speeds_queue):
+    def _compute_speeds_process(self, index, speeds_queue,
+                                angular_speeds_queue):
         """
         Returns an array of speeds.
         """
@@ -569,7 +525,8 @@ class Experiment(object):
         angular_speeds_queue.put(angular_speeds)
 
 
-    def speeds(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
+    def speeds(self, max_speed=100, max_angle_diff=90, limit=5,
+                     amount_of_rods=200):
         """
         Returns [speeds, angular_speeds] where both outputs are array with one
         value for each rod.
@@ -578,7 +535,8 @@ class Experiment(object):
         return [self._speeds, self._angular_speeds]
 
 
-    def average_quadratic_speed(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
+    def average_quadratic_speed(self, max_speed=100, max_angle_diff=90,
+                                limit=5, amount_of_rods=200):
         """
         Returns average quadratic speeds
         """
@@ -592,7 +550,8 @@ class Experiment(object):
         return output
 
 
-    def average_quadratic_angular_speed(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200):
+    def average_quadratic_angular_speed(self, max_speed=100, max_angle_diff=90,
+                                        limit=5, amount_of_rods=200):
         """
         Returns average quadratic angular speed
         """
@@ -606,10 +565,10 @@ class Experiment(object):
         return output
 
 
-    def local_speeds(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200, rad=50):
+    def local_speeds(self, max_speed=100, max_angle_diff=90, limit=5,
+                            amount_of_rods=200, rad=50):
         """
-        Creates an array of matrices. Each matrix's entry is a dictionariy such as
-        {rod_id: (speed, angular_speed)}
+        Returns local_speeds array.
         """
         self._compute_speeds(max_speed, max_angle_diff, limit, amount_of_rods)
         if len(self._local_speeds) == 0:
@@ -619,8 +578,8 @@ class Experiment(object):
 
     def _compute_local_speeds(self, rad):
         """
-        Creates an array of matrices. Each matrix's entry is a dictionariy such as
-        {rod_id: (speed, angular_speed)}
+        Creates an array of matrices. Each matrix's entry is a dictionariy such
+        as {rod_id: (speed, angular_speed)}
         """
         output_queue = mp.Queue()
         processes = []
@@ -668,18 +627,21 @@ class Experiment(object):
         output_queue.put([index, speeds_matrix])
 
 
-    def _compute_local_average_speeds(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200, rad=50):
+    def _compute_local_average_speeds(self, max_speed=100, max_angle_diff=90,
+                                      limit=5, amount_of_rods=200, rad=50):
         """
         Compute local average speeds.
         """
-        self.local_speeds(max_speed, max_angle_diff, limit, amount_of_rods, rad)
+        self.local_speeds(max_speed, max_angle_diff, limit,
+                            amount_of_rods, rad)
         if not len(self._local_average_quadratic_speeds):
             output_queue = mp.Queue()
             processes = []
-            local_speeds = self.local_speeds(max_speed, max_angle_diff, limit, amount_of_rods, rad)
+            local_speeds = self.local_speeds(max_speed, max_angle_diff,
+                                            limit, amount_of_rods, rad)
             for index in range(len(self._evolution_dictionaries)-1):
                 local_speeds_ = local_speeds[index]
-                process = mp.Process(target=self._compute_local_average_speeds_process,
+                process = mp.Process(target=compute_local_average_speeds_process,
                                     args=(index, output_queue, local_speeds_))
                 self._local_average_quadratic_speeds.append(None)
                 self._local_average_quadratic_angular_speeds.append(None)
@@ -700,48 +662,29 @@ class Experiment(object):
                     new_process = processes_left.pop()
                     new_process.start()
 
-
-    def _compute_local_average_speeds_process(self, index, output_queue, local_speeds):
-        """
-        Process
-        """
-        state = self._states[index]
-        speeds_matrix = []
-        angular_speeds_matrix = []
-        for row in local_speeds:
-            speeds_row = []
-            angular_speeds_row = []
-            for dictionary in row:
-                quadratic_speed = 0
-                quadratic_angular_speed = 0
-                num_rods = len(dictionary)
-                for speeds in dictionary.values():
-                    quadratic_speed += float(speeds[0]**2)/num_rods
-                    quadratic_angular_speed += float(speeds[1]**2)/num_rods
-                speeds_row.append(quadratic_speed)
-                angular_speeds_row.append(quadratic_angular_speed)
-            speeds_matrix.append(speeds_row)
-            angular_speeds_matrix.append(angular_speeds_row)
-        output_queue.put([index, speeds_matrix, angular_speeds_matrix])
-
-
-    def local_average_quadratic_speed(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200, rad=50):
+    def local_average_quadratic_speed(self, max_speed=100, max_angle_diff=90,
+                                        limit=5, amount_of_rods=200, rad=50):
         """
         Returns a array of matrices. Each matrix represents
         local average quadratic speed values.
         """
-        self._compute_local_average_speeds(max_speed, max_angle_diff, limit, amount_of_rods, rad)
+        self._compute_local_average_speeds(max_speed, max_angle_diff, limit,
+                                            amount_of_rods, rad)
         return self._local_average_quadratic_speeds
 
-    def local_average_quadratic_angular_speed(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200, rad=50):
+    def local_average_quadratic_angular_speed(self, max_speed=100,
+                                        max_angle_diff=90, limit=5,
+                                        amount_of_rods=200, rad=50):
         """
         Returns a array of matrices. Each matrix represents
         local average quadratic angular speed values.
         """
-        self._compute_local_average_speeds(max_speed, max_angle_diff, limit, amount_of_rods, rad)
+        self._compute_local_average_speeds(max_speed, max_angle_diff,
+                                            limit, amount_of_rods, rad)
         return self._local_average_quadratic_angular_speeds
 
-    def density_and_quad_speed(self, max_speed=100, max_angle_diff=90, limit=5, amount_of_rods=200, rad=50):
+    def density_and_quad_speed(self, max_speed=100, max_angle_diff=90,
+                                limit=5, amount_of_rods=200, rad=50):
         """
         Returns 2 arrays: density values and temperature
         """
@@ -815,7 +758,7 @@ class Experiment(object):
         kappas = self._states[0].kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
         self._generic_scatter_animator(frames, name, function_name,
-                            rad, folder=folder, fps=fps)
+                            rad, fps=fps)
 
     def create_relative_g2_gif(self, rad=50, folder="./", fps=1):
         """
@@ -826,7 +769,7 @@ class Experiment(object):
         kappas = self._states[0].kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
         self._generic_scatter_animator(frames, name, function_name,
-                            rad, folder=folder, fps=fps)
+                            rad, fps=fps)
 
     def create_relative_g4_gif(self, rad=50, folder="./", fps=1):
         """
@@ -837,7 +780,7 @@ class Experiment(object):
         kappas = self._states[0].kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
         self._generic_scatter_animator(frames, name, function_name,
-                            rad, folder=folder, fps=fps)
+                            rad, fps=fps)
 
     def create_average_angle_gif(self, rad=50, folder="./", fps=1):
         """
@@ -848,13 +791,13 @@ class Experiment(object):
         kappas = self._states[0].kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
         self._generic_scatter_animator(frames, name, function_name,
-                            rad, folder=folder, fps=fps)
+                            rad, fps=fps)
 
-    def _generic_scatter_animator(self, frames, name, function_name, rad, folder="./", fps=1):
+    def _generic_scatter_animator(self, frames, name, function_name,
+                                    rad, fps=1):
         """
         Generic animator
         """
-        self.colorbar = None
         def animate(index):
             """
             Specific animator.
@@ -881,6 +824,9 @@ class Experiment(object):
         """
         Creates a gif per property of the system that shows evolution.
         """
+        self.create_density_gif(rad, folder, fps)
+        self.create_relative_g2_gif(rad, folder, fps)
+        self.create_relative_g4_gif(rad, folder, fps)
         """processes = []
         processes.append(mp.Process(target=self.create_density_gif,
                          args=(rad, folder, fps)))
@@ -909,7 +855,27 @@ class Experiment(object):
                     finished += 1
                 else:
                     running.append(process)"""
-        self.create_density_gif(rad, folder, fps)
-        self.create_relative_g2_gif(rad, folder, fps)
-        self.create_relative_g4_gif(rad, folder, fps)
 
+
+
+def compute_local_average_speeds_process(index, output_queue, local_speeds):
+    """
+    Process
+    """
+    speeds_matrix = []
+    angular_speeds_matrix = []
+    for row in local_speeds:
+        speeds_row = []
+        angular_speeds_row = []
+        for dictionary in row:
+            quadratic_speed = 0
+            quadratic_angular_speed = 0
+            num_rods = len(dictionary)
+            for speeds in dictionary.values():
+                quadratic_speed += float(speeds[0]**2)/num_rods
+                quadratic_angular_speed += float(speeds[1]**2)/num_rods
+            speeds_row.append(quadratic_speed)
+            angular_speeds_row.append(quadratic_angular_speed)
+        speeds_matrix.append(speeds_row)
+        angular_speeds_matrix.append(angular_speeds_row)
+    output_queue.put([index, speeds_matrix, angular_speeds_matrix])
