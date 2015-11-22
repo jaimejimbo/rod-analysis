@@ -452,10 +452,14 @@ def array_average(array_of_arrays):
     """
     Gets average array value over a list of arrays.
     """
-    output = []
     number_of_arrays = len(array_of_arrays)
-    for index in range(number_of_arrays):
-        output.append(0)
-        for array in array_of_arrays:
+    array_length = len(array_of_arrays[0])
+    output = [0 for dummy in range(array_length)]
+    for array in array_of_arrays:
+        if len(array) != array_length:
+            print array_of_arrays
+            msg = "Arrays are not of same length."
+            raise ValueError(msg)
+        for index in range(len(array)):
             output[index] += float(array[index])/number_of_arrays
     return output

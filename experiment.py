@@ -805,17 +805,20 @@ class Experiment(object):
             """
             Wrapper.
             """
-            self._last_index = self._animate(function_name, rad, self._last_index)
+            if self._last_index != -1:
+                self._last_index = self._animate_scatter(function_name,
+                                                rad, self._last_index)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
 
-    def _animate(self, function_name, rad, last_index):
+    def _animate_scatter(self, function_name, rad, last_index):
         """
         Specific animator.
         """
         dates = self._dates
         index = last_index
-        if index == len(self._states)-2:
+        number_of_states = len(self._states)
+        if index == number_of_states-2:
             return -1
         image1_id, image2_id = self._get_image_ids(index)
         x_vals, y_vals, z_vals = [], [], []
@@ -826,10 +829,11 @@ class Experiment(object):
             x_val, y_val, z_val = function(rad)
             z_vals.append(z_val)
             index += 1
-            if index == len(self._states)-2:
+            if index == number_of_states-2:
                 break
             image1_id, image2_id = self._get_image_ids(index)
             if not methods.is_in_burst(dates, image1_id, image2_id):
+                index += 1
                 break
         if len(z_vals) > 1:
             z_val = methods.array_average(z_vals)
@@ -844,7 +848,13 @@ class Experiment(object):
             ymax = max(y_val)+rad
             plt.xlim((xmin, xmax))
             plt.ylim((ymin, ymax))
-            plt.colorbar()
+            try:
+                plt.colorbar()
+            except TypeError as e:
+                print e
+                print "Colorbar exception: "
+                print len(x_val), len(y_val), len(z_val)
+                print "\n\n"
         return index
 
     def _get_image_ids(self, index):
