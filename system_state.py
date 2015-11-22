@@ -294,7 +294,7 @@ class SystemState(object):
         """
         if self._divisions != divisions:
             self._reset()
-        self.divide_in_circles(divisions)
+        self._divide_in_circles(divisions)
 
 
     def _divide_in_circles(self, divisions):
