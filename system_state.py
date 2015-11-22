@@ -22,7 +22,7 @@ class SystemState(object):
         self._kappas = kappas
         self._allowed_kappa_error = allowed_kappa_error
         self._radius_correction_ratio = radius_correction_ratio
-        self.id_string = id_string
+        self._id_string = id_string
         self._rad_of_division = None
         self._actual_subdivision = []
         self._subdivision_centers = []
@@ -59,6 +59,13 @@ class SystemState(object):
         except IndexError:
             print zone_coords
             raise IndexError
+
+    @property
+    def id_string(self):
+        """
+        Returns the name of rod list.
+        """
+        return self._id_string
 
     @property
     def kappas(self):

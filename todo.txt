@@ -35,5 +35,3 @@ Segregation
 - Cluster area                                          (not started)
 
 
-bugs:
-    - All Cpus used at the end.

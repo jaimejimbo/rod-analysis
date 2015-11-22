@@ -63,6 +63,7 @@ class Experiment(object):
         self._local_average_quadratic_angular_speeds = []
         self._densities_array = []
         self._quad_speeds_array = []
+        self._dates = dates
 
 
     def __getitem__(self, state_num):
@@ -798,13 +799,41 @@ class Experiment(object):
         """
         Generic animator
         """
-        def animate(index):
+        fig = plt.figure()
+        self._last_index = 0
+        def animate(dummy_frame):
             """
-            Specific animator.
+            Wrapper.
             """
+            self._last_index = self._animate(function_name, rad, self._last_index)
+        anim = animation.FuncAnimation(fig, animate, frames=frames)
+        anim.save(name, writer='imagemagick', fps=fps)
+
+    def _animate(self, function_name, rad, last_index):
+        """
+        Specific animator.
+        """
+        dates = self._dates
+        index = last_index
+        if index == len(self._states)-2:
+            return -1
+        image1_id, image2_id = self._get_image_ids(index)
+        x_vals, y_vals, z_vals = [], [], []
+        x_val, y_val, z_val = [], [], []
+        while True:
             state = self._states[index]
             function = getattr(state, function_name)
             x_val, y_val, z_val = function(rad)
+            z_vals.append(z_val)
+            index += 1
+            if index == len(self._states)-2:
+                break
+            image1_id, image2_id = self._get_image_ids(index)
+            if not methods.is_in_burst(dates, image1_id, image2_id):
+                break
+        if len(z_vals) > 1:
+            z_val = methods.array_average(z_vals)
+        if len(z_val):
             plt.cla()
             plt.clf()
             size = (0.8*rad/2.0)**2
@@ -816,9 +845,17 @@ class Experiment(object):
             plt.xlim((xmin, xmax))
             plt.ylim((ymin, ymax))
             plt.colorbar()
-        fig = plt.figure()
-        anim = animation.FuncAnimation(fig, animate, frames=frames)
-        anim.save(name, writer='imagemagick', fps=fps)
+        return index
+
+    def _get_image_ids(self, index):
+        """
+        Returns consecutive system images' ids.
+        """
+        image1_id_str = self._states[index].id_string
+        image2_id_str = self._states[index+1].id_string
+        image1_id = methods.get_number_from_string(image1_id_str)
+        image2_id = methods.get_number_from_string(image2_id_str)
+        return image1_id, image2_id
 
     def create_gifs(self, rad=50, folder="./", fps=1):
         """
@@ -851,3 +888,4 @@ def compute_local_average_speeds_process(index, output_queue, local_speeds):
         speeds_matrix.append(speeds_row)
         angular_speeds_matrix.append(angular_speeds_row)
     output_queue.put([index, speeds_matrix, angular_speeds_matrix])
+

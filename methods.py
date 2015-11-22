@@ -448,3 +448,14 @@ def run_processes(processes):
         pass
     return running, processes
 
+def array_average(array_of_arrays):
+    """
+    Gets average array value over a list of arrays.
+    """
+    output = []
+    number_of_arrays = len(array_of_arrays)
+    for index in range(number_of_arrays):
+        output.append(0)
+        for array in array_of_arrays:
+            output[index] += float(array[index])/number_of_arrays
+    return output
