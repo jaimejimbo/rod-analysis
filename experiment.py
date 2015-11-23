@@ -805,17 +805,19 @@ class Experiment(object):
         """
         fig = plt.figure()
         self._last_index = 0
+        kappas = self._states[0].kappas
         def animate(dummy_frame):
             """
             Wrapper.
             """
             if self._last_index != -1:
                 self._last_index = self._animate_scatter(function_name,
-                                                divisions, self._last_index)
+                                                kappas, divisions,
+                                                self._last_index)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
 
-    def _animate_scatter(self, function_name, divisions, last_index):
+    def _animate_scatter(self, function_name, kappas, divisions, last_index):
         """
         Specific animator.
         """
@@ -849,11 +851,17 @@ class Experiment(object):
         plt.clf()
         rad = 2000.0/divisions
         size = (rad/8)**2
-        print function_name
-        print z_val
-        print "\n\n"
+        x_min = min(x_val)*.9
+        x_max = max(x_val)*1.1
+        y_min = min(y_val)*.7
+        y_max = max(y_val)*1.1
+        plt.xlim((x_min, x_max))
+        plt.ylim((y_min, y_max))
+        name = str(function_name) + "K" + str(kappas)
+        plt.suptitle(name)
         plt.scatter(x_val, y_val, s=size, c=z_val, marker='s')
         plt.colorbar()
+        plt.gca().invert_yaxis()
         return index
 
     def _get_image_ids(self, index):
