@@ -937,9 +937,12 @@ def create_rods_process(kappas, allowed_kappa_error,
                radius_correction_ratio, names[index])
     data = methods.import_data(files[index])
     for dataline in data:
-        parameters = tuple(dataline)
-        new_rod = rod.Rod(parameters)
-        state.put_rod(new_rod)
+        try:
+            parameters = tuple(dataline)
+            new_rod = rod.Rod(parameters)
+            state.put_rod(new_rod)
+        except ValueError:
+            print names[index]
     state.check_rods()
     states_queue.put([index, state])
 
