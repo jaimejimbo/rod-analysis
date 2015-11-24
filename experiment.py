@@ -878,10 +878,10 @@ class Experiment(object):
         """
         Creates a gif per property of the system that shows evolution.
         """
-        """self.create_density_gif(divisions, folder, fps)
+        self.create_density_gif(divisions, folder, fps)
         self.create_relative_g2_gif(divisions, folder, fps)
-        self.create_relative_g4_gif(divisions, folder, fps)"""
-        processes = []
+        self.create_relative_g4_gif(divisions, folder, fps)
+        """processes = []
         processes.append(mp.Process(target=self.create_density_gif,
                          args=(divisions, folder, fps)))
         processes.append(mp.Process(target=self.create_relative_g2_gif,
@@ -908,7 +908,7 @@ class Experiment(object):
                     process.join()
                     finished += 1
                 else:
-                    running.append(process)
+                    running.append(process)"""
 
 
 def compute_local_average_speeds_process(index, output_queue, local_speeds):
