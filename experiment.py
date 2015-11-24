@@ -752,7 +752,6 @@ class Experiment(object):
                     density = 0
                     total_quad_speed = 0
                 speeds_row.append(total_quad_speed)
-        #mejor guardar las velocidades en el subsystema.
                 densities.append(density)
                 speeds.append(total_quad_speed)
             speeds_matrix.append(speeds_row)
@@ -802,8 +801,21 @@ class Experiment(object):
         self._generic_scatter_animator(frames, name, function_name,
                             divisions, fps=fps)
 
+
+    def create_average_angle_gif(self, divisions=5, folder="./", fps=1):
+        """
+        Creates a gif of average angle evolution.
+        """
+        frames = len(self._states)
+        function_name = 'plottable_average_angle_matrix'
+        kappas = self._states[0].kappas
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
+        self._generic_scatter_animator(frames, name, function_name,
+                            divisions, fps=fps)
+
     def _generic_scatter_animator(self, frames, name, function_name,
-                                    divisions, fps=1):
+                                    divisions, fps=1,
+                                    limit=number_of_states-2):
         """
         Generic animator
         """
@@ -817,18 +829,19 @@ class Experiment(object):
             if self._last_index != -1:
                 self._last_index = self._animate_scatter(function_name,
                                                 kappas, divisions,
-                                                self._last_index)
+                                                self._last_index, limit)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
 
-    def _animate_scatter(self, function_name, kappas, divisions, last_index):
+    def _animate_scatter(self, function_name, kappas, divisions, last_index,
+                        limit):
         """
         Specific animator.
         """
         dates = self._dates
         index = last_index
         number_of_states = len(self._states)
-        if index == number_of_states-2:
+        if index == limit:
             return -1
         image1_id, image2_id = self._get_image_ids(index)
         x_vals, y_vals, z_vals = [], [], []
@@ -885,6 +898,42 @@ class Experiment(object):
         self.create_density_gif(divisions, folder, fps)
         self.create_relative_g2_gif(divisions, folder, fps)
         self.create_relative_g4_gif(divisions, folder, fps)
+
+
+    def plottable_local_average_quadratic_speeds(self,
+                                        max_speed=100,
+                                        max_angle_diff=90, limit=5,
+                                        amount_of_rods=200, divisions=5):
+        """
+        Returns plotable data.
+        """
+        quad_speeds = self.local_average_quadratic_speed(max_speed,
+                                        max_angle_diff, limit,
+                                        amount_of_rods, divisions)
+        quad_ang_speeds = self.local_average_quadratic_angular_speed(max_speed,
+                                        max_angle_diff, limit,
+                                        amount_of_rods, divisions)
+        x_vals, y_vals, z_vals = [], [], []
+        for index in range(len(self._states)-1):
+            state = self._states[index]
+            subgroups = state.subgroups_matrix(divisions)
+            x_val, y_val, z_val = [], [], []
+            for row_index in range(len(quad_speeds)):
+                for col_index in range(len(quad_speeds[row_index])):
+                    subgroup = subgroups[row_index][col_index]
+                    quad_speed = quad_speeds[index][row_index][col_index]
+                    ang_speed = quad_ang_speeds[index][row_index][col_index]
+                    center_x = subgroup[0]
+                    center_y = subgroup[1]
+                    total_speed = quad_speed + ang_speed
+                    x_val.append(center_x)
+                    y_val.append(center_y)
+                    z_val.append(total_speed)
+            x_vals.append(x_val)
+            y_vals.append(y_val)
+            z_vals.append(z_val)
+        return x_vals, y_vals, z_vals
+
 
 
 def compute_local_average_speeds_process(index, output_queue, local_speeds):
