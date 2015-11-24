@@ -64,6 +64,7 @@ class Experiment(object):
         self._densities_array = []
         self._quad_speeds_array = []
         self._dates = dates
+        self._speeds_matrices = []
 
 
     def __getitem__(self, state_num):
@@ -102,6 +103,7 @@ class Experiment(object):
         self._local_average_quadratic_angular_speeds = []
         self._densities_array = []
         self._quad_speeds_array = []
+        self._speeds_matrices = []
 
 
     def _create_dict_keys(self):
@@ -138,9 +140,6 @@ class Experiment(object):
                                                 limit, amount_of_rods)
         processes = []
         output_queue = mp.Queue()
-        #for state_id in self._states_dict.keys():
-        # Hay que cambiar la forma de acceder en el proceso.
-        # o hacer un dict {index: identifier}
         for index in range(len(self._states)-1):
             processes.append(mp.Process(target=self._fill_dicts_process_limited,
                                     args=(index, max_speed, max_angle_diff,
@@ -471,8 +470,7 @@ class Experiment(object):
 
     def _compute_speeds(self, max_speed, max_angle_diff, limit, amount_of_rods):
         """
-        After using methods listed before, some rods are unjoined.
-        This joins closest rods.
+        Get speeds and angular speeds.
         """
         tuple1 = (max_speed, max_angle_diff, limit, amount_of_rods)
         tuple2 = (self._max_speed, self._max_angle_diff,
@@ -718,6 +716,7 @@ class Experiment(object):
                 output = output_queue.get()
                 densities.append(output[0])
                 quad_speeds.append(output[1])
+                self._speeds_matrices[output[3]](output[2])
                 if len(processes_left):
                     finished -= 1
                     new_process = processes_left.pop()
@@ -738,7 +737,9 @@ class Experiment(object):
         subgroups = state.subgroups_matrix(divisions)
         densities = []
         speeds = []
+        speeds_matrix = []
         for row in range(len(quad_speeds)):
+            speeds_row = []
             for col in range(len(quad_speeds[row])):
                 subgroup = subgroups[row][col]
                 num_rods = subgroup.number_of_rods
@@ -750,9 +751,12 @@ class Experiment(object):
                 else:
                     density = 0
                     total_quad_speed = 0
+                speeds_row.append(total_quad_speed)
+        #mejor guardar las velocidades en el subsystema.
                 densities.append(density)
                 speeds.append(total_quad_speed)
-        output_queue.put([densities, speeds])
+            speeds_matrix.append(speeds_row)
+        output_queue.put([densities, speeds, speeds_matrix, index])
 
     def create_density_gif(self, divisions=5, folder="./", fps=1):
         """
@@ -881,34 +885,6 @@ class Experiment(object):
         self.create_density_gif(divisions, folder, fps)
         self.create_relative_g2_gif(divisions, folder, fps)
         self.create_relative_g4_gif(divisions, folder, fps)
-        """processes = []
-        processes.append(mp.Process(target=self.create_density_gif,
-                         args=(divisions, folder, fps)))
-        processes.append(mp.Process(target=self.create_relative_g2_gif,
-                         args=(divisions, folder, fps)))
-        processes.append(mp.Process(target=self.create_relative_g4_gif,
-                         args=(divisions, folder, fps)))
-        running, processes_left = methods.run_processes(processes)
-        num_processes = len(running)
-        finished = 0
-        all_popped = False
-        while finished < num_processes:
-            process = running.pop()
-            if not process.is_alive():
-                finished += 1
-                try:
-                    new_process = processes_left.pop()
-                    new_process.start()
-                    running.append(new_process)
-                    finished -= 1
-                except IndexError:
-                    all_popped = True
-            else:
-                if all_popped:
-                    process.join()
-                    finished += 1
-                else:
-                    running.append(process)"""
 
 
 def compute_local_average_speeds_process(index, output_queue, local_speeds):
