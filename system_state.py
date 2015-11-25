@@ -86,6 +86,8 @@ class SystemState(object):
         Magic method for [].
         """
         self.fill_dicts()
+        if not rod_id:
+            return None
         try:
             return self._rods_dict[rod_id]
         except KeyError:

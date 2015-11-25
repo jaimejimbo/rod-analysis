@@ -428,12 +428,17 @@ class Experiment(object):
         evol_dict = self._evolution_dictionaries[index]
         initial_state = self._states[index]
         final_state = self._states[index+1]
-        for initial_rod_id in evol_dict.keys():
-            final_rod_id = evol_dict[initial_rod_id]
-            initial_rod = initial_state[initial_rod_id]
-            final_rod = final_state[final_rod_id]
-            vector = initial_rod.vector_to_rod(final_rod)
-            speed_vectors[initial_rod_id] = vector
+        keys = evol_dict.keys()
+        if not keys[0]:
+            os.exit(0)
+        for initial_rod_id in keys:
+            if initial_rod_id:
+                final_rod_id = evol_dict[initial_rod_id]
+                if final_rod_id:
+                    initial_rod = initial_state[initial_rod_id]
+                    final_rod = final_state[final_rod_id]
+                    vector = initial_rod.vector_to_rod(final_rod)
+                    speed_vectors[initial_rod_id] = vector
         output_queue.put([index, speed_vectors])
 
 
@@ -927,7 +932,7 @@ class Experiment(object):
 
     def create_gifs(self, divisions=5, folder="./", fps=1,
                             max_speed=100, max_angle_diff=90, limit=5,
-                            amount_of_rods=200)):
+                            amount_of_rods=200):
         """
         Creates a gif per property of the system that shows evolution.
         """
