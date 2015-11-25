@@ -23,7 +23,6 @@ class SystemState(object):
         self._allowed_kappa_error = allowed_kappa_error
         self._radius_correction_ratio = radius_correction_ratio
         self._id_string = id_string
-        self._rad_of_division = None
         self._actual_subdivision = []
         self._subdivision_centers = []
         self._density_matrix = []
@@ -183,7 +182,6 @@ class SystemState(object):
         reset all important values, so they must be
         computed again.
         """
-        self._rad_of_division = None
         self._actual_subdivision = []
         self._density_matrix = []
         self._correlation_g2 = None
@@ -208,6 +206,7 @@ class SystemState(object):
         self._clusters_max_distance = None
         self._clusters_max_angle_diff = None
         self._divisions = None
+        self._subdivision_centers = []
         if not self._fixed_center_radius:
             self._radius = None
             self._center_x = None
@@ -374,20 +373,24 @@ class SystemState(object):
         """
             Put subsystems in a matrix form.
         """
-        self.divide_in_circles(divisions)
-        act_sub = self._actual_subdivision
-        actual_y = act_sub[0].center[1]
-        row = []
-        subgroups_matrix = []
-        for index in range(len(act_sub)):
-            element = act_sub[index]
-            element_y = element.center[1]
-            if element_y != actual_y:
-                subgroups_matrix.append(row)
-                row = []
-                actual_y = element_y
-            row.append(element)
-        self._subdivision_centers = subgroups_matrix
+        if divisions != self._divisions:
+            self._reset()
+        if not len(self._subdivision_centers):
+            self.divide_in_circles(divisions)
+            act_sub = self._actual_subdivision
+            actual_y = act_sub[0].center[1]
+            row = []
+            subgroups_matrix = []
+            for index in range(len(act_sub)):
+                element = act_sub[index]
+                element_y = element.center[1]
+                if element_y != actual_y:
+                    subgroups_matrix.append(row)
+                    row = []
+                    actual_y = element_y
+                row.append(element)
+            subgroups_matrix.append(row)
+            self._subdivision_centers = subgroups_matrix
 
     def subgroups_matrix(self, divisions):
         """
