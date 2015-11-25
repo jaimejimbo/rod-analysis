@@ -28,12 +28,11 @@
     · use states ids instead of indices                 (DONE)
 
 Segregation
-- T(x,y)                                                (in progress)
+- T(x,y)                                                (DONE)
 - Speeds:                                               (in progress)
     · Make a vector field.                              (in progress)
-- T in border                                           (in progress)
 - Order param                                           (not started)
     · Evolution                                         (not started)
-- Cluster area                                          (not started)
+· Cluster area                                          (not started)
 
 bugs:

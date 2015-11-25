@@ -177,6 +177,15 @@ class Rod(object):
         output = is_in_main and has_valid_proportions
         return output
 
+    def vector_to_rod(self, rod):
+        """
+        Returns a vector that joins 2 rods.
+        Start in self.
+        """
+        diff_x = rod.x_mid-self.x_mid
+        diff_y = rod.y_mid-self.y_mid
+        return (diff_x, diff_y)
+
     def distance_to_rod(self, rod):
         """
         Returns the distance to another rod.

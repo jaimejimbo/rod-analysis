@@ -1,7 +1,7 @@
 """
     Library for time evolution study.
 """
-import re, methods
+import re, methods, math
 import multiprocessing as mp
 from matplotlib import animation
 import matplotlib.pyplot as plt
@@ -52,6 +52,7 @@ class Experiment(object):
         self._unjoined_final_rods = []
         self._final_rods = []
         self._initial_rods = []
+        self._speed_vectors = []
         self._speeds = []
         self._angular_speeds = []
         self._max_speed = None
@@ -90,6 +91,7 @@ class Experiment(object):
         self._relative_dictionaries = []
         self._unjoined_initial_rods = []
         self._unjoined_final_rods = []
+        self._speed_vectors = []
         self._final_rods = []
         self._initial_rods = []
         self._speeds = []
@@ -188,10 +190,10 @@ class Experiment(object):
                     evol_dict[initial_id] |= set([final_id])
                     relative_dict[initial_id][final_id] = (distance,
                                                         angle, speed)
+                    vector_dict[initial_id][final_id] = vector
         for initial_id in relative_dict.keys():
             if len(relative_dict[initial_id]) == 1:
-                value = relative_dict[initial_id].values()
-                relative_dict[initial_id] = value
+                relative_dict[initial_id] = relative_dict[initial_id].values()[0]
         output_queue.put([index, evol_dict, relative_dict])
 
 
@@ -246,8 +248,7 @@ class Experiment(object):
                         del relative_dict[initial_id][rod_id]
         for initial_id in relative_dict.keys():
             if len(relative_dict[initial_id]) == 1:
-                value = relative_dict[initial_id].values()[0]
-                relative_dict[initial_id] = value
+                relative_dict[initial_id] = relative_dict[initial_id].values()[0]
         output_queue.put([index, evol_dict, relative_dict])
 
     def _remove_final_rod(self, index, initial_rod_id, final_rod_id):
@@ -283,7 +284,7 @@ class Experiment(object):
         output_queue = mp.Queue()
         selected_queue = mp.Queue()
         processes = []
-        for index in range(len(self._evolution_dictionaries)-1):
+        for index in range(len(self._evolution_dictionaries)):
             processes.append(mp.Process(target=self._leave_only_closer_process,
                                         args=(index, output_queue,
                                               selected_queue, max_distance)))
@@ -382,9 +383,58 @@ class Experiment(object):
             self._create_dict_keys()
             self._fill_dicts(max_speed, max_angle_diff, limit=limit,
                                 amount_of_rods=amount_of_rods)
-            #self._use_unique_evolutions()
             self._leave_only_closer(max_distance=max_speed)
             self._join_left_rods(max_distance=max_speed)
+            self._get_vectors()
+
+    def vectors_dictionaries(self, max_speed=100, max_angle_diff=90,
+                            limit=5, amount_of_rods=200):
+        """
+        Returns a dictionary {initial_rod: vector_to_final_rod}
+        """
+        self.compute_dictionaries(max_speed=max_speed,
+                                  max_angle_diff=max_angle_diff,
+                                  limit=5, amount_of_rods=200)
+        return self._speed_vectors
+
+    def _get_vectors(self):
+        """
+        Creates a dictionary {initial_rod: vector_to_final_rod}
+        """
+        output_queue = mp.Queue()
+        processes = []
+        for index in range(len(self._evolution_dictionaries)):
+            processes.append(mp.Process(target=self._get_vectors_process,
+                                        args=(index, output_queue)))
+        running, processes_left = methods.run_processes(processes)
+        num_processes = len(running)
+        finished = 0
+        while finished < num_processes:
+            finished += 1
+            output = output_queue.get()
+            index = output[0]
+            speed_vectors = output[1]
+            self._speed_vectors[index] = speed_vectors
+            if len(processes_left):
+                finished -= 1
+                new_process = processes_left.pop()
+                new_process.start()
+
+    def _get_vectors_process(self, index, output_queue):
+        """
+        Process.
+        """
+        speed_vectors = {}
+        evol_dict = self._evolution_dictionaries[index]
+        initial_state = self._states[index]
+        final_state = self._states[index+1]
+        for initial_rod_id in evol_dict.keys():
+            final_rod_id = evol_dict[initial_rod_id]
+            initial_rod = initial_state[initial_rod_id]
+            final_rod = final_state[final_rod_id]
+            vector = initial_rod.vector_to_rod(final_rod)
+            speed_vectors[initial_rod_id] = vector
+        output_queue.put([index, speed_vectors])
 
 
     def evolution_dictionaries(self, max_speed=100, max_angle_diff=90,
@@ -875,13 +925,18 @@ class Experiment(object):
         image2_id = methods.get_number_from_string(image2_id_str)
         return image1_id, image2_id
 
-    def create_gifs(self, divisions=5, folder="./", fps=1):
+    def create_gifs(self, divisions=5, folder="./", fps=1,
+                            max_speed=100, max_angle_diff=90, limit=5,
+                            amount_of_rods=200)):
         """
         Creates a gif per property of the system that shows evolution.
         """
         self.create_density_gif(divisions, folder, fps)
         self.create_relative_g2_gif(divisions, folder, fps)
         self.create_relative_g4_gif(divisions, folder, fps)
+        self.create_temperature_gif(divisions=divisions, folder=folder, fps=fps,
+                            max_speed=max_speed, max_angle_diff=max_angle_diff,
+                            limit=limit, amount_of_rods=amount_of_rods)
 
 
     def plottable_local_average_quadratic_speeds(self,
