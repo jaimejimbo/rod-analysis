@@ -7,10 +7,10 @@
     · velocities and temperature                        (DONE)
     · local velocities/temperature			            (DONE)
     · density as a function of local temperature.       (DONE)
-- main code (plot and study system)                     (in progress)
+- main code (plot and study system)                     (DONE)
     · density animation                                 (DONE)
     · g2, g4 animation                                  (DONE)
-    · temperature animation                             (in progress)
+    · temperature animation                             (DONE)
 - multiprocessing                                       (DONE)
 - GUI                                                   (not started)
 - imagej interface                                      (DONE)
@@ -29,6 +29,8 @@
 
 Segregation
 - T(x,y)                                                (in progress)
+- Speeds:                                               (in progress)
+    · Make a vector field.                              (in progress)
 - T in border                                           (in progress)
 - Order param                                           (not started)
     · Evolution                                         (not started)

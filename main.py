@@ -33,7 +33,9 @@ def main():
                                         system_states_list=rod_groups_17,
                                         dates=dates, diff_t=5/3.0)
 
-    experiment_5.create_gifs(divisions=10, fps=1)
-    experiment_17.create_gifs(divisions=10, fps=1)
+    #experiment_5.create_gifs(divisions=10, fps=1)
+    #experiment_17.create_gifs(divisions=10, fps=1)
+    experiment_5.create_temperature_gif(divisions=10, fps=1)
+    experiment_17.create_temperature_gif(divisions=10, fps=1)
 
 main()

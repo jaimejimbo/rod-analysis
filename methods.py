@@ -473,3 +473,4 @@ def array_average(array_of_arrays):
         for index in range(len(array)):
             output[index] += float(array[index])/number_of_arrays
     return output
+

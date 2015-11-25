@@ -802,50 +802,35 @@ class Experiment(object):
                             divisions, fps=fps)
 
 
-    def create_average_angle_gif(self, divisions=5, folder="./", fps=1):
-        """
-        Creates a gif of average angle evolution.
-        """
-        frames = len(self._states)
-        function_name = 'plottable_average_angle_matrix'
-        kappas = self._states[0].kappas
-        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
-        self._generic_scatter_animator(frames, name, function_name,
-                            divisions, fps=fps)
-
     def _generic_scatter_animator(self, frames, name, function_name,
-                                    divisions, fps=1,
-                                    limit=number_of_states-2):
+                                    divisions, fps=1):
         """
         Generic animator
         """
         fig = plt.figure()
         self._last_index = 0
-        kappas = self._states[0].kappas
         def animate(dummy_frame):
             """
             Wrapper.
             """
             if self._last_index != -1:
-                self._last_index = self._animate_scatter(function_name,
-                                                kappas, divisions,
-                                                self._last_index, limit)
+                self._last_index = self._animate_scatter(function_name, name,
+                                                divisions, self._last_index)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
 
-    def _animate_scatter(self, function_name, kappas, divisions, last_index,
-                        limit):
+    def _animate_scatter(self, function_name, name, divisions, last_index):
         """
         Specific animator.
         """
         dates = self._dates
         index = last_index
         number_of_states = len(self._states)
+        limit = number_of_states-2
         if index == limit:
             return -1
         image1_id, image2_id = self._get_image_ids(index)
-        x_vals, y_vals, z_vals = [], [], []
-        x_val, y_val, z_val = [], [], []
+        z_vals = []
         while True:
             state = self._states[index]
             function = getattr(state, function_name)
@@ -874,7 +859,6 @@ class Experiment(object):
         y_max = max(y_val)*1.1
         plt.xlim((x_min, x_max))
         plt.ylim((y_min, y_max))
-        name = str(function_name) + "K" + str(kappas)
         plt.suptitle(name)
         plt.scatter(x_val, y_val, s=size, c=z_val, marker='s')
         plt.colorbar()
@@ -910,29 +894,102 @@ class Experiment(object):
         quad_speeds = self.local_average_quadratic_speed(max_speed,
                                         max_angle_diff, limit,
                                         amount_of_rods, divisions)
-        quad_ang_speeds = self.local_average_quadratic_angular_speed(max_speed,
-                                        max_angle_diff, limit,
-                                        amount_of_rods, divisions)
+        #quad_ang_speeds = self.local_average_quadratic_angular_speed(max_speed,
+        #                                max_angle_diff, limit,
+        #                                amount_of_rods, divisions)
         x_vals, y_vals, z_vals = [], [], []
         for index in range(len(self._states)-1):
             state = self._states[index]
             subgroups = state.subgroups_matrix(divisions)
             x_val, y_val, z_val = [], [], []
-            for row_index in range(len(quad_speeds)):
-                for col_index in range(len(quad_speeds[row_index])):
+            for row_index in range(len(subgroups)):
+                for col_index in range(len(subgroups[row_index])):
                     subgroup = subgroups[row_index][col_index]
                     quad_speed = quad_speeds[index][row_index][col_index]
-                    ang_speed = quad_ang_speeds[index][row_index][col_index]
-                    center_x = subgroup[0]
-                    center_y = subgroup[1]
-                    total_speed = quad_speed + ang_speed
+                    #ang_speed = quad_ang_speeds[index][row_index][col_index]
+                    center = subgroup.center
+                    center_x = center[0]
+                    center_y = center[1]
+                    #total_speed = quad_speed + ang_speed
                     x_val.append(center_x)
                     y_val.append(center_y)
-                    z_val.append(total_speed)
+                    #z_val.append(total_speed)
+                    z_val.append(quad_speed)
             x_vals.append(x_val)
             y_vals.append(y_val)
             z_vals.append(z_val)
         return x_vals, y_vals, z_vals
+
+    def create_temperature_gif(self, divisions=5, folder="./", fps=1,
+                            max_speed=100, max_angle_diff=90, limit=5,
+                            amount_of_rods=200):
+        """
+        Creates a gif of temperature evolution.
+        """
+        x_vals, y_vals, z_vals = self.plottable_local_average_quadratic_speeds(
+                                        max_speed,
+                                        max_angle_diff, limit,
+                                        amount_of_rods, divisions)
+        self._last_index = 0
+        fig = plt.figure()
+        kappas = self._states[0].kappas
+        name = str(folder)+"Temperature"+str(kappas)+".gif"
+        def animate(dummy_frame):
+            """
+            Animation function.
+            """
+            self._last_index = self._temperature_gif_wrapper(x_vals, y_vals,
+                                                z_vals, divisions, name,
+                                                self._last_index)
+        frames = len(self._states)-2
+        anim = animation.FuncAnimation(fig, animate, frames=frames)
+        anim.save(name, writer='imagemagick', fps=fps)
+
+
+    def _temperature_gif_wrapper(self, x_vals, y_vals, z_vals,
+                                divisions, name, last_index):
+        """
+        Wrapper
+        """
+        dates = self._dates
+        index = last_index
+        number_of_states = len(self._states)
+        limit = number_of_states-3
+        if index >= limit:
+            return -1
+        image1_id, image2_id = self._get_image_ids(index)
+        x_val = x_vals[0]
+        y_val = y_vals[0]
+        while True:
+            z_val = z_vals.pop()
+            z_vals.append(z_val)
+            index += 1
+            if index == number_of_states-2:
+                break
+            image1_id, image2_id = self._get_image_ids(index)
+            if not methods.is_in_burst(dates, image1_id, image2_id):
+                index += 1
+                break
+        if len(z_vals) > 1:
+            try:
+                z_val = methods.array_average(z_vals)
+            except TypeError:
+                print z_vals
+        plt.cla()
+        plt.clf()
+        rad = 2000.0/divisions
+        size = (rad/8)**2
+        x_min = min(x_val)*.9
+        x_max = max(x_val)*1.1
+        y_min = min(y_val)*.7
+        y_max = max(y_val)*1.1
+        plt.xlim((x_min, x_max))
+        plt.ylim((y_min, y_max))
+        plt.suptitle(name)
+        plt.scatter(x_val, y_val, s=size, c=z_val, marker='s')
+        plt.colorbar()
+        plt.gca().invert_yaxis()
+        return index
 
 
 
