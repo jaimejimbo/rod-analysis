@@ -221,31 +221,32 @@ class Experiment(object):
             initial_kappa = initial_rod.kappa
             kappa_error = initial_state.kappa_error/2
             for final_rod in available_final_rods:
-                final_kappa = final_rod.kappa
-                cond1 = initial_kappa-kappa_error > final_kappa
-                cond2 = initial_kappa+kappa_error < final_kappa
-                if cond1 or cond2:
-                    continue
-                final_id = final_rod.identifier
-                distance = initial_rod.distance_to_rod(final_rod)
-                angle = initial_rod.angle_between_rods(final_rod)
-                angle = min([angle, 180-angle])
-                speed = float(distance)/self._diff_t
-                if speed <= max_speed and angle <= max_angle_diff:
-                    speeds.append([speed, final_id])
-                    speeds.sort()
-                    if len(speeds) > limit:
-                        dummy, rod_id = speeds.pop(-1)
-                    else:
-                        dummy, rod_id = speeds[-1]
-                        evol_dict[initial_id] |= set([final_id])
-                        relative_dict[initial_id][final_id] = (distance, angle)
+                if final_rod:
+                    final_kappa = final_rod.kappa
+                    cond1 = initial_kappa-kappa_error > final_kappa
+                    cond2 = initial_kappa+kappa_error < final_kappa
+                    if cond1 or cond2:
                         continue
-                    if rod_id != final_id:
-                        evol_dict[initial_id] |= set([final_id])
-                        relative_dict[initial_id][final_id] = (distance, angle)
-                        evol_dict[initial_id] -= set([rod_id])
-                        del relative_dict[initial_id][rod_id]
+                    final_id = final_rod.identifier
+                    distance = initial_rod.distance_to_rod(final_rod)
+                    angle = initial_rod.angle_between_rods(final_rod)
+                    angle = min([angle, 180-angle])
+                    speed = float(distance)/self._diff_t
+                    if speed <= max_speed and angle <= max_angle_diff:
+                        speeds.append([speed, final_id])
+                        speeds.sort()
+                        if len(speeds) > limit:
+                            dummy, rod_id = speeds.pop(-1)
+                        else:
+                            dummy, rod_id = speeds[-1]
+                            evol_dict[initial_id] |= set([final_id])
+                            relative_dict[initial_id][final_id] = (distance, angle)
+                            continue
+                        if rod_id != final_id:
+                            evol_dict[initial_id] |= set([final_id])
+                            relative_dict[initial_id][final_id] = (distance, angle)
+                            evol_dict[initial_id] -= set([rod_id])
+                            del relative_dict[initial_id][rod_id]
         for initial_id in relative_dict.keys():
             if len(relative_dict[initial_id]) == 1:
                 relative_dict[initial_id] = relative_dict[initial_id].values()[0]
@@ -403,9 +404,10 @@ class Experiment(object):
         """
         output_queue = mp.Queue()
         processes = []
-        for index in range(len(self._evolution_dictionaries)):
+        for index in range(len(self._evolution_dictionaries)-1):
             processes.append(mp.Process(target=self._get_vectors_process,
                                         args=(index, output_queue)))
+            self._speed_vectors.append(0)
         running, processes_left = methods.run_processes(processes)
         num_processes = len(running)
         finished = 0
