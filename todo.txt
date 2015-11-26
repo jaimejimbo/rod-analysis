@@ -11,6 +11,8 @@
     · density animation                                 (DONE)
     · g2, g4 animation                                  (DONE)
     · temperature animation                             (DONE)
+    · Speeds animation                                  (in progress)
+    · Cluster area animation.                           (not started)
 - multiprocessing                                       (DONE)
 - GUI                                                   (not started)
 - imagej interface                                      (DONE)
@@ -29,10 +31,10 @@
 
 Segregation
 - T(x,y)                                                (DONE)
-- Speeds:                                               (in progress)
+- Speeds:                                               (DONE)
     · Make a vector field.                              (in progress)
-- Order param                                           (not started)
-    · Evolution                                         (not started)
-· Cluster area                                          (not started)
+- Order param(cluster area)                             (not started)
 
 bugs:
+- Temperatures seem to be not computed correctly.
+- Density should be 0 for K17 in the end.

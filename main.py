@@ -23,9 +23,9 @@ def main():
         dates = methods.import_image_dates()
 
     names, rod_groups_5 = system_state.create_rods(kappas=5.5,
-                                            allowed_kappa_error=2)
+                                            allowed_kappa_error=.5)
     names, rod_groups_17 = system_state.create_rods(kappas=17,
-                                            allowed_kappa_error=2)
+                                            allowed_kappa_error=.5)
     experiment_5 = experiment.Experiment(system_states_name_list=names,
                                         system_states_list=rod_groups_5,
                                         dates=dates, diff_t=5/3.0)
@@ -33,7 +33,7 @@ def main():
                                         system_states_list=rod_groups_17,
                                         dates=dates, diff_t=5/3.0)
 
-    #experiment_5.create_gifs(divisions=10, fps=1)
-    #experiment_17.create_gifs(divisions=10, fps=1)
+    experiment_5.create_gifs(divisions=10, fps=1, max_speed=20, max_angle_diff=5)
+    experiment_17.create_gifs(divisions=10, fps=1, max_speed=20, max_angle_diff=5)
 
 main()
