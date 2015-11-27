@@ -1054,8 +1054,8 @@ class Experiment(object):
         return index
 
 
-    def _cluster_area_gif_wrapper(self, name, last_index,
-                                    max_distance=None, max_angle_diff=None):
+    def _cluster_area_step(self, name, last_index,
+                           max_distance=None, max_angle_diff=None):
         """
         Wrapper
         """
@@ -1079,15 +1079,8 @@ class Experiment(object):
             if not methods.is_in_burst(dates, image1_id, image2_id):
                 index += 1
                 break
-        if len(z_vals) > 1:
-            try:
-                z_val = float(sum(z_vals))/len(z_vals)
-            except TypeError:
-                print z_vals
-        plt.cla()
-        plt.clf()
-        plt.suptitle(name)
-        return index
+        z_val = float(sum(z_vals))/len(z_vals)
+        return index, z_val
 
 
 
