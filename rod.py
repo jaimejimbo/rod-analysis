@@ -33,6 +33,14 @@ class Rod(object):
         self._kappa = float(self.feret)/self.min_feret
 
     @property
+    def area(self):
+        """
+        Returns area covered by rod.
+        """
+        return self._major*self._minor
+        
+
+    @property
     def feret(self):
         """
         Feret length.

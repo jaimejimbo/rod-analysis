@@ -385,7 +385,7 @@ class Experiment(object):
             self._fill_dicts(max_speed, max_angle_diff, limit=limit,
                                 amount_of_rods=amount_of_rods)
             self._leave_only_closer(max_distance=max_speed)
-            self._join_left_rods(max_distance=max_speed)
+            #self._join_left_rods(max_distance=max_speed)
             self._get_vectors()
 
     def vectors_dictionaries(self, max_speed=100, max_angle_diff=90,
@@ -684,7 +684,7 @@ class Experiment(object):
 
 
     def _compute_local_average_speeds(self, max_speed=100, max_angle_diff=90,
-                                      limit=5, amount_of_rods=200, divisions=5):
+                                     limit=5, amount_of_rods=200, divisions=5):
         """
         Compute local average speeds.
         """
@@ -1052,6 +1052,44 @@ class Experiment(object):
         plt.colorbar()
         plt.gca().invert_yaxis()
         return index
+
+
+    def _cluster_area_gif_wrapper(self, name, last_index,
+                                    max_distance=None, max_angle_diff=None):
+        """
+        Wrapper
+        """
+        dates = self._dates
+        index = last_index
+        number_of_states = len(self._states)
+        limit = number_of_states-2
+        if index >= limit:
+            return -1
+        image1_id, image2_id = self._get_image_ids(index)
+        z_vals = []
+        while True:
+            state = self._states[index]
+            z_val = state.total_area_of_clusters(max_distance=max_distance,
+                                                 max_angle_diff=max_angle_diff)
+            z_vals.append(z_val)
+            index += 1
+            if index == number_of_states-2:
+                break
+            image1_id, image2_id = self._get_image_ids(index)
+            if not methods.is_in_burst(dates, image1_id, image2_id):
+                index += 1
+                break
+        if len(z_vals) > 1:
+            try:
+                z_val = float(sum(z_vals))/len(z_vals)
+            except TypeError:
+                print z_vals
+        plt.cla()
+        plt.clf()
+        plt.suptitle(name)
+        return index
+
+
 
 
 

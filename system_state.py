@@ -652,7 +652,8 @@ class SystemState(object):
         Angles in grad.
         """
         lengths = []
-        for cluster in self.clusters(max_distance, max_angle_diff):
+        clusters = self.clusters(max_distance, max_angle_diff)
+        for cluster in clusters:
             lengths.append(len(cluster))
         return lengths
 
@@ -661,7 +662,27 @@ class SystemState(object):
             Returns the number of clusters in the system.
         Angles in grad.
         """
-        return len(self.clusters(max_distance, max_angle_diff))
+        clusters = self.clusters(max_distance, max_angle_diff)
+        return len(clusters)
+
+    def total_area_of_clusters(self, max_distance=None, max_angle_diff=None):
+        """
+            Returns the area covered by clusters.
+        """
+        clusters = self.clusters(max_distance, max_angle_diff)
+        rod_area = self.rod_area
+        rods_num = self.number_of_rods_in_cluster(max_distance=max_distance,
+                                               max_angle_diff=max_angle_diff)
+        rods_num = sum(rods_num)
+        total_area = rods_num*self.rod_area
+
+    @property
+    def rod_area(self):
+        """
+        Returns the area of a rod of this system.
+        """
+        first_rod = list(self._rods)[0]
+        return first_rod.area
 
     def _compute_closest_rod_matrix(self):
         """
