@@ -631,7 +631,6 @@ class SystemState(object):
                                 max_distance, max_angle_diff)
                 if cluster:
                     clusters.append(cluster)
-            assert len(clusters) > 0, "no clusters detected"
             self._clusters = methods.erase_length_one_elements(clusters)
         return self._clusters
 
@@ -674,7 +673,10 @@ class SystemState(object):
         rods_num = self.number_of_rods_in_cluster(max_distance=max_distance,
                                                max_angle_diff=max_angle_diff)
         rods_num = sum(rods_num)
+        if not rods_num or not rod_area:
+            return 0
         total_area = rods_num*self.rod_area
+        return total_area
 
     @property
     def rod_area(self):

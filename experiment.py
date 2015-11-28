@@ -55,7 +55,7 @@ class Experiment(object):
         self._speed_vectors = []
         self._speeds = []
         self._angular_speeds = []
-        self._max_speed = None
+        self._max_distance = None
         self._max_angle_diff = None
         self._limit = None
         self._amount_of_rods = None
@@ -66,6 +66,7 @@ class Experiment(object):
         self._quad_speeds_array = []
         self._dates = dates
         self._speeds_matrices = []
+        self._cluster_areas = []
 
 
     def __getitem__(self, state_num):
@@ -96,7 +97,7 @@ class Experiment(object):
         self._initial_rods = []
         self._speeds = []
         self._angular_speeds = []
-        self._max_speed = None
+        self._max_distance = None
         self._max_angle_diff = None
         self._limit = None
         self._amount_of_rods = None
@@ -106,6 +107,7 @@ class Experiment(object):
         self._densities_array = []
         self._quad_speeds_array = []
         self._speeds_matrices = []
+        self._cluster_areas = []
 
 
     def _create_dict_keys(self):
@@ -132,19 +134,19 @@ class Experiment(object):
             self._final_rods[index] = self._initial_rods[index+1].copy()
 
 
-    def _fill_dicts(self, max_speed, max_angle_diff,
+    def _fill_dicts(self, max_distance, max_angle_diff,
                     limit=5, amount_of_rods=None):
         """
             Looks for rods that have only one possible predecessor.
         """
-        (self._max_speed, self._max_angle_diff,
-        self._limit, self._amount_of_rods) = (max_speed, max_angle_diff,
+        (self._max_distance, self._max_angle_diff,
+        self._limit, self._amount_of_rods) = (max_distance, max_angle_diff,
                                                 limit, amount_of_rods)
         processes = []
         output_queue = mp.Queue()
         for index in range(len(self._states)-1):
             processes.append(mp.Process(target=self._fill_dicts_process_limited,
-                                    args=(index, max_speed, max_angle_diff,
+                                    args=(index, max_distance, max_angle_diff,
                                         output_queue, limit, amount_of_rods)))
         running, processes_left = methods.run_processes(processes)
         num_processes = len(running)
@@ -161,7 +163,7 @@ class Experiment(object):
                 new_process.start()
 
 
-    def _fill_dicts_process(self, index, max_speed, max_angle_diff,
+    def _fill_dicts_process(self, index, max_distance, max_angle_diff,
                             output_queue, amount_of_rods=None):
         """
             Allows to create a process and use all cores.
@@ -186,7 +188,7 @@ class Experiment(object):
                 angle = initial_rod.angle_between_rods(final_rod)
                 angle = min([angle, 180-angle])
                 speed = float(distance)/self._diff_t
-                if speed <= max_speed and angle <= max_angle_diff:
+                if distance <= max_distance and angle <= max_angle_diff:
                     evol_dict[initial_id] |= set([final_id])
                     relative_dict[initial_id][final_id] = (distance,
                                                         angle, speed)
@@ -197,7 +199,7 @@ class Experiment(object):
         output_queue.put([index, evol_dict, relative_dict])
 
 
-    def _fill_dicts_process_limited(self, index, max_speed,
+    def _fill_dicts_process_limited(self, index, max_distance,
                                 max_angle_diff, output_queue,
                                 limit=5, amount_of_rods=None):
         """
@@ -232,7 +234,7 @@ class Experiment(object):
                     angle = initial_rod.angle_between_rods(final_rod)
                     angle = min([angle, 180-angle])
                     speed = float(distance)/self._diff_t
-                    if speed <= max_speed and angle <= max_angle_diff:
+                    if distance <= max_distance and angle <= max_angle_diff:
                         speeds.append([speed, final_id])
                         speeds.sort()
                         if len(speeds) > limit:
@@ -365,7 +367,7 @@ class Experiment(object):
         return final_rod, min_distance, angle_diff
 
 
-    def compute_dictionaries(self, max_speed=100, max_angle_diff=90,
+    def compute_dictionaries(self, max_distance=100, max_angle_diff=90,
                             limit=5, amount_of_rods=200):
         """
                 List of evolution dictionaries.
@@ -375,25 +377,25 @@ class Experiment(object):
              ...
              initial_rod_idN: set([final_rod_idN1,final_rod_idN2,...])}
         """
-        tuple1 = (max_speed, max_angle_diff, limit, amount_of_rods)
-        tuple2 = (self._max_speed, self._max_angle_diff,
+        tuple1 = (max_distance, max_angle_diff, limit, amount_of_rods)
+        tuple2 = (self._max_distance, self._max_angle_diff,
                     self._limit, self._amount_of_rods)
         if tuple1 != tuple2:
             self._reset()
         if not len(self._evolution_dictionaries):
             self._create_dict_keys()
-            self._fill_dicts(max_speed, max_angle_diff, limit=limit,
+            self._fill_dicts(max_distance, max_angle_diff, limit=limit,
                                 amount_of_rods=amount_of_rods)
-            self._leave_only_closer(max_distance=max_speed)
-            #self._join_left_rods(max_distance=max_speed)
+            self._leave_only_closer(max_distance=max_distance)
+            #self._join_left_rods(max_distance=max_distance)
             self._get_vectors()
 
-    def vectors_dictionaries(self, max_speed=100, max_angle_diff=90,
+    def vectors_dictionaries(self, max_distance=100, max_angle_diff=90,
                             limit=5, amount_of_rods=200):
         """
         Returns a dictionary {initial_rod: vector_to_final_rod}
         """
-        self.compute_dictionaries(max_speed=max_speed,
+        self.compute_dictionaries(max_distance=max_distance,
                                   max_angle_diff=max_angle_diff,
                                   limit=5, amount_of_rods=200)
         return self._speed_vectors
@@ -444,7 +446,7 @@ class Experiment(object):
         output_queue.put([index, speed_vectors])
 
 
-    def evolution_dictionaries(self, max_speed=100, max_angle_diff=90,
+    def evolution_dictionaries(self, max_distance=100, max_angle_diff=90,
                                 limit=5, amount_of_rods=200):
         """
             List of evolution dictionaries.
@@ -454,7 +456,7 @@ class Experiment(object):
              ...
              initial_rod_idN: set([final_rod_idN1,final_rod_idN2,...])}
         """
-        self.compute_dictionaries(max_speed=max_speed,
+        self.compute_dictionaries(max_distance=max_distance,
                                   max_angle_diff=max_angle_diff,
                                   limit=limit,
                                   amount_of_rods=amount_of_rods)
@@ -525,16 +527,16 @@ class Experiment(object):
         output_queue.put([index, evol_dict, relative_dict])
 
 
-    def _compute_speeds(self, max_speed, max_angle_diff, limit, amount_of_rods):
+    def _compute_speeds(self, max_distance, max_angle_diff, limit, amount_of_rods):
         """
         Get speeds and angular speeds.
         """
-        tuple1 = (max_speed, max_angle_diff, limit, amount_of_rods)
-        tuple2 = (self._max_speed, self._max_angle_diff,
+        tuple1 = (max_distance, max_angle_diff, limit, amount_of_rods)
+        tuple2 = (self._max_distance, self._max_angle_diff,
                     self._limit, self._amount_of_rods)
         if tuple1 != tuple2:
             self._reset()
-        self.compute_dictionaries(max_speed, max_angle_diff,
+        self.compute_dictionaries(max_distance, max_angle_diff,
                                 limit, amount_of_rods)
         if not len(self._speeds):
             speeds_queue = mp.Queue()
@@ -581,22 +583,22 @@ class Experiment(object):
         angular_speeds_queue.put(angular_speeds)
 
 
-    def speeds(self, max_speed=100, max_angle_diff=90, limit=5,
+    def speeds(self, max_distance=100, max_angle_diff=90, limit=5,
                      amount_of_rods=200):
         """
         Returns [speeds, angular_speeds] where both outputs are array with one
         value for each rod.
         """
-        self._compute_speeds(max_speed, max_angle_diff, limit, amount_of_rods)
+        self._compute_speeds(max_distance, max_angle_diff, limit, amount_of_rods)
         return [self._speeds, self._angular_speeds]
 
 
-    def average_quadratic_speed(self, max_speed=100, max_angle_diff=90,
+    def average_quadratic_speed(self, max_distance=100, max_angle_diff=90,
                                 limit=5, amount_of_rods=200):
         """
         Returns average quadratic speeds
         """
-        self._compute_speeds(max_speed, max_angle_diff, limit, amount_of_rods)
+        self._compute_speeds(max_distance, max_angle_diff, limit, amount_of_rods)
         output = []
         for index in range(len(self._speeds)):
             num_of_rods = len(self._speeds[index])
@@ -606,12 +608,12 @@ class Experiment(object):
         return output
 
 
-    def average_quadratic_angular_speed(self, max_speed=100, max_angle_diff=90,
+    def average_quadratic_angular_speed(self, max_distance=100, max_angle_diff=90,
                                         limit=5, amount_of_rods=200):
         """
         Returns average quadratic angular speed
         """
-        self._compute_speeds(max_speed, max_angle_diff, limit, amount_of_rods)
+        self._compute_speeds(max_distance, max_angle_diff, limit, amount_of_rods)
         output = []
         for index in range(len(self._angular_speeds)):
             num_of_rods = len(self._angular_speeds[index])
@@ -621,12 +623,12 @@ class Experiment(object):
         return output
 
 
-    def local_speeds(self, max_speed=100, max_angle_diff=90, limit=5,
+    def local_speeds(self, max_distance=100, max_angle_diff=90, limit=5,
                             amount_of_rods=200, divisions=5):
         """
         Returns local_speeds array.
         """
-        self._compute_speeds(max_speed, max_angle_diff, limit, amount_of_rods)
+        self._compute_speeds(max_distance, max_angle_diff, limit, amount_of_rods)
         if len(self._local_speeds) == 0:
             self._compute_local_speeds(divisions)
         return self._local_speeds
@@ -683,17 +685,17 @@ class Experiment(object):
         output_queue.put([index, speeds_matrix])
 
 
-    def _compute_local_average_speeds(self, max_speed=100, max_angle_diff=90,
+    def _compute_local_average_speeds(self, max_distance=100, max_angle_diff=90,
                                      limit=5, amount_of_rods=200, divisions=5):
         """
         Compute local average speeds.
         """
-        self.local_speeds(max_speed, max_angle_diff, limit,
+        self.local_speeds(max_distance, max_angle_diff, limit,
                             amount_of_rods, divisions)
         if not len(self._local_average_quadratic_speeds):
             output_queue = mp.Queue()
             processes = []
-            local_speeds = self.local_speeds(max_speed, max_angle_diff,
+            local_speeds = self.local_speeds(max_distance, max_angle_diff,
                                             limit, amount_of_rods, divisions)
             for index in range(len(self._evolution_dictionaries)-1):
                 local_speeds_ = local_speeds[index]
@@ -716,43 +718,43 @@ class Experiment(object):
                     new_process = processes_left.pop()
                     new_process.start()
 
-    def local_average_quadratic_speed(self, max_speed=100, max_angle_diff=90,
+    def local_average_quadratic_speed(self, max_distance=100, max_angle_diff=90,
                                         limit=5, amount_of_rods=200, divisions=5):
         """
         Returns a array of matrices. Each matrix represents
         local average quadratic speed values.
         """
-        self._compute_local_average_speeds(max_speed, max_angle_diff, limit,
+        self._compute_local_average_speeds(max_distance, max_angle_diff, limit,
                                             amount_of_rods, divisions)
         return self._local_average_quadratic_speeds
 
-    def local_average_quadratic_angular_speed(self, max_speed=100,
+    def local_average_quadratic_angular_speed(self, max_distance=100,
                                         max_angle_diff=90, limit=5,
                                         amount_of_rods=200, divisions=5):
         """
         Returns a array of matrices. Each matrix represents
         local average quadratic angular speed values.
         """
-        self._compute_local_average_speeds(max_speed, max_angle_diff,
+        self._compute_local_average_speeds(max_distance, max_angle_diff,
                                             limit, amount_of_rods, divisions)
         return self._local_average_quadratic_angular_speeds
 
-    def density_and_quad_speed(self, max_speed=100, max_angle_diff=90,
+    def density_and_quad_speed(self, max_distance=100, max_angle_diff=90,
                                 limit=5, amount_of_rods=200, divisions=5):
         """
         Returns 2 arrays: density values and temperature
         """
-        if (max_speed, max_angle_diff, limit, amount_of_rods) != (self._max_speed,
+        if (max_distance, max_angle_diff, limit, amount_of_rods) != (self._max_distance,
                     self._max_angle_diff, self._limit, self._amount_of_rods):
             self._reset()
         if not len(self._densities_array):
             laqs = self.local_average_quadratic_speed
-            quad_speeds_array = laqs(max_speed=max_speed,
+            quad_speeds_array = laqs(max_distance=max_distance,
                                 max_angle_diff=max_angle_diff,
                                 limit=limit, amount_of_rods=amount_of_rods,
                                 divisions=divisions)
             laqas = self.local_average_quadratic_angular_speed
-            ang_speeds_array = laqas(max_speed=max_speed,
+            ang_speeds_array = laqas(max_distance=max_distance,
                                     max_angle_diff=max_angle_diff,
                                     limit=limit, amount_of_rods=amount_of_rods,
                                     divisions=divisions)
@@ -933,7 +935,7 @@ class Experiment(object):
         return image1_id, image2_id
 
     def create_gifs(self, divisions=5, folder="./", fps=1,
-                            max_speed=100, max_angle_diff=90, limit=5,
+                            max_distance=100, max_angle_diff=90, limit=5,
                             amount_of_rods=200):
         """
         Creates a gif per property of the system that shows evolution.
@@ -942,21 +944,21 @@ class Experiment(object):
         self.create_relative_g2_gif(divisions, folder, fps)
         self.create_relative_g4_gif(divisions, folder, fps)
         self.create_temperature_gif(divisions=divisions, folder=folder, fps=fps,
-                            max_speed=max_speed, max_angle_diff=max_angle_diff,
+                            max_distance=max_distance, max_angle_diff=max_angle_diff,
                             limit=limit, amount_of_rods=amount_of_rods)
 
 
     def plottable_local_average_quadratic_speeds(self,
-                                        max_speed=100,
+                                        max_distance=100,
                                         max_angle_diff=90, limit=5,
                                         amount_of_rods=200, divisions=5):
         """
         Returns plotable data.
         """
-        quad_speeds = self.local_average_quadratic_speed(max_speed,
+        quad_speeds = self.local_average_quadratic_speed(max_distance,
                                         max_angle_diff, limit,
                                         amount_of_rods, divisions)
-        #quad_ang_speeds = self.local_average_quadratic_angular_speed(max_speed,
+        #quad_ang_speeds = self.local_average_quadratic_angular_speed(max_distance,
         #                                max_angle_diff, limit,
         #                                amount_of_rods, divisions)
         x_vals, y_vals, z_vals = [], [], []
@@ -983,13 +985,13 @@ class Experiment(object):
         return x_vals, y_vals, z_vals
 
     def create_temperature_gif(self, divisions=5, folder="./", fps=1,
-                            max_speed=100, max_angle_diff=90, limit=5,
+                            max_distance=100, max_angle_diff=90, limit=5,
                             amount_of_rods=200):
         """
         Creates a gif of temperature evolution.
         """
         x_vals, y_vals, z_vals = self.plottable_local_average_quadratic_speeds(
-                                        max_speed,
+                                        max_distance,
                                         max_angle_diff, limit,
                                         amount_of_rods, divisions)
         self._last_index = 0
@@ -1054,8 +1056,8 @@ class Experiment(object):
         return index
 
 
-    def _cluster_area_step(self, name, last_index,
-                           max_distance=None, max_angle_diff=None):
+    def _cluster_area_step(self, last_index, max_distance=None,
+                                           max_angle_diff=None):
         """
         Wrapper
         """
@@ -1064,7 +1066,7 @@ class Experiment(object):
         number_of_states = len(self._states)
         limit = number_of_states-2
         if index >= limit:
-            return -1
+            return -1, None
         image1_id, image2_id = self._get_image_ids(index)
         z_vals = []
         while True:
@@ -1082,7 +1084,30 @@ class Experiment(object):
         z_val = float(sum(z_vals))/len(z_vals)
         return index, z_val
 
-
+    def cluster_area(self, max_distance=None, max_angle_diff=None):
+        """
+        Returns an array where each value is total cluster area in
+        that moment.
+        """
+        if max_distance and max_angle_diff:
+            self._reset()
+        elif not max_distance and not max_angle_diff:
+            pass
+        else:
+            msg = "Both or none to be defined: max_distance, max_angle_diff"
+            raise ValueError(msg)
+        if not len(self._cluster_areas):
+            last_index = 0
+            areas = []
+            while last_index != -1:
+                last_index, area = self._cluster_area_step(last_index,
+                                                        max_distance=max_distance,
+                                                        max_angle_diff=max_angle_diff,
+                                                        output_queue)
+                areas.append(area)
+            areas.pop(-1)
+            self._cluster_areas = areas
+        return self._cluster_areas
 
 
 

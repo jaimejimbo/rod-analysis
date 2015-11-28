@@ -35,5 +35,7 @@ def main():
 
     #experiment_5.create_gifs(divisions=10, fps=1, max_speed=20, max_angle_diff=5)
     #experiment_17.create_gifs(divisions=10, fps=1, max_speed=20, max_angle_diff=5)
+    print experiment_5.cluster_area(max_distance=10, max_angle_diff=2)
+    print experiment_17.cluster_area(max_distance=10, max_angle_diff=2)
 
 main()
