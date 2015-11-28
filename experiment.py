@@ -1102,8 +1102,7 @@ class Experiment(object):
             while last_index != -1:
                 last_index, area = self._cluster_area_step(last_index,
                                                         max_distance=max_distance,
-                                                        max_angle_diff=max_angle_diff,
-                                                        output_queue)
+                                                        max_angle_diff=max_angle_diff)
                 areas.append(area)
             areas.pop(-1)
             self._cluster_areas = areas
