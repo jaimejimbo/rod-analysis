@@ -67,6 +67,7 @@ class Experiment(object):
         self._dates = dates
         self._speeds_matrices = []
         self._cluster_areas = []
+        self._bursts_groups = []
 
 
     def __getitem__(self, state_num):
@@ -899,7 +900,7 @@ class Experiment(object):
             if index == number_of_states-2:
                 break
             image1_id, image2_id = self._get_image_ids(index)
-            if not methods.is_in_burst(dates, image1_id, image2_id):
+            if not methods.are_in_burst(dates, image1_id, image2_id):
                 index += 1
                 break
         if len(z_vals) > 1:
@@ -1031,7 +1032,7 @@ class Experiment(object):
             if index == number_of_states-2:
                 break
             image1_id, image2_id = self._get_image_ids(index)
-            if not methods.is_in_burst(dates, image1_id, image2_id):
+            if not methods.are_in_burst(dates, image1_id, image2_id):
                 index += 1
                 break
         if len(z_vals) > 1:
@@ -1078,7 +1079,7 @@ class Experiment(object):
             if index == number_of_states-2:
                 break
             image1_id, image2_id = self._get_image_ids(index)
-            if not methods.is_in_burst(dates, image1_id, image2_id):
+            if not methods.are_in_burst(dates, image1_id, image2_id):
                 index += 1
                 break
         z_val = float(sum(z_vals))/len(z_vals)
@@ -1101,13 +1102,33 @@ class Experiment(object):
             areas = []
             while last_index != -1:
                 last_index, area = self._cluster_area_step(last_index,
-                                                        max_distance=max_distance,
-                                                        max_angle_diff=max_angle_diff)
+                                                max_distance=max_distance,
+                                                max_angle_diff=max_angle_diff)
                 areas.append(area)
             areas.pop(-1)
             self._cluster_areas = areas
         return self._cluster_areas
 
+    @property
+    def burst_groups(self):
+        """
+        Returns a list of groups of indices that are in a row.
+        """
+        if not len(self._burst_groups):
+            states = []
+            group = []
+            for index in range(len(self._state_numbers)-1):
+                initial_state = self._state_numbers[index]
+                final_state = self._state_numbers[index+1]
+                burst = methods.are_in_burst(self._dates, initial_state,
+                                             final_state)
+                if burst:
+                    group.append(initial_state)
+                else:
+                    group.append(initial_state)
+                    states.append(group)
+                    group = []
+        return self._bursts_groups
 
 
 def compute_local_average_speeds_process(index, output_queue, local_speeds):

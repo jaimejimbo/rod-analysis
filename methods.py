@@ -414,7 +414,7 @@ def get_date_taken(img_name, folder="./"):
     image = str(folder) + str(img_name)
     return Image.open(image)._getexif()[36867]
 
-def is_in_burst(dates, image_num_1, image_num_2):
+def are_in_burst(dates, image_num_1, image_num_2):
     """
     Return True if image 1 and image 2 are in a burst.
     Image 2 must be the next to image 1
