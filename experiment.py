@@ -1,7 +1,7 @@
 """
     Library for time evolution study.
 """
-import re, methods, math
+import re, methods, math, copy
 import multiprocessing as mp
 from matplotlib import animation
 import matplotlib.pyplot as plt
@@ -193,7 +193,6 @@ class Experiment(object):
                     evol_dict[initial_id] |= set([final_id])
                     relative_dict[initial_id][final_id] = (distance,
                                                         angle, speed)
-                    vector_dict[initial_id][final_id] = vector
         for initial_id in relative_dict.keys():
             if len(relative_dict[initial_id]) == 1:
                 relative_dict[initial_id] = relative_dict[initial_id].values()[0]
@@ -435,7 +434,7 @@ class Experiment(object):
         final_state = self._states[index+1]
         keys = evol_dict.keys()
         if not keys[0]:
-            os.exit(0)
+            return
         for initial_rod_id in keys:
             if initial_rod_id:
                 final_rod_id = evol_dict[initial_rod_id]
@@ -868,41 +867,30 @@ class Experiment(object):
         Generic animator
         """
         fig = plt.figure()
-        self._last_index = 0
+        burst_groups = copy.deepcopy(self.burst_groups)
         def animate(dummy_frame):
             """
             Wrapper.
             """
-            if self._last_index != -1:
-                self._last_index = self._animate_scatter(function_name, name,
-                                                divisions, self._last_index)
+            try:
+                group = burst_groups.pop()
+                self._animate_scatter(function_name, name,
+                                        divisions, group)
+            except IndexError:
+                pass
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
 
-    def _animate_scatter(self, function_name, name, divisions, last_index):
+    def _animate_scatter(self, function_name, name, divisions, group):
         """
         Specific animator.
         """
-        dates = self._dates
-        index = last_index
-        number_of_states = len(self._states)
-        limit = number_of_states-2
-        if index == limit:
-            return -1
-        image1_id, image2_id = self._get_image_ids(index)
         z_vals = []
-        while True:
+        for index in group:
             state = self._states[index]
             function = getattr(state, function_name)
             x_val, y_val, z_val = function(divisions)
             z_vals.append(z_val)
-            index += 1
-            if index == number_of_states-2:
-                break
-            image1_id, image2_id = self._get_image_ids(index)
-            if not methods.are_in_burst(dates, image1_id, image2_id):
-                index += 1
-                break
         if len(z_vals) > 1:
             try:
                 z_val = methods.array_average(z_vals)
@@ -923,7 +911,6 @@ class Experiment(object):
         plt.scatter(x_val, y_val, s=size, c=z_val, marker='s')
         plt.colorbar()
         plt.gca().invert_yaxis()
-        return index
 
     def _get_image_ids(self, index):
         """
@@ -1056,7 +1043,6 @@ class Experiment(object):
         plt.gca().invert_yaxis()
         return index
 
-
     def _cluster_area_step(self, last_index, max_distance=None,
                                            max_angle_diff=None):
         """
@@ -1114,20 +1100,20 @@ class Experiment(object):
         """
         Returns a list of groups of indices that are in a row.
         """
-        if not len(self._burst_groups):
-            states = []
+        if not len(self._bursts_groups):
+            groups = []
             group = []
             for index in range(len(self._state_numbers)-1):
-                initial_state = self._state_numbers[index]
-                final_state = self._state_numbers[index+1]
-                burst = methods.are_in_burst(self._dates, initial_state,
-                                             final_state)
+                initial_id, final_id = self._get_image_ids(index)
+                burst = methods.are_in_burst(self._dates, initial_id,
+                                             final_id)
                 if burst:
-                    group.append(initial_state)
+                    group.append(initial_id)
                 else:
-                    group.append(initial_state)
-                    states.append(group)
+                    group.append(initial_id)
+                    groups.append(group)
                     group = []
+            self._burst_groups = groups
         return self._bursts_groups
 
 
