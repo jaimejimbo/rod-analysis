@@ -1,7 +1,7 @@
 """
         System State. Group of rods in a determined moment.
 """
-import math, queue, matrix
+import math, queue, matrix, copy
 import multiprocessing as mp
 import methods, rod
 
@@ -18,6 +18,7 @@ class SystemState(object):
             Initialization
         """
         self._rods = queue.Queue(rods)
+        self._is_subsystem = False
         self._number_of_rods = len(self._rods)
         self._kappas = kappas
         self._allowed_kappa_error = allowed_kappa_error
@@ -93,7 +94,7 @@ class SystemState(object):
             msg += " " + str(self._rods_dict.keys())
             raise IndexError(msg)
 
-    def get_rods_range(self, initial_id, final_id):
+    def _get_rods_range(self, initial_id, final_id):
         """
         Returns a list of rods between initial_id and final_id.
         """
@@ -154,14 +155,13 @@ class SystemState(object):
         self._number_of_rods = len(self._rods)
         return self._number_of_rods
 
-    def put_rod(self, rod_):
+    def _put_rod(self, rod_):
         """
             Adds a rod to the group
         """
         self._rods.put(rod_)
-        self._reset()
 
-    def get_rod(self):
+    def _get_rod(self):
         """
             Returns the first rod in the queue
         """
@@ -169,12 +169,11 @@ class SystemState(object):
         self._rods.put(rod_)
         return rod_
 
-    def remove_rod(self, rod_):
+    def _remove_rod(self, rod_):
         """
             Removes a rod from the group (queue object mod needed)
         """
         self._rods.delete(rod_)
-        self._reset()
 
     def _reset(self):
         """
@@ -232,7 +231,9 @@ class SystemState(object):
         if self.number_of_rods == 0:
             msg = "center_and_radius can't be computed before adding rods"
             raise ValueError(msg)
-        if not len(self._zone_coords) and not self._fixed_center_radius:
+        not_defined = not len(self._zone_coords)
+        not_defined = not_defined and not self._fixed_center_radius
+        if not_defined and self._is_subsystem:
             x_values = []
             y_values = []
             for rod_ in list(self._rods):
@@ -285,7 +286,8 @@ class SystemState(object):
                         self._allowed_kappa_error,
                         zone_coords)
             if not valid:
-                self.remove_rod(rod_)
+                self._remove_rod(rod_)
+        self._reset()
 
     def divide_in_circles(self, divisions):
         """
@@ -323,14 +325,17 @@ class SystemState(object):
             Creates subsystems
         """
         subsystems = []
+        rods_list = copy.deepcopy(list(self._rods))
         for actual_y in possible_y_values:
             for actual_x in possible_x_values:
                 center = (actual_x, actual_y)
                 distance = methods.distance_between_points(center,
                                                      self.center)
-                subsystem = SubsystemState(center, rad, self.zone_coords)
+                subsystem = SubsystemState(center, rad, self.zone_coords,
+                                           rods_list, self._kappas,
+                                           self._allowed_kappa_error)
                 if distance < self._radius:
-                    subsystem.put_rods(list(self._rods))
+                    subsystem.check_rods()
                 else:
                     pass
                 subsystems.append(subsystem)
@@ -847,11 +852,14 @@ class SubsystemState(SystemState):
     have something in common.
     """
 
-    def __init__(self, center, rad, zone_coords):
+    def __init__(self, center, rad, zone_coords, rods, kappas, allowed_kappa_error):
         """
             Initialization
         """
-        SystemState.__init__(self)
+        self._subsystem_coords = (center[0], center[1], rad)
+        SystemState.__init__(self, rods=rods, zone_coords=self._subsystem_coords,
+                            kappas=kappas, allowed_kappa_error=allowed_kappa_error)
+        self._is_subsystem = True
         self._center = center
         self._rad = rad
         self._main_center = (zone_coords[0], zone_coords[1])
@@ -903,17 +911,18 @@ class SubsystemState(SystemState):
             self._update_density()
         return self._density
 
-    def put_rods(self, rod_list):
+    def check_rods(self):
         """
-            Add all rods of the list that are inside the circle.
+            Check if rods are correct.
         """
-        try:
-            for rod_ in rod_list:
-                if rod_.is_in_circle(self.center, self.radius):
-                    self.put_rod(rod_)
-        except TypeError:
-            print "Use a rod list in put_rods method"
-
+        zone_coords = [coord for coord in self._subsystem_coords]
+        for rod_ in self._rods:
+            valid = rod_.is_valid_rod(self._kappas,
+                        self._allowed_kappa_error,
+                        zone_coords)
+            if not valid:
+                self._remove_rod(rod_)
+        self._reset()
 
 
 
@@ -966,7 +975,7 @@ def create_rods_process(kappas, allowed_kappa_error,
         try:
             parameters = tuple(dataline)
             new_rod = rod.Rod(parameters)
-            state.put_rod(new_rod)
+            state._put_rod(new_rod)
         except ValueError:
             print names[index]
     state.check_rods()

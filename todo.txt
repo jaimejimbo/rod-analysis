@@ -33,7 +33,7 @@ Segregation
 - T(x,y)                                                (DONE)
 - Speeds:                                               (DONE)
     · Make a vector field.                              (in progress)
-- Order param(cluster area)                             (not started)
+- Order param(cluster area)                             (in progress)
 
 bugs:
 - Temperatures seem to be not computed correctly.
