@@ -983,42 +983,33 @@ class Experiment(object):
         fig = plt.figure()
         kappas = self._states[0].kappas
         name = str(folder)+"Temperature"+str(kappas)+".gif"
+        bursts_groups = copy.deepcopy(self.bursts_groups)
         def animate(dummy_frame):
             """
             Animation function.
             """
-            self._last_index = self._temperature_gif_wrapper(x_vals, y_vals,
-                                                z_vals, divisions, name,
-                                                self._last_index)
+            try:
+                group = bursts_groups.pop()
+                self._last_index = self._temperature_gif_wrapper(x_vals, y_vals,
+                                                    z_vals, divisions, name,
+                                                    group)
+            except IndexError:
+                pass
         frames = len(self._states)-2
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
 
 
     def _temperature_gif_wrapper(self, x_vals, y_vals, z_vals,
-                                divisions, name, last_index):
+                                divisions, name, group):
         """
         Wrapper
         """
-        dates = self._dates
-        index = last_index
-        number_of_states = len(self._states)
-        limit = number_of_states-3
-        if index >= limit:
-            return -1
-        image1_id, image2_id = self._get_image_ids(index)
         x_val = x_vals[0]
         y_val = y_vals[0]
-        while True:
+        for index in group:
             z_val = z_vals.pop()
             z_vals.append(z_val)
-            index += 1
-            if index == number_of_states-2:
-                break
-            image1_id, image2_id = self._get_image_ids(index)
-            if not methods.are_in_burst(dates, image1_id, image2_id):
-                index += 1
-                break
         if len(z_vals) > 1:
             try:
                 z_val = methods.array_average(z_vals)
@@ -1038,7 +1029,6 @@ class Experiment(object):
         plt.scatter(x_val, y_val, s=size, c=z_val, marker='s')
         plt.colorbar()
         plt.gca().invert_yaxis()
-        return index
 
     def _cluster_area_step(self, last_index, max_distance=None,
                                            max_angle_diff=None):
