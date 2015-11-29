@@ -868,28 +868,33 @@ class Experiment(object):
         """
         fig = plt.figure()
         bursts_groups = copy.deepcopy(self.bursts_groups)
+        z_vals = []
+        for group in bursts_groups:
+            for index in group:
+                state = self._states[index]
+                function = getattr(state, function_name)
+                x_val, y_val, z_val = function(divisions)
+                z_vals.append(z_val)
         def animate(dummy_frame):
             """
             Wrapper.
             """
             try:
                 group = bursts_groups.pop()
-                self._animate_scatter(function_name, name,
-                                        divisions, group)
+                self._animate_scatter(x_val, y_val, z_vals,
+                                    divisions, name, group)
             except IndexError:
                 pass
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
 
-    def _animate_scatter(self, function_name, name, divisions, group):
+    def _animate_scatter(self, x_val, y_val, z_vals,
+                                divisions, name, group):
         """
         Specific animator.
         """
-        z_vals = []
         for index in group:
-            state = self._states[index]
-            function = getattr(state, function_name)
-            x_val, y_val, z_val = function(divisions)
+            z_val = z_vals.pop()
             z_vals.append(z_val)
         if len(z_vals) > 1:
             try:
@@ -927,9 +932,9 @@ class Experiment(object):
         """
         Creates a gif per property of the system that shows evolution.
         """
-        self.create_density_gif(divisions, folder, fps)
-        self.create_relative_g2_gif(divisions, folder, fps)
-        self.create_relative_g4_gif(divisions, folder, fps)
+        self.create_density_gif(divisions=divisions, folder=folder, fps=fps)
+        self.create_relative_g2_gif(divisions=divisions, folder=folder, fps=fps)
+        self.create_relative_g4_gif(divisions=divisions, folder=folder, fps=fps)
         self.create_temperature_gif(divisions=divisions, folder=folder, fps=fps,
                             max_distance=max_distance, max_angle_diff=max_angle_diff,
                             limit=limit, amount_of_rods=amount_of_rods)
@@ -1097,9 +1102,9 @@ class Experiment(object):
                 burst = methods.are_in_burst(self._dates, initial_id,
                                              final_id)
                 if burst:
-                    group.append(initial_id)
+                    group.append(index)
                 else:
-                    group.append(initial_id)
+                    group.append(index)
                     groups.append(group)
                     group = []
             self._bursts_groups = groups
