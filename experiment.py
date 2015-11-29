@@ -891,12 +891,13 @@ class Experiment(object):
             function = getattr(state, function_name)
             x_val, y_val, z_val = function(divisions)
             z_vals.append(z_val)
-            print x_val, y_val, z_val
         if len(z_vals) > 1:
-            z_val = methods.array_average(z_vals)
+            try:
+                z_val = methods.array_average(z_vals)
+            except TypeError:
+                print z_vals
         plt.cla()
         plt.clf()
-        plt.gca().invert_yaxis()
         rad = 2000.0/divisions
         size = (rad/8)**2
         x_min = min(x_val)*.9
@@ -908,6 +909,7 @@ class Experiment(object):
         plt.suptitle(name)
         plt.scatter(x_val, y_val, s=size, c=z_val, marker='s')
         plt.colorbar()
+        plt.gca().invert_yaxis()
 
     def _get_image_ids(self, index):
         """
