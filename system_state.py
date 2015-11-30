@@ -17,6 +17,8 @@ class SystemState(object):
         """
             Initialization
         """
+        if not zone_coords:
+            zone_coords = []
         self._rods = queue.Queue(rods)
         self._is_subsystem = False
         self._number_of_rods = len(self._rods)
@@ -54,15 +56,12 @@ class SystemState(object):
             self._center_y = zone_coords[1]
             self._zone_coords = zone_coords
             self._fixed_center_radius = True
-        except TypeError:
+        except IndexError:
             self._fixed_center_radius = False
-            self._zone_cords = []
+            self._zone_cords = zone_coords
             self._center_x = None
             self._center_y = None
             self._radius = None
-        except IndexError:
-            print zone_coords
-            raise IndexError
 
     @property
     def id_string(self):

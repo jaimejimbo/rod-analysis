@@ -816,10 +816,35 @@ class Experiment(object):
             speeds_matrix.append(speeds_row)
         output_queue.put([densities, speeds, speeds_matrix, index])
 
+    def divide_systems_in_circles(self, divisions=5):
+        """
+        Divides all systems in circles.
+        """
+        processes = []
+        for state in self._states:
+            process = mp.Process(target=state.divide_in_circles,
+                                 args=(divisions,))
+            processes.append(process)
+        running, processes_left = methods.run_processes(processes)
+        num_processes = len(running)
+        finished = 0
+        densities = []
+        quad_speeds = []
+        while finished < num_processes:
+            for process in running:
+                if not process.is_alive():
+                    finished += 1
+                    if len(processes_left):
+                        finished -= 1
+                        new_process = processes_left.pop()
+                        new_process.start()
+
+
     def create_density_gif(self, divisions=5, folder="./", fps=1):
         """
         Creates a gif of density's evolution.
         """
+        self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_density_matrix'
         kappas = self._states[0].kappas
@@ -831,6 +856,7 @@ class Experiment(object):
         """
         Creates a gif of correlation g2 evolution.
         """
+        self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'relative_g2_plot_matrix'
         kappas = self._states[0].kappas
@@ -842,6 +868,7 @@ class Experiment(object):
         """
         Creates a gif of correlation g4 evolution.
         """
+        self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'relative_g4_plot_matrix'
         kappas = self._states[0].kappas
@@ -853,6 +880,7 @@ class Experiment(object):
         """
         Creates a gif of average angle evolution.
         """
+        self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_average_angle_matrix'
         kappas = self._states[0].kappas
