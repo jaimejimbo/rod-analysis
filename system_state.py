@@ -334,8 +334,6 @@ class SystemState(object):
         """
         x_0 = min(possible_x_values)
         y_0 = min(possible_y_values)
-        x_length = len(possible_x_values)
-        y_length = len(possible_y_values)
         divisions = len(possible_x_values)
         output = [[[] for dummy_ in range(divisions)] for dummy_2 in range(divisions)]
         for rod in rods_list:
@@ -344,11 +342,11 @@ class SystemState(object):
             output[index_y][index_x].append(rod)
             if index_x > 0:
                 output[index_y][index_x-1].append(rod)
-            if index_x < x_length-1:
+            if index_x < divisions-1:
                 output[index_y][index_x+1].append(rod)
             if index_y > 0:
                 output[index_y-1][index_x].append(rod)
-            if index_y < y_length-1:
+            if index_y < divisions-1:
                 output[index_y+1][index_x].append(rod)
         return output
             
@@ -448,6 +446,9 @@ class SystemState(object):
         """
             Computes correlation_g2 and correlation_g4 values
         """
+        if not len(list(self._rods)):
+            self._correlation_g2 = 0
+            self._correlation_g4 = 0
         cos2_av, sin2_av, cos4_av, sin4_av = 0, 0, 0, 0
         for rod_ in list(self._rods):
             angle = rod_.angle*math.pi/180.0
@@ -779,6 +780,7 @@ class SystemState(object):
         """
         if self._relative_g2 == None:
             if not self.number_of_rods:
+                self._relative_g2 = 0
                 return 0
             sin = 0
             cos = 0
@@ -800,6 +802,7 @@ class SystemState(object):
         """
         if self._relative_g4 == None:
             if not self.number_of_rods:
+                self._relative_g4 = 0
                 return 0
             sin = 0
             cos = 0
@@ -823,8 +826,8 @@ class SystemState(object):
             for subsystem in self._actual_subdivision:
                 correlation_g2 = [subsystem.center[0], subsystem.center[1]]
                 correlation_g4 = [subsystem.center[0], subsystem.center[1]]
-                correlation_g2.append(subsystem.correlation_g2)
-                correlation_g4.append(subsystem.correlation_g4)
+                correlation_g2.append(subsystem.relative_g2)
+                correlation_g4.append(subsystem.relative_g4)
                 self._relative_g2_subsystems.append(correlation_g2)
                 self._relative_g4_subsystems.append(correlation_g4)
 
@@ -943,6 +946,8 @@ class SubsystemState(SystemState):
         density = 0
         for rod_ in self:
             density += rod_.kappa
+        if not density:
+            return 0
         if not self.area:
             self._density = 0
         else:
