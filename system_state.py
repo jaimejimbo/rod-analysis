@@ -57,6 +57,9 @@ class SystemState(object):
         except TypeError:
             self._fixed_center_radius = False
             self._zone_cords = []
+            self._center_x = None
+            self._center_y = None
+            self._radius = None
         except IndexError:
             print zone_coords
             raise IndexError
@@ -231,9 +234,12 @@ class SystemState(object):
         if self.number_of_rods == 0:
             msg = "center_and_radius can't be computed before adding rods"
             raise ValueError(msg)
-        not_defined = not len(self._zone_coords)
-        not_defined = not_defined and not self._fixed_center_radius
-        if not_defined and self._is_subsystem:
+        try:
+            not_defined = not len(self._zone_coords)
+            not_defined = not_defined and not self._fixed_center_radius
+        except AttributeError:
+            not_defined = True
+        if not_defined and not self._is_subsystem:
             x_values = []
             y_values = []
             for rod_ in list(self._rods):
