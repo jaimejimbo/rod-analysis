@@ -964,11 +964,8 @@ class SubsystemState(SystemState):
         """
             Check if rods are correct.
         """
-        zone_coords = [coord for coord in self._subsystem_coords]
         for rod_ in self._rods:
-            valid = rod_.is_valid_rod(self._kappas,
-                        self._allowed_kappa_error,
-                        zone_coords)
+            valid = rod_.is_in_circle(self.center, self.radius)
             if not valid:
                 self._remove_rod(rod_)
         self._reset()
