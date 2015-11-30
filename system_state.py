@@ -339,10 +339,10 @@ class SystemState(object):
                 subsystem = SubsystemState(center, rad, self.zone_coords,
                                            rods_list, self._kappas,
                                            self._allowed_kappa_error)
-                if distance < self._radius:
-                    subsystem.check_rods()
-                else:
-                    pass
+                #if distance < self._radius:
+                #    subsystem.check_rods()
+                #else:
+                #    pass
                 subsystems.append(subsystem)
         return subsystems
 

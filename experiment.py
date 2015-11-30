@@ -176,12 +176,12 @@ class Experiment(object):
         for initial_rod in initial_state:
             initial_id = initial_rod.identifier
             if not amount_of_rods:
-                available_final_rods = final_state.get_rods_range(0,
+                available_final_rods = final_state._get_rods_range(0,
                                         final_state.number_of_rods)
             else:
                 start_id = initial_id-amount_of_rods/2
                 end_id = initial_id+amount_of_rods/2
-                available_final_rods = final_state.get_rods_range(start_id,
+                available_final_rods = final_state._get_rods_range(start_id,
                                                                     end_id)
             for final_rod in available_final_rods:
                 final_id = final_rod.identifier
@@ -217,7 +217,7 @@ class Experiment(object):
             else:
                 start_id = initial_id-amount_of_rods/2
                 end_id = initial_id+amount_of_rods/2
-                available_final_rods = final_state.get_rods_range(start_id,
+                available_final_rods = final_state._get_rods_range(start_id,
                                                                   end_id)
             speeds = []
             initial_kappa = initial_rod.kappa
