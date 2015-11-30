@@ -751,7 +751,7 @@ class SystemState(object):
             closest_rod_matrix.append(new_row)
         self._closest_rod_matrix = closest_rod_matrix
 
-
+    @property
     def closest_rod_matrix(self):
         """
             Returns closest rod matrix.
@@ -946,9 +946,7 @@ class SubsystemState(SystemState):
         density = 0
         for rod_ in self:
             density += rod_.kappa
-        if not density:
-            return 0
-        if not self.area:
+        if not density or not self.area:
             self._density = 0
         else:
             self._density = float(density)/self.area
