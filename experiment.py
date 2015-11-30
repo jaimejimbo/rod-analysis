@@ -903,6 +903,7 @@ class Experiment(object):
                 function = getattr(state, function_name)
                 x_val, y_val, z_val = function(divisions)
                 z_vals.append(z_val)
+        print z_vals
         def animate(dummy_frame):
             """
             Wrapper.
@@ -921,9 +922,6 @@ class Experiment(object):
         """
         Specific animator.
         """
-        for index in group:
-            z_val = z_vals.pop()
-            z_vals.append(z_val)
         if len(z_vals) > 1:
             try:
                 z_val = methods.array_average(z_vals)
