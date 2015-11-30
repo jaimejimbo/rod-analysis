@@ -897,36 +897,32 @@ class Experiment(object):
         fig = plt.figure()
         bursts_groups = copy.deepcopy(self.bursts_groups)
         z_vals = []
+        x_val = []
+        y_val = []
         for group in bursts_groups:
             for index in group:
                 state = self._states[index]
                 function = getattr(state, function_name)
                 x_val, y_val, z_val = function(divisions)
                 z_vals.append(z_val)
-        print z_vals
         def animate(dummy_frame):
             """
             Wrapper.
             """
-            try:
-                group = bursts_groups.pop()
-                self._animate_scatter(x_val, y_val, z_vals,
-                                    divisions, name, group)
-            except IndexError:
-                pass
+            self._animate_scatter(x_val, y_val, z_vals,
+                                divisions, name)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
 
     def _animate_scatter(self, x_val, y_val, z_vals,
-                                divisions, name, group):
+                                divisions, name):
         """
         Specific animator.
         """
-        if len(z_vals) > 1:
-            try:
-                z_val = methods.array_average(z_vals)
-            except TypeError:
-                print z_vals
+        try:
+            z_val = z_vals.pop()
+        except IndexError:
+            return
         plt.cla()
         plt.clf()
         rad = 2000.0/divisions
@@ -1016,38 +1012,28 @@ class Experiment(object):
         fig = plt.figure()
         kappas = self._states[0].kappas
         name = str(folder)+"Temperature"+str(kappas)+".gif"
-        bursts_groups = copy.deepcopy(self.bursts_groups)
         def animate(dummy_frame):
             """
             Animation function.
             """
-            try:
-                group = bursts_groups.pop()
-                self._last_index = self._temperature_gif_wrapper(x_vals, y_vals,
-                                                    z_vals, divisions, name,
-                                                    group)
-            except IndexError:
-                pass
+            self._last_index = self._temperature_gif_wrapper(x_vals, y_vals,
+                                                z_vals, divisions, name)
         frames = len(self._states)-2
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
 
 
     def _temperature_gif_wrapper(self, x_vals, y_vals, z_vals,
-                                divisions, name, group):
+                                divisions, name):
         """
         Wrapper
         """
         x_val = x_vals[0]
         y_val = y_vals[0]
-        for index in group:
+        try:
             z_val = z_vals.pop()
-            z_vals.append(z_val)
-        if len(z_vals) > 1:
-            try:
-                z_val = methods.array_average(z_vals)
-            except TypeError:
-                print z_vals
+        except IndexError:
+            return
         plt.cla()
         plt.clf()
         rad = 2000.0/divisions

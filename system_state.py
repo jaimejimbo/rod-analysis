@@ -309,6 +309,7 @@ class SystemState(object):
             "divisions" rows and columns.
         """
         if divisions != self._divisions:
+            self._compute_center_and_radius()
             self._divisions = divisions
             # Defining zone and distance between points.
             start_x = self.center[0]-self.radius
@@ -316,33 +317,67 @@ class SystemState(object):
             start_y = self.center[1]-self.radius
             diff = float(abs(start_x - end_x))/(divisions-1)
             # Getting all possible x and y values.
-            possible_x_values = [start_x + times*diff
+            possible_x_values = [start_x + (times)*diff
                                  for times in range(divisions)]
-            possible_y_values = [start_y + times*diff
+            possible_y_values = [start_y + (times)*diff
                                  for times in range(divisions)]
             rad = diff*math.sqrt(2)/2
             subsystems = self._subsystems(possible_x_values, possible_y_values,
-                                          rad)
+                                          rad, diff)
             self._actual_subdivision = subsystems
 
-    def _subsystems(self, possible_x_values, possible_y_values, rad):
+    def _separate_rods_by_coords(self, rods_list, possible_x_values,
+                                    possible_y_values, rad, diff):
+        """
+            Separates rods by zones. It reduces the amount of steps that
+        the programm makes.
+        """
+        x_0 = min(possible_x_values)
+        y_0 = min(possible_y_values)
+        x_length = len(possible_x_values)
+        y_length = len(possible_y_values)
+        divisions = len(possible_x_values)
+        output = [[[] for dummy_ in range(divisions)] for dummy_2 in range(divisions)]
+        for rod in rods_list:
+            index_x = int(float(rod.x_mid - x_0)/diff)
+            index_y = int(float(rod.y_mid - y_0)/diff)
+            output[index_y][index_x].append(rod)
+            if index_x > 0:
+                output[index_y][index_x-1].append(rod)
+            if index_x < x_length-1:
+                output[index_y][index_x+1].append(rod)
+            if index_y > 0:
+                output[index_y-1][index_x].append(rod)
+            if index_y < y_length-1:
+                output[index_y+1][index_x].append(rod)
+        return output
+            
+
+    def _subsystems(self, possible_x_values, possible_y_values, rad, diff):
         """
             Creates subsystems
         """
         subsystems = []
         rods_list = copy.deepcopy(list(self._rods))
-        for actual_y in possible_y_values:
-            for actual_x in possible_x_values:
+        rods_matrix = self._separate_rods_by_coords(rods_list, possible_x_values,
+                                                    possible_y_values, rad, diff)
+        y_vals = range(len(possible_y_values))
+        x_vals = range(len(possible_x_values))
+        for index_y in y_vals:
+            actual_y = possible_y_values[index_y]
+            for index_x in x_vals:
+                actual_x = possible_x_values[index_x]
                 center = (actual_x, actual_y)
                 distance = methods.distance_between_points(center,
                                                      self.center)
+                rods = rods_matrix[index_y][index_x]
                 subsystem = SubsystemState(center, rad, self.zone_coords,
-                                           rods_list, self._kappas,
+                                           rods, self._kappas,
                                            self._allowed_kappa_error)
-                #if distance < self._radius:
-                #    subsystem.check_rods()
-                #else:
-                #    pass
+                if distance < self._radius:
+                    subsystem.check_rods()
+                else:
+                    subsystem.remove_all_rods()
                 subsystems.append(subsystem)
         return subsystems
 
@@ -873,6 +908,12 @@ class SubsystemState(SystemState):
                                             self._center)
         self._area = methods.effective_area(self._rad,
                                     self._position_rad, self._main_rad)
+
+    def remove_all_rods(self):
+        """
+        Removes all rods of subsystem.
+        """
+        self._rods = []
 
     @property
     def center(self):
