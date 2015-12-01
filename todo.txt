@@ -37,4 +37,12 @@ Segregation
 
 bugs:
 - Temperatures seem to be not computed correctly.
-- Density should be 0 for K17 in the end.
+
+
+- use n>3,4 for clusters                                (in progress)
+- normalized histogram of number of rods in clusters.   (not started)
+- densidad x param orden                                (not started)
+- clusters area                                         (not started)
+- clusters                                              (not started)
+- g2, g4 divide by area                                 (DONE)
+

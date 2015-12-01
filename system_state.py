@@ -788,8 +788,8 @@ class SystemState(object):
                 angle = math.radians(row[0].angle_between_rods(row[1]))
                 sin += math.sin(2*angle)
                 cos += math.cos(2*angle)
-            sin /= self.number_of_rods
-            cos /= self.number_of_rods
+            sin /= self.area
+            cos /= self.area
             self._relative_g2 = math.sqrt(sin**2+cos**2)
         return self._relative_g2
 
@@ -810,8 +810,8 @@ class SystemState(object):
                 angle = math.radians(row[0].angle_between_rods(row[1]))
                 sin += math.sin(4*angle)
                 cos += math.cos(4*angle)
-            sin /= self.number_of_rods
-            cos /= self.number_of_rods
+            sin /= self.area
+            cos /= self.area
             self._relative_g4 = math.sqrt(sin**2+cos**2)
         return self._relative_g4
 
@@ -965,8 +965,7 @@ class SubsystemState(SystemState):
             Check if rods are correct.
         """
         for rod_ in self._rods:
-            valid = rod_.is_in_circle(self.center, self.radius)
-            if not valid:
+            if not rod_.is_in_circle(self.center, self.radius):
                 self._remove_rod(rod_)
         self._reset()
 
