@@ -30,7 +30,8 @@ class Rod(object):
         self._y_start = float(ystart)           #13
         self._hash = 0
         self._direction_matrix = matrix.zeros(2, 2)
-        self._kappa = float(self.feret)/self.min_feret
+        #self._kappa = float(feret)/float(min_feret)
+        self._kappa = float(major)/float(minor)
 
     @property
     def area(self):
@@ -38,7 +39,7 @@ class Rod(object):
         Returns area covered by rod.
         """
         return self._major*self._minor
-        
+
 
     @property
     def feret(self):
@@ -163,14 +164,13 @@ class Rod(object):
                     return True
             return False
         except TypeError:
-            return (abs(self.kappa-kappas) < allowed_error)
+            return abs(self.kappa-kappas) < allowed_error
 
     def is_valid_rod(self, kappas,
                     allowed_kappa_error,
                     zone_coords):
         """
         Check if rod is valid checking L/D and distance to center.
-        TODO: If rods are near, kappa is not correct.
         """
         center = (zone_coords[0], zone_coords[1])
         is_in_main = self.is_in_circle(center, zone_coords[2])
