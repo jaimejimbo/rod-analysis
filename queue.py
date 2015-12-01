@@ -59,7 +59,7 @@ class Queue(object):
         """
         Returns position of the element
         """
-        return self._data.index(element) + 1
+        return self._data.index(element)
 
     def __len__(self):
         """
@@ -72,4 +72,5 @@ class Queue(object):
         Deletes an element from the queue.
         """
         pos = self.get_possition(element)
-        del self._data[pos-1]
+        del self._data[pos]
+

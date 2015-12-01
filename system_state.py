@@ -297,12 +297,14 @@ class SystemState(object):
             Check if rods are correct.
         """
         zone_coords = [coord for coord in self.zone_coords]
+        valid_rods = []
         for rod_ in self._rods:
             valid = rod_.is_valid_rod(self._kappas,
                         self._allowed_kappa_error,
                         zone_coords)
-            if not valid:
-                self._remove_rod(rod_)
+            if valid:
+                valid_rods.append(rod_)
+        self._rods = queue.Queue(valid_rods)
         self._reset()
 
     def divide_in_circles(self, divisions):

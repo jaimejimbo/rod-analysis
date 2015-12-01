@@ -32,8 +32,8 @@ class Rod(object):
         self._y_start = float(ystart)           #13
         self._hash = 0
         self._direction_matrix = matrix.zeros(2, 2)
-        #self._kappa = float(feret)/float(min_feret)
-        self._kappa = float(major)/float(minor)
+        self._kappa = float(feret)/float(minferet)
+        #self._kappa = float(major)/float(minor)
 
     @property
     def area(self):
