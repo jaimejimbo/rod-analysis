@@ -64,6 +64,18 @@ class SystemState(object):
             self._radius = None
 
     @property
+    def rods_possitions(self):
+        """
+            Returns possitions of rods.
+        """
+        x_values = []
+        y_values = []
+        for rod in self._rods:
+            x_values.append(rod.x_mid)
+            y_values.append(rod.y_mid)
+        return x_values, y_values
+
+    @property
     def id_string(self):
         """
         Returns the name of rod list.

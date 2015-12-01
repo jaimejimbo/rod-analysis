@@ -157,19 +157,13 @@ class Rod(object):
         Checks if rod has valid L/D (kappas are possibles values
         for L/D).
         """
-        passed = []
         try:
             for kappa in kappas:
-                condition = abs(self.kappa-kappa) < allowed_error
-                passed.append(condition)
-#kappa is not an array, so there is only 1 kappa.
+                if abs(self.kappa-kappa) < allowed_error:
+                    return True
+            return False
         except TypeError:
-            condition = abs(self.kappa-kappas) < allowed_error
-            passed.append(condition)
-        output = False
-        for condition in passed:
-            output = output or condition
-        return output
+            return (abs(self.kappa-kappas) < allowed_error)
 
     def is_valid_rod(self, kappas,
                     allowed_kappa_error,
