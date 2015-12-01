@@ -328,7 +328,7 @@ class SystemState(object):
             start_x = self.center[0]-self.radius
             end_x = self.center[0]+self.radius
             start_y = self.center[1]-self.radius
-            diff = float(abs(start_x - end_x))/(divisions-1)
+            diff = float(abs(start_x - end_x))/(divisions)
             # Getting all possible x and y values.
             possible_x_values = [start_x + (times)*diff
                                  for times in range(divisions)]
@@ -344,22 +344,29 @@ class SystemState(object):
         """
             Separates rods by zones. It reduces the amount of steps that
         the programm makes.
+        BUG: indices get higher values than allowed.
         """
-        x_0 = min(possible_x_values)
-        y_0 = min(possible_y_values)
+        x_0 = min(possible_x_values)-diff/2.0
+        y_0 = min(possible_y_values)-diff/2.0
         divisions = len(possible_x_values)
-        output = [[[] for dummy_ in range(divisions)] for dummy_2 in range(divisions)]
+        div_range = range(divisions)
+        output = [[[] for dummy_1 in div_range] for dummy_2 in div_range]
         for rod in rods_list:
-            index_x = int(float(rod.x_mid - x_0)/diff)
-            index_y = int(float(rod.y_mid - y_0)/diff)
-            output[index_y][index_x].append(rod)
+            index_x = int((rod.x_mid-x_0)/diff)
+            index_y = int((rod.y_mid-y_0)/diff)
+            try:
+                output[index_y][index_x].append(rod)
+            except IndexError:
+                print index_y, index_x
+                print len(output), len(output[index_y])
+                raise IndexError
             if index_x > 0:
                 output[index_y][index_x-1].append(rod)
-            if index_x < divisions-1:
+            if index_x < divisions:
                 output[index_y][index_x+1].append(rod)
             if index_y > 0:
                 output[index_y-1][index_x].append(rod)
-            if index_y < divisions-1:
+            if index_y < divisions:
                 output[index_y+1][index_x].append(rod)
         return output
             
