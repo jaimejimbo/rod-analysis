@@ -8,16 +8,18 @@ class Rod(object):
     Rod object.
     """
 
-    def __init__(self, (ID, area, xm, ym, major, minor,
-                        angle, feret, feretx, ferety,
-                        feretangle, minferet, xstart, ystart)):
+    def __init__(self, args_tuple):
         """
         Initialization of rod
-        """                                     #Column
+        """
+        (ID, area, xmid, ymid, major, minor,
+                        angle, feret, feretx, ferety,
+                        feretangle, minferet, xstart, ystart) = args_tuple
+                                                #Column
         self._id = int(ID)                      #0
         self._area = float(area)                #1
-        self._x_mid = float(xm)                 #2
-        self._y_mid = float(ym)                 #3
+        self._x_mid = float(xmid)               #2
+        self._y_mid = float(ymid)               #3
         self._major = float(major)              #4
         self._minor = float(minor)              #5
         self._angle = float(angle)              #6
@@ -176,8 +178,7 @@ class Rod(object):
         is_in_main = self.is_in_circle(center, zone_coords[2])
         has_valid_proportions = self.has_valid_proportions(kappas,
                                                            allowed_kappa_error)
-        output = is_in_main and has_valid_proportions
-        return output
+        return is_in_main and has_valid_proportions
 
     def vector_to_rod(self, rod):
         """

@@ -21,7 +21,6 @@ class SystemState(object):
             zone_coords = []
         self._rods = queue.Queue(rods)
         self._is_subsystem = False
-        self._number_of_rods = len(self._rods)
         self._kappas = kappas
         self._allowed_kappa_error = allowed_kappa_error
         self._radius_correction_ratio = radius_correction_ratio
