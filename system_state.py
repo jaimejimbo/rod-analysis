@@ -339,7 +339,7 @@ class SystemState(object):
             #if coef > self.radius:
             #    coef = self.radius/10.0
             #coef = max(.5, coef)
-            coef = 1.5
+            coef = .5
             rad = diff*math.sqrt(2)*coef
             subsystems = self._subsystems(possible_x_values, possible_y_values,
                                           rad, diff, divisions)
