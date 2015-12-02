@@ -69,6 +69,13 @@ class Experiment(object):
         self._cluster_areas = []
         self._bursts_groups = []
 
+    def __iter__(self):
+        """
+            Magic method for looping.
+        """
+        for state in self._states:
+            yield state
+
 
     def __getitem__(self, state_num):
         """

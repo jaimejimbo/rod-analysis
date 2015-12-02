@@ -296,15 +296,16 @@ class SystemState(object):
         """
             Check if rods are correct.
         """
-        zone_coords = [coord for coord in self.zone_coords]
         valid_rods = []
+        initial_length = len(self._rods)
         for rod_ in self._rods:
             valid = rod_.is_valid_rod(self._kappas,
                         self._allowed_kappa_error,
-                        zone_coords)
+                        self.zone_coords)
             if valid:
                 valid_rods.append(rod_)
         self._rods = queue.Queue(valid_rods)
+        final_length = len(self._rods)
         self._reset()
 
     def divide_in_circles(self, divisions):
@@ -328,44 +329,39 @@ class SystemState(object):
             start_x = self.center[0]-self.radius
             end_x = self.center[0]+self.radius
             start_y = self.center[1]-self.radius
-            diff = float(abs(start_x - end_x))/(divisions)
+            diff = float(abs(start_x-end_x))/divisions
             # Getting all possible x and y values.
             possible_x_values = [start_x + (times-1)*diff
-                                 for times in range(divisions+4)]
+                                 for times in range(divisions+2)]
             possible_y_values = [start_y + (times-1)*diff
-                                 for times in range(divisions+4)]
-            coef = 3*divisions/10.0
-            if coef > self.radius:
-                coef = self.radius/10.0
-            coef = max(.5, coef)
+                                 for times in range(divisions+2)]
+            #coef = 3*divisions/10.0
+            #if coef > self.radius:
+            #    coef = self.radius/10.0
+            #coef = max(.5, coef)
+            coef = 1.5
             rad = diff*math.sqrt(2)*coef
             subsystems = self._subsystems(possible_x_values, possible_y_values,
-                                          rad, diff)
+                                          rad, diff, divisions)
             self._actual_subdivision = subsystems
 
     def _separate_rods_by_coords(self, rods_list, possible_x_values,
-                                    possible_y_values, rad, diff):
+                                    possible_y_values, rad, diff,
+                                    divisions):
         """
             Separates rods by zones. It reduces the amount of steps that
         the programm makes.
         BUG: indices get higher values than allowed.
         """
-        x_min = min(possible_x_values)-diff/2.0
-        y_min = min(possible_y_values)-diff/2.0
-        x_max = max(possible_x_values)+diff/2.0
-        y_max = max(possible_y_values)+diff/2.0
-        divisions = len(possible_x_values)
+        x_min = min(possible_x_values)
+        y_min = min(possible_y_values)
+        x_max = max(possible_x_values)
+        y_max = max(possible_y_values)
         div_range = range(divisions)
         output = [[[] for dummy_1 in div_range] for dummy_2 in div_range]
         for rod in rods_list:
             index_x = int((rod.x_mid-x_min)/diff)
             index_y = int((rod.y_mid-y_min)/diff)
-            msgx = "Too high value for index_x "+str(index_x)+" "+str(divisions)
-            msgx += "\n" + str([rod.x_mid, x_min, x_max, diff]) 
-            msgy = "Too high value for index_y "+str(index_y)+" "+str(divisions)
-            msgy += "\n" + str([rod.y_mid, y_min, y_max, diff]) 
-            assert index_x < divisions, msgx
-            assert index_y < divisions, msgy
             try:
                 output[index_y][index_x].append(rod)
             except IndexError:
@@ -375,14 +371,16 @@ class SystemState(object):
         return output
             
 
-    def _subsystems(self, possible_x_values, possible_y_values, rad, diff):
+    def _subsystems(self, possible_x_values, possible_y_values, rad, diff,
+                            divisions):
         """
             Creates subsystems
         """
         subsystems = []
         rods_list = copy.deepcopy(list(self._rods))
-        rods_matrix = self._separate_rods_by_coords(rods_list, possible_x_values,
-                                                    possible_y_values, rad, diff)
+        #rods_matrix = self._separate_rods_by_coords(rods_list, possible_x_values,
+        #                                            possible_y_values, rad, diff,
+        #                                            divisions)
         y_vals = range(len(possible_y_values))
         x_vals = range(len(possible_x_values))
         for index_y in y_vals:
@@ -392,7 +390,8 @@ class SystemState(object):
                 center = (actual_x, actual_y)
                 distance = methods.distance_between_points(center,
                                                      self.center)
-                rods = rods_matrix[index_y][index_x]
+                #rods = rods_matrix[index_y][index_x]
+                rods = self._rods
                 subsystem = SubsystemState(center, rad, self.zone_coords,
                                            rods, self._kappas,
                                            self._allowed_kappa_error)

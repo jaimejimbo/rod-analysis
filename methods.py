@@ -153,10 +153,9 @@ def is_in_circle(point_x, point_y, center_x, center_y, radius):
     """
     Checks if a point is in a circle
     """
-    point = (point_x, point_y)
-    center = (center_x, center_y)
-    distance = distance_between_points(point, center)
-    return distance <= radius
+    point = [point_x, point_y]
+    center = [center_x, center_y]
+    return distance_between_points(point, center) <= radius
 
 
 
