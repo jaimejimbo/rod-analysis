@@ -905,17 +905,24 @@ class Experiment(object):
                 function = getattr(state, function_name)
                 x_val, y_val, z_val = function(divisions)
                 z_vals.append(z_val)
+        z_maxs = []
+        z_mins = []
+        for z_val in z_vals:
+            z_maxs.append(max(z_val))
+            z_mins.append(min(z_val))
+        z_max = max(z_maxs)
+        z_min = min(z_mins)
         def animate(dummy_frame):
             """
             Wrapper.
             """
             self._animate_scatter(x_val, y_val, z_vals,
-                                divisions, name)
+                                divisions, name, z_max, z_min)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
 
     def _animate_scatter(self, x_val, y_val, z_vals,
-                                divisions, name):
+                                divisions, name, z_max, z_min):
         """
         Specific animator.
         """
@@ -934,7 +941,8 @@ class Experiment(object):
         plt.xlim((x_min, x_max))
         plt.ylim((y_min, y_max))
         plt.suptitle(name)
-        plt.scatter(x_val, y_val, s=size, c=z_val, marker='s')
+        plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
+                    vmin=z_min, vmax=z_max)
         plt.colorbar()
         plt.gca().invert_yaxis()
 
@@ -1012,19 +1020,27 @@ class Experiment(object):
         fig = plt.figure()
         kappas = self._states[0].kappas
         name = str(folder)+"Temperature"+str(kappas)+".gif"
+        z_maxs = []
+        z_mins = []
+        for z_val in z_vals:
+            z_maxs.append(max(z_val))
+            z_mins.append(min(z_val))
+        z_max = max(z_maxs)
+        z_min = min(z_mins)
         def animate(dummy_frame):
             """
             Animation function.
             """
             self._last_index = self._temperature_gif_wrapper(x_vals, y_vals,
-                                                z_vals, divisions, name)
+                                                z_vals, divisions, name,
+                                                z_max, z_min)
         frames = len(self._states)-2
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
 
 
     def _temperature_gif_wrapper(self, x_vals, y_vals, z_vals,
-                                divisions, name):
+                                divisions, name, z_max, z_min):
         """
         Wrapper
         """
@@ -1045,7 +1061,8 @@ class Experiment(object):
         plt.xlim((x_min, x_max))
         plt.ylim((y_min, y_max))
         plt.suptitle(name)
-        plt.scatter(x_val, y_val, s=size, c=z_val, marker='s')
+        plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
+                    vmax=z_max, vmin=z_min)
         plt.colorbar()
         plt.gca().invert_yaxis()
 

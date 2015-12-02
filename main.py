@@ -20,8 +20,8 @@ else:
 
 names, rod_groups_5 = system_state.create_rods(kappas=5.5,
                                         allowed_kappa_error=.5)
-names, rod_groups_17 = system_state.create_rods(kappas=17,
-                                        allowed_kappa_error=.5)
+names, rod_groups_17 = system_state.create_rods(kappas=16,
+                                        allowed_kappa_error=2)
 experiment_5 = experiment.Experiment(system_states_name_list=names,
                                     system_states_list=rod_groups_5,
                                     dates=dates, diff_t=5/3.0)
