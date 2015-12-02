@@ -89,7 +89,10 @@ def compute_min_dist(small_rad, small_position_rad, main_rad):
         min_dist = float(min_dist)
     except OverflowError:
         return small_rad*1.1
-    min_dist /= (2*small_position_rad)
+    try:
+        min_dist /= (2*small_position_rad)
+    except:
+        min_dist = main_rad*2
     if min_dist > small_rad:
         return small_rad
     if abs(min_dist) > small_rad:

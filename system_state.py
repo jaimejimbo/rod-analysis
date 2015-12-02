@@ -330,11 +330,15 @@ class SystemState(object):
             start_y = self.center[1]-self.radius
             diff = float(abs(start_x - end_x))/(divisions)
             # Getting all possible x and y values.
-            possible_x_values = [start_x + (times)*diff
-                                 for times in range(divisions+1)]
-            possible_y_values = [start_y + (times)*diff
-                                 for times in range(divisions+1)]
-            rad = diff*3*math.sqrt(2)/2
+            possible_x_values = [start_x + (times-1)*diff
+                                 for times in range(divisions+4)]
+            possible_y_values = [start_y + (times-1)*diff
+                                 for times in range(divisions+4)]
+            coef = 3*divisions/10.0
+            if coef > self.radius:
+                coef = self.radius/10.0
+            coef = max(.5, coef)
+            rad = diff*math.sqrt(2)*coef
             subsystems = self._subsystems(possible_x_values, possible_y_values,
                                           rad, diff)
             self._actual_subdivision = subsystems
@@ -346,29 +350,28 @@ class SystemState(object):
         the programm makes.
         BUG: indices get higher values than allowed.
         """
-        x_0 = min(possible_x_values)-diff/2.0
-        y_0 = min(possible_y_values)-diff/2.0
+        x_min = min(possible_x_values)-diff/2.0
+        y_min = min(possible_y_values)-diff/2.0
+        x_max = max(possible_x_values)+diff/2.0
+        y_max = max(possible_y_values)+diff/2.0
         divisions = len(possible_x_values)
-        div_range = range(divisions+2)
+        div_range = range(divisions)
         output = [[[] for dummy_1 in div_range] for dummy_2 in div_range]
         for rod in rods_list:
-            index_x = int((rod.x_mid-x_0)/diff)-1
-            index_y = int((rod.y_mid-y_0)/diff)-1
+            index_x = int((rod.x_mid-x_min)/diff)
+            index_y = int((rod.y_mid-y_min)/diff)
+            msgx = "Too high value for index_x "+str(index_x)+" "+str(divisions)
+            msgx += "\n" + str([rod.x_mid, x_min, x_max, diff]) 
+            msgy = "Too high value for index_y "+str(index_y)+" "+str(divisions)
+            msgy += "\n" + str([rod.y_mid, y_min, y_max, diff]) 
+            assert index_x < divisions, msgx
+            assert index_y < divisions, msgy
             try:
                 output[index_y][index_x].append(rod)
             except IndexError:
                 print index_y, index_x
                 print len(output), len(output[index_y])
                 raise IndexError
-            """
-            if index_x > 0:
-                output[index_y][index_x-1].append(rod)
-            if index_x < divisions-1:
-                output[index_y][index_x+1].append(rod)
-            if index_y > 0:
-                output[index_y-1][index_x].append(rod)
-            if index_y < divisions-1:
-                output[index_y+1][index_x].append(rod)"""
         return output
             
 
