@@ -927,12 +927,12 @@ class SubsystemState(SystemState):
                             kappas=kappas, allowed_kappa_error=allowed_kappa_error)
         self._is_subsystem = True
         self._center = center
-        self._rad = rad
+        self._radius = rad
         self._main_center = (zone_coords[0], zone_coords[1])
         self._main_rad = zone_coords[2]
         self._position_rad = methods.distance_between_points(self._main_center,
                                             self._center)
-        self._area = methods.effective_area(self._rad,
+        self._area = methods.effective_area(self._radius,
                                     self._position_rad, self._main_rad)
 
     def remove_all_rods(self):
@@ -953,7 +953,7 @@ class SubsystemState(SystemState):
         """
             Radius of the subsystem
         """
-        return self._rad
+        return self._radius
 
     @property
     def area(self):
@@ -987,9 +987,11 @@ class SubsystemState(SystemState):
         """
             Check if rods are correct.
         """
+        rods = []
         for rod_ in self._rods:
-            if not rod_.is_in_circle(self.center, self.radius):
-                self._remove_rod(rod_)
+            if rod_.is_in_circle(self.center, self.radius):
+                rods.append(rod_)
+        self._rods = queue.Queue(rods)
         self._reset()
 
 
