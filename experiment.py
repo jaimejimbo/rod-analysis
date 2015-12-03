@@ -847,7 +847,8 @@ class Experiment(object):
                         new_process.start()
 
 
-    def create_density_gif(self, divisions=5, folder="./", fps=1):
+    def create_density_gif(self, divisions=5, folder="./", fps=1,
+                                 number_of_bursts=1):
         """
         Creates a gif of density's evolution.
         """
@@ -859,7 +860,8 @@ class Experiment(object):
         self._generic_scatter_animator(frames, name, function_name,
                             divisions, fps=fps)
 
-    def create_relative_g2_gif(self, divisions=5, folder="./", fps=1):
+    def create_relative_g2_gif(self, divisions=5, folder="./", fps=1,
+                                 number_of_bursts=1):
         """
         Creates a gif of correlation g2 evolution.
         """
@@ -871,7 +873,8 @@ class Experiment(object):
         self._generic_scatter_animator(frames, name, function_name,
                             divisions, fps=fps)
 
-    def create_relative_g4_gif(self, divisions=5, folder="./", fps=1):
+    def create_relative_g4_gif(self, divisions=5, folder="./", fps=1,
+                                 number_of_bursts=1):
         """
         Creates a gif of correlation g4 evolution.
         """
@@ -883,7 +886,8 @@ class Experiment(object):
         self._generic_scatter_animator(frames, name, function_name,
                             divisions, fps=fps)
 
-    def create_average_angle_gif(self, divisions=5, folder="./", fps=1):
+    def create_average_angle_gif(self, divisions=5, folder="./", fps=1,
+                                 number_of_bursts=1):
         """
         Creates a gif of average angle evolution.
         """
@@ -897,7 +901,7 @@ class Experiment(object):
 
 
     def _generic_scatter_animator(self, frames, name, function_name,
-                                    divisions, fps=1):
+                                    divisions, fps=1, number_of_bursts=1):
         """
         Generic animator
         """
@@ -906,12 +910,13 @@ class Experiment(object):
         z_vals = []
         x_val = []
         y_val = []
-        for group in bursts_groups:
-            for index in group:
-                state = self._states[index]
-                function = getattr(state, function_name)
-                x_val, y_val, z_val = function(divisions)
-                z_vals.append(z_val)
+        for burst in range(number_of_bursts):
+            for group in bursts_groups:
+                for index in group:
+                    state = self._states[index]
+                    function = getattr(state, function_name)
+                    x_val, y_val, z_val = function(divisions)
+                    z_vals.append(z_val)
         z_maxs = []
         z_mins = []
         for z_val in z_vals:
@@ -965,13 +970,16 @@ class Experiment(object):
 
     def create_gifs(self, divisions=5, folder="./", fps=1,
                             max_distance=100, max_angle_diff=90, limit=5,
-                            amount_of_rods=200):
+                            amount_of_rods=200, number_of_bursts=1):
         """
         Creates a gif per property of the system that shows evolution.
         """
-        self.create_density_gif(divisions=divisions, folder=folder, fps=fps)
-        self.create_relative_g2_gif(divisions=divisions, folder=folder, fps=fps)
-        self.create_relative_g4_gif(divisions=divisions, folder=folder, fps=fps)
+        self.create_density_gif(divisions=divisions, folder=folder, fps=fps,
+                                 number_of_bursts=number_of_bursts)
+        self.create_relative_g2_gif(divisions=divisions, folder=folder, fps=fps,
+                                 number_of_bursts=number_of_bursts)
+        self.create_relative_g4_gif(divisions=divisions, folder=folder, fps=fps,
+                                 number_of_bursts=number_of_bursts)
         self.create_temperature_gif(divisions=divisions, folder=folder, fps=fps,
                             max_distance=max_distance, max_angle_diff=max_angle_diff,
                             limit=limit, amount_of_rods=amount_of_rods)

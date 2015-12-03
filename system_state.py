@@ -335,12 +335,8 @@ class SystemState(object):
                                  for times in range(divisions+2)]
             possible_y_values = [start_y + (times-1)*diff
                                  for times in range(divisions+2)]
-            #coef = 3*divisions/10.0
-            #if coef > self.radius:
-            #    coef = self.radius/10.0
-            #coef = max(.5, coef)
-            coef = .5
-            rad = diff*math.sqrt(2)*coef
+            coef = 3
+            rad = diff*math.sqrt(2)*coef/2
             subsystems = self._subsystems(possible_x_values, possible_y_values,
                                           rad, diff, divisions)
             self._actual_subdivision = subsystems
