@@ -996,10 +996,10 @@ class Experiment(object):
                          args=(divisions, folder, fps, number_of_bursts)))
         processes.append(mp.Process(target=self.create_relative_g4_gif,
                          args=(divisions, folder, fps, number_of_bursts)))
-        processes.append(mp.Process(target=self.create_temperature_gif,
-                         args=(divisions, folder, fps, max_distance,
-                               max_angle_diff, limit, amount_of_rods,
-                               number_of_bursts)))
+        #processes.append(mp.Process(target=self.create_temperature_gif,
+        #                 args=(divisions, folder, fps, max_distance,
+        #                       max_angle_diff, limit, amount_of_rods,
+        #                       number_of_bursts)))
         for process in processes:
             process.start()
             process.join()
