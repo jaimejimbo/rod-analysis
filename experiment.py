@@ -998,7 +998,8 @@ class Experiment(object):
                          args=(divisions, folder, fps, number_of_bursts)))
         processes.append(mp.Process(target=self.create_temperature_gif,
                          args=(divisions, folder, fps, max_distance,
-                               max_angle_diff, limit, amount_of_rods)))
+                               max_angle_diff, limit, amount_of_rods,
+                               number_of_bursts)))
         for process in processes:
             process.start()
             process.join()
@@ -1041,32 +1042,50 @@ class Experiment(object):
 
     def create_temperature_gif(self, divisions, folder, fps,
                             max_distance, max_angle_diff,
-                            limit, amount_of_rods):
+                            limit, amount_of_rods, number_of_bursts):
         """
         Creates a gif of temperature evolution.
         """
         x_vals, y_vals, z_vals = self.plottable_local_average_quadratic_speeds(
-                                        max_distance,
-                                        max_angle_diff, limit,
+                                        max_distance, max_angle_diff, limit,
                                         amount_of_rods, divisions)
-        self._last_index = 0
+        bursts_groups = copy.deepcopy(self.bursts_groups)
+        end = False
+        z_vals_avg = []
+        while not end:
+            groups = []
+            average = None
+            _z_vals = []
+            for dummy_time in range(number_of_bursts):
+                try:
+                    group = bursts_groups.pop()
+                    groups.append(group)
+                except IndexError:
+                    end = True            
+            for group in groups:
+                for dummy_time in range(len(group)):
+                    z_val = z_vals.pop()
+                    _z_vals.append(z_val)
+            average = methods.array_average(_z_vals)
+            z_vals_avg.append(average)
         fig = plt.figure()
         kappas = self._states[0].kappas
         name = str(folder)+"Temperature"+str(kappas)+".gif"
         z_maxs = []
         z_mins = []
-        for z_val in z_vals:
+        for z_val in z_vals_avg:
             z_maxs.append(max(z_val))
             z_mins.append(min(z_val))
         z_max = max(z_maxs)
         z_min = min(z_mins)
+        frames = len(z_vals_avg)
         def animate(dummy_frame):
             """
             Animation function.
             """
-            self._last_index = self._temperature_gif_wrapper(x_vals, y_vals,
-                                                z_vals, divisions, name,
-                                                z_max, z_min)
+            self._temperature_gif_wrapper(x_vals, y_vals,
+                                        z_vals_avg, divisions, name,
+                                        z_max, z_min, number_of_bursts)
         frames = len(self._states)-2
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
