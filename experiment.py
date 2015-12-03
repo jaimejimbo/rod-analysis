@@ -1061,21 +1061,30 @@ class Experiment(object):
                     group = bursts_groups.pop()
                     groups.append(group)
                 except IndexError:
-                    end = True            
+                    end = True     
+            if not len(groups):
+                break       
             for group in groups:
                 for dummy_time in range(len(group)):
                     z_val = z_vals.pop()
                     _z_vals.append(z_val)
-            average = methods.array_average(_z_vals)
+            try:
+                average = methods.array_average(_z_vals)
+            except IndexError:
+                average = _z_vals
             z_vals_avg.append(average)
         fig = plt.figure()
         kappas = self._states[0].kappas
         name = str(folder)+"Temperature"+str(kappas)+".gif"
         z_maxs = []
         z_mins = []
-        for z_val in z_vals_avg:
-            z_maxs.append(max(z_val))
-            z_mins.append(min(z_val))
+        try:
+            for z_val in z_vals_avg:
+                z_maxs.append(max(z_val))
+                z_mins.append(min(z_val))
+        except ValueError:
+            print z_vals_avg
+            raise ValueError
         z_max = max(z_maxs)
         z_min = min(z_mins)
         frames = len(z_vals_avg)
@@ -1085,7 +1094,7 @@ class Experiment(object):
             """
             self._temperature_gif_wrapper(x_vals, y_vals,
                                         z_vals_avg, divisions, name,
-                                        z_max, z_min, number_of_bursts)
+                                        z_max, z_min)
         frames = len(self._states)-2
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
