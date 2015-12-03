@@ -450,7 +450,7 @@ def run_processes(processes):
         Runs all processes using all cores.
     """
     running = []
-    cpus = mp.cpu_count()/2
+    cpus = mp.cpu_count()
     try:
         for dummy in range(cpus):
             next_process = processes.pop()

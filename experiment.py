@@ -394,7 +394,7 @@ class Experiment(object):
             self._fill_dicts(max_distance, max_angle_diff, limit=limit,
                                 amount_of_rods=amount_of_rods)
             self._leave_only_closer(max_distance=max_distance)
-            #self._join_left_rods(max_distance=max_distance)
+            #self._join_rods_left(max_distance=max_distance)
             self._get_vectors()
 
     def vectors_dictionaries(self, max_distance=100, max_angle_diff=90,
@@ -470,7 +470,7 @@ class Experiment(object):
         return self._evolution_dictionaries
 
 
-    def _join_left_rods(self, max_distance=50):
+    def _join_rods_left(self, max_distance=50):
         """
         After using methods listed before, some rods are unjoined.
         This joins closest rods.
@@ -478,7 +478,7 @@ class Experiment(object):
         output_queue = mp.Queue()
         processes = []
         for index in range(len(self._evolution_dictionaries)-1):
-            process = mp.Process(target=self._join_left_rods_process,
+            process = mp.Process(target=self._join_rods_left_process,
                                  args=(index, output_queue, max_distance))
             processes.append(process)
         running, processes_left = methods.run_processes(processes)
@@ -498,7 +498,7 @@ class Experiment(object):
                 new_process.start()
 
 
-    def _join_left_rods_process(self, index, output_queue, max_distance=50):
+    def _join_rods_left_process(self, index, output_queue, max_distance=50):
         """
         Process for method.
         """
@@ -857,8 +857,8 @@ class Experiment(object):
         function_name = 'plottable_density_matrix'
         kappas = self._states[0].kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
-        self._generic_scatter_animator(frames, name, function_name,
-                            divisions, fps=fps)
+        self._generic_scatter_animator(name, function_name,
+                        divisions, fps=fps, number_of_bursts=number_of_bursts)
 
     def create_relative_g2_gif(self, divisions=5, folder="./", fps=1,
                                  number_of_bursts=1):
@@ -870,8 +870,8 @@ class Experiment(object):
         function_name = 'relative_g2_plot_matrix'
         kappas = self._states[0].kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
-        self._generic_scatter_animator(frames, name, function_name,
-                            divisions, fps=fps)
+        self._generic_scatter_animator(name, function_name,
+                        divisions, fps=fps, number_of_bursts=number_of_bursts)
 
     def create_relative_g4_gif(self, divisions=5, folder="./", fps=1,
                                  number_of_bursts=1):
@@ -883,8 +883,8 @@ class Experiment(object):
         function_name = 'relative_g4_plot_matrix'
         kappas = self._states[0].kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
-        self._generic_scatter_animator(frames, name, function_name,
-                            divisions, fps=fps)
+        self._generic_scatter_animator(name, function_name,
+                        divisions, fps=fps, number_of_bursts=number_of_bursts)
 
     def create_average_angle_gif(self, divisions=5, folder="./", fps=1,
                                  number_of_bursts=1):
@@ -896,11 +896,11 @@ class Experiment(object):
         function_name = 'plottable_average_angle_matrix'
         kappas = self._states[0].kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
-        self._generic_scatter_animator(frames, name, function_name,
-                            divisions, fps=fps)
+        self._generic_scatter_animator(name, function_name,
+                        divisions, fps=fps, number_of_bursts=number_of_bursts)
 
 
-    def _generic_scatter_animator(self, frames, name, function_name,
+    def _generic_scatter_animator(self, name, function_name,
                                     divisions, fps=1, number_of_bursts=1):
         """
         Generic animator
@@ -908,18 +908,29 @@ class Experiment(object):
         fig = plt.figure()
         bursts_groups = copy.deepcopy(self.bursts_groups)
         z_vals = []
+        z_vals_avg = []
         x_val = []
         y_val = []
-        for burst in range(number_of_bursts):
-            for group in bursts_groups:
+        cont = True
+        while cont:
+            groups = []
+            try:
+                for burst in range(number_of_bursts):
+                    group = bursts_groups.pop()
+                    groups.append(group)
+            except IndexError:
+                cont = False
+            for group in groups:
                 for index in group:
                     state = self._states[index]
                     function = getattr(state, function_name)
                     x_val, y_val, z_val = function(divisions)
                     z_vals.append(z_val)
+            z_vals_avg.append(methods.array_average(z_vals))
+        frames = len(z_vals)
         z_maxs = []
         z_mins = []
-        for z_val in z_vals:
+        for z_val in z_vals_avg:
             z_maxs.append(max(z_val))
             z_mins.append(min(z_val))
         z_max = max(z_maxs)
@@ -928,7 +939,7 @@ class Experiment(object):
             """
             Wrapper.
             """
-            self._animate_scatter(x_val, y_val, z_vals,
+            self._animate_scatter(x_val, y_val, z_vals_avg,
                                 divisions, name, z_max, z_min)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
