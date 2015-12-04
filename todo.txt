@@ -37,6 +37,7 @@ Segregation
  
 bugs:
 - Temperatures seem to be not computed correctly.       (in progress)
+- g2, g4 not computed correctly.                        (in progress)
 
 
 - use n>3,4 for clusters                                (in progress)
