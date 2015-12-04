@@ -1002,6 +1002,7 @@ class Experiment(object):
         #                       number_of_bursts)))
         for process in processes:
             process.start()
+        for process in processes:
             process.join()
 
     def plottable_local_average_quadratic_speeds(self,

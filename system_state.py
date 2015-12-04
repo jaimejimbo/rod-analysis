@@ -999,18 +999,19 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
     Create one rod for each rod_data and for each file
     returns [RodGroup1, RodGroup2, ...]
     """
-    names, files = methods.import_files(folder=folder)
-    if len(files) == 0:
+    names = methods.get_file_names(folder=folder)
+    num_of_files = len(names)
+    if not num_of_files:
         print "No files to import."
         raise ValueError
-    states = [None for dummy_ in range(len(files))]
+    states = [None for dummy_ in range(num_of_files)]
     processes = []
     states_queue = mp.Queue()
-    for index in range(len(files)):
+    for index in range(num_of_files):
         process = mp.Process(target=create_rods_process,
                             args=(kappas, allowed_kappa_error,
                             radius_correction_ratio, names,
-                            files, index, states_queue))
+                            index, states_queue))
         processes.append(process)
     running, processes_left = methods.run_processes(processes)
     num_processes = len(running)
@@ -1030,13 +1031,15 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
 
 def create_rods_process(kappas, allowed_kappa_error,
                         radius_correction_ratio, names,
-                        files, index, states_queue):
+                        index, states_queue):
     """
     Process of method.
     """
+    name = names[index]
+    file_ = open(name, 'r')
     state = SystemState(kappas, allowed_kappa_error,
-               radius_correction_ratio, names[index])
-    data = methods.import_data(files[index])
+               radius_correction_ratio, name)
+    data = methods.import_data(file_)
     for dataline in data:
         try:
             parameters = tuple(dataline)
