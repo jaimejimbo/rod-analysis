@@ -5,8 +5,8 @@ Main script.
 """
 
 import experiment
-import system_state
-import methods
+import libraries/system_state
+import libraries/methods
 
 run_imagej = False
 
