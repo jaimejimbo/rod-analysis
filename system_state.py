@@ -633,7 +633,7 @@ class SystemState(object):
                     selected_rod = rod2
         return selected_rod
 
-    def _get_cluster_members(self, reference_rod,
+    def _get_cluster_members(self, reference_rod, min_size,
                                     max_distance, max_angle_diff):
         """
             Gets the closest neighbour to a rod that fulfill
@@ -654,21 +654,23 @@ class SystemState(object):
             angle_diff = abs(rod_.angle-reference_rod.angle)
             angle_diff = min([angle_diff, 180-angle_diff])
             if angle_diff <= max_angle_diff and distance < max_distance:
-                subrods = self._get_cluster_members(rod_, max_distance,
-                                                    max_angle_diff)
+                subrods = self._get_cluster_members(rod_, min_size,
+                                               max_distance, max_angle_diff)
                 rods.add(rod_)
                 rods |= subrods
                 continue
             cond1 = distance <= 1.4*max_distance
             cond2 = angle_diff <= max_angle_diff/2.0
             if cond1 and cond2:
-                subrods = self._get_cluster_members(rod_, max_distance,
-                                                   max_angle_diff)
+                subrods = self._get_cluster_members(rod_, min_size,
+                                               max_distance, max_angle_diff)
                 rods.add(rod_)
                 rods |= subrods
+        if len(rods) < min_size:
+            rods = set([])
         return rods
 
-    def clusters(self, max_distance=None, max_angle_diff=None):
+    def clusters(self, max_distance=None, max_angle_diff=None, min_size=3):
         """
             Gets the cluster for rod.
         Recursive method.
@@ -692,51 +694,58 @@ class SystemState(object):
             for rod_ in self._rods:
                 if self._cluster_checked_dict[rod_.identifier]:
                     continue
-                cluster = self._get_cluster_members(rod_,
+                cluster = self._get_cluster_members(rod_, min_size,
                                 max_distance, max_angle_diff)
                 if cluster:
                     clusters.append(cluster)
             self._clusters = methods.erase_length_one_elements(clusters)
         return self._clusters
 
-    def average_cluster_rod_num(self, max_distance=None, max_angle_diff=None):
+    def average_cluster_rod_num(self, max_distance=None,
+                                max_angle_diff=None, min_size=3):
         """
             Gets the average number of rods in clusters.
         Angles in grad.
         """
-        lengths = self.number_of_rods_in_cluster(max_distance, max_angle_diff)
+        lengths = self.number_of_rods_in_cluster(max_distance,
+                                        max_angle_diff, min_size)
         try:
             return float(sum(lengths))/len(lengths)
         except ZeroDivisionError:
             print "No clusters detected."
 
-    def number_of_rods_in_cluster(self, max_distance=None, max_angle_diff=None):
+    def number_of_rods_in_cluster(self, max_distance=None,
+                            max_angle_diff=None, min_size=3):
         """
             Creates a list with the number of rods in each cluster.
         Angles in grad.
         """
         lengths = []
-        clusters = self.clusters(max_distance, max_angle_diff)
+        clusters = self.clusters(max_distance,
+                                max_angle_diff, min_size)
         for cluster in clusters:
             lengths.append(len(cluster))
         return lengths
 
-    def number_of_clusters(self, max_distance=None, max_angle_diff=None):
+    def number_of_clusters(self, max_distance=None,
+                            max_angle_diff=None, min_size=3):
         """
             Returns the number of clusters in the system.
         Angles in grad.
         """
-        clusters = self.clusters(max_distance, max_angle_diff)
+        clusters = self.clusters(max_distance,
+                                max_angle_diff, min_size)
         return len(clusters)
 
-    def total_area_of_clusters(self, max_distance=None, max_angle_diff=None):
+    def total_area_of_clusters(self, max_distance=None,
+                                max_angle_diff=None, min_size=3):
         """
             Returns the area covered by clusters.
         """
-        clusters = self.clusters(max_distance, max_angle_diff)
         rod_area = self.rod_area
         rods_num = self.number_of_rods_in_cluster(max_distance=max_distance,
-                                               max_angle_diff=max_angle_diff)
+                                               max_angle_diff=max_angle_diff,
+                                               min_size=min_size)
         rods_num = sum(rods_num)
         if not rods_num or not rod_area:
             return 0
@@ -809,7 +818,8 @@ class SystemState(object):
                 cos += math.cos(2*angle)
             sin /= self.area
             cos /= self.area
-            self._relative_g2 = math.sqrt(sin**2+cos**2)
+            kappa = 1#self.average_kappa
+            self._relative_g2 = kappa*math.sqrt(sin**2+cos**2)
         return self._relative_g2
 
     @property
@@ -831,7 +841,8 @@ class SystemState(object):
                 cos += math.cos(4*angle)
             sin /= self.area
             cos /= self.area
-            self._relative_g4 = math.sqrt(sin**2+cos**2)
+            kappa = 1#self.average_kappa
+            self._relative_g4 = kappa*math.sqrt(sin**2+cos**2)
         return self._relative_g4
 
     def _compute_relative_g2_g4_mat(self, divisions):

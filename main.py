@@ -32,18 +32,16 @@ experiment_17 = experiment.Experiment(system_states_name_list=names,
 #print experiment_5._states[0].plottable_density_matrix(divisions=10)
 experiment_5.divide_systems_in_circles(divisions=20)
 experiment_17.divide_systems_in_circles(divisions=20)
-#experiment_5.create_gifs(divisions=20, fps=15, max_distance=10, max_angle_diff=5,
-#                         number_of_bursts=1)
-#experiment_17.create_gifs(divisions=20, fps=15, max_distance=10, max_angle_diff=5,
-#                         number_of_bursts=1)
-#print experiment_5.cluster_area(max_distance=10, max_angle_diff=2)
-#print experiment_17.cluster_area(max_distance=10, max_angle_diff=2)
-experiment_5.create_temperature_gif(20, folder="./", fps=15,
-                            max_distance=100, max_angle_diff=90,
-                            limit=10, amount_of_rods=200, number_of_bursts=1)
-experiment_17.create_temperature_gif(20, folder="./", fps=15,
-                            max_distance=50, max_angle_diff=30,
-                            limit=10, amount_of_rods=200, number_of_bursts=1)
+experiment_5.create_gifs(divisions=20, fps=15, max_distance=10, max_angle_diff=5,
+                         number_of_bursts=1)
+experiment_17.create_gifs(divisions=20, fps=15, max_distance=10, max_angle_diff=5,
+                         number_of_bursts=1)
+cluster_areas5 = experiment_5.cluster_areas(max_distance=50,
+                    max_angle_diff=30, min_size=3)
+cluster_areas17 = experiment_17.cluster_areas(max_distance=50,
+                    max_angle_diff=30, min_size=3)
+print cluster_areas5
+print cluster_areas17
 """x_val, y_val = experiment_5._states[1].rods_possitions
 import matplotlib.pyplot as plt
 plt.figure()

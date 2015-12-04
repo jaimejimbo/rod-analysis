@@ -69,6 +69,8 @@ class Experiment(object):
         self._cluster_areas = []
         self._bursts_groups = []
         self._divisions = None
+        self._min_density = None
+        self._max_density = None
 
     def __iter__(self):
         """
@@ -118,6 +120,8 @@ class Experiment(object):
         self._speeds_matrices = []
         self._cluster_areas = []
         self._divisions = None
+        self._min_density = None
+        self._max_density = None
 
 
     def _create_dict_keys(self):
@@ -861,8 +865,10 @@ class Experiment(object):
         function_name = 'plottable_density_matrix'
         kappas = self._states[0].kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
-        self._generic_scatter_animator(name, function_name,
+        z_min, z_max = self._generic_scatter_animator(name, function_name,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
+        self._min_density = z_min
+        self._max_density = z_max
 
     def create_relative_g2_gif(self, divisions, folder, fps,
                                  number_of_bursts):
@@ -932,13 +938,18 @@ class Experiment(object):
                     z_vals.append(z_val)
             z_vals_avg.append(methods.array_average(z_vals))
         frames = len(z_vals)
-        z_maxs = []
-        z_mins = []
-        for z_val in z_vals_avg:
-            z_maxs.append(max(z_val))
-            z_mins.append(min(z_val))
-        z_max = max(z_maxs)
-        z_min = min(z_mins)
+        match = re.match(r'.*?relative.*', function_name)
+        if not match or not self._max_density:
+            z_maxs = []
+            z_mins = []
+            for z_val in z_vals_avg:
+                z_maxs.append(max(z_val))
+                z_mins.append(min(z_val))
+            z_max = max(z_maxs)
+            z_min = min(z_mins)
+        else:
+            z_max = self._max_density
+            z_min = self._min_density
         def animate(dummy_frame):
             """
             Wrapper.
@@ -947,6 +958,7 @@ class Experiment(object):
                                 divisions, name, z_max, z_min)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
+        return z_min, z_max
 
     def _animate_scatter(self, x_val, y_val, z_vals,
                                 divisions, name, z_max, z_min):
@@ -989,21 +1001,12 @@ class Experiment(object):
         """
         Creates a gif per property of the system that shows evolution.
         """
-        processes = []
-        processes.append(mp.Process(target=self.create_density_gif,
-                         args=(divisions, folder, fps, number_of_bursts)))
-        processes.append(mp.Process(target=self.create_relative_g2_gif,
-                         args=(divisions, folder, fps, number_of_bursts)))
-        processes.append(mp.Process(target=self.create_relative_g4_gif,
-                         args=(divisions, folder, fps, number_of_bursts)))
-        #processes.append(mp.Process(target=self.create_temperature_gif,
-        #                 args=(divisions, folder, fps, max_distance,
-        #                       max_angle_diff, limit, amount_of_rods,
-        #                       number_of_bursts)))
-        for process in processes:
-            process.start()
-        for process in processes:
-            process.join()
+        self.create_density_gif(divisions, folder, fps, number_of_bursts)
+        self.create_relative_g2_gif(divisions, folder, fps, number_of_bursts)
+        self.create_relative_g4_gif(divisions, folder, fps, number_of_bursts)
+        self.create_temperature_gif(divisions, folder, fps, max_distance,
+                               max_angle_diff, limit, amount_of_rods,
+                               number_of_bursts)
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,
@@ -1129,8 +1132,8 @@ class Experiment(object):
         plt.colorbar()
         plt.gca().invert_yaxis()
 
-    def _cluster_area_step(self, last_index, max_distance=None,
-                                           max_angle_diff=None):
+    def _cluster_areas_step(self, last_index, max_distance=None,
+                               max_angle_diff=None, min_size=3):
         """
         Wrapper
         """
@@ -1145,7 +1148,8 @@ class Experiment(object):
         while True:
             state = self._states[index]
             z_val = state.total_area_of_clusters(max_distance=max_distance,
-                                                 max_angle_diff=max_angle_diff)
+                                                 max_angle_diff=max_angle_diff,
+                                                 min_size=min_size)
             z_vals.append(z_val)
             index += 1
             if index == number_of_states-2:
@@ -1157,7 +1161,8 @@ class Experiment(object):
         z_val = float(sum(z_vals))/len(z_vals)
         return index, z_val
 
-    def cluster_area(self, max_distance=None, max_angle_diff=None):
+    def cluster_areas(self, max_distance=None,
+                    max_angle_diff=None, min_size=3):
         """
         Returns an array where each value is total cluster area in
         that moment.
@@ -1173,9 +1178,10 @@ class Experiment(object):
             last_index = 0
             areas = []
             while last_index != -1:
-                last_index, area = self._cluster_area_step(last_index,
+                last_index, area = self._cluster_areas_step(last_index,
                                                 max_distance=max_distance,
-                                                max_angle_diff=max_angle_diff)
+                                                max_angle_diff=max_angle_diff,
+                                                min_size=min_size)
                 areas.append(area)
             areas.pop(-1)
             self._cluster_areas = areas
