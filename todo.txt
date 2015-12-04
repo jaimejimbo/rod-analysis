@@ -36,12 +36,12 @@ Segregation
 - Order param(cluster area)                             (in progress)
  
 bugs:
-- Temperatures seem to be not computed correctly.
+- Temperatures seem to be not computed correctly.       (in progress)
 
 
 - use n>3,4 for clusters                                (in progress)
 - normalized histogram of number of rods in clusters.   (not started)
-- densidad x param orden                                (not started)
+- density x order param                                 (not started)
 - clusters area                                         (not started)
 - clusters                                              (not started)
 - g2, g4 divide by area                                 (DONE)

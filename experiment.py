@@ -400,7 +400,7 @@ class Experiment(object):
             self._fill_dicts(max_distance, max_angle_diff, limit=limit,
                                 amount_of_rods=amount_of_rods)
             self._leave_only_closer(max_distance=max_distance)
-            #self._join_rods_left(max_distance=max_distance)
+            self._join_rods_left(max_distance=max_distance)
             self._get_vectors()
 
     def vectors_dictionaries(self, max_distance=100, max_angle_diff=90,
