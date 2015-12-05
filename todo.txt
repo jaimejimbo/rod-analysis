@@ -40,7 +40,7 @@ bugs:
 - g2, g4 not computed correctly.                        (in progress)
 
 
-- use n>3,4 for clusters                                (in progress)
+- use n>3,4 for clusters                                (DONE)
 - normalized histogram of number of rods in clusters.   (not started)
 - density x order param                                 (not started)
 - clusters area                                         (not started)

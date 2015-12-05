@@ -877,7 +877,8 @@ class Experiment(object):
         """
         #self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
-        function_name = 'relative_g2_plot_matrix'
+        function_name = 'correlation_g2_plot_matrix'
+        #function_name = 'relative_g2_plot_matrix'
         kappas = self._states[0].kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
         self._generic_scatter_animator(name, function_name,
@@ -890,7 +891,8 @@ class Experiment(object):
         """
         #self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
-        function_name = 'relative_g4_plot_matrix'
+#        function_name = 'relative_g4_plot_matrix'
+        function_name = 'correlation_g4_plot_matrix'
         kappas = self._states[0].kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
         self._generic_scatter_animator(name, function_name,
@@ -938,7 +940,7 @@ class Experiment(object):
                     z_vals.append(z_val)
             z_vals_avg.append(methods.array_average(z_vals))
         frames = len(z_vals)
-        match = re.match(r'.*?relative.*', function_name)
+        match = re.match(r'.*?g[2|4].*', function_name)
         if not match or not self._max_density:
             z_maxs = []
             z_mins = []

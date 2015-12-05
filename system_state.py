@@ -471,10 +471,18 @@ class SystemState(object):
         cos2_av, sin2_av, cos4_av, sin4_av = 0, 0, 0, 0
         for rod_ in list(self._rods):
             angle = rod_.angle*math.pi/180.0
-            cos2_av += math.cos(2*angle)/self.number_of_rods
-            sin2_av += math.sin(2*angle)/self.number_of_rods
-            cos4_av += math.cos(4*angle)/self.number_of_rods
-            sin4_av += math.sin(4*angle)/self.number_of_rods
+            cos2_av += math.cos(2*angle)
+            sin2_av += math.sin(2*angle)
+            cos4_av += math.cos(4*angle)
+            sin4_av += math.sin(4*angle)
+        if not self.area:
+            self._correlation_g2 = 0
+            self._correlation_g4 = 0
+            return
+        cos2_av /= self.area
+        sin2_av /= self.area
+        cos4_av /= self.area
+        sin4_av /= self.area
         self._correlation_g2 = math.sqrt(cos2_av**2+sin2_av**2)
         self._correlation_g4 = math.sqrt(cos4_av**2+sin4_av**2)
 
