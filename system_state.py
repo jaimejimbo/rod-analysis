@@ -50,6 +50,7 @@ class SystemState(object):
         self._clusters_max_angle_diff = None
         self._divisions = None
         self._coef = 1
+        self._fixed = True
         try:
             self._radius = zone_coords[2]
             self._center_x = zone_coords[0]
@@ -256,31 +257,35 @@ class SystemState(object):
             Computes where the center of the system is and its
         radius.
         """
-        #There must be rods to make statistics.
-        if self.number_of_rods == 0:
-            msg = "center_and_radius can't be computed before adding rods"
-            raise ValueError(msg)
-        try:
-            not_defined = not len(self._zone_coords)
-            not_defined = not_defined and not self._fixed_center_radius
-        except AttributeError:
-            not_defined = True
-        if not_defined and not self._is_subsystem:
-            x_values = []
-            y_values = []
-            for rod_ in list(self._rods):
-                x_values.append(rod_.x_mid)
-                y_values.append(rod_.y_mid)
-            #center is the mean position of all particles.
-            center_x = sum(x_values)*1.0/self.number_of_rods
-            center_y = sum(y_values)*1.0/self.number_of_rods
-            #radius is the average of maximum distances /2.
-            radius = (max(x_values)-min(x_values)+max(y_values)-min(y_values))
-            radius *= (1-self._radius_correction_ratio)/4.0
-            self._center_x = center_x
-            self._center_y = center_y
-            self._radius = radius
-            self._zone_coords = (center_x, center_y, radius)
+        self._center_x = 1300
+        self._center_y = 925
+        self._radius = 770.2
+        if not self._fixed:
+            #There must be rods to make statistics.
+            if self.number_of_rods == 0:
+                msg = "center_and_radius can't be computed before adding rods"
+                raise ValueError(msg)
+            try:
+                not_defined = not len(self._zone_coords)
+                not_defined = not_defined and not self._fixed_center_radius
+            except AttributeError:
+                not_defined = True
+            if not_defined and not self._is_subsystem:
+                x_values = []
+                y_values = []
+                for rod_ in list(self._rods):
+                    x_values.append(rod_.x_mid)
+                    y_values.append(rod_.y_mid)
+                #center is the mean position of all particles.
+                center_x = sum(x_values)*1.0/self.number_of_rods
+                center_y = sum(y_values)*1.0/self.number_of_rods
+                #radius is the average of maximum distances /2.
+                radius = (max(x_values)-min(x_values)+max(y_values)-min(y_values))
+                radius *= (1-self._radius_correction_ratio)/4.0
+                self._center_x = center_x
+                self._center_y = center_y
+                self._radius = radius
+        self._zone_coords = (self._center_x, self._center_y, self._radius)
         return self._center_x, self._center_y, self._radius
 
     @property
