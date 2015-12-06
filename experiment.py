@@ -181,7 +181,7 @@ class Experiment(object):
             self._relative_dictionaries[index] = output_row[2]
             if len(processes_left):
                 finished -= 1
-                new_process = processes_left.pop()
+                new_process = processes_left.pop(0)
                 new_process.start()
 
 
@@ -328,7 +328,7 @@ class Experiment(object):
             self._final_rods[index] -= selected[1]
             if len(processes_left):
                 finished -= 1
-                new_process = processes_left.pop()
+                new_process = processes_left.pop(0)
                 new_process.start()
 
 
@@ -442,7 +442,7 @@ class Experiment(object):
             self._speed_vectors[index] = speed_vectors
             if len(processes_left):
                 finished -= 1
-                new_process = processes_left.pop()
+                new_process = processes_left.pop(0)
                 new_process.start()
 
     def _get_vectors_process(self, index, output_queue):
@@ -508,7 +508,7 @@ class Experiment(object):
             self._relative_dictionaries[index] = relative_dict
             if len(processes_left):
                 finished -= 1
-                new_process = processes_left.pop()
+                new_process = processes_left.pop(0)
                 new_process.start()
 
 
@@ -579,7 +579,7 @@ class Experiment(object):
                 self._angular_speeds.append(angular_speeds)
                 if len(processes_left):
                     finished -= 1
-                    new_process = processes_left.pop()
+                    new_process = processes_left.pop(0)
                     new_process.start()
 
 
@@ -678,7 +678,7 @@ class Experiment(object):
             self._local_speeds[index] = speeds_matrix
             if len(processes_left):
                 finished -= 1
-                new_process = processes_left.pop()
+                new_process = processes_left.pop(0)
                 new_process.start()
 
 
@@ -736,7 +736,7 @@ class Experiment(object):
                 self._local_average_quadratic_angular_speeds[index] = output[2]
                 if len(processes_left):
                     finished -= 1
-                    new_process = processes_left.pop()
+                    new_process = processes_left.pop(0)
                     new_process.start()
 
     def local_average_quadratic_speed(self, max_distance=100, max_angle_diff=90,
@@ -799,7 +799,7 @@ class Experiment(object):
                 self._speeds_matrices[output[3]](output[2])
                 if len(processes_left):
                     finished -= 1
-                    new_process = processes_left.pop()
+                    new_process = processes_left.pop(0)
                     new_process.start()
             self._densities_array = densities
             self._quad_speeds_array = quad_speeds
@@ -859,7 +859,7 @@ class Experiment(object):
                         finished += 1
                         if len(processes_left):
                             finished -= 1
-                            new_process = processes_left.pop()
+                            new_process = processes_left.pop(0)
                             new_process.start()
 
 
@@ -936,7 +936,7 @@ class Experiment(object):
             groups = []
             try:
                 for burst in range(number_of_bursts):
-                    group = bursts_groups.pop()
+                    group = bursts_groups.pop(0)
                     groups.append(group)
             except IndexError:
                 cont = False
@@ -983,7 +983,7 @@ class Experiment(object):
         Specific animator.
         """
         try:
-            z_val = z_vals.pop()
+            z_val = z_vals.pop(0)
         except IndexError:
             return
         plt.cla()
@@ -1080,7 +1080,7 @@ class Experiment(object):
             _z_vals = []
             for dummy_time in range(number_of_bursts):
                 try:
-                    group = bursts_groups.pop()
+                    group = bursts_groups.pop(0)
                     groups.append(group)
                 except IndexError:
                     end = True     
@@ -1088,7 +1088,7 @@ class Experiment(object):
                 break       
             for group in groups:
                 for dummy_time in range(len(group)):
-                    z_val = z_vals.pop()
+                    z_val = z_vals.pop(0)
                     _z_vals.append(z_val)
             try:
                 average = methods.array_average(_z_vals)
@@ -1130,7 +1130,7 @@ class Experiment(object):
         Wrapper
         """
         try:
-            z_val = z_vals.pop()
+            z_val = z_vals.pop(0)
         except IndexError:
             return
         plt.cla()
@@ -1164,7 +1164,7 @@ class Experiment(object):
             _z_vals = []
             for dummy_time in range(number_of_bursts):
                 try:
-                    group = bursts_groups.pop()
+                    group = bursts_groups.pop(0)
                     groups.append(group)
                 except IndexError:
                     end = True     
@@ -1172,7 +1172,7 @@ class Experiment(object):
                 break       
             for group in groups:
                 for dummy_time in range(len(group)):
-                    z_val = z_vals.pop()
+                    z_val = z_vals.pop(0)
                     _z_vals.append(z_val)
             try:
                 average = methods.array_average(_z_vals)

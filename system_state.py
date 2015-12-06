@@ -1066,7 +1066,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
         states[index] = state
         if len(processes_left):
             finished -= 1
-            new_process = processes_left.pop()
+            new_process = processes_left.pop(0)
             new_process.start()
     return names, states
 
