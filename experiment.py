@@ -948,7 +948,7 @@ class Experiment(object):
                     z_vals.append(z_val)
             z_vals_avg.append(methods.array_average(z_vals))
         frames = len(z_vals)
-        match = re.match(r'.*?g[2|4].*', function_name)
+        """match = re.match(r'.*?g[2|4].*', function_name)
         if not match or not self._max_density:
             z_maxs = []
             z_mins = []
@@ -959,7 +959,14 @@ class Experiment(object):
             z_min = min(z_mins)
         else:
             z_max = self._max_density
-            z_min = self._min_density
+            z_min = self._min_density"""
+        z_maxs = []
+        z_mins = []
+        for z_val in z_vals_avg:
+            z_maxs.append(max(z_val))
+            z_mins.append(min(z_val))
+        z_max = max(z_maxs)
+        z_min = min(z_mins)
         def animate(dummy_frame):
             """
             Wrapper.
@@ -1066,6 +1073,7 @@ class Experiment(object):
         bursts_groups = copy.deepcopy(self.bursts_groups)
         end = False
         z_vals_avg = []
+        number_of_bursts *= 5
         while not end:
             groups = []
             average = None
@@ -1146,28 +1154,31 @@ class Experiment(object):
         """
         Wrapper
         """
-        dates = self._dates
-        index = last_index
-        number_of_states = len(self._states)
-        limit = number_of_states-2
-        if index >= limit:
-            return -1, None
-        image1_id, image2_id = self._get_image_ids(index)
-        z_vals = []
-        while True:
-            state = self._states[index]
-            z_val = state.total_area_of_clusters(max_distance=max_distance,
-                                                 max_angle_diff=max_angle_diff,
-                                                 min_size=min_size)
-            z_vals.append(z_val)
-            index += 1
-            if index == number_of_states-2:
-                break
-            image1_id, image2_id = self._get_image_ids(index)
-            if not methods.are_in_burst(dates, image1_id, image2_id):
-                index += 1
-                break
-        z_val = float(sum(z_vals))/len(z_vals)
+        bursts_groups = copy.deepcopy(self.bursts_groups)
+        end = False
+        z_vals_avg = []
+        number_of_bursts *= 5
+        while not end:
+            groups = []
+            average = None
+            _z_vals = []
+            for dummy_time in range(number_of_bursts):
+                try:
+                    group = bursts_groups.pop()
+                    groups.append(group)
+                except IndexError:
+                    end = True     
+            if not len(groups):
+                break       
+            for group in groups:
+                for dummy_time in range(len(group)):
+                    z_val = z_vals.pop()
+                    _z_vals.append(z_val)
+            try:
+                average = methods.array_average(_z_vals)
+            except IndexError:
+                average = _z_vals
+            z_vals_avg.append(average)
         return index, z_val
 
     def cluster_areas(self, max_distance=None,
