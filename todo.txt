@@ -46,4 +46,6 @@ bugs:
 - clusters area                                         (not started)
 - clusters                                              (not started)
 - g2, g4 divide by area                                 (DONE)
+- Don't draw zones outside the circle.                  (in progress)
+
 

@@ -21,7 +21,7 @@ else:
 names, rod_groups_5 = system_state.create_rods(kappas=5.5,
                                         allowed_kappa_error=.5)
 names, rod_groups_17 = system_state.create_rods(kappas=17.5,
-                                        allowed_kappa_error=.5)
+                                        allowed_kappa_error=1.5)
 experiment_5 = experiment.Experiment(system_states_name_list=names,
                                     system_states_list=rod_groups_5,
                                     dates=dates, diff_t=5/3.0)
@@ -29,12 +29,13 @@ experiment_17 = experiment.Experiment(system_states_name_list=names,
                                     system_states_list=rod_groups_17,
                                     dates=dates, diff_t=5/3.0)
 
-#print experiment_5._states[0].plottable_density_matrix(divisions=10)
-experiment_5.divide_systems_in_circles(divisions=20)
-experiment_17.divide_systems_in_circles(divisions=20)
-experiment_5.create_gifs(divisions=20, fps=15, max_distance=10, max_angle_diff=5,
+experiment_5.set_coef(5)
+experiment_17.set_coef(5)
+experiment_5.divide_systems_in_circles(divisions=30)
+experiment_17.divide_systems_in_circles(divisions=30)
+experiment_5.create_gifs(divisions=30, fps=15, max_distance=10, max_angle_diff=5,
                          number_of_bursts=1)
-experiment_17.create_gifs(divisions=20, fps=15, max_distance=10, max_angle_diff=5,
+experiment_17.create_gifs(divisions=30, fps=15, max_distance=10, max_angle_diff=5,
                          number_of_bursts=1)
 #cluster_areas5 = experiment_5.cluster_areas(max_distance=50,
 #                    max_angle_diff=30, min_size=3)

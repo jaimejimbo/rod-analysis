@@ -49,6 +49,7 @@ class SystemState(object):
         self._clusters_max_distance = None
         self._clusters_max_angle_diff = None
         self._divisions = None
+        self._coef = 1
         try:
             self._radius = zone_coords[2]
             self._center_x = zone_coords[0]
@@ -61,6 +62,21 @@ class SystemState(object):
             self._center_x = None
             self._center_y = None
             self._radius = None
+
+    @property
+    def coef(self):
+        """
+            Returns coefficient for circle division.
+        """
+        return self._coef
+
+    @coef.setter
+    def coef(self, value):
+        """
+            Changes coef value.
+        """
+        self._coef = value
+        self._reset()
 
     @property
     def rods_possitions(self):
@@ -308,23 +324,16 @@ class SystemState(object):
         final_length = len(self._rods)
         self._reset()
 
+
     def divide_in_circles(self, divisions):
-        """
-        Wrapper
-        """
-        if self._divisions != divisions:
-            self._reset()
-        self._divide_in_circles(divisions)
-
-
-    def _divide_in_circles(self, divisions):
         """
             Creates a grid over system with
             "divisions" rows and columns.
         """
         if divisions != self._divisions:
-            self._compute_center_and_radius()
+            self._reset()
             self._divisions = divisions
+            self._compute_center_and_radius()
             # Defining zone and distance between points.
             start_x = self.center[0]-self.radius
             end_x = self.center[0]+self.radius
@@ -335,8 +344,7 @@ class SystemState(object):
                                  for times in range(divisions+2)]
             possible_y_values = [start_y + (times-1)*diff
                                  for times in range(divisions+2)]
-            coef = 3
-            rad = diff*math.sqrt(2)*coef/2
+            rad = diff*math.sqrt(2)*self._coef/2
             subsystems = self._subsystems(possible_x_values, possible_y_values,
                                           rad, diff, divisions)
             self._actual_subdivision = subsystems

@@ -71,6 +71,7 @@ class Experiment(object):
         self._divisions = None
         self._min_density = None
         self._max_density = None
+        #self._inversed = False
 
     def __iter__(self):
         """
@@ -93,6 +94,13 @@ class Experiment(object):
             raise ValueError
         return self._states_dict[identifier]
 
+
+    def set_coef(self, value):
+        """
+            Changes coef for dividing in circles.
+        """
+        for state in self._states:
+            state.coef = value
 
     def _reset(self):
         """
@@ -833,7 +841,7 @@ class Experiment(object):
         """
         Divides all systems in circles.
         """
-        if False:#divisions != self._divisions:
+        if divisions != self._divisions:
             self._divisions = divisions
             processes = []
             for state in self._states:
@@ -860,7 +868,7 @@ class Experiment(object):
         """
         Creates a gif of density's evolution.
         """
-        #self.divide_systems_in_circles(divisions=divisions)
+        self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_density_matrix'
         kappas = self._states[0].kappas
@@ -875,7 +883,7 @@ class Experiment(object):
         """
         Creates a gif of correlation g2 evolution.
         """
-        #self.divide_systems_in_circles(divisions=divisions)
+        self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'correlation_g2_plot_matrix'
         #function_name = 'relative_g2_plot_matrix'
@@ -889,7 +897,7 @@ class Experiment(object):
         """
         Creates a gif of correlation g4 evolution.
         """
-        #self.divide_systems_in_circles(divisions=divisions)
+        self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
 #        function_name = 'relative_g4_plot_matrix'
         function_name = 'correlation_g4_plot_matrix'
@@ -903,7 +911,7 @@ class Experiment(object):
         """
         Creates a gif of average angle evolution.
         """
-        #self.divide_systems_in_circles(divisions=divisions)
+        self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_average_angle_matrix'
         kappas = self._states[0].kappas
@@ -984,8 +992,8 @@ class Experiment(object):
         plt.suptitle(name)
         plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
                     vmin=z_min, vmax=z_max)
-        plt.colorbar()
         plt.gca().invert_yaxis()
+        plt.colorbar()
 
     def _get_image_ids(self, index):
         """
@@ -1094,11 +1102,13 @@ class Experiment(object):
         z_max = max(z_maxs)
         z_min = min(z_mins)
         frames = len(z_vals_avg)
+        x_val = x_vals[0]
+        y_val = y_vals[0]
         def animate(dummy_frame):
             """
             Animation function.
             """
-            self._temperature_gif_wrapper(x_vals, y_vals,
+            self._temperature_gif_wrapper(x_val, y_val,
                                         z_vals_avg, divisions, name,
                                         z_max, z_min)
         frames = len(self._states)-2
@@ -1106,14 +1116,11 @@ class Experiment(object):
         anim.save(name, writer='imagemagick', fps=fps)
 
 
-    def _temperature_gif_wrapper(self, x_vals, y_vals, z_vals,
+    def _temperature_gif_wrapper(self, x_val, y_val, z_vals,
                                 divisions, name, z_max, z_min):
         """
         Wrapper
         """
-        x_val = x_vals[0]
-        y_val = y_vals[0]
-        bursts_groups = copy.deepcopy(self.bursts_groups)
         try:
             z_val = z_vals.pop()
         except IndexError:
@@ -1131,8 +1138,8 @@ class Experiment(object):
         plt.suptitle(name)
         plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
                     vmax=z_max, vmin=z_min)
-        plt.colorbar()
         plt.gca().invert_yaxis()
+        plt.colorbar()
 
     def _cluster_areas_step(self, last_index, max_distance=None,
                                max_angle_diff=None, min_size=3):
