@@ -28,6 +28,12 @@
 - g2=g4=0 if number of rods = 0                         (DONE)
 - Use averages over bursts                              (DONE)
     · use states ids instead of indices                 (DONE)
+- use n>3,4 for clusters                                (DONE)
+- normalized histogram of number of rods in clusters.   (not started)
+- density x order param                                 (not started)
+- clusters area                                         (not started)
+- clusters                                              (not started)
+- g2, g4 divide by area                                 (DONE)
 
 Segregation
 - T(x,y)                                                (DONE)
@@ -38,14 +44,8 @@ Segregation
 bugs:
 - Temperatures seem to be not computed correctly.       (in progress)
 - g2, g4 not computed correctly.                        (in progress)
+- limits not computed correctly.                        (DONE)
 
 
-- use n>3,4 for clusters                                (DONE)
-- normalized histogram of number of rods in clusters.   (not started)
-- density x order param                                 (not started)
-- clusters area                                         (not started)
-- clusters                                              (not started)
-- g2, g4 divide by area                                 (DONE)
-- Don't draw zones outside the circle.                  (in progress)
 
 
