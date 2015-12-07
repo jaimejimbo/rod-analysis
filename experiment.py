@@ -947,9 +947,9 @@ class Experiment(object):
                     x_val, y_val, z_val = function(divisions)
                     z_vals.append(z_val)
             z_vals_avg.append(methods.array_average(z_vals))
-        frames = len(z_vals)
-        """match = re.match(r'.*?g[2|4].*', function_name)
-        if not match or not self._max_density:
+        frames = len(z_vals_avg)
+        match = re.match(r'.*?g[2|4].*', function_name)
+        if not match:
             z_maxs = []
             z_mins = []
             for z_val in z_vals_avg:
@@ -958,8 +958,8 @@ class Experiment(object):
             z_max = max(z_maxs)
             z_min = min(z_mins)
         else:
-            z_max = self._max_density
-            z_min = self._min_density"""
+            z_max = 1
+            z_min = 0
         z_maxs = []
         z_mins = []
         for z_val in z_vals_avg:

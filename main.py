@@ -33,9 +33,9 @@ experiment_5.set_coef(5)
 experiment_17.set_coef(5)
 experiment_5.divide_systems_in_circles(divisions=30)
 experiment_17.divide_systems_in_circles(divisions=30)
-experiment_5.create_gifs(divisions=30, fps=15, max_distance=10, max_angle_diff=5,
+experiment_5.create_gifs(divisions=30, fps=10, max_distance=10, max_angle_diff=5,
                          number_of_bursts=1)
-experiment_17.create_gifs(divisions=30, fps=15, max_distance=10, max_angle_diff=5,
+experiment_17.create_gifs(divisions=30, fps=10, max_distance=10, max_angle_diff=5,
                          number_of_bursts=1)
 #cluster_areas5 = experiment_5.cluster_areas(max_distance=50,
 #                    max_angle_diff=30, min_size=3)

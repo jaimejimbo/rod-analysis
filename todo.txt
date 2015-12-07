@@ -34,6 +34,7 @@
 - clusters area                                         (not started)
 - clusters                                              (not started)
 - g2, g4 divide by area                                 (DONE)
+- convert gif to mp4                                    (DONE)
 
 Segregation
 - T(x,y)                                                (DONE)
@@ -43,7 +44,7 @@ Segregation
  
 bugs:
 - Temperatures seem to be not computed correctly.       (in progress)
-- g2, g4 not computed correctly.                        (in progress)
+- g2, g4 not computed correctly.                        (DONE?)
 - limits not computed correctly.                        (DONE)
 
 
