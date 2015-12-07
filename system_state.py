@@ -473,7 +473,7 @@ class SystemState(object):
         if divisions != self._divisions:
             self._reset()
         if not len(self._subdivision_centers):
-            self.divide_in_circles(divisions)
+            #self.divide_in_circles(divisions)
             act_sub = self._actual_subdivision
             actual_y = act_sub[0].center[1]
             row = []
@@ -548,7 +548,7 @@ class SystemState(object):
         """
             Computes correlation_g2 and correlation_g4 matrices for subgroups.
         """
-        self.divide_in_circles(divisions)
+        #self.divide_in_circles(divisions)
         if not self._correlation_g2 or not self._correlation_g2:
             for subsystem in self._actual_subdivision:
                 correlation_g2 = [subsystem.center[0], subsystem.center[1]]
@@ -638,7 +638,7 @@ class SystemState(object):
         """
             Computes average angle matrix
         """
-        self.divide_in_circles(divisions)
+        #self.divide_in_circles(divisions)
         for subsystem in self._actual_subdivision:
             row = [subsystem.center[0], subsystem.center[1]]
             row.append(subsystem.average_angle)
@@ -897,7 +897,7 @@ class SystemState(object):
         """
             Computes correlation_g2 and correlation_g4 matrices for subgroups.
         """
-        self.divide_in_circles(divisions)
+        #self.divide_in_circles(divisions)
         len_correlation_g2 = len(self._relative_g2_subsystems)
         len_correlation_g4 = len(self._relative_g4_subsystems)
         if  len_correlation_g2 == 0 or len_correlation_g4 == 0:
