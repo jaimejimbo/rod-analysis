@@ -845,6 +845,7 @@ class Experiment(object):
             self._divisions = divisions
             processes = []
             for state in self._states:
+                state.divisions = divisions
                 process = mp.Process(target=state.divide_in_circles,
                                      args=(divisions,))
                 processes.append(process)

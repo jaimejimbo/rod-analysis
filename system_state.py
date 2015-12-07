@@ -72,6 +72,21 @@ class SystemState(object):
         return len(self._rods)
 
     @property
+    def divisions(self):
+        """
+            Returns number of divisions per axis.
+        """
+        return self._divisions
+
+    @divisions.setter
+    def divisions(self, value):
+        """
+            Changes divisions value.
+        """
+        self._divisions = value
+        self._reset()
+
+    @property
     def coef(self):
         """
             Returns coefficient for circle division.
@@ -423,7 +438,7 @@ class SystemState(object):
         """
             Computes density matrix of the system.
         """
-        self.divide_in_circles(divisions)
+        #self.divide_in_circles(divisions)
         density = []
         for subsystem in self._actual_subdivision:
             subdensity = [subsystem.center[0], subsystem.center[1]]
