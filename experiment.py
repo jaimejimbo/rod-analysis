@@ -875,6 +875,7 @@ class Experiment(object):
         """
         Creates a gif of density's evolution.
         """
+        print "Creating densities animations..."
         self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_density_matrix'
@@ -890,6 +891,7 @@ class Experiment(object):
         """
         Creates a gif of correlation g2 evolution.
         """
+        print "Creating g2 animations..."
         self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'correlation_g2_plot_matrix'
@@ -904,6 +906,7 @@ class Experiment(object):
         """
         Creates a gif of correlation g4 evolution.
         """
+        print "Creating g4 animations..."
         self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
 #        function_name = 'relative_g4_plot_matrix'
@@ -918,6 +921,7 @@ class Experiment(object):
         """
         Creates a gif of average angle evolution.
         """
+        print "Creating average angle animations..."
         self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_average_angle_matrix'
