@@ -68,7 +68,12 @@ class SystemState(object):
         """
         Destructor
         """
-        self.reset()
+        for name in dir(self):
+            if not callable(name) and not name.startswith("__"):
+                try:
+                    delattr(self, name)
+                except AttributeError:
+                    pass
 
     @property
     def number_of_rods(self):
