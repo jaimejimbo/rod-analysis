@@ -844,30 +844,33 @@ class Experiment(object):
         if divisions != self._divisions:
             self._divisions = divisions
             processes = []
-            for state in self._states:
-                process = mp.Process(target=state.divide_in_circles,
-                                     args=(divisions,))
+            output_queue = mp.Queue()
+            for index in range(len(self._states)):
+                process = mp.Process(target=self.divide_system_in_circles_process,
+                                     args=(divisions, index, output_queue))
                 processes.append(process)
             running, processes_left = methods.run_processes(processes)
             num_processes = len(running)
             finished = 0
-            densities = []
-            quad_speeds = []
-            while True:
-                try:
-                    process = running.pop(0)
-                    process.join()
-                except IndexError:
-                    pass
-                try:
+            while finished < num_processes:
+                finished += 1
+                output = output_queue.get()
+                index = output[0]
+                state = output[1]
+                self._states[index] = state
+                if len(processes_left):
+                    finished -= 1
                     new_process = processes_left.pop(0)
                     new_process.start()
-                    running.append(new_process)
-                except:
-                    for process in running:
-                        process.join()
-                    break
+            
 
+    def divide_system_in_circles_process(self, divisions, index, output_queue):
+        """
+            Process
+        """
+        state = self._states[index]
+        state.divide_in_circles()
+        output_queue.put([identifier, state])
 
     def create_density_gif(self, divisions, folder, fps,
                                  number_of_bursts):
@@ -875,7 +878,7 @@ class Experiment(object):
         Creates a gif of density's evolution.
         """
         print "Creating densities animations..."
-        self.divide_systems_in_circles(divisions=divisions)
+        #self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_density_matrix'
         kappas = self._states[0].kappas
@@ -891,7 +894,7 @@ class Experiment(object):
         Creates a gif of correlation g2 evolution.
         """
         print "Creating g2 animations..."
-        self.divide_systems_in_circles(divisions=divisions)
+        #self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'correlation_g2_plot_matrix'
         #function_name = 'relative_g2_plot_matrix'
@@ -906,7 +909,7 @@ class Experiment(object):
         Creates a gif of correlation g4 evolution.
         """
         print "Creating g4 animations..."
-        self.divide_systems_in_circles(divisions=divisions)
+        #self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
 #        function_name = 'relative_g4_plot_matrix'
         function_name = 'correlation_g4_plot_matrix'
@@ -921,7 +924,7 @@ class Experiment(object):
         Creates a gif of average angle evolution.
         """
         print "Creating average angle animations..."
-        self.divide_systems_in_circles(divisions=divisions)
+        #self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_average_angle_matrix'
         kappas = self._states[0].kappas
@@ -1028,12 +1031,36 @@ class Experiment(object):
         """
         Creates a gif per property of the system that shows evolution.
         """
-        self.create_density_gif(divisions, folder, fps, number_of_bursts)
-        self.create_relative_g2_gif(divisions, folder, fps, number_of_bursts)
-        self.create_relative_g4_gif(divisions, folder, fps, number_of_bursts)
-        self.create_temperature_gif(divisions, folder, fps, max_distance,
+        self.divide_systems_in_circles(divisions)
+        processes = []
+        process = mp.Process(target=self.create_density_gif,
+                             args=(divisions, folder, fps, number_of_bursts))
+        processes.append(process)
+        process = mp.Process(target=self.create_relative_g2_gif,
+                             args=(divisions, folder, fps, number_of_bursts))
+        processes.append(process)
+        process = mp.Process(target=self.create_relative_g4_gif,
+                             args=(divisions, folder, fps, number_of_bursts))
+        processes.append(process)
+        process = mp.Process(target=self.create_temperature_gif,
+                             args=(divisions, folder, fps, max_distance,
                                max_angle_diff, limit, amount_of_rods,
-                               number_of_bursts)
+                               number_of_bursts))
+        running, processes_left = methods.run_processes(processes)
+        while True:
+            try:
+                process = running.pop(0)
+                process.join()
+            except IndexError:
+                pass
+            try:
+                new_process = processes_left.pop(0)
+                new_process.start()
+                running.append(new_process)
+            except IndexError:
+                for process in running:
+                    process.join()
+                break
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,
