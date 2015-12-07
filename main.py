@@ -4,9 +4,8 @@
 Main script.
 """
 
-import experiment
-import system_state
-import methods
+import experiment, system_state, methods
+import os
 
 run_imagej = False
 
@@ -49,3 +48,5 @@ plt.figure()
 plt.scatter(x_val, y_val)
 plt.gca().invert_yaxis()
 plt.show()"""
+
+os.system("bash tomp4script.sh")
