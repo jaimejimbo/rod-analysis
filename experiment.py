@@ -1,7 +1,7 @@
 """
     Library for time evolution study.
 """
-import re, methods, math, copy
+import re, methods, math, copy, gc
 import multiprocessing as mp
 from matplotlib import animation
 import matplotlib.pyplot as plt
@@ -860,8 +860,14 @@ class Experiment(object):
                 output = output_queue.get()
                 index = output[0]
                 state = output[1]
-                del self._states[index]
+                self._states[index] = None
                 new_states[index] = state
+                for index_ in range(len(running)):
+                    process = running[index_]
+                    if not process.is_alive():
+                        del process
+                        del running[index_]
+                gc.collect()
                 if len(processes_left):
                     finished -= 1
                     new_process = processes_left.pop(0)
@@ -978,13 +984,6 @@ class Experiment(object):
         else:
             z_max = 1
             z_min = 0
-        z_maxs = []
-        z_mins = []
-        for z_val in z_vals_avg:
-            z_maxs.append(max(z_val))
-            z_mins.append(min(z_val))
-        z_max = max(z_maxs)
-        z_min = min(z_mins)
         def animate(dummy_frame):
             """
             Wrapper.

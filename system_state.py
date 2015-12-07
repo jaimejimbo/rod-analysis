@@ -64,17 +64,6 @@ class SystemState(object):
             self._center_y = None
             self._radius = None
 
-    def __del__(self):
-        """
-        Destructor
-        """
-        for name in dir(self):
-            if not callable(name) and not name.startswith("__"):
-                try:
-                    delattr(self, name)
-                except AttributeError:
-                    pass
-
     @property
     def number_of_rods(self):
         """
