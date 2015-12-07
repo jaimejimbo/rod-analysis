@@ -853,14 +853,20 @@ class Experiment(object):
             finished = 0
             densities = []
             quad_speeds = []
-            while finished < num_processes:
-                for process in running:
-                    if not process.is_alive():
-                        finished += 1
-                        if len(processes_left):
-                            finished -= 1
-                            new_process = processes_left.pop(0)
-                            new_process.start()
+            while True:
+                try:
+                    process = running.pop(0)
+                    process.join()
+                except IndexError:
+                    pass
+                try:
+                    new_process = processes_left.pop(0)
+                    new_process.start()
+                    running.append(new_process)
+                except:
+                    for process in running:
+                        process.join()
+                    break
 
 
     def create_density_gif(self, divisions, folder, fps,
