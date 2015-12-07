@@ -850,7 +850,7 @@ class Experiment(object):
                 process = mp.Process(target=self.divide_system_in_circles_process,
                                      args=(divisions, index, output_queue))
                 processes.append(process)
-            running, processes_left = methods.run_processes(processes)
+            running, processes_left = methods.run_processes(processes, cpus=4)
             num_processes = len(running)
             finished = 0
             while finished < num_processes:
@@ -858,6 +858,7 @@ class Experiment(object):
                 output = output_queue.get()
                 index = output[0]
                 state = output[1]
+                self._states[index].reset()
                 self._states[index] = state
                 if len(processes_left):
                     finished -= 1
@@ -1047,6 +1048,7 @@ class Experiment(object):
                              args=(divisions, folder, fps, max_distance,
                                max_angle_diff, limit, amount_of_rods,
                                number_of_bursts))
+        processes.append(process)
         running, processes_left = methods.run_processes(processes, cpus=1)
         while True:
             try:

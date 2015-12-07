@@ -64,6 +64,12 @@ class SystemState(object):
             self._center_y = None
             self._radius = None
 
+    def __del__(self):
+        """
+        Destructor
+        """
+        self.reset()
+
     @property
     def number_of_rods(self):
         """
@@ -84,7 +90,7 @@ class SystemState(object):
             Changes divisions value.
         """
         self._divisions = value
-        self._reset()
+        self.reset()
 
     @property
     def coef(self):
@@ -99,7 +105,7 @@ class SystemState(object):
             Changes coef value.
         """
         self._coef = value
-        self._reset()
+        self.reset()
 
     @property
     def rods_possitions(self):
@@ -227,7 +233,7 @@ class SystemState(object):
         """
         self._rods.delete(rod_)
 
-    def _reset(self):
+    def reset(self):
         """
             Called when system is changed..
         reset all important values, so they must be
@@ -349,7 +355,7 @@ class SystemState(object):
                 valid_rods.append(rod_)
         self._rods = queue.Queue(valid_rods)
         final_length = len(self._rods)
-        self._reset()
+        self.reset()
 
 
     def divide_in_circles(self, divisions):
@@ -358,7 +364,7 @@ class SystemState(object):
             "divisions" rows and columns.
         """
         if divisions != self._divisions:
-            self._reset()
+            self.reset()
             self._divisions = divisions
             self._compute_center_and_radius()
             # Defining zone and distance between points.
@@ -471,7 +477,7 @@ class SystemState(object):
             Put subsystems in a matrix form.
         """
         if divisions != self._divisions:
-            self._reset()
+            self.reset()
         if not len(self._subdivision_centers):
             self.divide_in_circles(divisions)
             act_sub = self._actual_subdivision
@@ -1047,7 +1053,7 @@ class SubsystemState(SystemState):
             if rod_.is_in_circle(self.center, self.radius):
                 rods.append(rod_)
         self._rods = queue.Queue(rods)
-        self._reset()
+        self.reset()
 
 
 
