@@ -857,16 +857,18 @@ class Experiment(object):
             finished = 0
             while finished < num_processes:
                 finished += 1
+                if not len(running):
+                    break
                 output = output_queue.get()
                 index = output[0]
                 state = output[1]
                 self._states[index] = None
                 new_states[index] = state
-                gc.collect()
                 if len(processes_left):
                     finished -= 1
                     new_process = processes_left.pop(0)
                     new_process.start()
+            gc.collect()
             self._states = new_states
 
 
