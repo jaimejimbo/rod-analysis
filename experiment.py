@@ -862,11 +862,6 @@ class Experiment(object):
                 state = output[1]
                 self._states[index] = None
                 new_states[index] = state
-                for index_ in range(len(running)):
-                    process = running[index_]
-                    if not process.is_alive():
-                        del process
-                        del running[index_]
                 gc.collect()
                 if len(processes_left):
                     finished -= 1
