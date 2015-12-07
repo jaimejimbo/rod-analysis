@@ -869,7 +869,7 @@ class Experiment(object):
             Process
         """
         state = self._states[index]
-        state.divide_in_circles()
+        state.divide_in_circles(divisions)
         output_queue.put([identifier, state])
 
     def create_density_gif(self, divisions, folder, fps,
