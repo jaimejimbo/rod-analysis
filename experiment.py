@@ -842,6 +842,7 @@ class Experiment(object):
         Divides all systems in circles.
         """
         if divisions != self._divisions:
+            print "Dividing systems in circles..."
             self._divisions = divisions
             processes = []
             output_queue = mp.Queue()
@@ -862,7 +863,7 @@ class Experiment(object):
                     finished -= 1
                     new_process = processes_left.pop(0)
                     new_process.start()
-            
+
 
     def divide_system_in_circles_process(self, divisions, index, output_queue):
         """
@@ -870,7 +871,7 @@ class Experiment(object):
         """
         state = self._states[index]
         state.divide_in_circles(divisions)
-        output_queue.put([identifier, state])
+        output_queue.put([index, state])
 
     def create_density_gif(self, divisions, folder, fps,
                                  number_of_bursts):
@@ -1120,9 +1121,9 @@ class Experiment(object):
                     group = bursts_groups.pop(0)
                     groups.append(group)
                 except IndexError:
-                    end = True     
+                    end = True
             if not len(groups):
-                break       
+                break
             for group in groups:
                 for dummy_time in range(len(group)):
                     z_val = z_vals.pop(0)
@@ -1204,9 +1205,9 @@ class Experiment(object):
                     group = bursts_groups.pop(0)
                     groups.append(group)
                 except IndexError:
-                    end = True     
+                    end = True
             if not len(groups):
-                break       
+                break
             for group in groups:
                 for dummy_time in range(len(group)):
                     z_val = z_vals.pop(0)

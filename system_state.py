@@ -400,7 +400,7 @@ class SystemState(object):
                 print len(output), len(output[index_y])
                 raise IndexError
         return output
-            
+
 
     def _subsystems(self, possible_x_values, possible_y_values, rad, diff,
                             divisions):
