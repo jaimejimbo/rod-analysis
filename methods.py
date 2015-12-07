@@ -445,12 +445,13 @@ def are_in_burst(dates, image_num_1, image_num_2):
         return False
     return True
 
-def run_processes(processes):
+def run_processes(processes, cpus=None):
     """
         Runs all processes using all cores.
     """
     running = []
-    cpus = int(mp.cpu_count()/2)
+    if not cpus:
+        cpus = int(mp.cpu_count()/2)
     try:
         for dummy in range(cpus):
             next_process = processes.pop()

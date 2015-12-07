@@ -1047,7 +1047,7 @@ class Experiment(object):
                              args=(divisions, folder, fps, max_distance,
                                max_angle_diff, limit, amount_of_rods,
                                number_of_bursts))
-        running, processes_left = methods.run_processes(processes)
+        running, processes_left = methods.run_processes(processes, cpus=1)
         while True:
             try:
                 process = running.pop(0)
