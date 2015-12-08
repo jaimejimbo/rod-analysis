@@ -270,7 +270,7 @@ def import_files(folder="./", regular_expression=r'rods_[0-9]*'):
     return names, files
 
 
-def get_file_names(folder="./", regular_expression=r'rods_[0-9]*'):
+def get_file_names(folder="./", regular_expression=r'^rods_[0-9]{4}$'):
     """
     Get file names of the folder whose names pass regular expression
     """
