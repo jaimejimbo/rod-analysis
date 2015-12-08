@@ -145,6 +145,9 @@ class Experiment(object):
             self._initial_rods.append(set([]))
         for index in range(len(self._states)):
             state = self._states[index]
+            if not state:
+                msg = "State is not defined."
+                raise TypeError(msg)
             evol_dict = self._evolution_dictionaries[index]
             relative_dict = self._relative_dictionaries[index]
             for rod in state:
@@ -862,7 +865,6 @@ class Experiment(object):
                 output = output_queue.get()
                 index = output[0]
                 state = output[1]
-                self._states[index] = None
                 new_states[index] = state
                 if len(processes_left):
                     new_process = processes_left.pop(0)
