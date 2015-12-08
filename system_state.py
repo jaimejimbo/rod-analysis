@@ -375,6 +375,7 @@ class SystemState(object):
             subsystems = self._subsystems(possible_x_values, possible_y_values,
                                           rad, diff, divisions)
             self._actual_subdivision = subsystems
+        return
 
     def _separate_rods_by_coords(self, rods_list, possible_x_values,
                                     possible_y_values, rad, diff,

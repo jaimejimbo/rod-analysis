@@ -867,8 +867,8 @@ class Experiment(object):
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     new_process.start()
-            gc.collect()
             self._states = new_states
+            gc.collect()
 
 
     def divide_system_in_circles_process(self, divisions, index, output_queue):
