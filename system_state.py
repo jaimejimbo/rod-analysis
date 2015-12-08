@@ -65,13 +65,6 @@ class SystemState(object):
             self._radius = None
 
     @property
-    def number_of_rods(self):
-        """
-            Returns number of rods in system.
-        """
-        return len(self._rods)
-
-    @property
     def divisions(self):
         """
             Returns number of divisions per axis.
@@ -1107,6 +1100,7 @@ def create_rods_process(kappas, allowed_kappa_error,
             state._put_rod(new_rod)
         except ValueError:
             print names[index]
+    file_.close()
     state.check_rods()
     states_queue.put([index, state])
 
