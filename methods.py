@@ -451,7 +451,7 @@ def run_processes(processes, cpus=None):
     """
     running = []
     if not cpus:
-        cpus = int(mp.cpu_count()/2)
+        cpus = 6#int(mp.cpu_count()/2)
     try:
         for dummy in range(cpus):
             next_process = processes.pop()

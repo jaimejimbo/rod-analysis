@@ -62,7 +62,7 @@
 
 \author{
 \large
-\textsc{Jaime P\'erez Aparicio}\thanks{A thank you or further information}\\[2mm] % Your name
+\textsc{Jaime P\'erez Aparicio}\thanks{Enrique Velasco(direcci\'on, material, montaje) y Miguel Gonz\'alez Pinto(montaje experimental, c\'odigo, obtenci\'on de datos experimentales)}\\[2mm] % Your name
 \normalsize Universidad Aut\'onoma de Madrid \\ % Your institution
 \normalsize \href{mailto:jaime.pereza@estudiante.uam.es}{jaime.pereza@estudiante.uam.es} % Your email address
 \vspace{-5mm}
@@ -95,7 +95,15 @@
 
 \section*{Introducci\'on}
 
-nananana
+A veces, en sistemas aparentemente homog\'eneos (pues no hay una interacci\'on dependiente de la distancia entre part\'iculas) aparecen ciertos estados estacionarios con patrones espaciales no triviales. En este caso, en vez de quedar una mezcla homog\'enea durante todo el experimento (algo que ser\'ia lo esperable de un sistema termodin\'anmico con interacci\'on el\'astica entre part\'iculas), se produce una segregaci\'on de las part\'iculas, quedando separadas en funci\'on de su K. Tambi\'en puede pasar (como se ha estudiado en otros experimentos) que aparezcan fases tetr\'aticas y nem\'aticas en un conjunto de part\'iculas iguales. En este caso las part\'iculas de alto K tambi\'en se quedan en una fase nem\'atica. En el estado estacionario, la potencia disipada es la misma que la introducida. 
+
+Estos comportamientos est\'an causados por la forma de las part\'iculas, m\'as que por la acci\'on exterior (que es importante, tambi\'en). Es un comportamiento que depende de la energ\'ia que se meta desde el exterior, pues si estuvieran quietas no se mover\'ian. Si se suponen part\'iculas libres (pues no hay potenciales de interacci\'on entre ellas, aparentemente) se  define la energ\'ia libre como:
+
+\begin{equation}
+F = U - TS
+\end{equation}
+
+
 
 %------------------------------------------------
 
@@ -109,23 +117,30 @@ La c\'amara se coloca sobre el sistema y se le conecta un disparador autom\'atic
 
 %------------------------------------------------
 
-\section{Methods}
+\section*{Tratamiento de datos}
 
-Maecenas sed ultricies felis. Sed imperdiet dictum arcu a egestas. 
-\begin{compactitem}
-\item Donec dolor arcu, rutrum id molestie in, viverra sed diam
-\item Curabitur feugiat
-\item turpis sed auctor facilisis
-\item arcu eros accumsan lorem, at posuere mi diam sit amet tortor
-\item Fusce fermentum, mi sit amet euismod rutrum
-\item sem lorem molestie diam, iaculis aliquet sapien tortor non nisi
-\item Pellentesque bibendum pretium aliquet
-\end{compactitem}
-\lipsum[4] % Dummy text
+\subsection*{Imagej}
+
+Las imagenes son tratadas con ''imagej''. Es un programa que permite obtener las posiciones y orientaciones de las part\'iculas. Mediante un script, escrito por Miguel, el programa aumenta el contraste, corta la imagen para que solo aparezca el c\'irculo en el que est\'an las part\'iculas y dibuja elipses encima de las part\'iculas. 
+
+El programa devuelve el \'angulo al que se encuentra el eje largo. Tambi\'en devuelve los tama\~os de los ejes de la elipse y las longitudes de Feret (que son las distancias entre caras paralelas. En este caso la distancia m\'inima y la m\'axima. Tambi\'en develve la posici\'on media horizontal y vertical (la del centro de masas, en este caso, al haber simetr\'ia).
+
+Sin embargo, pese a que las part\'iculas usadas tienen unas K bien definidas y medidas de 4 y 14, el programa devuelve elipses con K 5.5 y 17.5, por lo que hay cierto error al analizar las im\'agenes en cuanto a la obtenci\'on de su tama\~no. El script de python usa las K dadas por imagej, pues no se de d\'onde sale ese error y prefiero no forzar el uso de otro valor.
+
+\subsection*{Script de python}
+
+Los datos se pasan entonces a otro programa (que he escrito yo bas\'andome un poco en el que hizo Miguel). He usado un lenguaje distinto, as\'i que s\'olo he cogido un poco las ideas sobre los algoritmos que se usaban en el otro. He cambiado algunos de ellos porque no los entend\'ia o no me parec\'ian tan eficaces. Mi programa, al igual que el de Miguel, divide la distribuci\'on en c\'irculos del mismo radio, cubriendo toda la superficie disponible. En mi caso uso un radio m\'as grande, lo que suaviza un poco la distribuci\'on.
+
+El programa es lento y posiblemente se pueda optimizar bastante (pues ahora usa una cantidad demasiado grande de RAM y de CPU), pero el tiempo es limitado y hay que poner prioridades. A\'un as\'i lo he optimizado bastante (evitando que se calculen varias veces las mismas cosas, usando algoritmos m\'as r\'apidos de ordenaci\'on, usando procesos y consiguiendo as\'i que se haga uso de m\'as procesadores...). Lo malo de evitar calcular las cosas varias veces es que hay que guardarlas mientras tanto, y eso hace que el uso de RAM sea exagerado. Posiblemente haya bugs que hagan que el uso se dispare y se podr\'ia disminuir en una cantidad notable, pero hay muchos objetivos y poco tiempo.
+
+Python es un poco distinto a otros lenguajes de programaci\'on en cuanto a la liberaci\'on de memoria. Va realizando limpiezas peri\'odicas de objetos hu\'erfanos. Sin embargo se puede forzar esta limpieza para que se liberen recursos usados por objetos a los que no se puede acceder (porque se ha eliminado el puntero que les conecta al programa, por lo que solo est\'an malgastando memoria).
+
+El programa hace los c\'alculos necesarios y saca los datos en forma de GIF animado, que luego otro programa llamado ffmpeg transforma a formato mp4, mucho m\'as comprimido y r\'apido. Hace gr\'aficas (para cada K) para las densidades locales, las correlaciones, las temperaturas, el \'area que cubren los clusters y un histograma del tama\~no de los clusters. En la del \'area que cubren los clusters, se representa \'area frente al tiempo, pudiendo ver as\'i el car\'acter de la evoluci\'on (exponencial, ley de potencias...).
+
 
 %------------------------------------------------
 
-\section{Results}
+\section*{Resultados}
 
 \begin{table}[H]
 \caption{Example table}
