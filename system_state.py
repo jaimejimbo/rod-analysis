@@ -1101,6 +1101,7 @@ def create_rods_process(kappas, allowed_kappa_error,
         except ValueError:
             print names[index]
     file_.close()
+    assert not not state, "A state must have been created."
     state.check_rods()
     states_queue.put([index, state])
 
