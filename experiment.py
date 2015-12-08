@@ -853,7 +853,7 @@ class Experiment(object):
                 processes.append(process)
                 new_states.append(None)
             running, processes_left = methods.run_processes(processes, cpus=4)
-            num_processes = len(running)
+            num_processes = len(processes)
             finished = 0
             while finished < num_processes:
                 finished += 1
@@ -865,7 +865,6 @@ class Experiment(object):
                 self._states[index] = None
                 new_states[index] = state
                 if len(processes_left):
-                    finished -= 1
                     new_process = processes_left.pop(0)
                     new_process.start()
             gc.collect()

@@ -46,6 +46,7 @@ bugs:
 - Temperatures seem to be not computed correctly.       (in progress)
 - g2, g4 not computed correctly.                        (DONE?)
 - limits not computed correctly.                        (DONE)
+- High RAM use                                          (in progress)
 
 
 
