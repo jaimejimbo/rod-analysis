@@ -1186,15 +1186,14 @@ class Experiment(object):
         plt.gca().invert_yaxis()
         plt.colorbar()
 
-    def _cluster_areas_step(self, last_index, max_distance=None,
-                               max_angle_diff=None, min_size=3):
+    def _average_cluster_areas(self, z_vals, number_of_bursts=1,
+                               min_size=3):
         """
         Wrapper
         """
         bursts_groups = copy.deepcopy(self.bursts_groups)
         end = False
         z_vals_avg = []
-        number_of_bursts *= 5
         while not end:
             groups = []
             average = None
@@ -1215,10 +1214,57 @@ class Experiment(object):
                 average = methods.array_average(_z_vals)
             except IndexError:
                 average = _z_vals
+            except TypeError:
+                try:
+                    average = sum(_z_vals)/float(len(_z_vals))
+                except TypeError:
+                    print _z_vals
             z_vals_avg.append(average)
-        return index, z_val
+        return z_vals_avg
 
-    def cluster_areas(self, max_distance=None,
+    def _get_cluster_areas(self, max_distance=None,
+                    max_angle_diff=None, min_size=3):
+        """
+        Compute cluster areas for all states.
+        """
+        output_queue = mp.Queue()
+        processes = []
+        areas = []
+        for index in range(len(self._states)):
+            state = self._states[index]
+            process = mp.Process(target=self._get_cluster_areas_process,
+                                 args=(index, state, max_distance,
+                                    max_angle_diff, output_queue, min_size))
+            processes.append(process)
+            areas.append(None)
+        running, processes_left = methods.run_processes(processes, cpus=4)
+        num_processes = len(processes)
+        finished = 0
+        while finished < num_processes:
+            finished += 1
+            if not len(running):
+                break
+            output = output_queue.get()
+            index = output[0]
+            area = output[1]
+            areas[index] = area
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                new_process.start()
+        return areas
+        
+
+    def _get_cluster_areas_process(self, index, state, max_distance,
+                    max_angle_diff, output_queue, min_size):
+        """
+        Process
+        """
+        area = state.total_area_of_clusters(max_distance=max_distance,
+                            max_angle_diff=max_angle_diff, min_size=min_size)
+        output_queue.put([index, area])
+        return
+
+    def cluster_areas(self, number_of_bursts=1, max_distance=None,
                     max_angle_diff=None, min_size=3):
         """
         Returns an array where each value is total cluster area in
@@ -1232,15 +1278,11 @@ class Experiment(object):
             msg = "Both or none to be defined: max_distance, max_angle_diff"
             raise ValueError(msg)
         if not len(self._cluster_areas):
-            last_index = 0
-            areas = []
-            while last_index != -1:
-                last_index, area = self._cluster_areas_step(last_index,
-                                                max_distance=max_distance,
-                                                max_angle_diff=max_angle_diff,
-                                                min_size=min_size)
-                areas.append(area)
-            areas.pop(-1)
+            z_vals = self._get_cluster_areas(max_distance=max_distance,
+                            max_angle_diff=max_angle_diff, min_size=min_size)
+            areas = self._average_cluster_areas(z_vals,
+                                        number_of_bursts=number_of_bursts,
+                                        min_size=min_size)
             self._cluster_areas = areas
         return self._cluster_areas
 
