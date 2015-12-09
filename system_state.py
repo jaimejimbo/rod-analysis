@@ -690,11 +690,8 @@ class SystemState(object):
         for rod_ in list(self._rods):
             if self._cluster_checked_dict[rod_.identifier]:
                 continue
-            x_diff = rod_.x_mid-reference_rod.x_mid
-            y_diff = rod_.y_mid-reference_rod.y_mid
-            distance = math.sqrt(x_diff**2+y_diff**2)
-            angle_diff = abs(rod_.angle-reference_rod.angle)
-            angle_diff = min([angle_diff, 180-angle_diff])
+            distance = rod_.distance_to_rod(reference_rod)
+            angle_diff = rod_.angle_between_rods(reference_rod)
             if angle_diff <= max_angle_diff and distance < max_distance:
                 subrods = self._get_cluster_members(rod_, min_size,
                                                max_distance, max_angle_diff)

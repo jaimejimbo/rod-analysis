@@ -12,7 +12,6 @@
     · g2, g4 animation                                  (DONE)
     · temperature animation                             (DONE)
     · Speeds animation                                  (DONE)
-    · Cluster area animation.                           (not started)
 - multiprocessing                                       (DONE)
 - GUI                                                   (not started)
 - imagej interface                                      (DONE)
@@ -31,8 +30,9 @@
 - use n>3,4 for clusters                                (DONE)
 - normalized histogram of number of rods in clusters.   (not started)
 - density x order param                                 (not started)
-- clusters area                                         (not started)
-- clusters                                              (not started)
+    -> Needs density computation (too slow)             (---)
+- clusters area                                         (in progress)
+- clusters                                              (in progress)
 - g2, g4 divide by area                                 (DONE)
 - convert gif to mp4                                    (DONE)
 
@@ -44,10 +44,10 @@ Segregation
  
 bugs:
 - Temperatures seem to be not computed correctly.       (in progress)
-- g2, g4 not computed correctly.                        (DONE?)
+- g2, g4 not computed correctly.                        (DONE)
 - limits not computed correctly.                        (DONE)
 - High RAM use                                          (in progress)
-
+- Clusters not computed correctly                       (in progresS)
 
 
 
