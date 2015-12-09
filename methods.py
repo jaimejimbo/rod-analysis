@@ -477,3 +477,19 @@ def array_average(array_of_arrays):
             output[index] += float(array[index])/number_of_arrays
     return output
 
+def vector_module(vector):
+    """
+       Returns array's module. 
+    """
+    return math.sqrt(vector[0]**2+vector[1]**2)
+
+def vector_angle(vector):
+    """
+        Returns array's vector.
+    """
+    try:
+        angle = math.atan(vector[1]/float(vector[0]))
+    except ZeroDivisionError:
+        angle = math.pi
+    return angle
+

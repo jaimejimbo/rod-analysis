@@ -687,18 +687,23 @@ class SystemState(object):
         if self._cluster_checked_dict[reference_rod.identifier]:
             return rods
         self._cluster_checked_dict[reference_rod.identifier] = True
+        length = reference_rod.feret
         for rod_ in list(self._rods):
             if self._cluster_checked_dict[rod_.identifier]:
                 continue
-            distance = rod_.distance_to_rod(reference_rod)
+            vector = reference_rod.vector_to_rod(rod_)
+            distance = methods.vector_module(vector)
             angle_diff = rod_.angle_between_rods(reference_rod)
-            if angle_diff <= max_angle_diff and distance < max_distance:
+            vector_angle = methods.vector_angle(vector)
+            distance_angle = vector_angle-reference_rod.angle
+            max_dist = max_distance+math.sin(distance_angle)*(1.1*length-max_distance)
+            if angle_diff <= max_angle_diff and distance < max_dist:
                 subrods = self._get_cluster_members(rod_, min_size,
                                                max_distance, max_angle_diff)
                 rods.add(rod_)
                 rods |= subrods
                 continue
-            cond1 = distance <= 1.4*max_distance
+            cond1 = distance <= 1.4*max_dist
             cond2 = angle_diff <= max_angle_diff/2.0
             if cond1 and cond2:
                 subrods = self._get_cluster_members(rod_, min_size,

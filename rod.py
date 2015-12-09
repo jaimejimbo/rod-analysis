@@ -42,6 +42,13 @@ class Rod(object):
         """
         return self._major*self._minor
 
+    def vector_to_rod(self, rod_):
+        """
+        Array that joins 2 rods
+        """
+        x = rod_.x_mid - self.x_mid
+        y = rod_.y_mid - self.y_mid
+        return (x, y)
 
     @property
     def feret(self):
