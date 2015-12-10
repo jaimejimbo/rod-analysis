@@ -61,6 +61,12 @@ class Queue(object):
         """
         return self._data.index(element)
 
+    def __set__(self):
+        """
+            Magic method for set conversion.
+        """
+        return set(self._data)
+
     def __len__(self):
         """
         Returns length of the queue

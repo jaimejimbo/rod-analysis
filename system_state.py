@@ -726,6 +726,7 @@ class SystemState(object):
             self._clusters_max_angle_diff = max_angle_diff
             self.fill_dicts()
             clusters = []
+            rods_left = set(self._rods)
             for rod_ in self._rods:
                 if self._cluster_checked_dict[rod_.identifier]:
                     continue
