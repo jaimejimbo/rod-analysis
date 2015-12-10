@@ -732,8 +732,7 @@ class SystemState(object):
         if not len(self._clusters) or cond2:
             self._clusters_max_distance = max_distance
             self._clusters_max_angle_diff = max_angle_diff
-            if len(self._cluster_checked_dict.keys()):
-                self.fill_dicts()
+            self.fill_dicts()
             clusters = []
             for rod_ in self._rods:
                 if self._cluster_checked_dict[rod_.identifier]:
@@ -742,7 +741,6 @@ class SystemState(object):
                                 max_distance, max_angle_diff)
                 if cluster:
                     clusters.append(cluster)
-            self._clusters = methods.erase_length_one_elements(clusters)
         return self._clusters
 
     def average_cluster_rod_num(self, max_distance=None,
