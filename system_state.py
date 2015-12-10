@@ -696,20 +696,21 @@ class SystemState(object):
             angle_diff = rod_.angle_between_rods(reference_rod)
             vector_angle = methods.vector_angle(vector)
             distance_angle = vector_angle-reference_rod.angle
-            max_dist = max_distance+math.sin(distance_angle)*(1.1*length-max_distance)
+            diff = 1.1*length-max_distance
+            max_dist = max_distance+math.sin(distance_angle)*diff
             if angle_diff <= max_angle_diff and distance < max_dist:
                 subrods = self._get_cluster_members(rod_, min_size,
                                                max_distance, max_angle_diff)
                 rods.add(rod_)
                 rods |= subrods
                 continue
-            cond1 = distance <= 1.4*max_dist
+            """cond1 = distance <= 1.4*max_dist
             cond2 = angle_diff <= max_angle_diff/2.0
             if cond1 and cond2:
                 subrods = self._get_cluster_members(rod_, min_size,
                                                max_distance, max_angle_diff)
                 rods.add(rod_)
-                rods |= subrods
+                rods |= subrods"""
         if len(rods) < min_size:
             rods = set([])
         return rods
