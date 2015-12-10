@@ -687,7 +687,7 @@ class SystemState(object):
             return rods
         self._cluster_checked_dict[reference_rod.identifier] = True
         length = reference_rod.feret
-        for rod_ in list(self._rods):
+        for rod_ in self._rods:
             if self._cluster_checked_dict[rod_.identifier]:
                 continue
             vector = reference_rod.vector_to_rod(rod_)
@@ -726,14 +726,16 @@ class SystemState(object):
             self._clusters_max_angle_diff = max_angle_diff
             self.fill_dicts()
             clusters = []
-            rods_left = set(self._rods)
+            rods_left = set(list(self._rods))
             for rod_ in self._rods:
                 if self._cluster_checked_dict[rod_.identifier]:
                     continue
+                rods_left -= set([rod_])
                 cluster = self._get_cluster_members(rod_, min_size,
                                 max_distance, max_angle_diff)
                 if len(cluster):
                     clusters.append(cluster)
+            self._clusters = clusters
         return self._clusters
 
     def average_cluster_rod_num(self, max_distance=None,
