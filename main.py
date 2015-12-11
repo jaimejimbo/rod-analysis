@@ -41,8 +41,8 @@ if run_17:
         #cluster_areas17 = experiment_17.cluster_areas(max_distance=50,
         #                    max_angle_diff=30, min_size=3)
         for state in experiment_17._states:
-            #print state.total_area_of_clusters(max_distance=100, max_angle_diff=10)
-            print state.clusters(max_distance=200, max_angle_diff=30)
+            print state.total_area_of_clusters(max_distance=100, max_angle_diff=10)
+            #print state.clusters(max_distance=200, max_angle_diff=30)
 
 if run_5:
     names, rod_groups_5 = system_state.create_rods(kappas=5.5,

@@ -682,9 +682,9 @@ class SystemState(object):
         some conditions.
         Angles in grad.
         """
-        rods = set([])
+        rods = set([reference_rod])
         if self._cluster_checked_dict[reference_rod.identifier]:
-            return rods
+            return set([])
         self._cluster_checked_dict[reference_rod.identifier] = True
         length = reference_rod.feret
         for rod_ in self._rods:
@@ -700,7 +700,6 @@ class SystemState(object):
             if angle_diff <= max_angle_diff and distance < max_dist:
                 subrods = self._get_cluster_members(rod_, min_size,
                                                max_distance, max_angle_diff)
-                rods.add(rod_)
                 rods |= subrods
         if len(rods) < min_size:
             rods = set([])
