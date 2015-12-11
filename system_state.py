@@ -703,7 +703,7 @@ class SystemState(object):
                 rods |= subrods
         return rods
 
-    def clusters(self, max_distance=None, max_angle_diff=None, min_size=3):
+    def _get_clusters(self, max_distance=None, max_angle_diff=None):
         """
             Gets the cluster for rod.
         Recursive method.
@@ -730,10 +730,22 @@ class SystemState(object):
                 rods_left -= set([rod_])
                 cluster = self._get_cluster_members(rod_,
                                 max_distance, max_angle_diff)
-                if len(cluster) >= min_size:
+                if len(cluster):
                     clusters.append(cluster)
             self._clusters = clusters
         return self._clusters
+
+    def clusters(self, max_distance=None, max_angle_diff=None, min_size=3):
+        """
+            Returns clusters with min_size number of rods or more.
+        """
+        clusters = self._get_clusters(max_distance=max_distance,
+                                  max_angle_diff=max_angle_diff)
+        output = []
+        for cluster in clusters:
+            if len(cluster) >= min_size:
+                output.append(cluster)
+        return output
 
     def average_cluster_rod_num(self, max_distance=None,
                                 max_angle_diff=None, min_size=3):
@@ -785,6 +797,21 @@ class SystemState(object):
             return 0
         total_area = rods_num*self.rod_area
         return total_area
+
+    def cluster_distribution(self, max_distance=None, max_angle_diff=None):
+        """
+            Returns clusters' length distribution.
+        """
+        clusters = self._get_clusters(max_distance=max_distance,
+                                      max_angle_diff=max_angle_diff)
+        histogram = {}
+        for cluster in clusters:
+            length = len(cluster)
+            try:
+                histogram[length] += 1
+            except KeyError:
+                histogram[length] = 1
+        return histogram
 
     @property
     def rod_area(self):
