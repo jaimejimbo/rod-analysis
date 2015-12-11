@@ -43,14 +43,14 @@
 Segregation
 - T(x,y)                                                (DONE)
 - Speeds:                                               (DONE)
-    · Make a vector field.                              (in progress)
+    · Make a vector field.                              (not started)
 - Order param(cluster area)                             (in progress)
  
 bugs:
 - Temperatures seem to be not computed correctly.       (DONE?)
 - g2, g4 not computed correctly.                        (DONE)
 - limits not computed correctly.                        (DONE)
-- High RAM use                                          (in progress)
+- High RAM use                                          (won't fix)
 - Clusters not computed correctly                       (in progresS)
 
 
