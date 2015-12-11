@@ -1363,7 +1363,7 @@ class Experiment(object):
         times = [0+diff_t*step for step in range(len(areas))]
         fig = plt.figure()
         plt.ylim((0,max(areas)*1.1))
-        plt.grid(times, areas)
+        plt.grid()
         try:
             plt.plot(times, areas)
         except ValueError:

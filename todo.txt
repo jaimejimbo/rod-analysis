@@ -29,10 +29,10 @@
     · use states ids instead of indices                 (DONE)
 - use n>3,4 for clusters                                (DONE)
 - normalized histogram of number of rods in clusters.   (DONE)
-- density x order param                                 (not started)
+- density x order param                                 (won't fix)
     -> Needs density computation (too slow)             (---)
-- clusters area                                         (in progress)
-- clusters                                              (in progress)
+- clusters area                                         (DONE)
+- clusters                                              (DONE)
     · join rods with array                              (DONE)
     · array angle                                       (DONE)
     · specific angle between rods                       (DONE)
@@ -44,7 +44,7 @@ Segregation
 - T(x,y)                                                (DONE)
 - Speeds:                                               (DONE)
     · Make a vector field.                              (not started)
-- Order param(cluster area)                             (in progress)
+- Order param(cluster area)                             (DONE)
  
 bugs:
 - Temperatures seem to be not computed correctly.       (DONE?)
@@ -52,6 +52,7 @@ bugs:
 - limits not computed correctly.                        (DONE)
 - High RAM use                                          (won't fix)
 - Clusters not computed correctly                       (DONE)
+- Use time correctly for clusters graph!                (in progress)
 
 
 
