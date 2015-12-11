@@ -1098,6 +1098,53 @@ class Experiment(object):
             z_vals.append(z_val)
         return x_vals, y_vals, z_vals
 
+    def create_cluster_histogram_gif(max_distance=None, max_angle_diff=None):
+        """
+            Creates a gif of cluster length histogram.
+        """
+        processes = []
+        output_queue = mp.Queue()
+        arrays = []
+        for index in range(len(self._states)):
+            process = mp.Process(target=self.create_cluster_hist_gif_process,
+                                 args=(index, max_distance, max_angle_diff,
+                                       output_queue))
+            processes.append(process)
+            arrays.append(None)
+        running, processes_left = methods.run_processes(processes, cpus=4)
+        num_processes = len(processes)
+        finished = 0
+        while finished < num_processes:
+            finished += 1
+            if not len(running):
+                break
+            output = output_queue.get()
+            index = output[0]
+            array = output[1]
+            arrays[index] = array
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                new_process.start()
+        def animate(dummy_frame):
+            """
+            Animation function.
+            """
+            self._cluster_gif_wrapper(arrays)
+        anim = animation.FuncAnimation(fig, animate, frames=frames)
+        anim.save(name, writer='imagemagick', fps=fps)
+
+    def create_cluster_hist_gif_process(index, max_distance, max_angle_diff,
+                                        output_queue):
+        """
+        Process
+        """
+        state = self._states[index]
+        array = state.number_of_rods_in_cluster(max_distance=max_distance,
+                                            max_angle_diff, max_angle_diff,
+                                            min_size=1)
+        output_queue.put([index, array])
+        return
+
     def create_temperature_gif(self, divisions, folder, fps,
                             max_distance, max_angle_diff,
                             limit, amount_of_rods, number_of_bursts):
@@ -1156,7 +1203,6 @@ class Experiment(object):
             self._temperature_gif_wrapper(x_val, y_val,
                                         z_vals_avg, divisions, name,
                                         z_max, z_min)
-        frames = len(self._states)-2
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
 

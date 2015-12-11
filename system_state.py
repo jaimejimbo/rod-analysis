@@ -798,21 +798,6 @@ class SystemState(object):
         total_area = rods_num*self.rod_area
         return total_area
 
-    def cluster_distribution(self, max_distance=None, max_angle_diff=None):
-        """
-            Returns clusters' length distribution.
-        """
-        clusters = self._get_clusters(max_distance=max_distance,
-                                      max_angle_diff=max_angle_diff)
-        histogram = {}
-        for cluster in clusters:
-            length = len(cluster)
-            try:
-                histogram[length] += 1
-            except KeyError:
-                histogram[length] = 1
-        return histogram
-
     @property
     def rod_area(self):
         """
