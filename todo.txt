@@ -28,7 +28,7 @@
 - Use averages over bursts                              (DONE)
     · use states ids instead of indices                 (DONE)
 - use n>3,4 for clusters                                (DONE)
-- normalized histogram of number of rods in clusters.   (not started)
+- normalized histogram of number of rods in clusters.   (DONE)
 - density x order param                                 (not started)
     -> Needs density computation (too slow)             (---)
 - clusters area                                         (in progress)
@@ -51,7 +51,7 @@ bugs:
 - g2, g4 not computed correctly.                        (DONE)
 - limits not computed correctly.                        (DONE)
 - High RAM use                                          (won't fix)
-- Clusters not computed correctly                       (in progresS)
+- Clusters not computed correctly                       (DONE)
 
 
 

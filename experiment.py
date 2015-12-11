@@ -1274,18 +1274,17 @@ class Experiment(object):
             if not len(groups):
                 break
             for group in groups:
-                for dummy_time in range(len(group)):
+                for dummy_time in group:
                     z_val = z_vals.pop(0)
                     _z_vals.append(z_val)
             try:
-                average = methods.array_average(_z_vals)
-            except IndexError:
-                average = _z_vals
+                average = sum(_z_vals)/float(len(_z_vals))
             except TypeError:
-                try:
-                    average = sum(_z_vals)/float(len(_z_vals))
-                except TypeError:
-                    print _z_vals
+                not_none_vals = []
+                for val in _z_vals:
+                    if val is not None:
+                        not_none_vals.append(val)
+                average = sum(not_none_vals)/float(len(not_none_vals))
             z_vals_avg.append(average)
         return z_vals_avg
 
@@ -1328,11 +1327,12 @@ class Experiment(object):
         """
         area = state.total_area_of_clusters(max_distance=max_distance,
                             max_angle_diff=max_angle_diff, min_size=min_size)
+        assert area is not None, "Area badly computed!"+str(index)+""+str(area)
         output_queue.put([index, area])
         return
 
     def cluster_areas(self, number_of_bursts=1, max_distance=None,
-                    max_angle_diff=None, min_size=3):
+                    max_angle_diff=None, min_size=5):
         """
         Returns an array where each value is total cluster area in
         that moment.
@@ -1352,6 +1352,24 @@ class Experiment(object):
                                         min_size=min_size)
             self._cluster_areas = areas
         return self._cluster_areas
+
+    def plot_cluster_areas(self, number_of_bursts=1, max_distance=None,
+                    max_angle_diff=None, min_size=10):
+        areas = self.cluster_areas(number_of_bursts=number_of_bursts,
+                                   max_distance=max_distance,
+                                   max_angle_diff=max_angle_diff,
+                                   min_size=min_size)
+        diff_t = 15*number_of_bursts
+        times = [0+diff_t*step for step in range(len(areas))]
+        fig = plt.figure()
+        plt.ylim((0,max(areas)*1.1))
+        plt.grid(times, areas)
+        try:
+            plt.plot(times, areas)
+        except ValueError:
+            print len(times), len(areas)
+            print times, areas
+        plt.savefig("cluster_areas.png")
 
     @property
     def bursts_groups(self):

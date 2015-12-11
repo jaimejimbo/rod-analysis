@@ -37,13 +37,8 @@ try:
             experiment_17.create_gifs(divisions=30, fps=10, max_distance=10, max_angle_diff=5,
                                      number_of_bursts=1)
         if clusters:
-            #try:
-            #cluster_areas17 = experiment_17.cluster_areas(max_distance=50,
-            #                    max_angle_diff=30, min_size=3)
-            #for state in experiment_17._states:
-                #print state.cluster_distribution(max_distance=100, max_angle_diff=10)
-                #print state.clusters(max_distance=200, max_angle_diff=30)
-            experiment_17.create_cluster_histogram_gif(max_distance=100, max_angle_diff=10)
+            experiment_17.plot_cluster_areas(number_of_bursts=5, max_distance=100,
+                    max_angle_diff=10, min_size=20)
 
     if run_5:
         names, rod_groups_5 = system_state.create_rods(kappas=5.5,
@@ -57,8 +52,8 @@ try:
             experiment_5.create_gifs(divisions=30, fps=10, max_distance=10, max_angle_diff=5,
                                      number_of_bursts=1)
         if clusters:
-            cluster_areas5 = experiment_5.cluster_areas(max_distance=50,
-                                max_angle_diff=30, min_size=5)
+            experiment_5.plot_cluster_areas(number_of_bursts=5, max_distance=100,
+                    max_angle_diff=10, min_size=20)
 
     if run_all:
         names, rod_groups_all = system_state.create_rods(kappas=10,
@@ -72,11 +67,13 @@ try:
             experiment_all.create_gifs(divisions=30, fps=10, max_distance=10, max_angle_diff=5,
                                      number_of_bursts=1)
         if clusters:
-            cluster_areas_all = experiment_all.cluster_areas(max_distance=50,
-                                max_angle_diff=30, min_size=3)
+            experiment_all.plot_cluster_areas(number_of_bursts=5, max_distance=100,
+                    max_angle_diff=10, min_size=20)
 
     os.system("bash tomp4script.sh")
 except KeyboardInterrupt:
+    os.system("sudo pkill -f main.py")
+except AssertionError:
     os.system("sudo pkill -f main.py")
 print "Type exit() to exit."
 def exit():
