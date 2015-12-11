@@ -675,7 +675,7 @@ class SystemState(object):
                     selected_rod = rod2
         return selected_rod
 
-    def _get_cluster_members(self, reference_rod, min_size,
+    def _get_cluster_members(self, reference_rod,
                                     max_distance, max_angle_diff):
         """
             Gets the closest neighbour to a rod that fulfill
@@ -698,11 +698,9 @@ class SystemState(object):
             diff = length-max_distance
             max_dist = max_distance+math.sin(distance_angle)*diff
             if angle_diff <= max_angle_diff and distance < max_dist:
-                subrods = self._get_cluster_members(rod_, min_size,
+                subrods = self._get_cluster_members(rod_,
                                                max_distance, max_angle_diff)
                 rods |= subrods
-        if len(rods) < min_size:
-            rods = set([])
         return rods
 
     def clusters(self, max_distance=None, max_angle_diff=None, min_size=3):
@@ -730,9 +728,9 @@ class SystemState(object):
                 if self._cluster_checked_dict[rod_.identifier]:
                     continue
                 rods_left -= set([rod_])
-                cluster = self._get_cluster_members(rod_, min_size,
+                cluster = self._get_cluster_members(rod_,
                                 max_distance, max_angle_diff)
-                if len(cluster):
+                if len(cluster) >= min_size:
                     clusters.append(cluster)
             self._clusters = clusters
         return self._clusters
