@@ -1098,13 +1098,17 @@ class Experiment(object):
             z_vals.append(z_val)
         return x_vals, y_vals, z_vals
 
-    def create_cluster_histogram_gif(max_distance=None, max_angle_diff=None):
+    def create_cluster_histogram_gif(self, max_distance=None,
+                                    max_angle_diff=None, fps=15):
         """
             Creates a gif of cluster length histogram.
         """
+        kappa = self._states[0].average_kappa
+        name = "cluster_hist_K"+str(int(kappa))+".gif"
         processes = []
         output_queue = mp.Queue()
         arrays = []
+        fig = plt.figure()
         for index in range(len(self._states)):
             process = mp.Process(target=self.create_cluster_hist_gif_process,
                                  args=(index, max_distance, max_angle_diff,
@@ -1130,17 +1134,34 @@ class Experiment(object):
             Animation function.
             """
             self._cluster_gif_wrapper(arrays)
+        frames = len(self._states)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
 
-    def create_cluster_hist_gif_process(index, max_distance, max_angle_diff,
+    def _cluster_gif_wrapper(self, arrays):
+        """
+        Wrapper.
+        """
+        try:
+            plt.cla()
+            plt.clf()
+            array = arrays.pop(0)
+            boundaries = [0+time*10 for time in range(40)]
+            plt.xlim((0, 200))
+            plt.ylim((0,0.3))
+            plt.hist(array, bins=boundaries, normed=True)
+            plt.suptitle("Cluster length histogram")
+        except:
+            pass
+
+    def create_cluster_hist_gif_process(self, index, max_distance, max_angle_diff,
                                         output_queue):
         """
         Process
         """
         state = self._states[index]
         array = state.number_of_rods_in_cluster(max_distance=max_distance,
-                                            max_angle_diff, max_angle_diff,
+                                            max_angle_diff=max_angle_diff,
                                             min_size=1)
         output_queue.put([index, array])
         return
