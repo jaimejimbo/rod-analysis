@@ -45,6 +45,7 @@ Segregation
 - Speeds:                                               (DONE)
     · Make a vector field.                              (not started)
 - Order param(cluster area)                             (DONE)
+- Normalized order param(cluster area)                  (DONE)
  
 bugs:
 - Temperatures seem to be not computed correctly.       (DONE?)
@@ -52,7 +53,7 @@ bugs:
 - limits not computed correctly.                        (DONE)
 - High RAM use                                          (won't fix)
 - Clusters not computed correctly                       (DONE)
-- Use time correctly for clusters graph!                (in progress)
+- Use time correctly for clusters graph!                (DONE)
 
 
 
