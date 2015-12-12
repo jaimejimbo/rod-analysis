@@ -71,6 +71,8 @@ class Experiment(object):
         self._divisions = None
         self._min_density = None
         self._max_density = None
+        self._indices = None
+        self._total_cluster_areas = None
         #self._inversed = False
 
     def __iter__(self):
@@ -130,6 +132,8 @@ class Experiment(object):
         self._divisions = None
         self._min_density = None
         self._max_density = None
+        self._indices = None
+        self._total_cluster_areas = None
 
 
     def _create_dict_keys(self):
@@ -1014,15 +1018,13 @@ class Experiment(object):
         plt.gca().invert_yaxis()
         plt.colorbar()
 
-    def _get_image_ids(self, index):
+    def _get_image_id(self, index):
         """
         Returns consecutive system images' ids.
         """
         image1_id_str = self._states[index].id_string
-        image2_id_str = self._states[index+1].id_string
         image1_id = methods.get_number_from_string(image1_id_str)
-        image2_id = methods.get_number_from_string(image2_id_str)
-        return image1_id, image2_id
+        return image1_id
 
     def create_gifs(self, divisions=5, folder="./", fps=1,
                             max_distance=100, max_angle_diff=90, limit=5,
@@ -1261,7 +1263,11 @@ class Experiment(object):
         bursts_groups = copy.deepcopy(self.bursts_groups)
         end = False
         z_vals_avg = []
+        index = 0
+        indices = []
         while not end:
+            initial_id = self._get_image_id(index)
+            indices.append(index)
             groups = []
             average = None
             _z_vals = []
@@ -1275,6 +1281,7 @@ class Experiment(object):
                 break
             for group in groups:
                 for dummy_time in group:
+                    index += 1  
                     z_val = z_vals.pop(0)
                     _z_vals.append(z_val)
             try:
@@ -1286,7 +1293,7 @@ class Experiment(object):
                         not_none_vals.append(val)
                 average = sum(not_none_vals)/float(len(not_none_vals))
             z_vals_avg.append(average)
-        return z_vals_avg
+        return z_vals_avg, indices
 
     def _get_cluster_areas(self, max_distance=None,
                     max_angle_diff=None, min_size=3):
@@ -1327,7 +1334,6 @@ class Experiment(object):
         """
         area = state.total_area_of_clusters(max_distance=max_distance,
                             max_angle_diff=max_angle_diff, min_size=min_size)
-        assert area is not None, "Area badly computed!"+str(index)+""+str(area)
         output_queue.put([index, area])
         return
 
@@ -1347,10 +1353,17 @@ class Experiment(object):
         if not len(self._cluster_areas):
             z_vals = self._get_cluster_areas(max_distance=max_distance,
                             max_angle_diff=max_angle_diff, min_size=min_size)
-            areas = self._average_cluster_areas(z_vals,
+            areas, indices = self._average_cluster_areas(z_vals,
                                         number_of_bursts=number_of_bursts,
                                         min_size=min_size)
             self._cluster_areas = areas
+            z_vals = self._get_cluster_areas(max_distance=max_distance,
+                            max_angle_diff=max_angle_diff, min_size=0)
+            norm_areas, indices = self._average_cluster_areas(z_vals,
+                                        number_of_bursts=number_of_bursts,
+                                        min_size=0)
+            self._total_cluster_areas = norm_areas
+            self._indices = indices
         return self._cluster_areas
 
     def plot_cluster_areas(self, number_of_bursts=1, max_distance=None,
@@ -1359,13 +1372,36 @@ class Experiment(object):
                                    max_distance=max_distance,
                                    max_angle_diff=max_angle_diff,
                                    min_size=min_size)
+        total_areas = self._total_cluster_areas
+        norm_areas = []
+        for index in range(len(areas)):
+            area = areas[index]
+            total_area = total_areas[index]
+            proportion = float(area)/total_area
+            norm_areas.append(proportion)
         diff_t = 15*number_of_bursts
-        times = [0+diff_t*step for step in range(len(areas))]
+        id_0 = self._get_image_id(self._indices[0])
+        times = []
+        previous_time = 0
+        for index_ in range(len(self._indices)):
+            index = self._indices[index_]
+            if not index:
+                time = 0
+            else:
+                id_1 = self._get_image_id(index)
+                index_0 = self._indices[index_-1]
+                id_0 = self._get_image_id(index_0)
+                time = methods.time_difference(self._dates, id_0, id_1)
+            time += previous_time
+            previous_time = time
+            times.append(time) 
         fig = plt.figure()
-        plt.ylim((0,max(areas)*1.1))
+        plt.ylim((0,1))
+        plt.xlabel("time[seconds]")
+        plt.ylabel("cluster area proportion")
         plt.grid()
         try:
-            plt.plot(times, areas)
+            plt.plot(times, norm_areas)
         except ValueError:
             print len(times), len(areas)
             print times, areas
@@ -1380,7 +1416,8 @@ class Experiment(object):
             groups = []
             group = []
             for index in range(len(self._state_numbers)-1):
-                initial_id, final_id = self._get_image_ids(index)
+                initial_id  = self._get_image_id(index)
+                final_id = self._get_image_id(index+1)
                 burst = methods.are_in_burst(self._dates, initial_id,
                                              final_id)
                 if burst:

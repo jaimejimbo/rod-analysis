@@ -445,6 +445,27 @@ def are_in_burst(dates, image_num_1, image_num_2):
         return False
     return True
 
+def time_difference(dates, image_num_1, image_num_2):
+    """
+        Returns the difference of time between 2 images.
+    """
+    image_num_1 = int(image_num_1)
+    image_num_2 = int(image_num_2)
+    date1 = dates[image_num_1].split(' ')
+    date2 = dates[image_num_2].split(' ')
+    date_1 = date1[0].split(':')
+    date_2 = date2[0].split(':')
+    for index in range(len(date_1)):
+        if date_1[index] != date_2[index]:
+            return 15*60
+    time1 = date1[1].split(':')
+    time2 = date2[1].split(':')
+    time1 = [int(time_part) for time_part in time1]
+    time2 = [int(time_part) for time_part in time2]
+    time1 = time1[0]*3600+time1[1]*60+time1[2]
+    time2 = time2[0]*3600+time2[1]*60+time2[2]
+    return abs(time2-time1)
+
 def run_processes(processes, cpus=None):
     """
         Runs all processes using all cores.

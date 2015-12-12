@@ -733,7 +733,7 @@ class SystemState(object):
                 if len(cluster):
                     clusters.append(cluster)
             self._clusters = clusters
-        return self._clusters
+        return clusters
 
     def clusters(self, max_distance=None, max_angle_diff=None, min_size=3):
         """

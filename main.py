@@ -37,8 +37,8 @@ try:
             experiment_17.create_gifs(divisions=30, fps=10, max_distance=10, max_angle_diff=5,
                                      number_of_bursts=1)
         if clusters:
-            experiment_17.plot_cluster_areas(number_of_bursts=5, max_distance=100,
-                    max_angle_diff=10, min_size=20)
+            experiment_17.plot_cluster_areas(number_of_bursts=10, max_distance=100,
+                    max_angle_diff=10, min_size=1)
 
     if run_5:
         names, rod_groups_5 = system_state.create_rods(kappas=5.5,
