@@ -1184,22 +1184,25 @@ class Experiment(object):
         """
             Creates a gif of average speed vectors over subsystem.
         """
-        average_speeds_vectors_matrices = self.average_speeds_vectors(
+        vectors_matrices = self.average_speeds_vectors(
                                             divisions, max_distance,
                                             max_angle_diff)
         fig = plt.figure()
         kappa = self._states[0].average_kappa
         name = str(folder) + "speeds_vectors_K" + str(kappa)
+        bursts_groups = copy.deepcopy(self.bursts_groups)
+        end = False
+        vectors_matrices_avg = []
         def animate(dummy_frame):
             """
             Animation function.
             """
-            self._speeds_vectors_gif_wrapper(average_speeds_vectors_matrices)
+            self._speeds_vectors_gif_wrapper(vectors_matrix)
         frames = len(self._states)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer='imagemagick', fps=fps)
 
-    def _speeds_vectors_gif_wrapper(self, averate_speeds_vectors_matrices):
+    def _speeds_vectors_gif_wrapper(self, vectors_matrix):
         """
             Wrapper
         """
@@ -1214,7 +1217,8 @@ class Experiment(object):
         speeds = self.speeds_vectors
         processes = []
         vector_matrices = []
-        for index in range(len()):
+        speeds_num = len(self._states)-1
+        for index in range(speeds_num):
             speeds_ = speeds[index]
             state = self._states[index]
             process = mp.Process(target=average_speeds_vectors_gif_process,
@@ -1236,9 +1240,11 @@ class Experiment(object):
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
-        return vector_matrices
-        
-        
+        vectors = []
+        for index in range(speeds_num):
+            state = self._states[index]
+            vector_matrix = vector_matrices[index]
+            
 
     def create_temperature_gif(self, divisions, folder, fps,
                             max_distance, max_angle_diff,
