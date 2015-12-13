@@ -5,6 +5,7 @@ import re, methods, math, copy, gc
 import multiprocessing as mp
 from matplotlib import animation
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class Experiment(object):
@@ -427,6 +428,15 @@ class Experiment(object):
                                   max_angle_diff=max_angle_diff,
                                   limit=5, amount_of_rods=200)
         return self._speed_vectors
+
+    @property
+    def speed_vectors(self):
+        """
+         Rods' speed vectors.
+        """
+        if not len(self._speeds_vectors):
+            self._get_vectors()
+        return self._speeds_vectors
 
     def _get_vectors(self):
         """
