@@ -53,7 +53,7 @@ class Experiment(object):
         self._unjoined_final_rods = []
         self._final_rods = []
         self._initial_rods = []
-        self._speed_vectors = []
+        self._speeds_vectors = []
         self._speeds = []
         self._angular_speeds = []
         self._max_distance = None
@@ -114,7 +114,7 @@ class Experiment(object):
         self._relative_dictionaries = []
         self._unjoined_initial_rods = []
         self._unjoined_final_rods = []
-        self._speed_vectors = []
+        self._speeds_vectors = []
         self._final_rods = []
         self._initial_rods = []
         self._speeds = []
@@ -427,10 +427,10 @@ class Experiment(object):
         self.compute_dictionaries(max_distance=max_distance,
                                   max_angle_diff=max_angle_diff,
                                   limit=5, amount_of_rods=200)
-        return self._speed_vectors
+        return self._speeds_vectors
 
     @property
-    def speed_vectors(self):
+    def speeds_vectors(self):
         """
          Rods' speed vectors.
         """
@@ -447,7 +447,7 @@ class Experiment(object):
         for index in range(len(self._evolution_dictionaries)-1):
             processes.append(mp.Process(target=self._get_vectors_process,
                                         args=(index, output_queue)))
-            self._speed_vectors.append(0)
+            self._speeds_vectors.append(0)
         running, processes_left = methods.run_processes(processes)
         num_processes = len(running)
         finished = 0
@@ -455,8 +455,8 @@ class Experiment(object):
             finished += 1
             output = output_queue.get()
             index = output[0]
-            speed_vectors = output[1]
-            self._speed_vectors[index] = speed_vectors
+            speeds_vectors = output[1]
+            self._speeds_vectors[index] = speeds_vectors
             if len(processes_left):
                 finished -= 1
                 new_process = processes_left.pop(0)
@@ -466,7 +466,7 @@ class Experiment(object):
         """
         Process.
         """
-        speed_vectors = {}
+        speeds_vectors = {}
         evol_dict = self._evolution_dictionaries[index]
         initial_state = self._states[index]
         final_state = self._states[index+1]
@@ -480,8 +480,8 @@ class Experiment(object):
                     initial_rod = initial_state[initial_rod_id]
                     final_rod = final_state[final_rod_id]
                     vector = initial_rod.vector_to_rod(final_rod)
-                    speed_vectors[initial_rod_id] = vector
-        output_queue.put([index, speed_vectors])
+                    speeds_vectors[initial_rod_id] = vector
+        output_queue.put([index, speeds_vectors])
 
 
     def evolution_dictionaries(self, max_distance=100, max_angle_diff=90,
@@ -1178,6 +1178,68 @@ class Experiment(object):
         output_queue.put([index, array])
         return
 
+    def create_speeds_vectors_gif(self, divisions, folder, fps, max_distance,
+                                 max_angle_diff, limit, amount_of_rods,
+                                 number_of_bursts):
+        """
+            Creates a gif of average speed vectors over subsystem.
+        """
+        average_speeds_vectors_matrices = self.average_speeds_vectors(
+                                            divisions, max_distance,
+                                            max_angle_diff)
+        fig = plt.figure()
+        kappa = self._states[0].average_kappa
+        name = str(folder) + "speeds_vectors_K" + str(kappa)
+        def animate(dummy_frame):
+            """
+            Animation function.
+            """
+            self._speeds_vectors_gif_wrapper(average_speeds_vectors_matrices)
+        frames = len(self._states)
+        anim = animation.FuncAnimation(fig, animate, frames=frames)
+        anim.save(name, writer='imagemagick', fps=fps)
+
+    def _speeds_vectors_gif_wrapper(self, averate_speeds_vectors_matrices):
+        """
+            Wrapper
+        """
+        pass
+        
+
+    def average_speeds_vectors(self, divisions, max_distance, max_angle_diff):
+        """
+            Computes average speeds vectors
+        """
+        output_queue = mp.Queue()
+        speeds = self.speeds_vectors
+        processes = []
+        vector_matrices = []
+        for index in range(len()):
+            speeds_ = speeds[index]
+            state = self._states[index]
+            process = mp.Process(target=average_speeds_vectors_gif_process,
+                                 args=(divisions, index, state,
+                                     speeds_, output_queue))
+            processes.append(process)
+            vector_matrices.append(None)
+        running, processes_left = methods.run_processes(processes, cpus=4)
+        num_processes = len(processes)
+        finished = 0
+        while finished < num_processes:
+            finished += 1
+            if not len(running):
+                break
+            output = output_queue.get()
+            index = output[0]
+            vector_matrix = output[1]
+            vector_matrices[index] = vector_matrix
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                new_process.start()
+        return vector_matrices
+        
+        
+
     def create_temperature_gif(self, divisions, folder, fps,
                             max_distance, max_angle_diff,
                             limit, amount_of_rods, number_of_bursts):
@@ -1461,4 +1523,26 @@ def compute_local_average_speeds_process(index, output_queue, local_speeds):
         speeds_matrix.append(speeds_row)
         angular_speeds_matrix.append(angular_speeds_row)
     output_queue.put([index, speeds_matrix, angular_speeds_matrix])
+
+def average_speeds_vectors_gif_process(divisions, index, state,
+                                     speeds, output_queue):
+    """
+        Process
+    """
+    subgroups_matrix = state.subgroups_matrix(divisions)
+    emp = [None, None]
+    vectors_matrix = [[emp for dummy in range(len(subgroups_matrix[idx]))]
+                      for idx in range(len(subgroups_matrix))]
+    for row in range(len(subgroups_matrix)):
+        for col in range(len(subgroups_matrix[row])):
+            subgroup = subgroups_matrix[row][col]
+            vector = [0, 0]
+            number_of_rods = float(subgroup.number_of_rods)
+            for rod_ in subgroup:
+                rod_id = rod_.identifier
+                rod_vector = list(speeds[rod_id])
+                vector[0] += rod_vector[0]/number_of_rods
+                vector[1] += rod_vector[1]/number_of_rods
+            vectors_matrix[row][col] = vector
+    output_queue.put([index, vectors_matrix])
 
