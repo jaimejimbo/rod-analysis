@@ -39,6 +39,7 @@
     · max_distance, max_angle                           (DONE)
 - g2, g4 divide by area                                 (DONE)
 - convert gif to mp4                                    (DONE)
+- Average temperature of system.                        (DONE)
 
 Segregation
 - T(x,y)                                                (DONE)
@@ -46,6 +47,8 @@ Segregation
     · Make a vector field.                              (not started)
 - Order param(cluster area)                             (DONE)
 - Normalized order param(cluster area)                  (DONE)
+- Exponent                                              (in progress)
+
  
 bugs:
 - Temperatures seem to be not computed correctly.       (DONE?)

@@ -1,4 +1,4 @@
-"""
+R"""
     Library for time evolution study.
 """
 import re, methods, math, copy, gc
@@ -6,6 +6,7 @@ import multiprocessing as mp
 from matplotlib import animation
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.optimize as optimization
 
 
 class Experiment(object):
@@ -1444,8 +1445,32 @@ class Experiment(object):
             self._indices = indices
         return self._cluster_areas
 
+    def get_order_evolution_coeficient(self, number_of_bursts=1, max_distance=None,
+                    max_angle_diff=None, min_size=5):
+        """
+            Returns coeficient of order param evolution.
+        """
+        cluster_areas = self.cluster_areas(number_of_bursts=number_of_bursts,
+                                   max_distance=max_distance,
+                                   max_angle_diff=max_angle_diff,
+                                   min_size=min_size)
+        indices = self._indices
+        self._compute_times(number_of_bursts)
+        times = self._times
+        log_areas = numpy.array([math.log(area) for area in cluster_areas])
+        log_times = numpy.array([math.log(time) for time in times])
+        x_0 = numpy.array([0,0,0,0])
+        function = lambda value, coef1, coef2: coef1 + coef2*value
+        (coef1, coef2) = optimization.curve_fit(function, log_times,
+                                            log_areas, x_0)
+        return coef1, coef2
+        
+
     def plot_cluster_areas(self, number_of_bursts=1, max_distance=None,
                     max_angle_diff=None, min_size=10):
+        """
+            Plots cluster areas evolution.
+        """
         areas = self.cluster_areas(number_of_bursts=number_of_bursts,
                                    max_distance=max_distance,
                                    max_angle_diff=max_angle_diff,
@@ -1457,6 +1482,24 @@ class Experiment(object):
             total_area = total_areas[index]
             proportion = float(area)/total_area
             norm_areas.append(proportion)
+        self._compute_times()
+        times = self._times
+        fig = plt.figure()
+        plt.ylim((0,1))
+        plt.xlabel("time[seconds]")
+        plt.ylabel("cluster area proportion")
+        plt.grid()
+        try:
+            plt.plot(times, norm_areas)
+        except ValueError:
+            print len(times), len(areas)
+            print times, areas
+        plt.savefig("cluster_areas.png")
+
+    def _compute_times(self, number_of_bursts):
+        """
+            Computes times for experiment.
+        """
         diff_t = 15*number_of_bursts
         id_0 = self._get_image_id(self._indices[0])
         times = []
@@ -1473,17 +1516,7 @@ class Experiment(object):
             time += previous_time
             previous_time = time
             times.append(time) 
-        fig = plt.figure()
-        plt.ylim((0,1))
-        plt.xlabel("time[seconds]")
-        plt.ylabel("cluster area proportion")
-        plt.grid()
-        try:
-            plt.plot(times, norm_areas)
-        except ValueError:
-            print len(times), len(areas)
-            print times, areas
-        plt.savefig("cluster_areas.png")
+        self._times = times
 
     @property
     def bursts_groups(self):
@@ -1507,6 +1540,54 @@ class Experiment(object):
             self._bursts_groups = groups
         return self._bursts_groups
 
+    def plot_average_temperature(self, max_distance, max_angle_diff):
+        """
+            Average temperature over time.
+        """
+        self._compute_speeds(max_distance, max_angle_diff,
+                        5, None)
+        indices = []
+        average_speeds = []
+        processes = []
+        output_queue = mp.Queue()
+        for index in range(len(self._speeds)):
+            indices.append(index)
+            process = mp.Process(target=self.average_speeds,
+                                 args=(index, output_queue))
+            processes.append(process)
+            average_speeds.append(None)
+        running, processes_left = methods.run_processes(processes, cpus=4)
+        num_processes = len(processes)
+        finished = 0
+        while finished < num_processes:
+            finished += 1
+            if not len(running):
+                break
+            output = output_queue.get()
+            index = output[0]
+            average_speed = output[1]
+            average_speeds[index] = average_speed
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                new_process.start()
+        plt.figure()
+        plt.plot(indices, average_speeds)
+        name = "avg_temp_K"
+        kappa = int(self._states[0].average_kappa)
+        name += str(kappa) + ".png"
+        plt.savefig(name)
+
+    def average_speeds(self, index, output_queue):
+        """
+            Averages speeds of all rods.
+        """
+        speeds = self._speeds[index]
+        number_of_rods = len(speeds.keys())
+        average_speed = 0
+        for speed in speeds.values():
+            average_speed += speed
+        average_speed /= number_of_rods
+        output_queue.put([index, average_speed])
 
 def compute_local_average_speeds_process(index, output_queue, local_speeds):
     """
