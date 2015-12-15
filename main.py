@@ -49,8 +49,11 @@ try:
         if order_param_exp:
             print experiment_17.get_order_evolution_coeficient(number_of_bursts=3, max_distance=50,
                     max_angle_diff=10, min_size=10)
-    del names, experiment_17, rod_groups_17
-    gc.collect()
+    try:
+        del names, experiment_17, rod_groups_17
+        gc.collect()
+    except NameError:
+        pass
 
     if run_5:
         names, rod_groups_5 = system_state.create_rods(kappas=5.5,
@@ -68,8 +71,11 @@ try:
                     max_angle_diff=10, min_size=20)
         if avg_temp:
             experiment_5.plot_average_temperature(100, 10)
-    del names, experiment_5, rod_groups_5
-    gc.collect()
+    try:
+        del names, experiment_5, rod_groups_5
+        gc.collect()
+    except NameError:
+        pass
 
     if run_all:
         names, rod_groups_all = system_state.create_rods(kappas=10,
@@ -87,8 +93,11 @@ try:
                     max_angle_diff=10, min_size=20)
         if avg_temp:
             experiment_all.plot_average_temperature(100, 10)
-    del names, experiment_all, rod_groups_all
-    gc.collect()
+    try:
+        del names, experiment_all, rod_groups_all
+        gc.collect()
+    except NameError:
+        pass
 
     os.system("bash tomp4script.sh")
 except KeyboardInterrupt:

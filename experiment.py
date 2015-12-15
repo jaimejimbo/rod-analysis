@@ -1,11 +1,11 @@
-R"""
+"""
     Library for time evolution study.
 """
 import re, methods, math, copy, gc
 import multiprocessing as mp
 from matplotlib import animation
 import matplotlib.pyplot as plt
-import numpy as np
+import numpy
 import scipy.optimize as optimization
 
 
@@ -1457,13 +1457,14 @@ class Experiment(object):
         indices = self._indices
         self._compute_times(number_of_bursts)
         times = self._times
+        times.pop(0)
+        cluster_areas.pop(0)
         log_areas = numpy.array([math.log(area) for area in cluster_areas])
         log_times = numpy.array([math.log(time) for time in times])
         x_0 = numpy.array([0,0,0,0])
         function = lambda value, coef1, coef2: coef1 + coef2*value
-        (coef1, coef2) = optimization.curve_fit(function, log_times,
-                                            log_areas, x_0)
-        return coef1, coef2
+        popt, pcov = optimization.curve_fit(function, log_times, log_areas)
+        return popt[0], popt[1]
         
 
     def plot_cluster_areas(self, number_of_bursts=1, max_distance=None,
