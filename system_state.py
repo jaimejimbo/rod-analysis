@@ -753,18 +753,19 @@ class SystemState(object):
             Gets the average number of rods in clusters.
         Angles in grad.
         """
-        lengths = self.number_of_rods_in_cluster(max_distance,
+        lengths = self.cluster_lengths(max_distance,
                                         max_angle_diff, min_size)
         try:
             return float(sum(lengths))/len(lengths)
         except ZeroDivisionError:
             print "No clusters detected."
 
-    def number_of_rods_in_cluster(self, max_distance=None,
+    def cluster_lengths(self, max_distance=None,
                             max_angle_diff=None, min_size=3):
         """
-            Creates a list with the number of rods in each cluster.
-        Angles in grad.
+            Creates an array of lengths of clusters:
+        [1,4,4,5,2] means that there are 1 cluster of lenght 1, 
+        2 of length 4...
         """
         lengths = []
         clusters = self.clusters(max_distance,
@@ -789,7 +790,7 @@ class SystemState(object):
             Returns the area covered by clusters.
         """
         rod_area = self.rod_area
-        rods_num = self.number_of_rods_in_cluster(max_distance=max_distance,
+        rods_num = self.cluster_lengths(max_distance=max_distance,
                                                max_angle_diff=max_angle_diff,
                                                min_size=min_size)
         rods_num = sum(rods_num)

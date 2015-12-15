@@ -1173,7 +1173,7 @@ class Experiment(object):
         Process
         """
         state = self._states[index]
-        array = state.number_of_rods_in_cluster(max_distance=max_distance,
+        array = state.cluster_lengths(max_distance=max_distance,
                                             max_angle_diff=max_angle_diff,
                                             min_size=1)
         output_queue.put([index, array])
