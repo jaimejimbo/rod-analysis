@@ -1590,12 +1590,13 @@ class Experiment(object):
         average_speed /= number_of_rods
         output_queue.put([index, average_speed])
 
+    @property
     def lost_rods_percentage(self):
         """
             Computes maximum percentage of rods lost in analysis.
         """
         number_of_rods = []
-        for state in range(len(self._states)):
+        for state in self._states:
             number = state.number_of_rods
             number_of_rods.append(number)
         supposed_total_number = max(number_of_rods)

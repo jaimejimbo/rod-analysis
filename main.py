@@ -19,12 +19,13 @@ try:
         dates = methods.import_image_dates()
 
     run_17 = True
-    run_5 = False
-    run_all = False
+    run_5 = True
+    run_all = True
     create_gifs = False
     clusters = False
     avg_temp = False
     order_param_exp = True
+    lost_percentage = True
 
     coef = 5
     divisions = 30
@@ -47,8 +48,10 @@ try:
         if avg_temp:
             experiment_17.plot_average_temperature(100, 10)
         if order_param_exp:
-            print experiment_17.get_order_evolution_coeficient(number_of_bursts=3, max_distance=50,
-                    max_angle_diff=10, min_size=10)
+            print "Order parameter: "+str(experiment_17.get_order_evolution_coeficient(number_of_bursts=3, max_distance=50,
+                    max_angle_diff=10, min_size=10))
+        if lost_percentage:
+            print "Rods lost: "+str(experiment_17.lost_rods_percentage)+"%"
     try:
         del names, experiment_17, rod_groups_17
         gc.collect()
@@ -71,6 +74,8 @@ try:
                     max_angle_diff=10, min_size=20)
         if avg_temp:
             experiment_5.plot_average_temperature(100, 10)
+        if lost_percentage:
+            print "Rods lost: "+str(experiment_5.lost_rods_percentage)+"%"
     try:
         del names, experiment_5, rod_groups_5
         gc.collect()
@@ -93,6 +98,8 @@ try:
                     max_angle_diff=10, min_size=20)
         if avg_temp:
             experiment_all.plot_average_temperature(100, 10)
+        if lost_percentage:
+            print "Rods lost: "+str(experiment_all.lost_rods_percentage)+"%"
     try:
         del names, experiment_all, rod_groups_all
         gc.collect()
