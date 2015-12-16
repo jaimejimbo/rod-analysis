@@ -48,8 +48,8 @@ try:
         if avg_temp:
             experiment_17.plot_average_temperature(100, 10)
         if order_param_exp:
-            indep, param, covar = str(experiment_17.get_order_evolution_coeficient(number_of_bursts=3, max_distance=50,
-                    max_angle_diff=10, min_size=10))
+            indep, param, covar = experiment_17.get_order_evolution_coeficient(number_of_bursts=3, max_distance=50,
+                    max_angle_diff=10, min_size=10)
             print "Order parameter: "+str(param)+" Cov: "+str(covar)
         if lost_percentage:
             percentage, covar = experiment_17.lost_rods_percentage
