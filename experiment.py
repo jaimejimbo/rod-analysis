@@ -1464,7 +1464,7 @@ class Experiment(object):
         x_0 = numpy.array([0,0,0,0])
         function = lambda value, coef1, coef2: coef1 + coef2*value
         popt, pcov = optimization.curve_fit(function, log_times, log_areas)
-        return popt[0], popt[1]
+        return popt[0], popt[1], pcov
         
 
     def plot_cluster_areas(self, number_of_bursts=1, max_distance=None,
@@ -1600,9 +1600,14 @@ class Experiment(object):
             number = state.number_of_rods
             number_of_rods.append(number)
         supposed_total_number = max(number_of_rods)
-        max_losses = supposed_total_number-min(number_of_rods)
-        percentage = float(max_losses)/supposed_total_number
-        return percentage
+        loses = [float(supposed_total_number-number)/supposed_total_number 
+                 for number in number_of_rods]
+        loses_2 = [lose**2 for lose in loses]
+        loses_average = float(sum(loses))/len(loses)
+        loses_2_average = float(sum(loses_2))/len(loses_2)
+        cov = math.sqrt(loses_2_average-loses_average**2)
+        return loses_average, cov
+        
 
 def compute_local_average_speeds_process(index, output_queue, local_speeds):
     """

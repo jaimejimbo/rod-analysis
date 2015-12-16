@@ -48,10 +48,12 @@ try:
         if avg_temp:
             experiment_17.plot_average_temperature(100, 10)
         if order_param_exp:
-            print "Order parameter: "+str(experiment_17.get_order_evolution_coeficient(number_of_bursts=3, max_distance=50,
+            indep, param, covar = str(experiment_17.get_order_evolution_coeficient(number_of_bursts=3, max_distance=50,
                     max_angle_diff=10, min_size=10))
+            print "Order parameter: "+str(param)+" Cov: "+str(covar)
         if lost_percentage:
-            print "Rods lost: "+str(experiment_17.lost_rods_percentage)+"%"
+            percentage, covar = experiment_17.lost_rods_percentage
+            print "Rods lost: "+str(percentage)+"%"+" Cov: "+str(covar)
     try:
         del names, experiment_17, rod_groups_17
         gc.collect()
@@ -75,7 +77,8 @@ try:
         if avg_temp:
             experiment_5.plot_average_temperature(100, 10)
         if lost_percentage:
-            print "Rods lost: "+str(experiment_5.lost_rods_percentage)+"%"
+            percentage, covar = experiment_5.lost_rods_percentage
+            print "Rods lost: "+str(percentage)+"%"+" Cov: "+str(covar)
     try:
         del names, experiment_5, rod_groups_5
         gc.collect()
@@ -99,7 +102,8 @@ try:
         if avg_temp:
             experiment_all.plot_average_temperature(100, 10)
         if lost_percentage:
-            print "Rods lost: "+str(experiment_all.lost_rods_percentage)+"%"
+            percentage, covar = experiment_all.lost_rods_percentage
+            print "Rods lost: "+str(percentage)+"%"+" Cov: "+str(covar)
     try:
         del names, experiment_all, rod_groups_all
         gc.collect()
