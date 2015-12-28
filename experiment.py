@@ -6,6 +6,7 @@ import multiprocessing as mp
 from matplotlib import animation
 import matplotlib.pyplot as plt
 import numpy
+import numpy as np
 import scipy.optimize as optimization
 
 
@@ -223,9 +224,9 @@ class Experiment(object):
                     evol_dict[initial_id] |= set([final_id])
                     relative_dict[initial_id][final_id] = (distance,
                                                         angle, speed)
-        for initial_id in relative_dict.keys():
+        for initial_id in list(relative_dict.keys()):
             if len(relative_dict[initial_id]) == 1:
-                relative_dict[initial_id] = relative_dict[initial_id].values()[0]
+                relative_dict[initial_id] = list(relative_dict[initial_id].values())[0]
         output_queue.put([index, evol_dict, relative_dict])
 
 
@@ -279,9 +280,9 @@ class Experiment(object):
                             relative_dict[initial_id][final_id] = (distance, angle)
                             evol_dict[initial_id] -= set([rod_id])
                             del relative_dict[initial_id][rod_id]
-        for initial_id in relative_dict.keys():
+        for initial_id in list(relative_dict.keys()):
             if len(relative_dict[initial_id]) == 1:
-                relative_dict[initial_id] = relative_dict[initial_id].values()[0]
+                relative_dict[initial_id] = list(relative_dict[initial_id].values())[0]
         output_queue.put([index, evol_dict, relative_dict])
 
     def _remove_final_rod(self, index, initial_rod_id, final_rod_id):
@@ -294,7 +295,7 @@ class Experiment(object):
         changed = False
         conflicts = set([])
         final_rod_set = set([final_rod])
-        for rod_id in evol_dict.keys():
+        for rod_id in list(evol_dict.keys()):
             last_changed = False
             final_rods = evol_dict[rod_id]
             if rod_id != initial_rod_id and len(final_rods):
@@ -349,7 +350,7 @@ class Experiment(object):
         selected = set([])
         evol_dict = self._evolution_dictionaries[index]
         relative_dict = self._relative_dictionaries[index]
-        for initial_rod_id in evol_dict.keys():
+        for initial_rod_id in list(evol_dict.keys()):
             final_rod_id, distance, angle_diff = self._closer_rod(index,
                                           initial_rod_id, selected,
                                             max_distance)
@@ -471,7 +472,7 @@ class Experiment(object):
         evol_dict = self._evolution_dictionaries[index]
         initial_state = self._states[index]
         final_state = self._states[index+1]
-        keys = evol_dict.keys()
+        keys = list(evol_dict.keys())
         if not keys[0]:
             return
         for initial_rod_id in keys:
@@ -609,7 +610,7 @@ class Experiment(object):
         rel_dict = self._relative_dictionaries[index]
         speeds = {}
         angular_speeds = {}
-        for initial_rod_id in rel_dict.keys():
+        for initial_rod_id in list(rel_dict.keys()):
             values = rel_dict[initial_rod_id]
             try:
                 speed = float(values[0])/self._diff_t
@@ -642,7 +643,7 @@ class Experiment(object):
         for index in range(len(self._speeds)):
             num_of_rods = len(self._speeds[index])
             output.append(0)
-            for speed in self._speeds[index].values():
+            for speed in list(self._speeds[index].values()):
                 output[index] += speed**2/num_of_rods
         return output
 
@@ -657,7 +658,7 @@ class Experiment(object):
         for index in range(len(self._angular_speeds)):
             num_of_rods = len(self._angular_speeds[index])
             output.append(0)
-            for angular_speed in self._angular_speeds[index].values():
+            for angular_speed in list(self._angular_speeds[index].values()):
                 output[index] += angular_speed**2/num_of_rods
         return output
 
@@ -860,7 +861,7 @@ class Experiment(object):
         Divides all systems in circles.
         """
         if divisions != self._divisions:
-            print "Dividing systems in circles..."
+            print("Dividing systems in circles...")
             self._divisions = divisions
             processes = []
             output_queue = mp.Queue()
@@ -898,7 +899,7 @@ class Experiment(object):
         """
         Creates a gif of density's evolution.
         """
-        print "Creating densities animations..."
+        print("Creating densities animations...")
         #self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_density_matrix'
@@ -914,7 +915,7 @@ class Experiment(object):
         """
         Creates a gif of correlation g2 evolution.
         """
-        print "Creating g2 animations..."
+        print("Creating g2 animations...")
         #self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'correlation_g2_plot_matrix'
@@ -929,7 +930,7 @@ class Experiment(object):
         """
         Creates a gif of correlation g4 evolution.
         """
-        print "Creating g4 animations..."
+        print("Creating g4 animations...")
         #self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
 #        function_name = 'relative_g4_plot_matrix'
@@ -944,7 +945,7 @@ class Experiment(object):
         """
         Creates a gif of average angle evolution.
         """
-        print "Creating average angle animations..."
+        print("Creating average angle animations...")
         #self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_average_angle_matrix'
@@ -1291,7 +1292,7 @@ class Experiment(object):
                 z_maxs.append(max(z_val))
                 z_mins.append(min(z_val))
         except ValueError:
-            print z_vals_avg
+            print(z_vals_avg)
             raise ValueError
         z_max = max(z_maxs)
         z_min = min(z_mins)
@@ -1464,7 +1465,7 @@ class Experiment(object):
         x_0 = numpy.array([0,0,0,0])
         function = lambda value, coef1, coef2: coef1 + coef2*value
         popt, pcov = optimization.curve_fit(function, log_times, log_areas)
-        std_dev = np.sqrt(np.diag(pcov))
+        std_dev = numpy.sqrt(numpy.diag(pcov))
         return popt[0], popt[1], std_dev
         
 
@@ -1494,8 +1495,8 @@ class Experiment(object):
         try:
             plt.plot(times, norm_areas)
         except ValueError:
-            print len(times), len(areas)
-            print times, areas
+            print(len(times), len(areas))
+            print(times, areas)
         plt.savefig("cluster_areas.png")
 
     def _compute_times(self, number_of_bursts):
@@ -1584,9 +1585,9 @@ class Experiment(object):
             Averages speeds of all rods.
         """
         speeds = self._speeds[index]
-        number_of_rods = len(speeds.keys())
+        number_of_rods = len(list(speeds.keys()))
         average_speed = 0
-        for speed in speeds.values():
+        for speed in list(speeds.values()):
             average_speed += speed
         average_speed /= number_of_rods
         output_queue.put([index, average_speed])
@@ -1623,7 +1624,7 @@ def compute_local_average_speeds_process(index, output_queue, local_speeds):
             quadratic_speed = 0
             quadratic_angular_speed = 0
             num_rods = len(dictionary)
-            for speeds in dictionary.values():
+            for speeds in list(dictionary.values()):
                 quadratic_speed += float(speeds[0]**2)/num_rods
                 quadratic_angular_speed += float(speeds[1]**2)/num_rods
             speeds_row.append(quadratic_speed)

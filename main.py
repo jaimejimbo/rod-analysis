@@ -18,14 +18,14 @@ try:
     else:
         dates = methods.import_image_dates()
 
-    run_17 = True
+    run_17 = False
     run_5 = True
-    run_all = True
-    create_gifs = False
+    run_all = False
+    create_gifs = True
     clusters = False
     avg_temp = False
-    order_param_exp = True
-    lost_percentage = True
+    order_param_exp = False
+    lost_percentage = False
 
     coef = 5
     divisions = 30
@@ -110,7 +110,7 @@ try:
     except NameError:
         pass
 
-    os.system("bash tomp4script.sh")
+    #os.system("bash tomp4script.sh")
 except KeyboardInterrupt:
     os.system("sudo pkill -f main.py")
 except AssertionError:

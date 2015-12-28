@@ -517,8 +517,8 @@ class SystemState(object):
         sin2_av /= self.number_of_rods
         cos4_av /= self.number_of_rods
         sin4_av /= self.number_of_rods
-        self._correlation_g2 = math.sqrt(cos2_av**2+sin2_av**2)
-        self._correlation_g4 = math.sqrt(cos4_av**2+sin4_av**2)
+        self._correlation_g2 = cos2_av #math.sqrt(cos2_av**2+sin2_av**2)
+        self._correlation_g4 = cos4_av #math.sqrt(cos4_av**2+sin4_av**2)
 
     @property
     def correlation_g2(self):
@@ -867,7 +867,7 @@ class SystemState(object):
             sin /= self.area
             cos /= self.area
             kappa = 1#self.average_kappa
-            self._relative_g2 = kappa*math.sqrt(sin**2+cos**2)
+            self._relative_g2 = cos #kappa*math.sqrt(sin**2+cos**2)
         return self._relative_g2
 
     @property
@@ -890,7 +890,7 @@ class SystemState(object):
             sin /= self.area
             cos /= self.area
             kappa = 1#self.average_kappa
-            self._relative_g4 = kappa*math.sqrt(sin**2+cos**2)
+            self._relative_g4 = cos #kappa*math.sqrt(sin**2+cos**2)
         return self._relative_g4
 
     def _compute_relative_g2_g4_mat(self, divisions):
