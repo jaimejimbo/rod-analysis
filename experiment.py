@@ -10,6 +10,7 @@ import numpy as np
 import scipy.optimize as optimization
 
 
+
 class Experiment(object):
     """
         Has a list of system states, one for each t.
@@ -77,6 +78,9 @@ class Experiment(object):
         self._indices = None
         self._total_cluster_areas = None
         #self._inversed = False
+	writer_ = animation.writers['ffmpeg']
+	writer = writer_(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+	self._writer = writer
 
     def __iter__(self):
         """
@@ -904,7 +908,7 @@ class Experiment(object):
         frames = len(self._states)
         function_name = 'plottable_density_matrix'
         kappas = self._states[0].kappas
-        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         z_min, z_max = self._generic_scatter_animator(name, function_name,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
         self._min_density = z_min
@@ -921,7 +925,7 @@ class Experiment(object):
         function_name = 'correlation_g2_plot_matrix'
         #function_name = 'relative_g2_plot_matrix'
         kappas = self._states[0].kappas
-        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         self._generic_scatter_animator(name, function_name,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
 
@@ -936,7 +940,7 @@ class Experiment(object):
 #        function_name = 'relative_g4_plot_matrix'
         function_name = 'correlation_g4_plot_matrix'
         kappas = self._states[0].kappas
-        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         self._generic_scatter_animator(name, function_name,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
 
@@ -950,7 +954,7 @@ class Experiment(object):
         frames = len(self._states)
         function_name = 'plottable_average_angle_matrix'
         kappas = self._states[0].kappas
-        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.gif'
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         self._generic_scatter_animator(name, function_name,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
 
@@ -1002,7 +1006,7 @@ class Experiment(object):
             self._animate_scatter(x_val, y_val, z_vals_avg,
                                 divisions, name, z_max, z_min)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
-        anim.save(name, writer='imagemagick', fps=fps)
+        anim.save(name, writer=self._writer, fps=fps)
         return z_min, z_max
 
     def _animate_scatter(self, x_val, y_val, z_vals,
@@ -1046,19 +1050,19 @@ class Experiment(object):
         """
         self.divide_systems_in_circles(divisions)
         processes = []
-        process = mp.Process(target=self.create_density_gif,
+        """process = mp.Process(target=self.create_density_gif,
                              args=(divisions, folder, fps, number_of_bursts))
-        processes.append(process)
+        processes.append(process)"""
         process = mp.Process(target=self.create_relative_g2_gif,
                              args=(divisions, folder, fps, number_of_bursts))
         processes.append(process)
         process = mp.Process(target=self.create_relative_g4_gif,
                              args=(divisions, folder, fps, number_of_bursts))
         processes.append(process)
-        process = mp.Process(target=self.create_temperature_gif,
+        """process = mp.Process(target=self.create_temperature_gif,
                              args=(divisions, folder, fps, max_distance,
                                max_angle_diff, limit, amount_of_rods,
-                               number_of_bursts))
+                               number_of_bursts))"""
         processes.append(process)
         running, processes_left = methods.run_processes(processes, cpus=1)
         while True:
@@ -1118,7 +1122,7 @@ class Experiment(object):
             Creates a gif of cluster length histogram.
         """
         kappa = self._states[0].average_kappa
-        name = "cluster_hist_K"+str(int(kappa))+".gif"
+        name = "cluster_hist_K"+str(int(kappa))+".mp4"
         processes = []
         output_queue = mp.Queue()
         arrays = []
@@ -1150,7 +1154,7 @@ class Experiment(object):
             self._cluster_gif_wrapper(arrays)
         frames = len(self._states)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
-        anim.save(name, writer='imagemagick', fps=fps)
+        anim.save(name, writer=self._writer, fps=fps)
 
     def _cluster_gif_wrapper(self, arrays):
         """
@@ -1202,7 +1206,7 @@ class Experiment(object):
             self._speeds_vectors_gif_wrapper(vectors_matrix)
         frames = len(self._states)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
-        anim.save(name, writer='imagemagick', fps=fps)
+        anim.save(name, writer=self._writer, fps=fps)
 
     def _speeds_vectors_gif_wrapper(self, vectors_matrix):
         """
@@ -1284,7 +1288,7 @@ class Experiment(object):
             z_vals_avg.append(average)
         fig = plt.figure()
         kappas = self._states[0].kappas
-        name = str(folder)+"Temperature"+str(kappas)+".gif"
+        name = str(folder)+"Temperature"+str(kappas)+".mp4"
         z_maxs = []
         z_mins = []
         try:
@@ -1307,7 +1311,7 @@ class Experiment(object):
                                         z_vals_avg, divisions, name,
                                         z_max, z_min)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
-        anim.save(name, writer='imagemagick', fps=fps)
+        anim.save(name, writer=self._writer, fps=fps)
 
 
     def _temperature_gif_wrapper(self, x_val, y_val, z_vals,
