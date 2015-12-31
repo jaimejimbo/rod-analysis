@@ -18,8 +18,8 @@ try:
     else:
         dates = methods.import_image_dates()
 
-    run_17 = False
-    run_5 = True
+    run_17 = True
+    run_5 = False
     run_all = False
     create_gifs = True
     clusters = False

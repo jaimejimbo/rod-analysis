@@ -24,8 +24,10 @@ class Experiment(object):
         type_ = str(type(system_states_list))
         if re.match(r'.*NoneType.*', type_):
             self._states = []
+            self._number_of_states = 0
         elif re.match(r'.*list.*', type_):
-            self._states = system_states_list
+            self._states = methods.compress(system_states_list)
+            self._number_of_states = len(system_states_list)
         else:
             raise TypeError
 
@@ -39,10 +41,10 @@ class Experiment(object):
             raise TypeError
 
         self._states_dict = {}
-        for index in range(len(self._state_numbers)):
+        for index in range(self._number_of_states):
             number = self._state_numbers[index]
             state = self._states[index]
-            self._states_dict[number] = state
+            self._states_dict[number] = methods.compress(state)
         if not dates:
             msg = "Time evolution needs dates file.\n"
             msg = "To create one run export_image_dates().\n"
@@ -78,16 +80,16 @@ class Experiment(object):
         self._indices = None
         self._total_cluster_areas = None
         #self._inversed = False
-	writer_ = animation.writers['ffmpeg']
-	writer = writer_(fps=15, metadata=dict(artist='Me'), bitrate=1800)
-	self._writer = writer
+        _writer = animation.writers['ffmpeg']
+        writer = _writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+        self._writer = writer
 
     def __iter__(self):
         """
             Magic method for looping.
         """
         for state in self._states:
-            yield state
+            yield methods.decompress(state)
 
 
     def __getitem__(self, state_num):
@@ -101,7 +103,7 @@ class Experiment(object):
             identifier = state_num
         else:
             raise ValueError
-        return self._states_dict[identifier]
+        return methods.decompress(self._states_dict[identifier])
 
 
     def set_coef(self, value):
