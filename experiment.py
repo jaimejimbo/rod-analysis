@@ -78,7 +78,9 @@ class Experiment(object):
         self._min_density = None
         self._max_density = None
         self._indices = None
+        self._done = False
         self._total_cluster_areas = None
+        self._kappas = None
         #self._inversed = False
         _writer = animation.writers['ffmpeg']
         writer = _writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
@@ -866,8 +868,9 @@ class Experiment(object):
         """
         Divides all systems in circles.
         """
-        if divisions != self._divisions:
+        if divisions != self._divisions and not self._done:
             print("Dividing systems in circles...")
+            self._done = True
             self._divisions = divisions
             processes = []
             output_queue = mp.Queue()
@@ -892,8 +895,8 @@ class Experiment(object):
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     new_process.start()
-            self._states = methods.compress(states)
-            states = None
+            self._states = methods.compress(states_)
+            states_ = None
             gc.collect()
 
 
@@ -901,6 +904,7 @@ class Experiment(object):
         """
             Process
         """
+        
         state.divide_in_circles(divisions)
         output_queue.put([index, state])
 
@@ -920,6 +924,15 @@ class Experiment(object):
         self._min_density = z_min
         self._max_density = z_max
 
+    @property
+    def kappas(self):
+        """
+        Kappas of systems.
+        """
+        if not self._kappas:
+            self._kappas = methods.decompress(self._states[0]).kappas
+        return self._kappas
+
     def create_relative_g2_video(self, divisions, folder, fps,
                                  number_of_bursts):
         """
@@ -929,8 +942,7 @@ class Experiment(object):
         self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'correlation_g2_plot_matrix'
-        #function_name = 'relative_g2_plot_matrix'
-        kappas = methods.decompress(self._states[0]).kappas
+        kappas = self.kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         self._generic_scatter_animator(name, function_name,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
@@ -943,9 +955,8 @@ class Experiment(object):
         print("Creating g4 animations...")
         self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
-#        function_name = 'relative_g4_plot_matrix'
         function_name = 'correlation_g4_plot_matrix'
-        kappas = methods.decompress(self._states[0]).kappas
+        kappas = self.kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         self._generic_scatter_animator(name, function_name,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
