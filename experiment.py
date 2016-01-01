@@ -26,7 +26,7 @@ class Experiment(object):
             self._states = []
             self._number_of_states = 0
         elif re.match(r'.*list.*', type_):
-            self._states = methods.compress(system_states_list)
+            self._states = system_states_list
             self._number_of_states = len(system_states_list)
         else:
             raise TypeError
@@ -110,7 +110,7 @@ class Experiment(object):
         """
             Changes coef for dividing in circles.
         """
-        for state in self._states:
+        for state in self:
             state.coef = value
 
     def _reset(self):
@@ -566,7 +566,7 @@ class Experiment(object):
                 angle_diff = final_rod.angle_between_rods(selected_rod)
                 angle_diff = min([angle_diff, 180-angle_diff])
             except AttributeError:
-                min_distance = -1
+                min_distance = -13731
                 angle_diff = -1
             relative_dict[selected_rod_id] = (min_distance, angle_diff)
             initial_rods -= set([selected_rod_id])
@@ -871,11 +871,14 @@ class Experiment(object):
             self._divisions = divisions
             processes = []
             output_queue = mp.Queue()
+            states_ = []
             for index in range(len(self._states)):
+                state = methods.decompress(self._states[index])
+                states_.append(None)
                 process = mp.Process(target=self.divide_system_in_circles_process,
-                                     args=(divisions, index, output_queue))
+                                     args=(divisions, index, output_queue, state))
                 processes.append(process)
-            running, processes_left = methods.run_processes(processes, cpus=4)
+            running, processes_left = methods.run_processes(processes)
             num_processes = len(processes)
             finished = 0
             while finished < num_processes:
@@ -885,77 +888,78 @@ class Experiment(object):
                 output = output_queue.get()
                 index = output[0]
                 state = output[1]
-                self._states[index] = state
+                states_[index] = state
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     new_process.start()
+            self._states = methods.compress(states)
+            states = None
             gc.collect()
 
 
-    def divide_system_in_circles_process(self, divisions, index, output_queue):
+    def divide_system_in_circles_process(self, divisions, index, output_queue, state):
         """
             Process
         """
-        state = self._states[index]
         state.divide_in_circles(divisions)
         output_queue.put([index, state])
 
-    def create_density_gif(self, divisions, folder, fps,
+    def create_density_video(self, divisions, folder, fps,
                                  number_of_bursts):
         """
-        Creates a gif of density's evolution.
+        Creates a video of density's evolution.
         """
         print("Creating densities animations...")
-        #self.divide_systems_in_circles(divisions=divisions)
+        self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_density_matrix'
-        kappas = self._states[0].kappas
+        kappas = methods.decompress(self._states[0]).kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         z_min, z_max = self._generic_scatter_animator(name, function_name,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
         self._min_density = z_min
         self._max_density = z_max
 
-    def create_relative_g2_gif(self, divisions, folder, fps,
+    def create_relative_g2_video(self, divisions, folder, fps,
                                  number_of_bursts):
         """
-        Creates a gif of correlation g2 evolution.
+        Creates a video of correlation g2 evolution.
         """
         print("Creating g2 animations...")
-        #self.divide_systems_in_circles(divisions=divisions)
+        self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'correlation_g2_plot_matrix'
         #function_name = 'relative_g2_plot_matrix'
-        kappas = self._states[0].kappas
+        kappas = methods.decompress(self._states[0]).kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         self._generic_scatter_animator(name, function_name,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
 
-    def create_relative_g4_gif(self, divisions, folder, fps,
+    def create_relative_g4_video(self, divisions, folder, fps,
                                  number_of_bursts):
         """
-        Creates a gif of correlation g4 evolution.
+        Creates a video of correlation g4 evolution.
         """
         print("Creating g4 animations...")
-        #self.divide_systems_in_circles(divisions=divisions)
+        self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
 #        function_name = 'relative_g4_plot_matrix'
         function_name = 'correlation_g4_plot_matrix'
-        kappas = self._states[0].kappas
+        kappas = methods.decompress(self._states[0]).kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         self._generic_scatter_animator(name, function_name,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
 
-    def create_average_angle_gif(self, divisions, folder, fps,
+    def create_average_angle_video(self, divisions, folder, fps,
                                  number_of_bursts):
         """
-        Creates a gif of average angle evolution.
+        Creates a video of average angle evolution.
         """
         print("Creating average angle animations...")
-        #self.divide_systems_in_circles(divisions=divisions)
+        self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_average_angle_matrix'
-        kappas = self._states[0].kappas
+        kappas = methods.decompress(self._states[0]).kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         self._generic_scatter_animator(name, function_name,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
@@ -1044,24 +1048,24 @@ class Experiment(object):
         image1_id = methods.get_number_from_string(image1_id_str)
         return image1_id
 
-    def create_gifs(self, divisions=5, folder="./", fps=1,
+    def create_videos(self, divisions=5, folder="./", fps=1,
                             max_distance=100, max_angle_diff=90, limit=5,
                             amount_of_rods=200, number_of_bursts=1):
         """
-        Creates a gif per property of the system that shows evolution.
+        Creates a video per property of the system that shows evolution.
         """
         self.divide_systems_in_circles(divisions)
         processes = []
-        """process = mp.Process(target=self.create_density_gif,
+        """process = mp.Process(target=self.create_density_video,
                              args=(divisions, folder, fps, number_of_bursts))
         processes.append(process)"""
-        process = mp.Process(target=self.create_relative_g2_gif,
+        process = mp.Process(target=self.create_relative_g2_video,
                              args=(divisions, folder, fps, number_of_bursts))
         processes.append(process)
-        process = mp.Process(target=self.create_relative_g4_gif,
+        process = mp.Process(target=self.create_relative_g4_video,
                              args=(divisions, folder, fps, number_of_bursts))
         processes.append(process)
-        """process = mp.Process(target=self.create_temperature_gif,
+        """process = mp.Process(target=self.create_temperature_video,
                              args=(divisions, folder, fps, max_distance,
                                max_angle_diff, limit, amount_of_rods,
                                number_of_bursts))"""
@@ -1118,10 +1122,10 @@ class Experiment(object):
             z_vals.append(z_val)
         return x_vals, y_vals, z_vals
 
-    def create_cluster_histogram_gif(self, max_distance=None,
+    def create_cluster_histogram_video(self, max_distance=None,
                                     max_angle_diff=None, fps=15):
         """
-            Creates a gif of cluster length histogram.
+            Creates a video of cluster length histogram.
         """
         kappa = self._states[0].average_kappa
         name = "cluster_hist_K"+str(int(kappa))+".mp4"
@@ -1130,12 +1134,12 @@ class Experiment(object):
         arrays = []
         fig = plt.figure()
         for index in range(len(self._states)):
-            process = mp.Process(target=self.create_cluster_hist_gif_process,
+            process = mp.Process(target=self.create_cluster_hist_video_process,
                                  args=(index, max_distance, max_angle_diff,
                                        output_queue))
             processes.append(process)
             arrays.append(None)
-        running, processes_left = methods.run_processes(processes, cpus=4)
+        running, processes_left = methods.run_processes(processes)
         num_processes = len(processes)
         finished = 0
         while finished < num_processes:
@@ -1153,12 +1157,12 @@ class Experiment(object):
             """
             Animation function.
             """
-            self._cluster_gif_wrapper(arrays)
+            self._cluster_video_wrapper(arrays)
         frames = len(self._states)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer=self._writer, fps=fps)
 
-    def _cluster_gif_wrapper(self, arrays):
+    def _cluster_video_wrapper(self, arrays):
         """
         Wrapper.
         """
@@ -1174,7 +1178,7 @@ class Experiment(object):
         except:
             pass
 
-    def create_cluster_hist_gif_process(self, index, max_distance, max_angle_diff,
+    def create_cluster_hist_video_process(self, index, max_distance, max_angle_diff,
                                         output_queue):
         """
         Process
@@ -1186,11 +1190,11 @@ class Experiment(object):
         output_queue.put([index, array])
         return
 
-    def create_speeds_vectors_gif(self, divisions, folder, fps, max_distance,
+    def create_speeds_vectors_video(self, divisions, folder, fps, max_distance,
                                  max_angle_diff, limit, amount_of_rods,
                                  number_of_bursts):
         """
-            Creates a gif of average speed vectors over subsystem.
+            Creates a video of average speed vectors over subsystem.
         """
         vectors_matrices = self.average_speeds_vectors(
                                             divisions, max_distance,
@@ -1205,12 +1209,12 @@ class Experiment(object):
             """
             Animation function.
             """
-            self._speeds_vectors_gif_wrapper(vectors_matrix)
+            self._speeds_vectors_video_wrapper(vectors_matrices)    #BUG
         frames = len(self._states)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer=self._writer, fps=fps)
 
-    def _speeds_vectors_gif_wrapper(self, vectors_matrix):
+    def _speeds_vectors_video_wrapper(self, vectors_matrix):
         """
             Wrapper
         """
@@ -1229,12 +1233,12 @@ class Experiment(object):
         for index in range(speeds_num):
             speeds_ = speeds[index]
             state = self._states[index]
-            process = mp.Process(target=average_speeds_vectors_gif_process,
+            process = mp.Process(target=average_speeds_vectors_video_process,
                                  args=(divisions, index, state,
                                      speeds_, output_queue))
             processes.append(process)
             vector_matrices.append(None)
-        running, processes_left = methods.run_processes(processes, cpus=4)
+        running, processes_left = methods.run_processes(processes)
         num_processes = len(processes)
         finished = 0
         while finished < num_processes:
@@ -1254,11 +1258,11 @@ class Experiment(object):
             vector_matrix = vector_matrices[index]
             
 
-    def create_temperature_gif(self, divisions, folder, fps,
+    def create_temperature_video(self, divisions, folder, fps,
                             max_distance, max_angle_diff,
                             limit, amount_of_rods, number_of_bursts):
         """
-        Creates a gif of temperature evolution.
+        Creates a video of temperature evolution.
         """
         x_vals, y_vals, z_vals = self.plottable_local_average_quadratic_speeds(
                                         max_distance, max_angle_diff, limit,
@@ -1309,14 +1313,14 @@ class Experiment(object):
             """
             Animation function.
             """
-            self._temperature_gif_wrapper(x_val, y_val,
+            self._temperature_video_wrapper(x_val, y_val,
                                         z_vals_avg, divisions, name,
                                         z_max, z_min)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer=self._writer, fps=fps)
 
 
-    def _temperature_gif_wrapper(self, x_val, y_val, z_vals,
+    def _temperature_video_wrapper(self, x_val, y_val, z_vals,
                                 divisions, name, z_max, z_min):
         """
         Wrapper
@@ -1396,7 +1400,7 @@ class Experiment(object):
                                     max_angle_diff, output_queue, min_size))
             processes.append(process)
             areas.append(None)
-        running, processes_left = methods.run_processes(processes, cpus=4)
+        running, processes_left = methods.run_processes(processes)
         num_processes = len(processes)
         finished = 0
         while finished < num_processes:
@@ -1491,7 +1495,7 @@ class Experiment(object):
             total_area = total_areas[index]
             proportion = float(area)/total_area
             norm_areas.append(proportion)
-        self._compute_times()
+        self._compute_times(number_of_bursts=number_of_bursts)
         times = self._times
         fig = plt.figure()
         plt.ylim((0,1))
@@ -1565,7 +1569,7 @@ class Experiment(object):
                                  args=(index, output_queue))
             processes.append(process)
             average_speeds.append(None)
-        running, processes_left = methods.run_processes(processes, cpus=4)
+        running, processes_left = methods.run_processes(processes)
         num_processes = len(processes)
         finished = 0
         while finished < num_processes:
@@ -1639,7 +1643,7 @@ def compute_local_average_speeds_process(index, output_queue, local_speeds):
         angular_speeds_matrix.append(angular_speeds_row)
     output_queue.put([index, speeds_matrix, angular_speeds_matrix])
 
-def average_speeds_vectors_gif_process(divisions, index, state,
+def average_speeds_vectors_video_process(divisions, index, state,
                                      speeds, output_queue):
     """
         Process

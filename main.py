@@ -21,7 +21,7 @@ try:
     run_17 = True
     run_5 = False
     run_all = False
-    create_gifs = True
+    create_videos = True
     clusters = False
     avg_temp = False
     order_param_exp = False
@@ -38,9 +38,9 @@ try:
                                             dates=dates, diff_t=5/3.0)
         experiment_17.set_coef(coef)
         
-        if create_gifs:
+        if create_videos:
             experiment_17.divide_systems_in_circles(divisions=divisions)
-            experiment_17.create_gifs(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
+            experiment_17.create_videos(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
                                      number_of_bursts=1)
         if clusters:
             experiment_17.plot_cluster_areas(number_of_bursts=3, max_distance=100,
@@ -67,9 +67,9 @@ try:
                                             system_states_list=rod_groups_5,
                                             dates=dates, diff_t=5/3.0)
         experiment_5.set_coef(coef)
-        if create_gifs:
+        if create_videos:
             experiment_5.divide_systems_in_circles(divisions=divisions)
-            experiment_5.create_gifs(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
+            experiment_5.create_videos(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
                                      number_of_bursts=1)
         if clusters:
             experiment_5.plot_cluster_areas(number_of_bursts=5, max_distance=100,
@@ -92,9 +92,9 @@ try:
                                             system_states_list=rod_groups_all,
                                             dates=dates, diff_t=5/3.0)
         experiment_all.set_coef(coef)
-        if create_gifs:
+        if create_videos:
             experiment_all.divide_systems_in_circles(divisions=divisions)
-            experiment_all.create_gifs(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
+            experiment_all.create_videos(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
                                      number_of_bursts=1)
         if clusters:
             experiment_all.plot_cluster_areas(number_of_bursts=5, max_distance=100,

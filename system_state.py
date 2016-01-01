@@ -92,8 +92,8 @@ class SystemState(object):
         """
             Changes coef value.
         """
-        self._coef = value
         self.reset()
+        self._coef = value
 
     @property
     def rods_possitions(self):
@@ -134,7 +134,7 @@ class SystemState(object):
         """
         self.fill_dicts()
         try:
-            return self._rods_dict[rod_id]
+            return methods.decompress(self._rods_dict[rod_id])
         except KeyError:
             msg = str(rod_id)
             msg += " " + str(self._rods_dict.keys())
@@ -198,28 +198,27 @@ class SystemState(object):
         """
             Returns the number of rods.
         """
-        self._number_of_rods = len(self._rods)
-        return self._number_of_rods
+        return len(self)
 
     def put_rod(self, rod_):
         """
             Adds a rod to the group
         """
-        self._rods.put(rod_)
+        self._rods.put(methods.compress(rod_))
 
     def _get_rod(self):
         """
             Returns the first rod in the queue
         """
         rod_ = self._rods.get()
-        self._rods.put(rod_)
+        self._rods.put(methods.decompress(rod_))
         return rod_
 
     def _remove_rod(self, rod_):
         """
             Removes a rod from the group (queue object mod needed)
         """
-        self._rods.delete(rod_)
+        self._rods.delete(methods.compress(rod_))
 
     def reset(self):
         """
@@ -265,7 +264,7 @@ class SystemState(object):
         if not len(self._cluster_checked_dict):
             for rod_ in self:
                 identifier = rod_.identifier
-                self._rods_dict[identifier] = rod_
+                self._rods_dict[identifier] = methods.compress(rod_)
                 self._cluster_checked_dict[identifier] = False
 
     def _compute_center_and_radius(self):
@@ -340,7 +339,7 @@ class SystemState(object):
                         self._allowed_kappa_error,
                         self.zone_coords)
             if valid:
-                valid_rods.append(rod_)
+                valid_rods.append(methods.compress(rod_))
         self._rods = queue.Queue(valid_rods)
         final_length = len(self._rods)
         self.reset()
@@ -420,9 +419,8 @@ class SystemState(object):
                 distance = methods.distance_between_points(center,
                                                      self.center)
                 #rods = rods_matrix[index_y][index_x]
-                rods = self._rods
                 subsystem = SubsystemState(center, rad, self.zone_coords,
-                                           rods, self._kappas,
+                                           self._rods, self._kappas,
                                            self._allowed_kappa_error)
                 if distance < self._radius:
                     subsystem.check_rods()
@@ -614,7 +612,7 @@ class SystemState(object):
         """
         if not self._kappa_dev:
             kappa2 = 0
-            for rod_ in list(self._rods):
+            for rod_ in self:
                 kappa2 += rod_.kappa**2
             kappa2 /= self.number_of_rods
             self._kappa_dev = math.sqrt(kappa2-self.average_kappa**2)
@@ -1105,7 +1103,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
     while finished < num_processes:
         finished += 1
         [index, state] = states_queue.get()
-        states[index] = state
+        states[index] = methods.compress(state)
         if len(processes_left):
             finished -= 1
             new_process = processes_left.pop(0)
@@ -1130,7 +1128,7 @@ def create_rods_process(kappas, allowed_kappa_error,
         try:
             parameters = tuple(dataline)
             new_rod = rod.Rod(parameters)
-            state.put_rod(methods.compress(new_rod))
+            state.put_rod(new_rod)
         except ValueError:
             print names[index]
     file_.close()
