@@ -26,7 +26,13 @@ class Experiment(object):
             self._states = []
             self._number_of_states = 0
         elif re.match(r'.*list.*', type_):
-            self._states = system_states_list
+            type_2 = str(type(system_states_list[0]))
+            if re.match(r'.*SystemState.*', type_2):
+                self._states = [methods.compress(state) for state in system_states_list]
+            elif re.match(r'.*str.*', type_2):
+                self._states = system_states_list
+            else:
+                raise TypeError
             self._number_of_states = len(system_states_list)
         else:
             raise TypeError
@@ -891,11 +897,11 @@ class Experiment(object):
                 output = output_queue.get()
                 index = output[0]
                 state = output[1]
-                states_[index] = state
+                states_[index] = methods.compress(state)
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     new_process.start()
-            self._states = methods.compress(states_)
+            self._states = states_
             states_ = None
             gc.collect()
 
@@ -1055,7 +1061,7 @@ class Experiment(object):
         """
         Returns consecutive system images' ids.
         """
-        image1_id_str = self._states[index].id_string
+        image1_id_str = methods.decompress(self._states[index]).id_string
         image1_id = methods.get_number_from_string(image1_id_str)
         return image1_id
 
