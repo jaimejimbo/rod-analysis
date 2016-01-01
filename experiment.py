@@ -882,10 +882,9 @@ class Experiment(object):
             output_queue = mp.Queue()
             states_ = []
             for index in range(len(self._states)):
-                state = methods.decompress(self._states[index])
                 states_.append(None)
                 process = mp.Process(target=self.divide_system_in_circles_process,
-                                     args=(divisions, index, output_queue, state))
+                                     args=(divisions, index, output_queue))
                 processes.append(process)
             running, processes_left = methods.run_processes(processes)
             num_processes = len(processes)
@@ -902,15 +901,12 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     new_process.start()
             self._states = states_
-            states_ = None
-            gc.collect()
 
-
-    def divide_system_in_circles_process(self, divisions, index, output_queue, state):
+    def divide_system_in_circles_process(self, divisions, index, output_queue):
         """
             Process
         """
-        
+        state = methods.decompress(self._states[index])
         state.divide_in_circles(divisions)
         output_queue.put([index, state])
 
