@@ -57,6 +57,23 @@ bugs:
 - High RAM use                                          (won't fix)
 - Clusters not computed correctly                       (DONE)
 - Use time correctly for clusters graph!                (DONE)
+- Decompressing issues                                  (WIP)
+        Traceback (most recent call last):
+          File "/usr/lib/python2.7/multiprocessing/process.py", line 258, in _bootstrap
+            self.run()
+          File "/usr/lib/python2.7/multiprocessing/process.py", line 114, in run
+            self._target(*self._args, **self._kwargs)
+          File "/home/jaime/Dropbox/TFG/rod-analysis/experiment.py", line 964, in create_relative_g4_video
+            divisions, fps=fps, number_of_bursts=number_of_bursts)
+          File "/home/jaime/Dropbox/TFG/rod-analysis/experiment.py", line 987, in _generic_scatter_animator
+            bursts_groups = copy.deepcopy(self.bursts_groups)
+          File "/home/jaime/Dropbox/TFG/rod-analysis/experiment.py", line 1557, in bursts_groups
+            final_id = self._get_image_id(index+1)
+          File "/home/jaime/Dropbox/TFG/rod-analysis/experiment.py", line 1060, in _get_image_id
+            image1_id_str = methods.decompress(self._states[index]).id_string
+          File "/home/jaime/Dropbox/TFG/rod-analysis/methods.py", line 530, in decompress
+            dumps = zlib.decompress(obj)
+        TypeError: must be string or read-only buffer, not None
 
 
 
