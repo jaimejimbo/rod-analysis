@@ -504,7 +504,8 @@ class SystemState(object):
             self._correlation_g4 = 0
             return
         cos2_av, sin2_av, cos4_av, sin4_av = 0, 0, 0, 0
-        for rod_ in list(self._rods):
+        for rod__ in list(self._rods):
+            rod_ = methods.decompress(rod__)
             angle = rod_.angle*math.pi/180.0
             cos2_av += math.cos(2*angle)
             sin2_av += math.sin(2*angle)
@@ -821,7 +822,7 @@ class SystemState(object):
         """
         Returns the area of a rod of this system.
         """
-        first_rod = list(self._rods)[0]
+        first_rod = methods.decompress(list(self._rods)[0])
         return first_rod.area
 
     def _compute_closest_rod_matrix(self):
@@ -1048,7 +1049,7 @@ class SubsystemState(SystemState):
         """
         density = 0
         for rod_ in self:
-            density += rod_.kappa
+            density += methods.decompress(rod_).kappa
         if not density or not self.area:
             self._density = 0
         else:
@@ -1070,7 +1071,7 @@ class SubsystemState(SystemState):
         rods = []
         for rod_ in self:
             if rod_.is_in_circle(self.center, self.radius):
-                rods.append(rod_)
+                rods.append(methods.compress(rod_))
         self._rods = queue.Queue(rods)
         self.reset()
 

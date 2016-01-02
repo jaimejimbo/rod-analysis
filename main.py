@@ -13,7 +13,8 @@ settings.close()
 import experiment, system_state, methods
 import os, gc
 
-try:
+#try:
+if True:
     run_imagej = False
 
     dates = None
@@ -25,13 +26,13 @@ try:
         dates = methods.import_image_dates()
 
     run_17 = True
-    run_5 = False
-    run_all = False
+    run_5 = True
+    run_all = True
     create_videos = True
-    clusters = False
-    avg_temp = False
-    order_param_exp = False
-    lost_percentage = False
+    clusters = 1
+    avg_temp = 1
+    order_param_exp = 1
+    lost_percentage = 1
 
     coef = 5
     divisions = 30
@@ -123,11 +124,11 @@ try:
         pass
 
     #os.system("bash tomp4script.sh")
-except KeyboardInterrupt:
+"""except KeyboardInterrupt:
     os.system("sudo pkill -f main.py")
 except AssertionError as error:
     print "Assertion error({0})".format(error)
-    os.system("sudo pkill -f main.py")
+    os.system("sudo pkill -f main.py")"""
 print "Type exit() to exit."
 def exit():
     print "Give root password to kill all remaining zombie processes"

@@ -478,8 +478,12 @@ def run_processes(processes, cpus=None):
     try:
         for dummy in range(cpus):
             next_process = processes.pop(0)
-            running.append(next_process)
-            next_process.start()
+            try:
+                next_process.start()
+            except AssertionError:
+                pass
+            else:
+                running.append(next_process)
     except IndexError:
         pass
     return running, processes

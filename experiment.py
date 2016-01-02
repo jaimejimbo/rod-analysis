@@ -171,9 +171,10 @@ class Experiment(object):
                 raise TypeError(msg)
             evol_dict = self._evolution_dictionaries[index]
             relative_dict = self._relative_dictionaries[index]
-            for rod in state:
-                self._initial_rods[index] |= set([rod.identifier])
-                rod_id = rod.identifier
+            for rod__ in state:
+                rod_ = methods.decompress(rod__)
+                self._initial_rods[index] |= set([rod_.identifier])
+                rod_id = rod_.identifier
                 evol_dict[rod_id] = set([])
                 relative_dict[rod_id] = {}
         for index in range(len(self._states)-1):
@@ -1069,22 +1070,25 @@ class Experiment(object):
         """
         self.divide_systems_in_circles(divisions)
         processes = []
-        """process = mp.Process(target=self.create_density_video,
+        process = mp.Process(target=self.create_density_video,
                              args=(divisions, folder, fps, number_of_bursts))
-        processes.append(process)"""
+        processes.append(process)
         process = mp.Process(target=self.create_relative_g2_video,
                              args=(divisions, folder, fps, number_of_bursts))
         processes.append(process)
         process = mp.Process(target=self.create_relative_g4_video,
                              args=(divisions, folder, fps, number_of_bursts))
         processes.append(process)
-        """process = mp.Process(target=self.create_temperature_video,
+        process = mp.Process(target=self.create_temperature_video,
                              args=(divisions, folder, fps, max_distance,
                                max_angle_diff, limit, amount_of_rods,
-                               number_of_bursts))"""
+                               number_of_bursts))
         processes.append(process)
-        running, processes_left = methods.run_processes(processes)
-        while True:
+        #running, processes_left = methods.run_processes(processes, cpus=len(processes))
+        for process in processes:
+            process.start()
+            process.join()
+        """while True:
             try:
                 process = running.pop(0)
                 process.join()
@@ -1097,7 +1101,7 @@ class Experiment(object):
             except IndexError:
                 for process in running:
                     process.join()
-                break
+                break"""
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,
@@ -1407,9 +1411,8 @@ class Experiment(object):
         processes = []
         areas = []
         for index in range(len(self._states)):
-            state = self._states[index]
             process = mp.Process(target=self._get_cluster_areas_process,
-                                 args=(index, state, max_distance,
+                                 args=(index, max_distance,
                                     max_angle_diff, output_queue, min_size))
             processes.append(process)
             areas.append(None)
@@ -1430,11 +1433,12 @@ class Experiment(object):
         return areas
         
 
-    def _get_cluster_areas_process(self, index, state, max_distance,
+    def _get_cluster_areas_process(self, index, max_distance,
                     max_angle_diff, output_queue, min_size):
         """
         Process
         """
+        state = methods.decompress(self._states[index])
         area = state.total_area_of_clusters(max_distance=max_distance,
                             max_angle_diff=max_angle_diff, min_size=min_size)
         output_queue.put([index, area])
