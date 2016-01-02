@@ -5,6 +5,7 @@ import re, math, os
 import multiprocessing as mp
 from PIL import Image
 import cPickle, zlib
+import settings
 
 def segment_area(rad, min_dist):
     """
@@ -515,12 +516,12 @@ def vector_angle(vector):
         angle = math.pi
     return angle
 
-def compress(obj):
+def compress(obj, level=settings.default_comp_level):
     """
     Compress data of an object.
     """
     dumps = cPickle.dumps(obj)
-    compressed = zlib.compress(dumps)
+    compressed = zlib.compress(dumps, level)
     return compressed
 
 def decompress(obj):

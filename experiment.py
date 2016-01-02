@@ -880,27 +880,28 @@ class Experiment(object):
             self._divisions = divisions
             processes = []
             output_queue = mp.Queue()
-            states_ = []
+            states = []
             for index in range(len(self._states)):
-                states_.append(None)
+                states.append(None)
                 process = mp.Process(target=self.divide_system_in_circles_process,
                                      args=(divisions, index, output_queue))
                 processes.append(process)
-            running, processes_left = methods.run_processes(processes)
             num_processes = len(processes)
+            running, processes_left = methods.run_processes(processes)
             finished = 0
-            while finished < num_processes:
-                finished += 1
-                if not len(running):
-                    break
+            while True:
                 output = output_queue.get()
+                print output
                 index = output[0]
                 state = output[1]
-                states_[index] = methods.compress(state)
+                states[index] = methods.compress(state)
+                finished += 1
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     new_process.start()
-            self._states = states_
+                if finished >= num_processes:
+                    break
+            self._states = states
 
     def divide_system_in_circles_process(self, divisions, index, output_queue):
         """

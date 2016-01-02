@@ -4,10 +4,17 @@
 Main script.
 """
 
+default_comp_level = 0
+
+settings = open("settings.py", "w")
+settings.write("default_comp_level = {0}".format(default_comp_level))
+settings.close()
+
 import experiment, system_state, methods
 import os, gc
 
-try:
+#try:
+if True:
     run_imagej = False
 
     dates = None
@@ -111,10 +118,11 @@ try:
         pass
 
     #os.system("bash tomp4script.sh")
-except KeyboardInterrupt:
+"""except KeyboardInterrupt:
     os.system("sudo pkill -f main.py")
-except AssertionError:
-    os.system("sudo pkill -f main.py")
+except AssertionError as error:
+    print "Assertion error({0})".format(error)
+    os.system("sudo pkill -f main.py")"""
 print "Type exit() to exit."
 def exit():
     print "Give root password to kill all remaining zombie processes"
