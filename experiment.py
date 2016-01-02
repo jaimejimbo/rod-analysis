@@ -891,7 +891,6 @@ class Experiment(object):
             finished = 0
             while True:
                 output = output_queue.get()
-                print output
                 index = output[0]
                 state = output[1]
                 states[index] = methods.compress(state)
@@ -1001,7 +1000,7 @@ class Experiment(object):
                 cont = False
             for group in groups:
                 for index in group:
-                    state = self._states[index]
+                    state = methods.decompress(self._states[index])
                     function = getattr(state, function_name)
                     x_val, y_val, z_val = function(divisions)
                     z_vals.append(z_val)
@@ -1084,7 +1083,7 @@ class Experiment(object):
                                max_angle_diff, limit, amount_of_rods,
                                number_of_bursts))"""
         processes.append(process)
-        running, processes_left = methods.run_processes(processes, cpus=1)
+        running, processes_left = methods.run_processes(processes)
         while True:
             try:
                 process = running.pop(0)

@@ -13,8 +13,7 @@ settings.close()
 import experiment, system_state, methods
 import os, gc
 
-#try:
-if True:
+try:
     run_imagej = False
 
     dates = None
@@ -62,7 +61,9 @@ if True:
             percentage, std_dev = experiment_17.lost_rods_percentage
             print "Rods lost: "+str(percentage)+"%"+" Standard deviation: "+str(std_dev)
     try:
-        del names, experiment_17, rod_groups_17
+        names = None
+        experiment_17 = methods.compress(experiment_17, level=9)
+        rod_groups_17 = None
         gc.collect()
     except NameError:
         pass
@@ -87,7 +88,9 @@ if True:
             percentage, std_devar = experiment_5.lost_rods_percentage
             print "Rods lost: "+str(percentage)+"%"+" Standard deviation: "+str(std_dev)
     try:
-        del names, experiment_5, rod_groups_5
+        names = None
+        experiment_5 = methods.compress(experiment_5, level=9)
+        rod_groups_5 = None
         gc.collect()
     except NameError:
         pass
@@ -112,17 +115,19 @@ if True:
             percentage, std_devar = experiment_all.lost_rods_percentage
             print "Rods lost: "+str(percentage)+"%"+" Standard deviation: "+str(std_dev)
     try:
-        del names, experiment_all, rod_groups_all
+        names = None
+        experiment_all = methods.compress(experiment_all, level=9)
+        rod_groups_all = None
         gc.collect()
     except NameError:
         pass
 
     #os.system("bash tomp4script.sh")
-"""except KeyboardInterrupt:
+except KeyboardInterrupt:
     os.system("sudo pkill -f main.py")
 except AssertionError as error:
     print "Assertion error({0})".format(error)
-    os.system("sudo pkill -f main.py")"""
+    os.system("sudo pkill -f main.py")
 print "Type exit() to exit."
 def exit():
     print "Give root password to kill all remaining zombie processes"

@@ -477,7 +477,7 @@ def run_processes(processes, cpus=None):
         cpus = int(mp.cpu_count())
     try:
         for dummy in range(cpus):
-            next_process = processes.pop()
+            next_process = processes.pop(0)
             running.append(next_process)
             next_process.start()
     except IndexError:
