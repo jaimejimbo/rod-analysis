@@ -387,11 +387,12 @@ class SystemState(object):
         y_max = max(possible_y_values)
         div_range = range(divisions)
         output = [[[] for dummy_1 in div_range] for dummy_2 in div_range]
-        for rod_ in rods_list:
+        for rod__ in rods_list:
+            rod_ = methods.decompress(rod__)
             index_x = int((rod_.x_mid-x_min)/diff)
             index_y = int((rod_.y_mid-y_min)/diff)
             try:
-                output[index_y][index_x].append(rod)
+                output[index_y][index_x].append(rod_)
             except IndexError:
                 print index_y, index_x
                 print len(output), len(output[index_y])
@@ -1049,7 +1050,7 @@ class SubsystemState(SystemState):
         """
         density = 0
         for rod_ in self:
-            density += methods.decompress(rod_).kappa
+            density += rod_.kappa
         if not density or not self.area:
             self._density = 0
         else:
