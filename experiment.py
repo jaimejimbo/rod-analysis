@@ -1,13 +1,14 @@
 """
     Library for time evolution study.
 """
-import re, methods, math, copy, gc
+import re, methods, math, copy, gc, sys
 import multiprocessing as mp
 from matplotlib import animation
 import matplotlib.pyplot as plt
 import numpy
 import numpy as np
 import scipy.optimize as optimization
+import datetime
 
 
 
@@ -875,7 +876,7 @@ class Experiment(object):
         Divides all systems in circles.
         """
         if divisions != self._divisions and not self._done:
-            print("Dividing systems in circles...")
+            print("Dividing systems in circles. This is the slowest part.")
             self._done = True
             self._divisions = divisions
             processes = []
@@ -889,7 +890,31 @@ class Experiment(object):
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
             finished = 0
+            previous_time = datetime.datetime.now()
+            counter = 0
+            previous_time_left = "unknown"
+            times = []
             while True:
+                counter += 1
+                now = datetime.datetime.now()
+                seconds_passed = (now-previous_time).total_seconds()
+                times.append(seconds_passed)
+                progress = int(finished*100/num_processes)
+                previous_time = now
+                string = "Progress: %d%%  " % (progress)
+                perten = int(progress/10)
+                string += "["
+                string += "#"*perten*4
+                string += "-"*(10-perten)*4
+                string += "]"
+                if counter >= 9:
+                    counter = 0
+                    avg_time = sum(times)*1.0/len(times)
+                    time_left = int(len(processes_left)*avg_time/60)
+                    times = []
+                string += "\t" + str(time_left) + " minutes \r"
+                sys.stdout.write(string)
+                sys.stdout.flush()
                 output = output_queue.get()
                 index = output[0]
                 state = output[1]
