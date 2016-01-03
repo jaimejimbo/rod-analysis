@@ -199,8 +199,8 @@ class Experiment(object):
             processes.append(mp.Process(target=self._fill_dicts_process_limited,
                                     args=(index, max_distance, max_angle_diff,
                                         output_queue, limit, amount_of_rods)))
+        num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
-        num_processes = len(running)
         finished = 0
         while finished < num_processes:
             finished += 1
@@ -209,7 +209,6 @@ class Experiment(object):
             self._evolution_dictionaries[index] = output_row[1]
             self._relative_dictionaries[index] = output_row[2]
             if len(processes_left):
-                finished -= 1
                 new_process = processes_left.pop(0)
                 new_process.start()
 
@@ -343,8 +342,8 @@ class Experiment(object):
             processes.append(mp.Process(target=self._leave_only_closer_process,
                                         args=(index, output_queue,
                                               selected_queue, max_distance)))
+        num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
-        num_processes = len(running)
         finished = 0
         while finished < num_processes:
             finished += 1
@@ -358,7 +357,6 @@ class Experiment(object):
             index = selected[0]
             self._final_rods[index] -= selected[1]
             if len(processes_left):
-                finished -= 1
                 new_process = processes_left.pop(0)
                 new_process.start()
 
@@ -471,8 +469,8 @@ class Experiment(object):
             processes.append(mp.Process(target=self._get_vectors_process,
                                         args=(index, output_queue)))
             self._speeds_vectors.append(0)
+        num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
-        num_processes = len(running)
         finished = 0
         while finished < num_processes:
             finished += 1
@@ -481,7 +479,6 @@ class Experiment(object):
             speeds_vectors = output[1]
             self._speeds_vectors[index] = speeds_vectors
             if len(processes_left):
-                finished -= 1
                 new_process = processes_left.pop(0)
                 new_process.start()
 
@@ -537,9 +534,9 @@ class Experiment(object):
             process = mp.Process(target=self._join_rods_left_process,
                                  args=(index, output_queue, max_distance))
             processes.append(process)
-        running, processes_left = methods.run_processes(processes)
-        num_processes = len(running)
+        num_processes = len(processes)
         finished = 0
+        running, processes_left = methods.run_processes(processes)
         while finished < num_processes:
             finished += 1
             output = output_queue.get()
@@ -549,7 +546,6 @@ class Experiment(object):
             self._evolution_dictionaries[index] = evol_dict
             self._relative_dictionaries[index] = relative_dict
             if len(processes_left):
-                finished -= 1
                 new_process = processes_left.pop(0)
                 new_process.start()
 
@@ -643,7 +639,6 @@ class Experiment(object):
                 self._speeds.append(speeds)
                 self._angular_speeds.append(angular_speeds)
                 if len(processes_left):
-                    finished -= 1
                     new_process = processes_left.pop(0)
                     new_process.start()
                 if finished >= num_processes:
@@ -749,7 +744,6 @@ class Experiment(object):
             speeds_matrix = output[1]
             self._local_speeds[index] = speeds_matrix
             if len(processes_left):
-                finished -= 1
                 new_process = processes_left.pop(0)
                 new_process.start()
             if finished >= num_processes-1:
@@ -800,8 +794,8 @@ class Experiment(object):
                 self._local_average_quadratic_speeds.append(None)
                 self._local_average_quadratic_angular_speeds.append(None)
                 processes.append(process)
+            num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
-            num_processes = len(running)
             finished = 0
             while finished < num_processes:
                 finished += 1
@@ -810,7 +804,6 @@ class Experiment(object):
                 self._local_average_quadratic_speeds[index] = output[1]
                 self._local_average_quadratic_angular_speeds[index] = output[2]
                 if len(processes_left):
-                    finished -= 1
                     new_process = processes_left.pop(0)
                     new_process.start()
 
@@ -861,8 +854,8 @@ class Experiment(object):
                             args=(index, output_queue, quad_speeds_array,
                                   ang_speeds_array, divisions))
                 processes.append(process)
+            num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
-            num_processes = len(running)
             finished = 0
             densities = []
             quad_speeds = []
@@ -873,7 +866,6 @@ class Experiment(object):
                 quad_speeds.append(output[1])
                 self._speeds_matrices[output[3]](output[2])
                 if len(processes_left):
-                    finished -= 1
                     new_process = processes_left.pop(0)
                     new_process.start()
             self._densities_array = densities
