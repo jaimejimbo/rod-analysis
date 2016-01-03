@@ -621,10 +621,10 @@ class Experiment(object):
                 progress = int(finished*100/num_processes)
                 previous_time = now
                 string = "Progress: %d%%  " % (progress)
-                perten = int(progress/10)
+                perten = progress/10
                 string += "["
-                string += "#"*perten*4
-                string += "-"*(9-perten)*4
+                string += "#"*int(perten*4)
+                string += "-"*int((9-perten)*4)
                 string += "]"
                 if counter >= 3:
                     counter = 0
@@ -935,10 +935,10 @@ class Experiment(object):
                 progress = int(finished*100/num_processes)
                 previous_time = now
                 string = "Progress: %d%%  " % (progress)
-                perten = int(progress/10)
+                perten = progress/10
                 string += "["
-                string += "#"*perten*4
-                string += "-"*(9-perten)*4
+                string += "#"*int(perten*4)
+                string += "-"*int((9-perten)*4)
                 string += "]"
                 if counter >= 3:
                     counter = 0
@@ -959,7 +959,7 @@ class Experiment(object):
                 if finished >= num_processes:
                     break
             self._states = states
-            os.system("clear")
+            print "\n"
 
     def divide_system_in_circles_process(self, divisions, index, output_queue):
         """
@@ -1152,8 +1152,8 @@ class Experiment(object):
         processes.append(process)
         for process in processes:
             process.start()
-        for process in processes:
-            process.join()
+        #for process in processes:
+        #    process.join()
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,
@@ -1664,7 +1664,9 @@ class Experiment(object):
         plt.figure()
         plt.plot(indices, average_speeds)
         name = "avg_temp_K"
-        kappa = int(methods.decompress(self._states[0]).average_kappa)
+        state = methods.decompress(self._states[0],
+                                level=methods.settings.strong_comp_level)
+        kappa = int(state.average_kappa)
         name += str(kappa) + ".png"
         plt.savefig(name)
 
