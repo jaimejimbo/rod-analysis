@@ -1,6 +1,3 @@
 Libraries to study granular particles behaviour.
 
-- tests.py: executes many tests to see that everything works as expected.
-    (to execute it allow execution permissions and double click)
-
-- rod_statistics: main library. Has methods to study the system.
+- Change execution parameters in main and then run it with python or bash (./main.py).
