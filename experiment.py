@@ -165,14 +165,13 @@ class Experiment(object):
             self._final_rods.append(set([]))
             self._initial_rods.append(set([]))
         for index in range(len(self._states)):
-            state = self._states[index]
+            state = methods.decompress(self._states[index])
             if not state:
                 msg = "State is not defined."
                 raise TypeError(msg)
             evol_dict = self._evolution_dictionaries[index]
             relative_dict = self._relative_dictionaries[index]
-            for rod__ in state:
-                rod_ = methods.decompress(rod__)
+            for rod_ in state:
                 self._initial_rods[index] |= set([rod_.identifier])
                 rod_id = rod_.identifier
                 evol_dict[rod_id] = set([])
@@ -252,8 +251,8 @@ class Experiment(object):
             Allows to create a process and use all cores.
         It limits possible final rods amount.
         """
-        initial_state = self._states[index]
-        final_state = self._states[index+1]
+        initial_state = methods.decompress(self._states[index])
+        final_state = methods.decompress(self._states[index+1])
         evol_dict = self._evolution_dictionaries[index]
         relative_dict = self._relative_dictionaries[index]
         for initial_rod in initial_state:
@@ -485,8 +484,8 @@ class Experiment(object):
         """
         speeds_vectors = {}
         evol_dict = self._evolution_dictionaries[index]
-        initial_state = self._states[index]
-        final_state = self._states[index+1]
+        initial_state = methods.decompress(self._states[index])
+        final_state = methods.decompress(self._states[index+1])
         keys = list(evol_dict.keys())
         if not keys[0]:
             return
@@ -720,7 +719,7 @@ class Experiment(object):
         """
         Process
         """
-        state = self._states[index]
+        state = methods.decompress(self._states[index])
         subgroups_matrix = state.subgroups_matrix(divisions)
         speeds_matrix = []
         for row in subgroups_matrix:
@@ -1118,7 +1117,7 @@ class Experiment(object):
         #                                amount_of_rods, divisions)
         x_vals, y_vals, z_vals = [], [], []
         for index in range(len(self._states)-1):
-            state = self._states[index]
+            state = methods.decompress(self._states[index])
             subgroups = state.subgroups_matrix(divisions)
             x_val, y_val, z_val = [], [], []
             for row_index in range(len(subgroups)):
@@ -1310,7 +1309,7 @@ class Experiment(object):
                 average = _z_vals
             z_vals_avg.append(average)
         fig = plt.figure()
-        kappas = self._states[0].kappas
+        kappas = methods.decompress(self._states[0]).kappas
         name = str(folder)+"Temperature"+str(kappas)+".mp4"
         z_maxs = []
         z_mins = []
@@ -1603,7 +1602,7 @@ class Experiment(object):
         plt.figure()
         plt.plot(indices, average_speeds)
         name = "avg_temp_K"
-        kappa = int(self._states[0].average_kappa)
+        kappa = int(methods.decompress(self._states[0]).average_kappa)
         name += str(kappa) + ".png"
         plt.savefig(name)
 

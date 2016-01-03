@@ -459,7 +459,8 @@ class SystemState(object):
         x_values = []
         y_values = []
         z_values = []
-        for row in self._density_matrix:
+        density_matrix = methods.decompress(self._density_matrix)
+        for row in density_matrix:
             x_values.append(row[0])
             y_values.append(row[1])
             z_values.append(row[2])
@@ -494,7 +495,7 @@ class SystemState(object):
             Returns subgroups matrix
         """
         self._create_subgroups_matrix(divisions)
-        return self._subdivision_centers
+        return methods.decompress(self._subdivision_centers)
 
     def _compute_g2_and_g4(self):
         """
@@ -602,7 +603,7 @@ class SystemState(object):
         """
         if not self._average_kappa:
             self._average_kappa = 0
-            for rod_ in list(self._rods):
+            for rod_ in self:
                 self._average_kappa += rod_.kappa
             self._average_kappa /= self.number_of_rods
         return self._average_kappa
@@ -739,9 +740,10 @@ class SystemState(object):
         if not len(self._clusters) or cond2:
             self._clusters_max_distance = max_distance
             self._clusters_max_angle_diff = max_angle_diff
-            self.fill_dicts()
+            #self.fill_dicts()
             clusters = []
-            rods_left = set(list(self._rods))
+            list_of_rods = [methods.decompress(rod_) for rod_ in self._rods]
+            rods_left = set(list_of_rods)
             for rod_ in self:
                 if self._cluster_checked_dict[rod_.identifier]:
                     continue
