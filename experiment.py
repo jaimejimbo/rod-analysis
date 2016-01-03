@@ -722,7 +722,7 @@ class Experiment(object):
         Creates an array of matrices. Each matrix's entry is a dictionariy such
         as {rod_id: (speed, angular_speed)}
         """
-        print "Computing local speeds."
+        print "Computing local speeds.\n"
         output_queue = mp.Queue()
         processes = []
         for index in range(len(self._evolution_dictionaries)-1):
@@ -1150,10 +1150,12 @@ class Experiment(object):
                                max_angle_diff, limit, amount_of_rods,
                                number_of_bursts))
         processes.append(process)
-        for process in processes:
-            process.start()
-        #for process in processes:
-        #    process.join()
+        for index in range(3):
+            processes[index].start()
+        for index in range(3):
+            processes[index].join()
+        processes[3].start()
+        processes[3].join()
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,
@@ -1176,8 +1178,14 @@ class Experiment(object):
             x_val, y_val, z_val = [], [], []
             for row_index in range(len(subgroups)):
                 for col_index in range(len(subgroups[row_index])):
-                    subgroup = subgroups[row_index][col_index]
-                    quad_speed = quad_speeds[index][row_index][col_index]
+                    try:
+                        subgroup = subgroups[row_index][col_index]      #BUG bad dimensions of both subgroup and quad_speeds (101 31 31, - 32 32, 102 32 32) 
+                        quad_speed = quad_speeds[index][row_index][col_index]
+                    except IndexError:
+                        print index, row_index, col_index
+                        print "-", len(subgroups), len(subgroups[0])
+                        print len(quad_speeds), len(quad_speeds[0]), len(quad_speeds[0][0])
+                        print "1185"
                     #ang_speed = quad_ang_speeds[index][row_index][col_index]
                     center = subgroup.center
                     center_x = center[0]
