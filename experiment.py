@@ -892,7 +892,7 @@ class Experiment(object):
             finished = 0
             previous_time = datetime.datetime.now()
             counter = 0
-            previous_time_left = "unknown"
+            time_left = "unknown"
             times = []
             while True:
                 counter += 1
