@@ -740,7 +740,6 @@ class SystemState(object):
         if not len(self._clusters) or cond2:
             self._clusters_max_distance = max_distance
             self._clusters_max_angle_diff = max_angle_diff
-            #self.fill_dicts()
             clusters = []
             list_of_rods = [methods.decompress(rod_) for rod_ in self._rods]
             rods_left = set(list_of_rods)
