@@ -1536,6 +1536,7 @@ class Experiment(object):
         """
             Returns coeficient of order param evolution.
         """
+        print "Computing order evolution parameter..."
         cluster_areas = self.cluster_areas(number_of_bursts=number_of_bursts,
                                    max_distance=max_distance,
                                    max_angle_diff=max_angle_diff,
@@ -1559,6 +1560,7 @@ class Experiment(object):
         """
             Plots cluster areas evolution.
         """
+        print "Computing cluster areas..."
         areas = self.cluster_areas(number_of_bursts=number_of_bursts,
                                    max_distance=max_distance,
                                    max_angle_diff=max_angle_diff,
@@ -1632,6 +1634,7 @@ class Experiment(object):
         """
             Average temperature over time.
         """
+        print "Computing average temperature..."
         self._compute_speeds(max_distance, max_angle_diff,
                         5, None)
         indices = []
@@ -1682,6 +1685,7 @@ class Experiment(object):
         """
             Computes maximum percentage of rods lost in analysis.
         """
+        print "Computing lost rods percentaje..."
         number_of_rods = []
         for index in range(len(self._states)):
             state = methods.decompress(self._states[index],
