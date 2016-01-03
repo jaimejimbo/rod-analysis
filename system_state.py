@@ -364,7 +364,8 @@ class SystemState(object):
                                  for times in range(divisions+2)]
             possible_y_values = [start_y + (times-1)*diff
                                  for times in range(divisions+2)]
-            rad = diff*math.sqrt(2)*self._coef/2
+            assert self._coef == 5, "Coeficient error (367)"
+            rad = diff*math.sqrt(2)*self._coef/2.0
             subsystems = self._subsystems(possible_x_values, possible_y_values,
                                           rad, diff, divisions)
             self._actual_subdivision = methods.compress(subsystems)

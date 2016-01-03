@@ -5,13 +5,19 @@ Main script.
 """
 
 default_comp_level = 0
+strong_comp_level = 1       #0-9
 
 settings = open("settings.py", "w")
 settings.write("default_comp_level = {0}".format(default_comp_level))
+settings.write("\n")
+settings.write("strong_comp_level = {0}".format(strong_comp_level))
+settings.write("\n")
 settings.close()
 
 import experiment, system_state, methods
 import os, gc
+
+os.system("clear && clear")
 
 #try:
 if True:
@@ -19,6 +25,7 @@ if True:
 
     dates = None
     if run_imagej:
+        print "Running imagej..."
         methods.imagej()
         dates = methods.get_image_dates()
         methods.export_image_dates()
@@ -38,6 +45,7 @@ if True:
     divisions = 30
 
     if run_17:
+        print "K17"
         names, rod_groups_17 = system_state.create_rods(kappas=17.5,
                                                 allowed_kappa_error=1.5)
         experiment_17 = experiment.Experiment(system_states_name_list=names,
@@ -70,6 +78,7 @@ if True:
         pass
 
     if run_5:
+        print "K5"
         names, rod_groups_5 = system_state.create_rods(kappas=5.5,
                                                 allowed_kappa_error=.5)
         experiment_5 = experiment.Experiment(system_states_name_list=names,
@@ -97,6 +106,7 @@ if True:
         pass
 
     if run_all:
+        print "K all"
         names, rod_groups_all = system_state.create_rods(kappas=10,
                                                 allowed_kappa_error=10)
         experiment_all = experiment.Experiment(system_states_name_list=names,

@@ -7,6 +7,16 @@ from PIL import Image
 import cPickle, zlib
 import settings
 
+def change_compression_coef(new_coef):
+    """
+    Changes compression algorithm coeficient.
+    """
+    os.system("del settings")
+    settings = open("settings.py", "w")
+    settings.write("default_comp_level = {0}".format(9))
+    settings.close()
+    import settings
+
 def segment_area(rad, min_dist):
     """
     Computes the area of an intersection of a circle with a line
@@ -524,14 +534,18 @@ def compress(obj, level=settings.default_comp_level):
     """
     Compress data of an object.
     """
+    if not level:
+        return obj
     dumps = cPickle.dumps(obj)
     compressed = zlib.compress(dumps, level)
     return compressed
 
-def decompress(obj):
+def decompress(obj, level=settings.default_comp_level):
     """
     Decompress an object.
     """
+    if not level:
+        return obj
     dumps = zlib.decompress(obj)
     data = cPickle.loads(dumps)
     return data

@@ -1,7 +1,7 @@
 """
     Library for time evolution study.
 """
-import re, methods, math, copy, gc, sys
+import re, methods, math, copy, gc, sys, os
 import multiprocessing as mp
 from matplotlib import animation
 import matplotlib.pyplot as plt
@@ -119,8 +119,11 @@ class Experiment(object):
         """
             Changes coef for dividing in circles.
         """
+        states = []
         for state in self:
             state.coef = value
+            states.append(methods.compress(state))
+        self._states = states
 
     def _reset(self):
         """
@@ -166,7 +169,8 @@ class Experiment(object):
             self._final_rods.append(set([]))
             self._initial_rods.append(set([]))
         for index in range(len(self._states)):
-            state = methods.decompress(self._states[index])
+            state = methods.decompress(self._states[index],
+                                    level=methods.settings.strong_comp_level)
             if not state:
                 msg = "State is not defined."
                 raise TypeError(msg)
@@ -252,8 +256,10 @@ class Experiment(object):
             Allows to create a process and use all cores.
         It limits possible final rods amount.
         """
-        initial_state = methods.decompress(self._states[index])
-        final_state = methods.decompress(self._states[index+1])
+        initial_state = methods.decompress(self._states[index],
+                                level=methods.settings.strong_comp_level)
+        final_state = methods.decompress(self._states[index+1],
+                                level=methods.settings.strong_comp_level)
         evol_dict = self._evolution_dictionaries[index]
         relative_dict = self._relative_dictionaries[index]
         for initial_rod in initial_state:
@@ -485,8 +491,10 @@ class Experiment(object):
         """
         speeds_vectors = {}
         evol_dict = self._evolution_dictionaries[index]
-        initial_state = methods.decompress(self._states[index])
-        final_state = methods.decompress(self._states[index+1])
+        initial_state = methods.decompress(self._states[index],
+                                level=methods.settings.strong_comp_level)
+        final_state = methods.decompress(self._states[index+1],
+                                level=methods.settings.strong_comp_level)
         keys = list(evol_dict.keys())
         if not keys[0]:
             return
@@ -602,10 +610,33 @@ class Experiment(object):
                                      args=(index, speeds_queue,
                                             angular_speeds_queue))
                 processes.append(process)
+            num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
-            num_processes = len(running)
             finished = 0
-            while finished < num_processes:
+            previous_time = datetime.datetime.now()
+            counter = 0
+            time_left = "unknown"
+            times = []
+            while True:
+                counter += 1
+                now = datetime.datetime.now()
+                seconds_passed = (now-previous_time).total_seconds()
+                times.append(seconds_passed)
+                progress = int(finished*100/num_processes)
+                previous_time = now
+                string = "Progress: %d%%  " % (progress)
+                perten = int(progress/10)
+                string += "["
+                string += "#"*perten*4
+                string += "-"*(9-perten)*4
+                string += "]"
+                if counter >= 3:
+                    counter = 0
+                    avg_time = sum(times)*1.0/len(times)
+                    time_left = int(len(processes_left)*avg_time/60)
+                string += "\t" + str(time_left) + " minutes \r"
+                sys.stdout.write(string)
+                sys.stdout.flush()
                 finished += 1
                 speeds = speeds_queue.get()
                 angular_speeds = angular_speeds_queue.get()
@@ -615,6 +646,8 @@ class Experiment(object):
                     finished -= 1
                     new_process = processes_left.pop(0)
                     new_process.start()
+                if finished >= num_processes:
+                    break
 
 
     def _compute_speeds_process(self, index, speeds_queue,
@@ -694,6 +727,7 @@ class Experiment(object):
         Creates an array of matrices. Each matrix's entry is a dictionariy such
         as {rod_id: (speed, angular_speed)}
         """
+        print "Computing local speeds."
         output_queue = mp.Queue()
         processes = []
         for index in range(len(self._evolution_dictionaries)-1):
@@ -701,10 +735,14 @@ class Experiment(object):
                                 args=(index, output_queue, divisions))
             self._local_speeds.append({})
             processes.append(process)
+        num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
-        num_processes = len(running)
         finished = 0
-        while finished < num_processes:
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = "unknown"
+        times = []
+        while True:
             finished += 1
             output = output_queue.get()
             index = output[0]
@@ -714,13 +752,16 @@ class Experiment(object):
                 finished -= 1
                 new_process = processes_left.pop(0)
                 new_process.start()
+            if finished >= num_processes-1:
+                break
 
 
     def _compute_local_speeds_process(self, index, output_queue, divisions):
         """
         Process
         """
-        state = methods.decompress(self._states[index])
+        state = methods.decompress(self._states[index],
+                                level=methods.settings.strong_comp_level)
         subgroups_matrix = state.subgroups_matrix(divisions)
         speeds_matrix = []
         for row in subgroups_matrix:
@@ -905,20 +946,20 @@ class Experiment(object):
                 perten = int(progress/10)
                 string += "["
                 string += "#"*perten*4
-                string += "-"*(10-perten)*4
+                string += "-"*(9-perten)*4
                 string += "]"
-                if counter >= 9:
+                if counter >= 3:
                     counter = 0
                     avg_time = sum(times)*1.0/len(times)
                     time_left = int(len(processes_left)*avg_time/60)
-                    times = []
                 string += "\t" + str(time_left) + " minutes \r"
                 sys.stdout.write(string)
                 sys.stdout.flush()
                 output = output_queue.get()
                 index = output[0]
                 state = output[1]
-                states[index] = methods.compress(state)
+                states[index] = methods.compress(state,
+                                        level=methods.settings.strong_comp_level)
                 finished += 1
                 if len(processes_left):
                     new_process = processes_left.pop(0)
@@ -926,6 +967,7 @@ class Experiment(object):
                 if finished >= num_processes:
                     break
             self._states = states
+            os.system("clear")
 
     def divide_system_in_circles_process(self, divisions, index, output_queue):
         """
@@ -940,11 +982,13 @@ class Experiment(object):
         """
         Creates a video of density's evolution.
         """
-        print("Creating densities animations...")
+        print("Creating densities video...")
         self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_density_matrix'
-        kappas = methods.decompress(self._states[0]).kappas
+        state = methods.decompress(self._states[0],
+                                level=methods.settings.strong_comp_level)
+        kappas = state.kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         z_min, z_max = self._generic_scatter_animator(name, function_name,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
@@ -957,7 +1001,9 @@ class Experiment(object):
         Kappas of systems.
         """
         if not self._kappas:
-            self._kappas = methods.decompress(self._states[0]).kappas
+            state = methods.decompress(self._states[0],
+                                level=methods.settings.strong_comp_level)
+            self._kappas = state.kappas
         return self._kappas
 
     def create_relative_g2_video(self, divisions, folder, fps,
@@ -965,7 +1011,7 @@ class Experiment(object):
         """
         Creates a video of correlation g2 evolution.
         """
-        print("Creating g2 animations...")
+        print("Creating g2 video...")
         self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'correlation_g2_plot_matrix'
@@ -979,7 +1025,7 @@ class Experiment(object):
         """
         Creates a video of correlation g4 evolution.
         """
-        print("Creating g4 animations...")
+        print("Creating g4 video...")
         self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'correlation_g4_plot_matrix'
@@ -993,7 +1039,7 @@ class Experiment(object):
         """
         Creates a video of average angle evolution.
         """
-        print("Creating average angle animations...")
+        print("Creating average angle video...")
         self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_average_angle_matrix'
@@ -1025,10 +1071,12 @@ class Experiment(object):
                 cont = False
             for group in groups:
                 for index in group:
-                    state = methods.decompress(self._states[index])
+                    state = methods.decompress(self._states[index],
+                                        level=methods.settings.strong_comp_level)
                     function = getattr(state, function_name)
                     x_val, y_val, z_val = function(divisions)
                     z_vals.append(z_val)
+                state = None
             z_vals_avg.append(methods.array_average(z_vals))
         frames = len(z_vals_avg)
         match = re.match(r'.*?g[2|4].*', function_name)
@@ -1082,7 +1130,9 @@ class Experiment(object):
         """
         Returns consecutive system images' ids.
         """
-        image1_id_str = methods.decompress(self._states[index]).id_string
+        state = methods.decompress(self._states[index],
+                                level=methods.settings.strong_comp_level)
+        image1_id_str = state.id_string
         image1_id = methods.get_number_from_string(image1_id_str)
         return image1_id
 
@@ -1108,24 +1158,10 @@ class Experiment(object):
                                max_angle_diff, limit, amount_of_rods,
                                number_of_bursts))
         processes.append(process)
-        #running, processes_left = methods.run_processes(processes, cpus=len(processes))
         for process in processes:
             process.start()
+        for process in processes:
             process.join()
-        """while True:
-            try:
-                process = running.pop(0)
-                process.join()
-            except IndexError:
-                pass
-            try:
-                new_process = processes_left.pop(0)
-                new_process.start()
-                running.append(new_process)
-            except IndexError:
-                for process in running:
-                    process.join()
-                break"""
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,
@@ -1142,7 +1178,8 @@ class Experiment(object):
         #                                amount_of_rods, divisions)
         x_vals, y_vals, z_vals = [], [], []
         for index in range(len(self._states)-1):
-            state = methods.decompress(self._states[index])
+            state = methods.decompress(self._states[index],
+                                        level=methods.settings.strong_comp_level)
             subgroups = state.subgroups_matrix(divisions)
             x_val, y_val, z_val = [], [], []
             for row_index in range(len(subgroups)):
@@ -1224,7 +1261,8 @@ class Experiment(object):
         """
         Process
         """
-        state = self._states[index]
+        state = methods.decompress(self._states[index],
+                                level=methods.settings.strong_comp_level)
         array = state.cluster_lengths(max_distance=max_distance,
                                             max_angle_diff=max_angle_diff,
                                             min_size=1)
@@ -1273,7 +1311,8 @@ class Experiment(object):
         speeds_num = len(self._states)-1
         for index in range(speeds_num):
             speeds_ = speeds[index]
-            state = self._states[index]
+            state = methods.decompress(self._states[index],
+                                level=methods.settings.strong_comp_level)
             process = mp.Process(target=average_speeds_vectors_video_process,
                                  args=(divisions, index, state,
                                      speeds_, output_queue))
@@ -1295,7 +1334,8 @@ class Experiment(object):
                 new_process.start()
         vectors = []
         for index in range(speeds_num):
-            state = self._states[index]
+            state = methods.decompress(self._states[index],
+                                level=methods.settings.strong_comp_level)
             vector_matrix = vector_matrices[index]
             
 
@@ -1305,6 +1345,7 @@ class Experiment(object):
         """
         Creates a video of temperature evolution.
         """
+        print "Creating temperature video..."
         x_vals, y_vals, z_vals = self.plottable_local_average_quadratic_speeds(
                                         max_distance, max_angle_diff, limit,
                                         amount_of_rods, divisions)
@@ -1462,7 +1503,8 @@ class Experiment(object):
         """
         Process
         """
-        state = methods.decompress(self._states[index])
+        state = methods.decompress(self._states[index],
+                                level=methods.settings.strong_comp_level)
         area = state.total_area_of_clusters(max_distance=max_distance,
                             max_angle_diff=max_angle_diff, min_size=min_size)
         output_queue.put([index, area])
@@ -1649,7 +1691,9 @@ class Experiment(object):
             Computes maximum percentage of rods lost in analysis.
         """
         number_of_rods = []
-        for state in self._states:
+        for index in range(len(self._states)):
+            state = methods.decompress(self._states[index],
+                                level=methods.settings.strong_comp_level)
             number = state.number_of_rods
             number_of_rods.append(number)
         supposed_total_number = max(number_of_rods)
