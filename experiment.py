@@ -229,7 +229,10 @@ class Experiment(object):
                 avg_time = sum(times)*1.0/len(times)
                 time_left = int(len(processes_left)*avg_time/60)
             if not time_left is None:
-                string += "\t" + str(time_left) + " minutes"
+                if time_left:
+                    string += "\t" + str(time_left) + "\tminutes"
+                else:
+                     string += "\tLess than 1 minute"
             string += "\r"
             sys.stdout.write(string)
             sys.stdout.flush()
@@ -664,7 +667,10 @@ class Experiment(object):
                     avg_time = sum(times)*1.0/len(times)
                     time_left = int(len(processes_left)*avg_time/60)
                 if not time_left is None:
-                    string += "\t" + str(time_left) + " minutes"
+                    if time_left:
+                        string += "\t" + str(time_left) + "\tminutes"
+                    else:
+                         string += "\tLess than 1 minute"
                 string += "\r"
                 sys.stdout.write(string)
                 sys.stdout.flush()
@@ -978,7 +984,10 @@ class Experiment(object):
                     avg_time = sum(times)*1.0/len(times)
                     time_left = int(len(processes_left)*avg_time/60)
                 if not time_left is None:
-                    string += "\t" + str(time_left) + " minutes"
+                    if time_left:
+                        string += "\t" + str(time_left) + "\tminutes"
+                    else:
+                         string += "\tLess than 1 minute"
                 string += "\r"
                 sys.stdout.write(string)
                 sys.stdout.flush()
