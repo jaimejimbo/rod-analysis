@@ -190,6 +190,7 @@ class Experiment(object):
         """
             Looks for rods that have only one possible predecessor.
         """
+        print "Filling dicts..."
         (self._max_distance, self._max_angle_diff,
         self._limit, self._amount_of_rods) = (max_distance, max_angle_diff,
                                                 limit, amount_of_rods)
@@ -202,7 +203,36 @@ class Experiment(object):
         num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
         finished = 0
-        while finished < num_processes:
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        while True:
+            counter += 1
+            now = datetime.datetime.now()
+            seconds_passed = (now-previous_time).total_seconds()
+            times.append(seconds_passed)
+            progress = int(finished*100/num_processes)
+            previous_time = now
+            blank_string = "\t"*20
+            blank_string += "\r"
+            sys.stdout.write(blank_string)
+            sys.stdout.flush()
+            string = "Progress: %d%%  " % (progress)
+            perten = progress/10
+            string += "["
+            string += "#"*int(perten*4)
+            string += "-"*int((9-perten)*4)
+            string += "]"
+            if counter >= 3:
+                counter = 0
+                avg_time = sum(times)*1.0/len(times)
+                time_left = int(len(processes_left)*avg_time/60)
+            if not time_left is None:
+                string += "\t" + str(time_left) + " minutes"
+            string += "\r"
+            sys.stdout.write(string)
+            sys.stdout.flush()
             finished += 1
             output_row = output_queue.get()
             index = output_row[0]
@@ -211,6 +241,9 @@ class Experiment(object):
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
+            if finished >= num_processes:
+                break
+        print "\n"
 
 
     def _fill_dicts_process(self, index, max_distance, max_angle_diff,
@@ -611,7 +644,7 @@ class Experiment(object):
             finished = 0
             previous_time = datetime.datetime.now()
             counter = 0
-            time_left = "unknown"
+            time_left = None
             times = []
             while True:
                 counter += 1
@@ -620,7 +653,7 @@ class Experiment(object):
                 times.append(seconds_passed)
                 progress = int(finished*100/num_processes)
                 previous_time = now
-                string = "Progress: %d%%  " % (progress)
+                string = "\rProgress: %d%%  " % (progress)
                 perten = progress/10
                 string += "["
                 string += "#"*int(perten*4)
@@ -630,7 +663,9 @@ class Experiment(object):
                     counter = 0
                     avg_time = sum(times)*1.0/len(times)
                     time_left = int(len(processes_left)*avg_time/60)
-                string += "\t" + str(time_left) + " minutes \r"
+                if not time_left is None:
+                    string += "\t" + str(time_left) + " minutes"
+                string += "\r"
                 sys.stdout.write(string)
                 sys.stdout.flush()
                 finished += 1
@@ -722,7 +757,7 @@ class Experiment(object):
         Creates an array of matrices. Each matrix's entry is a dictionariy such
         as {rod_id: (speed, angular_speed)}
         """
-        print "Computing local speeds.\n"
+        print "Computing local speeds."
         output_queue = mp.Queue()
         processes = []
         for index in range(len(self._evolution_dictionaries)-1):
@@ -735,7 +770,7 @@ class Experiment(object):
         finished = 0
         previous_time = datetime.datetime.now()
         counter = 0
-        time_left = "unknown"
+        time_left = None
         times = []
         while True:
             finished += 1
@@ -780,8 +815,6 @@ class Experiment(object):
         """
         Compute local average speeds.
         """
-        self.local_speeds(max_distance, max_angle_diff, limit,
-                            amount_of_rods, divisions)
         if not len(self._local_average_quadratic_speeds):
             output_queue = mp.Queue()
             processes = []
@@ -925,7 +958,7 @@ class Experiment(object):
             finished = 0
             previous_time = datetime.datetime.now()
             counter = 0
-            time_left = "unknown"
+            time_left = None
             times = []
             while True:
                 counter += 1
@@ -944,7 +977,9 @@ class Experiment(object):
                     counter = 0
                     avg_time = sum(times)*1.0/len(times)
                     time_left = int(len(processes_left)*avg_time/60)
-                string += "\t" + str(time_left) + " minutes \r"
+                if not time_left is None:
+                    string += "\t" + str(time_left) + " minutes"
+                string += "\r"
                 sys.stdout.write(string)
                 sys.stdout.flush()
                 output = output_queue.get()
@@ -1183,9 +1218,14 @@ class Experiment(object):
                         quad_speed = quad_speeds[index][row_index][col_index]
                     except IndexError:
                         print index, row_index, col_index
-                        print "-", len(subgroups), len(subgroups[0])
-                        print len(quad_speeds), len(quad_speeds[0]), len(quad_speeds[0][0])
-                        print "1185"
+                        assert len(subgroups) > row_index
+                        for index2 in range(len(subgroups)):
+                            assert len(subgroups[index2]) > col_index, "1188"
+                        assert len(quad_speeds) > index, "1189"
+                        for index2 in range(len(quad_speeds)):
+                            assert len(quad_speeds[index2]) > row_index, "1191"
+                            for index3 in range(len(quad_speeds[index2])):
+                                assert len(quad_speeds[index2][index3]) > col_index, "1193"
                     #ang_speed = quad_ang_speeds[index][row_index][col_index]
                     center = subgroup.center
                     center_x = center[0]
@@ -1353,6 +1393,7 @@ class Experiment(object):
         end = False
         z_vals_avg = []
         number_of_bursts *= 5
+        print "Computing averages..."
         while not end:
             groups = []
             average = None
