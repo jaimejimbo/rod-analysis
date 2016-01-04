@@ -232,7 +232,7 @@ class Experiment(object):
                 if time_left:
                     string += "\t" + str(time_left) + "\tminutes"
                 else:
-                     string += "\tLess than 1 minute"
+                    string += "\tLess than 1 minute"
             string += "\r"
             sys.stdout.write(string)
             sys.stdout.flush()
@@ -670,7 +670,7 @@ class Experiment(object):
                     if time_left:
                         string += "\t" + str(time_left) + "\tminutes"
                     else:
-                         string += "\tLess than 1 minute"
+                        string += "\tLess than 1 minute"
                 string += "\r"
                 sys.stdout.write(string)
                 sys.stdout.flush()
@@ -763,7 +763,7 @@ class Experiment(object):
         Creates an array of matrices. Each matrix's entry is a dictionariy such
         as {rod_id: (speed, angular_speed)}
         """
-        print "Computing local speeds."
+        print "Computing local speeds...\n"
         output_queue = mp.Queue()
         processes = []
         for index in range(len(self._evolution_dictionaries)-1):
@@ -774,7 +774,6 @@ class Experiment(object):
         num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
         finished = 0
-        previous_time = datetime.datetime.now()
         counter = 0
         time_left = None
         times = []
@@ -787,7 +786,7 @@ class Experiment(object):
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
-            if finished >= num_processes-1:
+            if finished >= num_processes:
                 break
 
 
@@ -948,7 +947,7 @@ class Experiment(object):
         Divides all systems in circles.
         """
         if divisions != self._divisions and not self._done:
-            print("Dividing systems in circles. This is the slowest part.")
+            print("Dividing systems in circles...")
             self._done = True
             self._divisions = divisions
             processes = []
@@ -987,7 +986,7 @@ class Experiment(object):
                     if time_left:
                         string += "\t" + str(time_left) + "\tminutes"
                     else:
-                         string += "\tLess than 1 minute"
+                        string += "\tLess than 1 minute"
                 string += "\r"
                 sys.stdout.write(string)
                 sys.stdout.flush()
@@ -1222,19 +1221,13 @@ class Experiment(object):
             x_val, y_val, z_val = [], [], []
             for row_index in range(len(subgroups)):
                 for col_index in range(len(subgroups[row_index])):
-                    try:
-                        subgroup = subgroups[row_index][col_index]      #BUG bad dimensions of both subgroup and quad_speeds (101 31 31, - 32 32, 102 32 32) 
-                        quad_speed = quad_speeds[index][row_index][col_index]
-                    except IndexError:
-                        print index, row_index, col_index
-                        assert len(subgroups) > row_index
-                        for index2 in range(len(subgroups)):
-                            assert len(subgroups[index2]) > col_index, "1188"
-                        assert len(quad_speeds) > index, "1189"
-                        for index2 in range(len(quad_speeds)):
-                            assert len(quad_speeds[index2]) > row_index, "1191"
-                            for index3 in range(len(quad_speeds[index2])):
-                                assert len(quad_speeds[index2][index3]) > col_index, "1193"
+                    subgroup = subgroups[row_index][col_index]
+                    quad_speed = quad_speeds[index][row_index][col_index]
+                    #assert len(quad_speeds) > index, "1228"
+                    #for index2 in range(len(quad_speeds)):
+                    #    assert len(quad_speeds[index2]) > row_index, "1230"
+                    #    for index3 in range(len(quad_speeds[index2])):
+                    #        assert len(quad_speeds[index2][index3]) > col_index, "1232"
                     #ang_speed = quad_ang_speeds[index][row_index][col_index]
                     center = subgroup.center
                     center_x = center[0]
@@ -1425,7 +1418,9 @@ class Experiment(object):
                 average = _z_vals
             z_vals_avg.append(average)
         fig = plt.figure()
-        kappas = methods.decompress(self._states[0]).kappas
+        state = methods.decompress(self._states[0],
+                                level=methods.settings.strong_comp_level)
+        kappas = state.kappas
         name = str(folder)+"Temperature"+str(kappas)+".mp4"
         z_maxs = []
         z_mins = []

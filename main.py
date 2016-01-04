@@ -78,7 +78,6 @@ if True:
         pass
 
     if run_5:
-        os.system("clear")
         print "K5"
         names, rod_groups_5 = system_state.create_rods(kappas=5.5,
                                                 allowed_kappa_error=.5)
@@ -107,7 +106,6 @@ if True:
         pass
 
     if run_all:
-        os.system("clear")
         print "K all"
         names, rod_groups_all = system_state.create_rods(kappas=10,
                                                 allowed_kappa_error=10)
