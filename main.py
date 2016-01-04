@@ -45,7 +45,7 @@ if True:
     divisions = 30
 
     if run_17:
-        print "K17"
+        print "\t\t\tK17\t\t\t"
         names, rod_groups_17 = system_state.create_rods(kappas=17.5,
                                                 allowed_kappa_error=1.5)
         experiment_17 = experiment.Experiment(system_states_name_list=names,
@@ -76,9 +76,9 @@ if True:
         gc.collect()
     except NameError:
         pass
-
+    print "\n"
     if run_5:
-        print "K5"
+        print "\t\t\tK5\t\t\t"
         names, rod_groups_5 = system_state.create_rods(kappas=5.5,
                                                 allowed_kappa_error=.5)
         experiment_5 = experiment.Experiment(system_states_name_list=names,
@@ -104,9 +104,9 @@ if True:
         gc.collect()
     except NameError:
         pass
-
+    print "\n"
     if run_all:
-        print "K all"
+        print "\t\t\tK all\t\t\t"
         names, rod_groups_all = system_state.create_rods(kappas=10,
                                                 allowed_kappa_error=10)
         experiment_all = experiment.Experiment(system_states_name_list=names,

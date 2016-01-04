@@ -11,6 +11,8 @@ import scipy.optimize as optimization
 import datetime
 
 
+CURSOR_UP_ONE = '\x1b[1A'
+ERASE_LINE = '\x1b[2K'
 
 class Experiment(object):
     """
@@ -207,6 +209,7 @@ class Experiment(object):
         counter = 0
         time_left = None
         times = []
+        print " "
         while True:
             counter += 1
             now = datetime.datetime.now()
@@ -214,10 +217,6 @@ class Experiment(object):
             times.append(seconds_passed)
             progress = int(finished*100/num_processes)
             previous_time = now
-            blank_string = "\t"*20
-            blank_string += "\r"
-            sys.stdout.write(blank_string)
-            sys.stdout.flush()
             string = "Progress: %d%%  " % (progress)
             perten = progress/10
             string += "["
@@ -230,12 +229,17 @@ class Experiment(object):
                 time_left = int(len(processes_left)*avg_time/60)
             if not time_left is None:
                 if time_left:
-                    string += "\t" + str(time_left) + "\tminutes"
+                    string += "\t" + str(time_left) + " minutes"
                 else:
-                    string += "\tLess than 1 minute"
-            string += "\r"
-            sys.stdout.write(string)
-            sys.stdout.flush()
+                    string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+            if not finished >= num_processes:
+                pass #string += "\r"
+            else:
+                string += "\n"
+            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+            print(string)
+            #sys.stdout.write(string)
+            #sys.stdout.flush()
             finished += 1
             output_row = output_queue.get()
             index = output_row[0]
@@ -246,7 +250,7 @@ class Experiment(object):
                 new_process.start()
             if finished >= num_processes:
                 break
-        print "\n"
+        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
 
 
     def _fill_dicts_process(self, index, max_distance, max_angle_diff,
@@ -649,6 +653,7 @@ class Experiment(object):
             counter = 0
             time_left = None
             times = []
+            print " "
             while True:
                 counter += 1
                 now = datetime.datetime.now()
@@ -668,12 +673,17 @@ class Experiment(object):
                     time_left = int(len(processes_left)*avg_time/60)
                 if not time_left is None:
                     if time_left:
-                        string += "\t" + str(time_left) + "\tminutes"
+                        string += "\t" + str(time_left) + " minutes"
                     else:
-                        string += "\tLess than 1 minute"
-                string += "\r"
-                sys.stdout.write(string)
-                sys.stdout.flush()
+                        string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+                if not finished >= num_processes:
+                    pass#string += "\r"
+                else:
+                    string += "\n"
+                print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+                print(string)
+                #sys.stdout.write(string)
+                #sys.stdout.flush()
                 finished += 1
                 speeds = speeds_queue.get()
                 angular_speeds = angular_speeds_queue.get()
@@ -684,6 +694,7 @@ class Experiment(object):
                     new_process.start()
                 if finished >= num_processes:
                     break
+            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
 
 
     def _compute_speeds_process(self, index, speeds_queue,
@@ -763,7 +774,7 @@ class Experiment(object):
         Creates an array of matrices. Each matrix's entry is a dictionariy such
         as {rod_id: (speed, angular_speed)}
         """
-        print "Computing local speeds...\n"
+        print "Computing local speeds..."
         output_queue = mp.Queue()
         processes = []
         for index in range(len(self._evolution_dictionaries)-1):
@@ -965,6 +976,7 @@ class Experiment(object):
             counter = 0
             time_left = None
             times = []
+            print " "
             while True:
                 counter += 1
                 now = datetime.datetime.now()
@@ -984,12 +996,17 @@ class Experiment(object):
                     time_left = int(len(processes_left)*avg_time/60)
                 if not time_left is None:
                     if time_left:
-                        string += "\t" + str(time_left) + "\tminutes"
+                        string += "\t" + str(time_left) + " minutes"
                     else:
-                        string += "\tLess than 1 minute"
-                string += "\r"
-                sys.stdout.write(string)
-                sys.stdout.flush()
+                        string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+                if not finished >= num_processes:
+                    pass#string += "\r"
+                else:
+                    string += "\n"
+                print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+                print(string)
+                #sys.stdout.write(string)
+                #sys.stdout.flush()
                 output = output_queue.get()
                 index = output[0]
                 state = output[1]
@@ -1002,7 +1019,8 @@ class Experiment(object):
                 if finished >= num_processes:
                     break
             self._states = states
-            print "\n"
+            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        
 
     def divide_system_in_circles_process(self, divisions, index, output_queue):
         """
@@ -1688,6 +1706,7 @@ class Experiment(object):
             Average temperature over time.
         """
         print "Computing average temperature..."
+        
         self._compute_speeds(max_distance, max_angle_diff,
                         5, None)
         indices = []
