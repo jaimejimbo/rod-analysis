@@ -462,7 +462,7 @@ def are_in_burst_queue(dates, image_num_1, image_num_2, output_queue):
     Multiprocessing friendly method.
     """
     output = are_in_burst(dates, image_num_1, image_num_2)
-    output_queue.put(image_num_1, image_num_2, output)
+    output_queue.put([image_num_1, image_num_2, output])
 
 def time_difference(dates, image_num_1, image_num_2):
     """

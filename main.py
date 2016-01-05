@@ -38,10 +38,10 @@ if True:
     else:
         dates = methods.import_image_dates()
 
-    run_17 = 0#True
-    run_5 = True
-    run_all = True
-    create_videos = True
+    run_17 = 0
+    run_5 = 1
+    run_all = 1
+    create_videos = 1
     clusters = 1
     avg_temp = 1
     order_param_exp = 1
