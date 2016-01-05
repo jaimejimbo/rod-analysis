@@ -467,6 +467,14 @@ class SystemState(object):
             z_values.append(row[2])
         return x_values, y_values, z_values
 
+    def plottable_density_matrix_queue(self, divisions, index, output_queue):
+        """
+        Multiprocessing friendly function.
+        """
+        x_val, y_val, z_val = self.plottable_density_matrix(divisions=divisions)
+        output_queue.put([index, x_val, y_val, z_val])
+        
+
     def _create_subgroups_matrix(self, divisions):
         """
             Put subsystems in a matrix form.
@@ -580,6 +588,14 @@ class SystemState(object):
         g2_subsystems = None
         return x_values, y_values, z_values
 
+    def correlation_g2_plot_matrix_queue(self, divisions, index, output_queue):
+        """
+            Multiprocessing friendly function.
+        """
+        x_val, y_val, z_val = self.correlation_g2_plot_matrix(divisions)
+        output_queue.put([index, x_val, y_val, z_val])
+        
+
     def correlation_g4_plot_matrix(self, divisions):
         """
             Returns values for plotting correlation_g2 matrix.
@@ -596,6 +612,13 @@ class SystemState(object):
         g4_subsystems = None
         #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
+
+    def correlation_g4_plot_matrix_queue(self, divisions, index, output_queue):
+        """
+            Multiprocessing friendly function.
+        """
+        x_val, y_val, z_val = self.correlation_g4_plot_matrix(divisions)
+        output_queue.put([index, x_val, y_val, z_val])
 
     @property
     def average_kappa(self):
@@ -672,6 +695,13 @@ class SystemState(object):
         angle_matrix = None
         #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
+
+    def plottable_average_angle_matrix_queue(self, divisions, index, output_queue):
+        """
+            Multiprocessing friendly function.
+        """
+        x_val, y_val, z_val = self.plottable_average_angle_matrix(divisions)
+        output_queue.put([index, x_val, y_val, z_val])
 
     @property
     def angle_histogram(self):

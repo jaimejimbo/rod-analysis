@@ -536,7 +536,7 @@ def compress(obj, level=settings.default_comp_level):
     """
     Compress data of an object.
     """
-    if not level:
+    if level is None:
         return obj
     dumps = cPickle.dumps(obj)
     compressed = zlib.compress(dumps, level)
@@ -546,7 +546,7 @@ def decompress(obj, level=settings.default_comp_level):
     """
     Decompress an object.
     """
-    if not level:
+    if level is None:
         return obj
     dumps = zlib.decompress(obj)
     data = cPickle.loads(dumps)

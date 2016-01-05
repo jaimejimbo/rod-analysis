@@ -4,8 +4,8 @@
 Main script.
 """
 
-default_comp_level = 0
-strong_comp_level = 1       #0-9
+default_comp_level = None
+strong_comp_level = 3       #0-9 or None to disable
 cpus = None     #None uses all cpus
 
 settings = open("settings.py", "w")
@@ -17,7 +17,7 @@ settings.write("cpus = {0}".format(cpus))
 settings.write("\n")
 settings.close()
 
-import experiment, system_state, methods
+import experiment, system_state, methods, settings
 import os, gc
 
 os.system("clear && clear")
@@ -35,7 +35,7 @@ if True:
     else:
         dates = methods.import_image_dates()
 
-    run_17 = True
+    run_17 = 0#True
     run_5 = True
     run_all = True
     create_videos = True
@@ -74,7 +74,7 @@ if True:
             print "Rods lost: "+str(percentage)+"%"+" Standard deviation: "+str(std_dev)
     try:
         names = None
-        experiment_17 = methods.compress(experiment_17, level=9)
+        experiment_17 = methods.compress(experiment_17, level=settings.strong_comp_level)
         rod_groups_17 = None
         gc.collect()
     except NameError:
@@ -102,7 +102,7 @@ if True:
             print "Rods lost: "+str(percentage)+"%"+" Standard deviation: "+str(std_dev)
     try:
         names = None
-        experiment_5 = methods.compress(experiment_5, level=9)
+        experiment_5 = methods.compress(experiment_5, level=settings.strong_comp_level)
         rod_groups_5 = None
         gc.collect()
     except NameError:
@@ -130,7 +130,7 @@ if True:
             print "Rods lost: "+str(percentage)+"%"+" Standard deviation: "+str(std_dev)
     try:
         names = None
-        experiment_all = methods.compress(experiment_all, level=9)
+        experiment_all = methods.compress(experiment_all, level=settings.strong_comp_level)
         rod_groups_all = None
         gc.collect()
     except NameError:
