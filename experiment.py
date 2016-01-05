@@ -1699,8 +1699,30 @@ class Experiment(object):
             for index in range(len(self._state_numbers)-1):
                 initial_id  = self._get_image_id(index)
                 final_id = self._get_image_id(index+1)
-                burst = methods.are_in_burst(self._dates, initial_id,
-                                             final_id)
+                #burst = methods.are_in_burst(self._dates, initial_id,
+                #                             final_id)
+                process = mp.Process(target=methods.are_in_burst_queue,
+                                     args=(self._dates, initial_id,
+                                            final_id, output_queue))
+                processes.append(process)
+            num_processes = len(processes)
+            running, processes_left = methods.run_processes(processes)
+            finished = 0
+            results = []
+            while finished < num_processes:
+                finished += 1
+                if not len(running):
+                    break
+                output = output_queue.get()
+                index = output[0]
+                burst = output[2]
+                results.append([index, burst])
+                if len(processes_left):
+                    new_process = processes_left.pop(0)
+                    new_process.start()
+            for result in results:
+                index = result[0]
+                burst = result[1]
                 if burst:
                     group.append(index)
                 else:
@@ -1728,8 +1750,8 @@ class Experiment(object):
                                  args=(index, output_queue))
             processes.append(process)
             average_speeds.append(None)
-        running, processes_left = methods.run_processes(processes)
         num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
         finished = 0
         while finished < num_processes:
             finished += 1
