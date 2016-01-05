@@ -1039,9 +1039,7 @@ class Experiment(object):
         #self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_density_matrix_queue'
-        state = methods.decompress(self._states[0],
-                                level=methods.settings.medium_comp_level)
-        kappas = state.kappas
+        kappas = self.kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         z_min, z_max = self._generic_scatter_animator(name, function_name,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
@@ -1113,36 +1111,31 @@ class Experiment(object):
         z_vals_avg = []
         x_val = []
         y_val = []
-        cont = True
-        while cont:
-            for group in bursts_groups:
-                output_queue = mp.Queue()
-                processes = []
-                for index in group:
-                    state = methods.decompress(self._states[index],
-                                        level=methods.settings.medium_comp_level)
-                    function = getattr(state, function_name)
-                    #x_val, y_val, z_val = function(divisions)
-                    #z_vals.append(z_val)
-                    process = mp.Process(target=function,
-                                    args=(divisions, index, output_queue))
-                    processes.append(process)
-                num_processes = len(processes)
-                print function_name, num_processes
-                running, processes_left = methods.run_processes(processes, cpus=20)
-                finished = 0
-                while finished < num_processes:
-                    finished += 1
-                    output = output_queue.get()
-                    index = output[0]
-                    x_val = output[1]
-                    y_val = output[2]
-                    z_val = output[3]
-                    z_vals.append(z_val)
-                    if len(processes_left):
-                        new_process = processes_left.pop(0)
-                        new_process.start()
-                z_vals_avg.append(methods.array_average(z_vals))
+        for group in bursts_groups:
+            output_queue = mp.Queue()
+            processes = []
+            for index in group:
+                state = methods.decompress(self._states[index],
+                                    level=methods.settings.medium_comp_level)
+                function = getattr(state, function_name)
+                process = mp.Process(target=function,
+                                args=(divisions, index, output_queue))
+                processes.append(process)
+            num_processes = len(processes)
+            running, processes_left = methods.run_processes(processes, cpus=20)
+            finished = 0
+            while finished < num_processes:
+                finished += 1
+                output = output_queue.get()
+                index = output[0]
+                x_val = output[1]
+                y_val = output[2]
+                z_val = output[3]
+                z_vals.append(z_val)
+                if len(processes_left):
+                    new_process = processes_left.pop(0)
+                    new_process.start()
+            z_vals_avg.append(methods.array_average(z_vals))
         frames = len(z_vals_avg)
         match = re.match(r'.*?g[2|4].*', function_name)
         if not match:
@@ -1208,7 +1201,7 @@ class Experiment(object):
         Creates a video per property of the system that shows evolution.
         """
         self.divide_systems_in_circles(divisions)
-        processes = []
+        """processes = []
         process = mp.Process(target=self.create_density_video,
                              args=(divisions, folder, fps, number_of_bursts))
         processes.append(process)
@@ -1225,7 +1218,13 @@ class Experiment(object):
         processes.append(process)
         for index in range(4):
             processes[index].start()
-            processes[index].join()
+            processes[index].join()"""
+        self.create_density_video(divisions, folder, fps, number_of_bursts)
+        self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
+        self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
+        self.create_temperature_video(divisions, folder, fps, max_distance,
+                               max_angle_diff, limit, amount_of_rods,
+                               number_of_bursts)
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,
@@ -1698,15 +1697,15 @@ class Experiment(object):
             group = []
             output_queue = mp.Queue()
             processes = []
+            initial_id  = self._get_image_id(0)
             for index in range(len(self._state_numbers)-1):
-                initial_id  = self._get_image_id(index)
                 final_id = self._get_image_id(index+1)
-                #burst = methods.are_in_burst(self._dates, initial_id,
-                #                             final_id)
+                date1 = self._dates[initial_id]
+                date2 = self._dates[final_id]
                 process = mp.Process(target=methods.are_in_burst_queue,
-                                     args=(self._dates, initial_id,
-                                            final_id, output_queue))
+                                     args=(index, date1, date2, output_queue))
                 processes.append(process)
+                initial_id = final_id
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
             finished = 0
@@ -1717,7 +1716,7 @@ class Experiment(object):
                     break
                 output = output_queue.get()
                 index = output[0]
-                burst = output[2]
+                burst = output[3]
                 results.append([index, burst])
                 if len(processes_left):
                     new_process = processes_left.pop(0)

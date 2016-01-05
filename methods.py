@@ -428,18 +428,16 @@ def get_date_taken(img_name, folder="./"):
     image = str(folder) + str(img_name)
     return Image.open(image)._getexif()[36867]
 
-def are_in_burst(dates, image_num_1, image_num_2):
+def are_in_burst(date1, date2):
     """
     Return True if image 1 and image 2 are in a burst.
     Image 2 must be the next to image 1
     """
-    image_num_1 = int(image_num_1)
-    image_num_2 = int(image_num_2)
     if image_num_2 != image_num_1+1:
         msg = "Image 2 must be the next to image 1."
         raise ValueError(msg)
-    date1 = dates[image_num_1].split(' ')
-    date2 = dates[image_num_2].split(' ')
+    date1 = date1.split(' ')
+    date2 = date2.split(' ')
     if date1[0] != date2[0]:
         return False
     time1 = date1[1].split(':')
@@ -457,12 +455,12 @@ def are_in_burst(dates, image_num_1, image_num_2):
         return False
     return True
 
-def are_in_burst_queue(dates, image_num_1, image_num_2, output_queue):
+def are_in_burst_queue(index, date1, date2, output_queue):
     """
     Multiprocessing friendly method.
     """
-    output = are_in_burst(dates, image_num_1, image_num_2)
-    output_queue.put([image_num_1, image_num_2, output])
+    output = are_in_burst(date1, date2)
+    output_queue.put([index, output])
 
 def time_difference(dates, image_num_1, image_num_2):
     """

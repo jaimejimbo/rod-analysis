@@ -4,10 +4,32 @@
 Main script.
 """
 
+"""
+Settings
+"""
 low_comp_level = None
 medium_comp_level = 0
 strong_comp_level = 3       #0-9 or None to disable
 cpus = None     #None uses all cpus
+
+run_17 = 0
+run_5 = 1
+run_all = 1
+create_videos = 1
+clusters = 1
+avg_temp = 1
+order_param_exp = 1
+lost_percentage = 1
+
+coef = 5
+divisions = 30
+run_imagej = False
+
+
+"""
+Script
+"""
+
 
 settings = open("settings.py", "w")
 settings.write("low_comp_level = {0}".format(low_comp_level))
@@ -27,7 +49,6 @@ os.system("clear && clear")
 
 #try:
 if True:
-    run_imagej = False
 
     dates = None
     if run_imagej:
@@ -37,18 +58,6 @@ if True:
         methods.export_image_dates()
     else:
         dates = methods.import_image_dates()
-
-    run_17 = 0
-    run_5 = 1
-    run_all = 1
-    create_videos = 1
-    clusters = 1
-    avg_temp = 1
-    order_param_exp = 1
-    lost_percentage = 1
-
-    coef = 5
-    divisions = 30
 
     if run_17:
         print "\t\t\tK17\t\t\t"
