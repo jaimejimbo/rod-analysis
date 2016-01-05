@@ -4,12 +4,15 @@
 Main script.
 """
 
-default_comp_level = None
+low_comp_level = None
+medium_comp_level = 0
 strong_comp_level = 3       #0-9 or None to disable
 cpus = None     #None uses all cpus
 
 settings = open("settings.py", "w")
-settings.write("default_comp_level = {0}".format(default_comp_level))
+settings.write("low_comp_level = {0}".format(low_comp_level))
+settings.write("\n")
+settings.write("medium_comp_level = {0}".format(medium_comp_level))
 settings.write("\n")
 settings.write("strong_comp_level = {0}".format(strong_comp_level))
 settings.write("\n")

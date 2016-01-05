@@ -539,7 +539,7 @@ def vector_angle(vector):
         angle = math.pi
     return angle
 
-def compress(obj, level=settings.default_comp_level):
+def compress(obj, level=settings.low_comp_level):
     """
     Compress data of an object.
     """
@@ -549,7 +549,7 @@ def compress(obj, level=settings.default_comp_level):
     compressed = zlib.compress(dumps, level)
     return compressed
 
-def decompress(obj, level=settings.default_comp_level):
+def decompress(obj, level=settings.low_comp_level):
     """
     Decompress an object.
     """

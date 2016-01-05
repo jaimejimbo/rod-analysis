@@ -172,7 +172,7 @@ class Experiment(object):
             self._initial_rods.append(set([]))
         for index in range(len(self._states)):
             state = methods.decompress(self._states[index],
-                                    level=methods.settings.default_comp_level)
+                                    level=methods.settings.medium_comp_level)
             if not state:
                 msg = "State is not defined."
                 raise TypeError(msg)
@@ -296,9 +296,9 @@ class Experiment(object):
         It limits possible final rods amount.
         """
         initial_state = methods.decompress(self._states[index],
-                                level=methods.settings.default_comp_level)
+                                level=methods.settings.medium_comp_level)
         final_state = methods.decompress(self._states[index+1],
-                                level=methods.settings.default_comp_level)
+                                level=methods.settings.medium_comp_level)
         evol_dict = self._evolution_dictionaries[index]
         relative_dict = self._relative_dictionaries[index]
         for initial_rod in initial_state:
@@ -529,9 +529,9 @@ class Experiment(object):
         speeds_vectors = {}
         evol_dict = self._evolution_dictionaries[index]
         initial_state = methods.decompress(self._states[index],
-                                level=methods.settings.default_comp_level)
+                                level=methods.settings.medium_comp_level)
         final_state = methods.decompress(self._states[index+1],
-                                level=methods.settings.default_comp_level)
+                                level=methods.settings.medium_comp_level)
         keys = list(evol_dict.keys())
         if not keys[0]:
             return
@@ -806,7 +806,7 @@ class Experiment(object):
         Process
         """
         state = methods.decompress(self._states[index],
-                                level=methods.settings.default_comp_level)
+                                level=methods.settings.medium_comp_level)
         subgroups_matrix = state.subgroups_matrix(divisions)
         speeds_matrix = []
         for row in subgroups_matrix:
@@ -1011,7 +1011,7 @@ class Experiment(object):
                 index = output[0]
                 state = output[1]
                 states[index] = methods.compress(state,
-                                        level=methods.settings.default_comp_level)
+                                        level=methods.settings.medium_comp_level)
                 finished += 1
                 if len(processes_left):
                     new_process = processes_left.pop(0)
@@ -1040,7 +1040,7 @@ class Experiment(object):
         frames = len(self._states)
         function_name = 'plottable_density_matrix_queue'
         state = methods.decompress(self._states[0],
-                                level=methods.settings.default_comp_level)
+                                level=methods.settings.medium_comp_level)
         kappas = state.kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         z_min, z_max = self._generic_scatter_animator(name, function_name,
@@ -1055,7 +1055,7 @@ class Experiment(object):
         """
         if not self._kappas:
             state = methods.decompress(self._states[0],
-                                level=methods.settings.default_comp_level)
+                                level=methods.settings.medium_comp_level)
             self._kappas = state.kappas
         return self._kappas
 
@@ -1120,7 +1120,7 @@ class Experiment(object):
                 processes = []
                 for index in group:
                     state = methods.decompress(self._states[index],
-                                        level=methods.settings.default_comp_level)
+                                        level=methods.settings.medium_comp_level)
                     function = getattr(state, function_name)
                     #x_val, y_val, z_val = function(divisions)
                     #z_vals.append(z_val)
@@ -1196,7 +1196,7 @@ class Experiment(object):
         Returns consecutive system images' ids.
         """
         state = methods.decompress(self._states[index],
-                                level=methods.settings.default_comp_level)
+                                level=methods.settings.medium_comp_level)
         image1_id_str = state.id_string
         image1_id = methods.get_number_from_string(image1_id_str)
         return image1_id
@@ -1243,7 +1243,7 @@ class Experiment(object):
         x_vals, y_vals, z_vals = [], [], []
         for index in range(len(self._states)-1):
             state = methods.decompress(self._states[index],
-                                        level=methods.settings.default_comp_level)
+                                        level=methods.settings.medium_comp_level)
             subgroups = state.subgroups_matrix(divisions)
             x_val, y_val, z_val = [], [], []
             for row_index in range(len(subgroups)):
@@ -1331,7 +1331,7 @@ class Experiment(object):
         Process
         """
         state = methods.decompress(self._states[index],
-                                level=methods.settings.default_comp_level)
+                                level=methods.settings.medium_comp_level)
         array = state.cluster_lengths(max_distance=max_distance,
                                             max_angle_diff=max_angle_diff,
                                             min_size=1)
@@ -1381,7 +1381,7 @@ class Experiment(object):
         for index in range(speeds_num):
             speeds_ = speeds[index]
             state = methods.decompress(self._states[index],
-                                level=methods.settings.default_comp_level)
+                                level=methods.settings.medium_comp_level)
             process = mp.Process(target=average_speeds_vectors_video_process,
                                  args=(divisions, index, state,
                                      speeds_, output_queue))
@@ -1404,7 +1404,7 @@ class Experiment(object):
         vectors = []
         for index in range(speeds_num):
             state = methods.decompress(self._states[index],
-                                level=methods.settings.default_comp_level)
+                                level=methods.settings.medium_comp_level)
             vector_matrix = vector_matrices[index]
             
 
@@ -1446,7 +1446,7 @@ class Experiment(object):
             z_vals_avg.append(average)
         fig = plt.figure()
         state = methods.decompress(self._states[0],
-                                level=methods.settings.default_comp_level)
+                                level=methods.settings.medium_comp_level)
         kappas = state.kappas
         name = str(folder)+"Temperature"+str(kappas)+".mp4"
         z_maxs = []
@@ -1576,7 +1576,7 @@ class Experiment(object):
         Process
         """
         state = methods.decompress(self._states[index],
-                                level=methods.settings.default_comp_level)
+                                level=methods.settings.medium_comp_level)
         area = state.total_area_of_clusters(max_distance=max_distance,
                             max_angle_diff=max_angle_diff, min_size=min_size)
         output_queue.put([index, area])
@@ -1696,6 +1696,8 @@ class Experiment(object):
         if not len(self._bursts_groups):
             groups = []
             group = []
+            output_queue = mp.Queue()
+            processes = []
             for index in range(len(self._state_numbers)-1):
                 initial_id  = self._get_image_id(index)
                 final_id = self._get_image_id(index+1)
@@ -1768,7 +1770,7 @@ class Experiment(object):
         plt.plot(indices, average_speeds)
         name = "avg_temp_K"
         state = methods.decompress(self._states[0],
-                                level=methods.settings.default_comp_level)
+                                level=methods.settings.medium_comp_level)
         kappa = int(state.average_kappa)
         name += str(kappa) + ".png"
         plt.savefig(name)
@@ -1794,7 +1796,7 @@ class Experiment(object):
         number_of_rods = []
         for index in range(len(self._states)):
             state = methods.decompress(self._states[index],
-                                level=methods.settings.default_comp_level)
+                                level=methods.settings.medium_comp_level)
             number = state.number_of_rods
             number_of_rods.append(number)
         supposed_total_number = max(number_of_rods)
