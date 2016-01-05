@@ -6,11 +6,14 @@ Main script.
 
 default_comp_level = 0
 strong_comp_level = 1       #0-9
+cpus = None     #None uses all cpus
 
 settings = open("settings.py", "w")
 settings.write("default_comp_level = {0}".format(default_comp_level))
 settings.write("\n")
 settings.write("strong_comp_level = {0}".format(strong_comp_level))
+settings.write("\n")
+settings.write("cpus = {0}".format(cpus))
 settings.write("\n")
 settings.close()
 

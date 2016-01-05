@@ -484,7 +484,9 @@ def run_processes(processes, cpus=None):
     """
     running = []
     if not cpus:
-        cpus = int(mp.cpu_count())
+        cpus = settings.cpus
+        if not cpus:
+            cpus = int(mp.cpu_count())
     try:
         for dummy in range(cpus):
             next_process = processes.pop(0)
