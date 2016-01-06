@@ -250,6 +250,9 @@ class Experiment(object):
                 new_process.start()
             if finished >= num_processes:
                 break
+        for process in processes:
+            if process.is_alive():
+                process.terminate()
         print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
 
 
@@ -399,6 +402,9 @@ class Experiment(object):
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
+        for process in processes:
+            if process.is_alive():
+                process.terminate()
 
 
     def _leave_only_closer_process(self, index, output_queue,
@@ -521,6 +527,9 @@ class Experiment(object):
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
+        for process in processes:
+            if process.is_alive():
+                process.terminate()
 
     def _get_vectors_process(self, index, output_queue):
         """
@@ -588,6 +597,9 @@ class Experiment(object):
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
+        for process in processes:
+            if process.is_alive():
+                process.terminate()
 
 
     def _join_rods_left_process(self, index, output_queue, max_distance=50):
@@ -695,6 +707,9 @@ class Experiment(object):
                 if finished >= num_processes:
                     break
             print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        for process in processes:
+            if process.is_alive():
+                process.terminate()
 
 
     def _compute_speeds_process(self, index, speeds_queue,
@@ -799,6 +814,9 @@ class Experiment(object):
                 new_process.start()
             if finished >= num_processes:
                 break
+        for process in processes:
+            if process.is_alive():
+                process.terminate()
 
 
     def _compute_local_speeds_process(self, index, output_queue, divisions):
@@ -855,6 +873,9 @@ class Experiment(object):
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     new_process.start()
+            for process in processes:
+                if process.is_alive():
+                    process.terminate()
 
     def local_average_quadratic_speed(self, max_distance=100, max_angle_diff=90,
                                         limit=5, amount_of_rods=200, divisions=5):
@@ -917,6 +938,9 @@ class Experiment(object):
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     new_process.start()
+            for process in processes:
+                if process.is_alive():
+                    process.terminate()
             self._densities_array = densities
             self._quad_speeds_array = quad_speeds
         return [self._densities_array, self._quad_speeds_array]
@@ -1020,6 +1044,9 @@ class Experiment(object):
                     break
             self._states = states
             print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+            for process in processes:
+                if process.is_alive():
+                    process.terminate()
         
 
     def divide_system_in_circles_process(self, divisions, index, output_queue):
@@ -1136,6 +1163,9 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     new_process.start()
             z_vals_avg.append(methods.array_average(z_vals))
+            for process in processes:
+                if process.is_alive():
+                    process.terminate()
         frames = len(z_vals_avg)
         match = re.match(r'.*?g[2|4].*', function_name)
         if not match:
@@ -1299,6 +1329,9 @@ class Experiment(object):
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
+        for process in processes:
+            if process.is_alive():
+                process.terminate()
         def animate(dummy_frame):
             """
             Animation function.
@@ -1400,6 +1433,9 @@ class Experiment(object):
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
+        for process in processes:
+            if process.is_alive():
+                process.terminate()
         vectors = []
         for index in range(speeds_num):
             state = methods.decompress(self._states[index],
@@ -1534,7 +1570,11 @@ class Experiment(object):
                 for val in _z_vals:
                     if val is not None:
                         not_none_vals.append(val)
-                average = sum(not_none_vals)/float(len(not_none_vals))
+                try:
+                    average = sum(not_none_vals)/float(len(not_none_vals))
+                except ZeroDivisionError:
+                    average = 0
+                    ############    Check this.
             z_vals_avg.append(average)
         return z_vals_avg, indices
 
@@ -1566,6 +1606,9 @@ class Experiment(object):
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
+        for process in processes:
+            if process.is_alive():
+                process.terminate()
         return areas
         
 
@@ -1716,11 +1759,14 @@ class Experiment(object):
                     break
                 output = output_queue.get()
                 index = output[0]
-                burst = output[3]
+                burst = output[1]
                 results.append([index, burst])
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     new_process.start()
+            for process in processes:
+                if process.is_alive():
+                    process.terminate()
             for result in results:
                 index = result[0]
                 burst = result[1]
@@ -1765,6 +1811,9 @@ class Experiment(object):
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
+        for process in processes:
+            if process.is_alive():
+                process.terminate()
         plt.figure()
         plt.plot(indices, average_speeds)
         name = "avg_temp_K"

@@ -1131,17 +1131,19 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
                             radius_correction_ratio, names,
                             index, states_queue))
         processes.append(process)
+    num_processes = len(processes)
     running, processes_left = methods.run_processes(processes)
-    num_processes = len(running)
     finished = 0
     while finished < num_processes:
         finished += 1
         [index, state] = states_queue.get()
         states[index] = methods.compress(state)
         if len(processes_left):
-            finished -= 1
             new_process = processes_left.pop(0)
             new_process.start()
+    for process in processes:
+        if process.is_alive():
+            process.terminate()
     return names, states
 
 

@@ -433,9 +433,6 @@ def are_in_burst(date1, date2):
     Return True if image 1 and image 2 are in a burst.
     Image 2 must be the next to image 1
     """
-    if image_num_2 != image_num_1+1:
-        msg = "Image 2 must be the next to image 1."
-        raise ValueError(msg)
     date1 = date1.split(' ')
     date2 = date2.split(' ')
     if date1[0] != date2[0]:
