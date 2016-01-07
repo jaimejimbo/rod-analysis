@@ -3,7 +3,7 @@
 """
 import math, queue, matrix, copy
 import multiprocessing as mp
-import methods, rod
+import methods, rod, settings
 import cPickle, zlib
 
 
@@ -772,7 +772,7 @@ class SystemState(object):
             self._clusters_max_distance = max_distance
             self._clusters_max_angle_diff = max_angle_diff
             clusters = []
-            list_of_rods = [methods.decompress(rod_) for rod_ in self._rods]
+            list_of_rods = [rod_ for rod_ in self]
             rods_left = set(list_of_rods)
             for rod_ in self:
                 if self._cluster_checked_dict[rod_.identifier]:
@@ -783,6 +783,7 @@ class SystemState(object):
                 if len(cluster):
                     clusters.append(cluster)
             self._clusters = clusters
+        #print clusters
         return clusters
 
     def clusters(self, max_distance=None, max_angle_diff=None, min_size=3):
@@ -1137,7 +1138,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
     while finished < num_processes:
         finished += 1
         [index, state] = states_queue.get()
-        states[index] = methods.compress(state)
+        states[index] = methods.compress(state, settings.medium_comp_level)
         if len(processes_left):
             new_process = processes_left.pop(0)
             new_process.start()

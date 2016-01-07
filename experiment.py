@@ -100,7 +100,8 @@ class Experiment(object):
             Magic method for looping.
         """
         for state in self._states:
-            yield methods.decompress(state)
+            comp_level = methods.settings.medium_comp_level
+            yield methods.decompress(state, level=comp_level)
 
 
     def __getitem__(self, state_num):
@@ -124,7 +125,8 @@ class Experiment(object):
         states = []
         for state in self:
             state.coef = value
-            states.append(methods.compress(state))
+            states.append(methods.compress(state, 
+                    level=methods.settings.medium_comp_level))
         self._states = states
 
     def _reset(self):
@@ -1053,12 +1055,13 @@ class Experiment(object):
         """
             Process
         """
-        state = methods.decompress(self._states[index])
+        state = methods.decompress(self._states[index],
+                                methods.settings.medium_comp_level)
         state.divide_in_circles(divisions)
         output_queue.put([index, state])
 
     def create_density_video(self, divisions, folder, fps,
-                                 number_of_bursts):
+                                 number_of_bursts, x_free):
         """
         Creates a video of density's evolution.
         """
@@ -1069,7 +1072,7 @@ class Experiment(object):
         kappas = self.kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         z_min, z_max = self._generic_scatter_animator(name, function_name,
-                        divisions, fps=fps, number_of_bursts=number_of_bursts)
+                        divisions, x_free, fps=fps, number_of_bursts=number_of_bursts)
         self._min_density = z_min
         self._max_density = z_max
 
@@ -1085,7 +1088,7 @@ class Experiment(object):
         return self._kappas
 
     def create_relative_g2_video(self, divisions, folder, fps,
-                                 number_of_bursts):
+                                 number_of_bursts, x_free):
         """
         Creates a video of correlation g2 evolution.
         """
@@ -1096,10 +1099,10 @@ class Experiment(object):
         kappas = self.kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         self._generic_scatter_animator(name, function_name,
-                        divisions, fps=fps, number_of_bursts=number_of_bursts)
+                        divisions, x_free, fps=fps, number_of_bursts=number_of_bursts)
 
     def create_relative_g4_video(self, divisions, folder, fps,
-                                 number_of_bursts):
+                                 number_of_bursts, x_free):
         """
         Creates a video of correlation g4 evolution.
         """
@@ -1110,10 +1113,10 @@ class Experiment(object):
         kappas = self.kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         self._generic_scatter_animator(name, function_name,
-                        divisions, fps=fps, number_of_bursts=number_of_bursts)
+                        divisions, x_free, fps=fps, number_of_bursts=number_of_bursts)
 
     def create_average_angle_video(self, divisions, folder, fps,
-                                 number_of_bursts):
+                                 number_of_bursts, x_free):
         """
         Creates a video of average angle evolution.
         """
@@ -1124,21 +1127,20 @@ class Experiment(object):
         kappas = methods.decompress(self._states[0]).kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
         self._generic_scatter_animator(name, function_name,
-                        divisions, fps=fps, number_of_bursts=number_of_bursts)
+                        divisions, x_free, fps=fps, number_of_bursts=number_of_bursts)
 
 
     def _generic_scatter_animator(self, name, function_name,
-                                    divisions, fps=15, number_of_bursts=10):
+                                    divisions, x_free, fps=15, number_of_bursts=10):
         """
         Generic animator
         """
         fig = plt.figure()
-        bursts_groups = copy.deepcopy(self.bursts_groups)
         z_vals = []
         z_vals_avg = []
         x_val = []
         y_val = []
-        for group in bursts_groups:
+        for group in self.bursts_groups:
             output_queue = mp.Queue()
             processes = []
             for index in group:
@@ -1179,6 +1181,7 @@ class Experiment(object):
         else:
             z_max = 1
             z_min = 0
+        x_free.get()
         def animate(dummy_frame):
             """
             Wrapper.
@@ -1187,6 +1190,7 @@ class Experiment(object):
                                 divisions, name, z_max, z_min)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer=self._writer, fps=fps)
+        x_free.put(True)
         return z_min, z_max
 
     def _animate_scatter(self, x_val, y_val, z_vals,
@@ -1231,23 +1235,26 @@ class Experiment(object):
         Creates a video per property of the system that shows evolution.
         """
         self.divide_systems_in_circles(divisions)
+        x_free = mp.Queue()
+        x_free.put(True)
         """processes = []
         process = mp.Process(target=self.create_density_video,
-                             args=(divisions, folder, fps, number_of_bursts))
+                             args=(divisions, folder, fps, number_of_bursts, x_free))
         processes.append(process)
         process = mp.Process(target=self.create_relative_g2_video,
-                             args=(divisions, folder, fps, number_of_bursts))
+                             args=(divisions, folder, fps, number_of_bursts, x_free))
         processes.append(process)
         process = mp.Process(target=self.create_relative_g4_video,
-                             args=(divisions, folder, fps, number_of_bursts))
+                             args=(divisions, folder, fps, number_of_bursts, x_free))
         processes.append(process)
         process = mp.Process(target=self.create_temperature_video,
                              args=(divisions, folder, fps, max_distance,
                                max_angle_diff, limit, amount_of_rods,
-                               number_of_bursts))
+                               number_of_bursts, x_free))
         processes.append(process)
         for index in range(4):
             processes[index].start()
+        for index in range(4):
             processes[index].join()"""
         self.create_density_video(divisions, folder, fps, number_of_bursts)
         self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
@@ -1445,7 +1452,7 @@ class Experiment(object):
 
     def create_temperature_video(self, divisions, folder, fps,
                             max_distance, max_angle_diff,
-                            limit, amount_of_rods, number_of_bursts):
+                            limit, amount_of_rods, number_of_bursts, x_free):
         """
         Creates a video of temperature evolution.
         """
@@ -1498,6 +1505,7 @@ class Experiment(object):
         frames = len(z_vals_avg)
         x_val = x_vals[0]
         y_val = y_vals[0]
+        x_free.get()
         def animate(dummy_frame):
             """
             Animation function.
@@ -1507,6 +1515,7 @@ class Experiment(object):
                                         z_max, z_min)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer=self._writer, fps=fps)
+        x_free.put(True)
 
 
     def _temperature_video_wrapper(self, x_val, y_val, z_vals,
@@ -1706,7 +1715,8 @@ class Experiment(object):
         except ValueError:
             print(len(times), len(areas))
             print(times, areas)
-        plt.savefig("cluster_areas.png")
+        file_name = "cluster_areas_K" + str(self.kappas) + ".png"
+        plt.savefig(file_name)
 
     def _compute_times(self, number_of_bursts):
         """
