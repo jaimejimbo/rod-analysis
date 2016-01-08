@@ -924,7 +924,7 @@ class SystemState(object):
             #cos /= self.area
             cos /= counter
             kappa = 1#self.average_kappa
-            self._relative_g2 = #cos #kappa*math.sqrt(sin**2+cos**2)
+            self._relative_g2 = cos #kappa*math.sqrt(sin**2+cos**2)
         return self._relative_g2
 
     @property
