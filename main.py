@@ -24,7 +24,7 @@ order_param_exp = 1
 lost_percentage = 1
 run_imagej = 0
 # variables
-coef = 5
+coef = 2
 divisions = 30
 
 

@@ -372,7 +372,7 @@ class SystemState(object):
                                  for times in range(divisions+2)]
             possible_y_values = [start_y + (times-1)*diff
                                  for times in range(divisions+2)]
-            assert self._coef == 5, "Coeficient error (367)"
+            #assert self._coef == 5, "Coeficient error (367)"
             rad = diff*math.sqrt(2)*self._coef/2.0
             subsystems = self._subsystems(possible_x_values, possible_y_values,
                                           rad, diff, divisions)
@@ -526,11 +526,11 @@ class SystemState(object):
         """
             Computes correlation_g2 and correlation_g4 values
         """
-        if not self.number_of_rods or not self.area:
+        num = self.number_of_rods
+        if not num in [0,1] or not self.area:
             self._correlation_g2 = 0
             self._correlation_g4 = 0
             return
-        num = self.number_of_rods
         cos2_av, cos4_av = 0, 0
         for rod1 in self:
             for rod2 in self:
@@ -538,8 +538,6 @@ class SystemState(object):
                     angle = math.radians(rod1.angle_between_rods(rod2))
                     cos2_av += abs(math.cos(angle))/(num*(num-1))
                     cos4_av += abs(math.cos(2*angle))/(num*(num-1))
-        assert 0 <= cos2_av <= 1
-        assert 0 <= cos4_av <= 1
         self._correlation_g2 = cos2_av
         self._correlation_g4 = cos4_av
 
@@ -566,7 +564,7 @@ class SystemState(object):
             Computes correlation_g2 and correlation_g4 matrices for subgroups.
         """
         self.divide_in_circles(divisions)
-        if not self._correlation_g2 or not self._correlation_g2:
+        if self._correlation_g2 is None or self._correlation_g4 is None:
             subdivision = methods.decompress(self._actual_subdivision,
                                 level=methods.settings.low_comp_level)
             for subsystem in subdivision:

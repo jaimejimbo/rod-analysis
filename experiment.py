@@ -1691,6 +1691,7 @@ class Experiment(object):
                                    max_angle_diff=max_angle_diff,
                                    min_size=min_size)
         total_areas = self._total_cluster_areas
+        assert total_areas, "Error"
         norm_areas = []
         for index in range(len(areas)):
             area = areas[index]
