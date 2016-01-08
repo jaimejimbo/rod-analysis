@@ -32,6 +32,8 @@ class SystemState(object):
         self._correlation_g2 = None
         self._correlation_g4 = None
         self._correlation_g2_subsystems = []
+        self._cos_g2 = {}
+        self._cos_g4 = {}
         self._correlation_g4_subsystems = []
         self._relative_g2_subsystems = []
         self._relative_g4_subsystems = []
@@ -238,6 +240,8 @@ class SystemState(object):
         self._correlation_g4 = None
         self._correlation_g2_subsystems = []
         self._correlation_g4_subsystems = []
+        self._cos_g2 = {}
+        self._cos_g4 = {}
         self._average_kappa = None
         self._kappa_dev = None
         self._average_angle = None
@@ -262,6 +266,7 @@ class SystemState(object):
             self._center_x = None
             self._center_y = None
             self._zone_coords = []
+        self.fill_dicts()
 
     def fill_dicts(self):
         """
@@ -273,6 +278,14 @@ class SystemState(object):
                 self._rods_dict[identifier] = methods.compress(rod_,
                                 level=methods.settings.low_comp_level)
                 self._cluster_checked_dict[identifier] = False
+        if not len(self._cos_g2) or not len(self._cos_g4):
+            for rod1 in self:
+                self._cos_g2[rod1] = {}
+                self._cos_g4[rod1] = {}
+                for rod2 in self:
+                    if rod1 != rod2:
+                        self._cos_g2[rod1][rod2] = None
+                        self._cos_g4[rod1][rod2] = None
 
     def _compute_center_and_radius(self):
         """
@@ -535,11 +548,18 @@ class SystemState(object):
         for rod1 in self:
             for rod2 in self:
                 if rod1 != rod2:
-                    angle = math.radians(rod1.angle_between_rods(rod2))
-                    cos2_av += abs(math.cos(angle))/(num*(num-1))
-                    cos4_av += abs(math.cos(2*angle))/(num*(num-1))
-        assert 0 <= cos2_av <= 1
-        assert 0 <= cos4_av <= 1
+                    angle = None
+                    if self._cos_g2[rod1][rod2] is None:
+                        angle = math.radians(rod1.angle_between_rods(rod2))
+                        cos2_av += abs(math.cos(angle))/(num*(num-1))
+                    else:
+                        pass
+                        #####
+                    if self._cos_g4[rod1][rod2] is None:
+                        if angle is None:
+                            angle = math.radians(rod1.angle_between_rods(rod2))
+                        cos4_av += abs(math.cos(2*angle))/(num*(num-1))
+                    
         self._correlation_g2 = cos2_av
         self._correlation_g4 = cos4_av
 
@@ -548,7 +568,7 @@ class SystemState(object):
         """
             sqrt(<cos(2*angle)>^2+<sin(2*angle)>^2)
         """
-        if not self._correlation_g2:
+        if self._correlation_g2 is None:
             self._compute_g2_and_g4()
         return self._correlation_g2
 
@@ -557,7 +577,7 @@ class SystemState(object):
         """
             sqrt(<cos(4*angle)>^2+<sin(4*angle)>^2)
         """
-        if not self._correlation_g4:
+        if self._correlation_g4 is None:
             self._compute_g2_and_g4()
         return self._correlation_g4
 
@@ -566,7 +586,7 @@ class SystemState(object):
             Computes correlation_g2 and correlation_g4 matrices for subgroups.
         """
         self.divide_in_circles(divisions)
-        if not self._correlation_g2 or not self._correlation_g2:
+        if not self._correlation_g2 or not self._correlation_g4:
             subdivision = methods.decompress(self._actual_subdivision,
                                 level=methods.settings.low_comp_level)
             for subsystem in subdivision:
