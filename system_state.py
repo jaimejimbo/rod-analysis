@@ -534,8 +534,8 @@ class SystemState(object):
         #sin2_av /= self.number_of_rods
         #cos4_av /= self.number_of_rods
         #sin4_av /= self.number_of_rods
-        self._correlation_g2 = #cos2_av #math.sqrt(cos2_av**2+sin2_av**2)
-        self._correlation_g4 = #cos4_av #math.sqrt(cos4_av**2+sin4_av**2)
+        self._correlation_g2 = 0#cos2_av #math.sqrt(cos2_av**2+sin2_av**2)
+        self._correlation_g4 = 0#cos4_av #math.sqrt(cos4_av**2+sin4_av**2)
 
     @property
     def correlation_g2(self):
