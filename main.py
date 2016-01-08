@@ -10,7 +10,7 @@ Settings
 low_comp_level = None
 medium_comp_level = None
 strong_comp_level = 0       #0-9 or None to disable
-cpus = 12     #None uses all cpus
+cpus = None     #None uses all cpus
 
 run_17 = 1
 run_5 = 1
