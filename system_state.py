@@ -518,10 +518,10 @@ class SystemState(object):
         for rod__ in list(self._rods):
             rod_ = methods.decompress(rod__)
             angle = rod_.angle*math.pi/180.0
-            cos2_av += math.cos(2*angle)
-            sin2_av += math.sin(2*angle)
-            cos4_av += math.cos(4*angle)
-            sin4_av += math.sin(4*angle)
+            #cos2_av += math.cos(2*angle)
+            #sin2_av += math.sin(2*angle)
+            #cos4_av += math.cos(4*angle)
+            #sin4_av += math.sin(4*angle)
         if not self.area:
             self._correlation_g2 = 0
             self._correlation_g4 = 0
@@ -530,12 +530,12 @@ class SystemState(object):
         #sin2_av /= self.area
         #cos4_av /= self.area
         #sin4_av /= self.area
-        cos2_av /= self.number_of_rods
-        sin2_av /= self.number_of_rods
-        cos4_av /= self.number_of_rods
-        sin4_av /= self.number_of_rods
-        self._correlation_g2 = cos2_av #math.sqrt(cos2_av**2+sin2_av**2)
-        self._correlation_g4 = cos4_av #math.sqrt(cos4_av**2+sin4_av**2)
+        #cos2_av /= self.number_of_rods
+        #sin2_av /= self.number_of_rods
+        #cos4_av /= self.number_of_rods
+        #sin4_av /= self.number_of_rods
+        self._correlation_g2 = #cos2_av #math.sqrt(cos2_av**2+sin2_av**2)
+        self._correlation_g4 = #cos4_av #math.sqrt(cos4_av**2+sin4_av**2)
 
     @property
     def correlation_g2(self):
@@ -911,16 +911,20 @@ class SystemState(object):
             if not self.number_of_rods:
                 self._relative_g2 = 0
                 return 0
-            sin = 0
+            #sin = 0
             cos = 0
+            counter = 0
             for row in self.closest_rod_matrix:
+                counter += 1
                 angle = math.radians(row[0].angle_between_rods(row[1]))
-                sin += math.sin(2*angle)
-                cos += math.cos(2*angle)
-            sin /= self.area
-            cos /= self.area
+                cos += math.sqrt(math.cos(angle)**2)
+                #sin += math.sin(2*angle)
+                #cos += math.cos(2*angle)
+            #sin /= self.area
+            #cos /= self.area
+            cos /= counter
             kappa = 1#self.average_kappa
-            self._relative_g2 = cos #kappa*math.sqrt(sin**2+cos**2)
+            self._relative_g2 = #cos #kappa*math.sqrt(sin**2+cos**2)
         return self._relative_g2
 
     @property
@@ -936,12 +940,16 @@ class SystemState(object):
                 return 0
             sin = 0
             cos = 0
+            counter = 0
             for row in self.closest_rod_matrix:
+                counter += 1
                 angle = math.radians(row[0].angle_between_rods(row[1]))
-                sin += math.sin(4*angle)
-                cos += math.cos(4*angle)
-            sin /= self.area
-            cos /= self.area
+                cos += math.sqrt(math.cos(2*angle)**2)
+                #sin += math.sin(4*angle)
+                #cos += math.cos(4*angle)
+            #sin /= self.area
+            #cos /= self.area
+            cos /= counter
             kappa = 1#self.average_kappa
             self._relative_g4 = cos #kappa*math.sqrt(sin**2+cos**2)
         return self._relative_g4
