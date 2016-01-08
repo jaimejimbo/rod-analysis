@@ -1252,12 +1252,12 @@ class Experiment(object):
             processes[index].start()
         for index in range(4):
             processes[index].join()"""
-        self.create_density_video(divisions, folder, fps, number_of_bursts)
+        #self.create_density_video(divisions, folder, fps, number_of_bursts)
         self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
         self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
-        self.create_temperature_video(divisions, folder, fps, max_distance,
-                               max_angle_diff, limit, amount_of_rods,
-                               number_of_bursts)
+        #self.create_temperature_video(divisions, folder, fps, max_distance,
+        #                       max_angle_diff, limit, amount_of_rods,
+        #                       number_of_bursts)
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,

@@ -12,9 +12,9 @@ low_comp_level = None
 medium_comp_level = None
 strong_comp_level = 0 
 #None uses all cpus      
-cpus = None     
+cpus = 12
 # 1 or True, 0 or False
-run_17 = 1
+run_17 = 0
 run_5 = 1
 run_all = 1
 create_videos = 1

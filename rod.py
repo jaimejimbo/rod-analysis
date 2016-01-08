@@ -208,9 +208,7 @@ class Rod(object):
         """
         Returns value of angle that formes this rod with another.
         """
-        angle = abs(self.angle-rod.angle)
-        angle = min([angle, 360-angle])
-        angle = min([angle, 180-angle])
+        angle = abs(self.angle-rod.angle) % 180
         return angle
 
     @property

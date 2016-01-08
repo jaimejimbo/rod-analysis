@@ -134,7 +134,8 @@ class SystemState(object):
         """
         self.fill_dicts()
         try:
-            return methods.decompress(self._rods_dict[rod_id])
+            return methods.decompress(self._rods_dict[rod_id],
+                                level=methods.settings.low_comp_level)
         except KeyError:
             msg = str(rod_id)
             msg += " " + str(self._rods_dict.keys())
@@ -157,13 +158,15 @@ class SystemState(object):
         Magic method for in.
         """
         for rod_ in self._rods:
-            yield methods.decompress(rod_)
+            yield methods.decompress(rod_,
+                                level=methods.settings.low_comp_level)
 
     def __list__(self):
         """
         Returns a list of rods
         """
-        output = [methods.decompress(rod_) for rod_ in self]
+        output = [methods.decompress(rod_,
+                level=methods.settings.low_comp_level) for rod_ in self]
         return output
 
     def __len__(self):
@@ -204,21 +207,24 @@ class SystemState(object):
         """
             Adds a rod to the group
         """
-        self._rods.put(methods.compress(rod_))
+        self._rods.put(methods.compress(rod_,
+                                level=methods.settings.low_comp_level))
 
     def _get_rod(self):
         """
             Returns the first rod in the queue
         """
         rod_ = self._rods.get()
-        self._rods.put(methods.decompress(rod_))
+        self._rods.put(methods.decompress(rod_),
+                                level=methods.settings.low_comp_level)
         return rod_
 
     def _remove_rod(self, rod_):
         """
             Removes a rod from the group (queue object mod needed)
         """
-        self._rods.delete(methods.compress(rod_))
+        self._rods.delete(methods.compress(rod_),
+                                level=methods.settings.low_comp_level)
 
     def reset(self):
         """
@@ -264,7 +270,8 @@ class SystemState(object):
         if not len(self._cluster_checked_dict):
             for rod_ in self:
                 identifier = rod_.identifier
-                self._rods_dict[identifier] = methods.compress(rod_)
+                self._rods_dict[identifier] = methods.compress(rod_,
+                                level=methods.settings.low_comp_level)
                 self._cluster_checked_dict[identifier] = False
 
     def _compute_center_and_radius(self):
@@ -339,7 +346,8 @@ class SystemState(object):
                         self._allowed_kappa_error,
                         self.zone_coords)
             if valid:
-                valid_rods.append(methods.compress(rod_))
+                valid_rods.append(methods.compress(rod_,
+                                level=methods.settings.low_comp_level))
         self._rods = queue.Queue(valid_rods)
         final_length = len(self._rods)
         self.reset()
@@ -368,7 +376,8 @@ class SystemState(object):
             rad = diff*math.sqrt(2)*self._coef/2.0
             subsystems = self._subsystems(possible_x_values, possible_y_values,
                                           rad, diff, divisions)
-            self._actual_subdivision = methods.compress(subsystems)
+            self._actual_subdivision = methods.compress(subsystems,
+                                level=methods.settings.low_comp_level)
             subsystems = None
             possible_x_values = None
             possible_y_values = None
@@ -389,7 +398,8 @@ class SystemState(object):
         div_range = range(divisions)
         output = [[[] for dummy_1 in div_range] for dummy_2 in div_range]
         for rod__ in rods_list:
-            rod_ = methods.decompress(rod__)
+            rod_ = methods.decompress(rod__,
+                                level=methods.settings.low_comp_level)
             index_x = int((rod_.x_mid-x_min)/diff)
             index_y = int((rod_.y_mid-y_min)/diff)
             try:
@@ -438,7 +448,8 @@ class SystemState(object):
         """
         self.divide_in_circles(divisions)
         density = []
-        subdivision = methods.decompress(self._actual_subdivision)
+        subdivision = methods.decompress(self._actual_subdivision,
+                                level=methods.settings.low_comp_level)
         for subsystem in subdivision:
             subdensity = [subsystem.center[0], subsystem.center[1]]
             dens = subsystem.density
@@ -449,7 +460,8 @@ class SystemState(object):
             subdensity.append(dens)
             density.append(subdensity)
         subdivision = None
-        self._density_matrix = methods.compress(density)
+        self._density_matrix = methods.compress(density,
+                                level=methods.settings.low_comp_level)
 
     def plottable_density_matrix(self, divisions=50):
         """
@@ -460,7 +472,8 @@ class SystemState(object):
         x_values = []
         y_values = []
         z_values = []
-        density_matrix = methods.decompress(self._density_matrix)
+        density_matrix = methods.decompress(self._density_matrix,
+                                level=methods.settings.low_comp_level)
         for row in density_matrix:
             x_values.append(row[0])
             y_values.append(row[1])
@@ -483,7 +496,8 @@ class SystemState(object):
             self.reset()
         if not len(self._subdivision_centers):
             self.divide_in_circles(divisions)
-            act_sub = methods.decompress(self._actual_subdivision)
+            act_sub = methods.decompress(self._actual_subdivision,
+                                level=methods.settings.low_comp_level)
             actual_y = act_sub[0].center[1]
             row = []
             subgroups_matrix = []
@@ -497,45 +511,37 @@ class SystemState(object):
                 row.append(element)
             subgroups_matrix.append(row)
             act_sub = None
-            self._subdivision_centers = methods.compress(subgroups_matrix)
+            self._subdivision_centers = methods.compress(subgroups_matrix,
+                                level=methods.settings.low_comp_level)
 
     def subgroups_matrix(self, divisions):
         """
             Returns subgroups matrix
         """
         self._create_subgroups_matrix(divisions)
-        return methods.decompress(self._subdivision_centers)
+        return methods.decompress(self._subdivision_centers,
+                                level=methods.settings.low_comp_level)
 
     def _compute_g2_and_g4(self):
         """
             Computes correlation_g2 and correlation_g4 values
         """
-        if not self.number_of_rods:
+        if not self.number_of_rods or not self.area:
             self._correlation_g2 = 0
             self._correlation_g4 = 0
             return
-        cos2_av, sin2_av, cos4_av, sin4_av = 0, 0, 0, 0
-        for rod__ in list(self._rods):
-            rod_ = methods.decompress(rod__)
-            angle = rod_.angle*math.pi/180.0
-            #cos2_av += math.cos(2*angle)
-            #sin2_av += math.sin(2*angle)
-            #cos4_av += math.cos(4*angle)
-            #sin4_av += math.sin(4*angle)
-        if not self.area:
-            self._correlation_g2 = 0
-            self._correlation_g4 = 0
-            return
-        #cos2_av /= self.area
-        #sin2_av /= self.area
-        #cos4_av /= self.area
-        #sin4_av /= self.area
-        #cos2_av /= self.number_of_rods
-        #sin2_av /= self.number_of_rods
-        #cos4_av /= self.number_of_rods
-        #sin4_av /= self.number_of_rods
-        self._correlation_g2 = 0#cos2_av #math.sqrt(cos2_av**2+sin2_av**2)
-        self._correlation_g4 = 0#cos4_av #math.sqrt(cos4_av**2+sin4_av**2)
+        num = self.number_of_rods
+        cos2_av, cos4_av = 0, 0
+        for rod1 in self:
+            for rod2 in self:
+                if rod1 != rod2:
+                    angle = math.radians(rod1.angle_between_rods(rod2))
+                    cos2_av += abs(math.cos(angle))/(num*(num-1))
+                    cos4_av += abs(math.cos(2*angle))/(num*(num-1))
+        assert 0 <= cos2_av <= 1
+        assert 0 <= cos4_av <= 1
+        self._correlation_g2 = cos2_av
+        self._correlation_g4 = cos4_av
 
     @property
     def correlation_g2(self):
@@ -561,7 +567,8 @@ class SystemState(object):
         """
         self.divide_in_circles(divisions)
         if not self._correlation_g2 or not self._correlation_g2:
-            subdivision = methods.decompress(self._actual_subdivision)
+            subdivision = methods.decompress(self._actual_subdivision,
+                                level=methods.settings.low_comp_level)
             for subsystem in subdivision:
                 correlation_g2 = [subsystem.center[0], subsystem.center[1]]
                 correlation_g4 = [subsystem.center[0], subsystem.center[1]]
@@ -569,8 +576,10 @@ class SystemState(object):
                 correlation_g4.append(subsystem.correlation_g4)
                 self._correlation_g2_subsystems.append(correlation_g2)
                 self._correlation_g4_subsystems.append(correlation_g4)
-            self._correlation_g2_subsystems = methods.compress(self._correlation_g2_subsystems)
-            self._correlation_g4_subsystems = methods.compress(self._correlation_g4_subsystems)
+            self._correlation_g2_subsystems = methods.compress(self._correlation_g2_subsystems,
+                                level=methods.settings.low_comp_level)
+            self._correlation_g4_subsystems = methods.compress(self._correlation_g4_subsystems,
+                                level=methods.settings.low_comp_level)
 
     def correlation_g2_plot_matrix(self, divisions):
         """
@@ -580,7 +589,8 @@ class SystemState(object):
         x_values = []
         y_values = []
         z_values = []
-        g2_subsystems = methods.decompress(self._correlation_g2_subsystems)
+        g2_subsystems = methods.decompress(self._correlation_g2_subsystems,
+                                level=methods.settings.low_comp_level)
         for subsystem in g2_subsystems:
             x_values.append(subsystem[0])
             y_values.append(subsystem[1])
@@ -604,7 +614,8 @@ class SystemState(object):
         x_values = []
         y_values = []
         z_values = []
-        g4_subsystems = methods.decompress(self._correlation_g4_subsystems)
+        g4_subsystems = methods.decompress(self._correlation_g4_subsystems,
+                                level=methods.settings.low_comp_level)
         for subsystem in g4_subsystems:
             x_values.append(subsystem[0])
             y_values.append(subsystem[1])
@@ -672,12 +683,14 @@ class SystemState(object):
             Computes average angle matrix
         """
         #self.divide_in_circles(divisions)
-        subdivision = methods.decompress(self._actual_subdivision)
+        subdivision = methods.decompress(self._actual_subdivision,
+                                level=methods.settings.low_comp_level)
         for subsystem in subdivision:
             row = [subsystem.center[0], subsystem.center[1]]
             row.append(subsystem.average_angle)
             self._angle_matrix.append(row)
-        self._angle_matrix = methods.compress(self._angle_matrix)
+        self._angle_matrix = methods.compress(self._angle_matrix,
+                                level=methods.settings.low_comp_level)
 
     def plottable_average_angle_matrix(self, divisions):
         """
@@ -687,7 +700,8 @@ class SystemState(object):
         x_values = []
         y_values = []
         z_values = []
-        angle_matrix = methods.decompress(self._angle_matrix)
+        angle_matrix = methods.decompress(self._angle_matrix,
+                                level=methods.settings.low_comp_level)
         for subsystem in angle_matrix:
             x_values.append(subsystem[0])
             y_values.append(subsystem[1])
@@ -856,7 +870,8 @@ class SystemState(object):
         """
         Returns the area of a rod of this system.
         """
-        first_rod = methods.decompress(list(self._rods)[0])
+        first_rod = methods.decompress(list(self._rods)[0],
+                                level=methods.settings.low_comp_level)
         return first_rod.area
 
     def _compute_closest_rod_matrix(self):
@@ -876,7 +891,8 @@ class SystemState(object):
                 continue
             new_row.append(closest_rod)
             closest_rod_matrix.append(new_row)
-        self._closest_rod_matrix = methods.compress(closest_rod_matrix)
+        self._closest_rod_matrix = methods.compress(closest_rod_matrix,
+                                level=methods.settings.low_comp_level)
         closest_rod_matrix = None
 
     @property
@@ -887,7 +903,8 @@ class SystemState(object):
         """
         if len(self._closest_rod_matrix) == 0:
             self._compute_closest_rod_matrix()
-        return methods.decompress(self._closest_rod_matrix)
+        return methods.decompress(self._closest_rod_matrix,
+                                level=methods.settings.low_comp_level)
 
     def closest_rod_dict(self):
         """
@@ -907,24 +924,18 @@ class SystemState(object):
         Now angle is the relative between rods.
         N^2
         """
-        if self._relative_g2 == None:
+        print "HOLA"
+        if self._relative_g2 is None:
             if not self.number_of_rods:
                 self._relative_g2 = 0
-                return 0
-            #sin = 0
-            cos = 0
-            counter = 0
-            for row in self.closest_rod_matrix:
-                counter += 1
-                angle = math.radians(row[0].angle_between_rods(row[1]))
-                cos += abs(math.cos(angle))
-                #sin += math.sin(2*angle)
-                #cos += math.cos(2*angle)
-            #sin /= self.area
-            #cos /= self.area
-            cos /= float(counter)
-            kappa = 1#self.average_kappa
-            self._relative_g2 = cos #kappa*math.sqrt(sin**2+cos**2)
+            else:
+                cos_av = 0
+                for rod1 in self:
+                    for rod2 in self:
+                        if rod1 != rod2:
+                            angle = math.radians(rod1.angle_between_rods(rod2))
+                            cos_av += abs(math.cos(angle))/self.number_of_rods*(self.number_of_rods-1)
+                self._relative_g2 = cos_av
         return self._relative_g2
 
     @property
@@ -934,24 +945,18 @@ class SystemState(object):
         Now angle is the relative between rods.
         N^2
         """
-        if self._relative_g4 == None:
+        if self._relative_g4 is None:
             if not self.number_of_rods:
                 self._relative_g4 = 0
-                return 0
-            sin = 0
-            cos = 0
-            counter = 0
-            for row in self.closest_rod_matrix:
-                counter += 1
-                angle = math.radians(row[0].angle_between_rods(row[1]))
-                cos += abs(math.cos(2*angle))
-                #sin += math.sin(4*angle)
-                #cos += math.cos(4*angle)
-            #sin /= self.area
-            #cos /= self.area
-            cos /= float(counter)
-            kappa = 1#self.average_kappa
-            self._relative_g4 = cos #kappa*math.sqrt(sin**2+cos**2)
+            else:
+                cos_av = 0
+                for rod1 in self:
+                    for rod2 in self:
+                        if rod1 != rod2:
+                            angle = math.radians(rod1.angle_between_rods(rod2))
+                            cos_av += abs(2*math.cos(angle))/self.number_of_rods*(self.number_of_rods-1)
+                cos_av /= self.number_of_rods*(self.number_of_rods-1)
+                self._relative_g4 = cos_av
         return self._relative_g4
 
     def _compute_relative_g2_g4_mat(self, divisions):
@@ -962,7 +967,8 @@ class SystemState(object):
         len_correlation_g2 = len(self._relative_g2_subsystems)
         len_correlation_g4 = len(self._relative_g4_subsystems)
         if  len_correlation_g2 == 0 or len_correlation_g4 == 0:
-            subsystems = methods.decompress(self._actual_subdivision)
+            subsystems = methods.decompress(self._actual_subdivision,
+                                level=methods.settings.low_comp_level)
             for subsystem in subsystems:
                 correlation_g2 = [subsystem.center[0], subsystem.center[1]]
                 correlation_g4 = [subsystem.center[0], subsystem.center[1]]
@@ -971,8 +977,10 @@ class SystemState(object):
                 self._relative_g2_subsystems.append(correlation_g2)
                 self._relative_g4_subsystems.append(correlation_g4)
             subsystems = None
-        self._relative_g2_subsystems = methods.compress(self._relative_g2_subsystems)
-        self._relative_g4_subsystems = methods.compress(self._relative_g4_subsystems)
+        self._relative_g2_subsystems = methods.compress(self._relative_g2_subsystems,
+                                level=methods.settings.low_comp_level)
+        self._relative_g4_subsystems = methods.compress(self._relative_g4_subsystems,
+                                level=methods.settings.low_comp_level)
 
     def relative_g2_plot_matrix(self, divisions):
         """
@@ -982,7 +990,8 @@ class SystemState(object):
         x_values = []
         y_values = []
         z_values = []
-        subsystems = methods.decompress(self._relative_g2_subsystems)
+        subsystems = methods.decompress(self._relative_g2_subsystems,
+                                level=methods.settings.low_comp_level)
         for subsystem in subsystems:
             x_values.append(subsystem[0])
             y_values.append(subsystem[1])
@@ -999,7 +1008,8 @@ class SystemState(object):
         x_values = []
         y_values = []
         z_values = []
-        subsystems = methods.decompress(self._relative_g4_subsystems)
+        subsystems = methods.decompress(self._relative_g4_subsystems,
+                                level=methods.settings.low_comp_level)
         for subsystem in subsystems:
             x_values.append(subsystem[0])
             y_values.append(subsystem[1])
@@ -1113,7 +1123,8 @@ class SubsystemState(SystemState):
         rods = []
         for rod_ in self:
             if rod_.is_in_circle(self.center, self.radius):
-                rods.append(methods.compress(rod_))
+                rods.append(methods.compress(rod_,
+                                level=methods.settings.low_comp_level))
         self._rods = queue.Queue(rods)
         self.reset()
 
@@ -1146,7 +1157,8 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
     while finished < num_processes:
         finished += 1
         [index, state] = states_queue.get()
-        states[index] = methods.compress(state, settings.medium_comp_level)
+        states[index] = methods.compress(state,
+                                level=methods.settings.low_comp_level)
         if len(processes_left):
             new_process = processes_left.pop(0)
             new_process.start()
