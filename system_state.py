@@ -922,7 +922,7 @@ class SystemState(object):
                 #cos += math.cos(2*angle)
             #sin /= self.area
             #cos /= self.area
-            cos /= counter
+            cos /= float(counter)
             kappa = 1#self.average_kappa
             self._relative_g2 = cos #kappa*math.sqrt(sin**2+cos**2)
         return self._relative_g2
@@ -949,7 +949,7 @@ class SystemState(object):
                 #cos += math.cos(4*angle)
             #sin /= self.area
             #cos /= self.area
-            cos /= counter
+            cos /= float(counter)
             kappa = 1#self.average_kappa
             self._relative_g4 = cos #kappa*math.sqrt(sin**2+cos**2)
         return self._relative_g4
