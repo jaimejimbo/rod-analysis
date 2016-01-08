@@ -7,11 +7,13 @@ Main script.
 """
 Settings
 """
+#0-9 or None to disable
 low_comp_level = None
 medium_comp_level = None
-strong_comp_level = 0       #0-9 or None to disable
-cpus = None     #None uses all cpus
-
+strong_comp_level = 0 
+#None uses all cpus      
+cpus = None     
+# 1 or True, 0 or False
 run_17 = 1
 run_5 = 1
 run_all = 1
@@ -20,10 +22,18 @@ clusters = 1
 avg_temp = 1
 order_param_exp = 1
 lost_percentage = 1
-
+run_imagej = 0
+# variables
 coef = 5
 divisions = 30
-run_imagej = False
+
+
+
+
+
+
+
+
 
 
 """
@@ -86,7 +96,7 @@ if True:
             print "Rods lost: "+str(percentage)+"%"+" Standard deviation: "+str(std_dev)
     try:
         names = None
-        experiment_17 = methods.compress(experiment_17, level=settings.strong_comp_level)
+        experiment_17 = None #methods.compress(experiment_17, level=settings.strong_comp_level)
         rod_groups_17 = None
         gc.collect()
     except NameError:
@@ -114,7 +124,7 @@ if True:
             print "Rods lost: "+str(percentage)+"%"+" Standard deviation: "+str(std_dev)
     try:
         names = None
-        experiment_5 = methods.compress(experiment_5, level=settings.strong_comp_level)
+        experiment_5 = None #methods.compress(experiment_5, level=settings.strong_comp_level)
         rod_groups_5 = None
         gc.collect()
     except NameError:
@@ -142,7 +152,7 @@ if True:
             print "Rods lost: "+str(percentage)+"%"+" Standard deviation: "+str(std_dev)
     try:
         names = None
-        experiment_all = methods.compress(experiment_all, level=settings.strong_comp_level)
+        experiment_all = None #methods.compress(experiment_all, level=settings.strong_comp_level)
         rod_groups_all = None
         gc.collect()
     except NameError:
