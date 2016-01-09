@@ -14,14 +14,14 @@ strong_comp_level = 0
 #None uses all cpus      
 cpus = 12
 # 1 or True, 0 or False
-run_17 = 0
+run_17 = 1
 run_5 = 1
 run_all = 1
 create_videos = 1
-clusters = 1
-avg_temp = 1
-order_param_exp = 1
-lost_percentage = 1
+clusters = 0
+avg_temp = 0
+order_param_exp = 0
+lost_percentage = 0
 run_imagej = 0
 # variables
 coef = 2

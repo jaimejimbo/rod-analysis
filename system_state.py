@@ -527,7 +527,7 @@ class SystemState(object):
             Computes correlation_g2 and correlation_g4 values
         """
         num = self.number_of_rods
-        if not num in [0,1] or not self.area:
+        if num in [0,1] or not self.area:
             self._correlation_g2 = 0
             self._correlation_g4 = 0
             return
