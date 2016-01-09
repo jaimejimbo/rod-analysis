@@ -1696,7 +1696,11 @@ class Experiment(object):
         for index in range(len(areas)):
             area = areas[index]
             total_area = total_areas[index]
-            proportion = float(area)/total_area
+            try:
+                proportion = float(area)/total_area
+            except ZeroDivisionError:
+                print "Error in cluster areas computing."
+                continue
             norm_areas.append(proportion)
         self._compute_times(number_of_bursts=number_of_bursts)
         times = self._times
