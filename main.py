@@ -115,8 +115,9 @@ if True:
             experiment_5.create_videos(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
                                      number_of_bursts=1)
         if clusters:
-            experiment_5.plot_cluster_areas(number_of_bursts=5, max_distance=100,
-                    max_angle_diff=10, min_size=20)
+            #experiment_5.plot_cluster_areas(number_of_bursts=5, max_distance=100,
+            #        max_angle_diff=10, min_size=20)
+            pass
         if avg_temp:
             experiment_5.plot_average_temperature(100, 10)
         if lost_percentage:
