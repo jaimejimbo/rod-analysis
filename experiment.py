@@ -1306,6 +1306,7 @@ class Experiment(object):
         """
             Creates a video of cluster length histogram.
         """
+        print "Creating cluster histogram animation..."
         kappa = self._states[0].average_kappa
         name = "cluster_hist_K"+str(int(kappa))+".mp4"
         processes = []
@@ -1352,7 +1353,7 @@ class Experiment(object):
             plt.cla()
             plt.clf()
             array = arrays.pop(0)
-            boundaries = [0+time*10 for time in range(40)]
+            boundaries = [0+time*1 for time in range(400)]
             plt.xlim((0, 200))
             plt.ylim((0,0.3))
             plt.hist(array, bins=boundaries, normed=True)

@@ -29,7 +29,7 @@
     · use states ids instead of indices                 (DONE)
 - use n>3,4 for clusters                                (DONE)
 - normalized histogram of number of rods in clusters.   (DONE)
-- density x order param                                 (won't fix)
+- density x order param                                 (not started)
     -> Needs density computation (too slow)             (---)
 - clusters area                                         (DONE)
 - clusters                                              (DONE)
@@ -47,14 +47,14 @@ Segregation
     · Make a vector field.                              (not started)
 - Order param(cluster area)                             (DONE)
 - Normalized order param(cluster area)                  (DONE)
-- Exponent                                              (in progress)
+- Exponent                                              (DONE)
 
  
 bugs:
 - Temperatures seem to be not computed correctly.       (DONE?)
 - g2, g4 not computed correctly.                        (DONE)
 - limits not computed correctly.                        (DONE)
-- High RAM use                                          (won't fix)
+- High RAM use                                          (DONE)
 - Clusters not computed correctly                       (DONE)
 - Use time correctly for clusters graph!                (DONE)
 - Decompressing issues                                  (DONE)

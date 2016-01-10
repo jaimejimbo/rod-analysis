@@ -15,13 +15,13 @@ strong_comp_level = 0
 cpus = 12
 # 1 or True, 0 or False
 run_17 = 1
-run_5 = 1
+run_5 = 0
 run_all = 0
-create_videos = 1
+create_videos = 0
 clusters = 1
-avg_temp = 1
-order_param_exp = 1
-lost_percentage = 1
+avg_temp = 0
+order_param_exp = 0
+lost_percentage = 0
 run_imagej = 0
 # variables
 coef = 3
@@ -85,6 +85,7 @@ if True:
         if clusters:
             experiment_17.plot_cluster_areas(number_of_bursts=3, max_distance=100,
                     max_angle_diff=10, min_size=10)
+            experiment_17.create_cluster_histogram_video(max_distance=100, max_angle_diff=10, fps=15)
         if avg_temp:
             experiment_17.plot_average_temperature(100, 10)
         if order_param_exp:
