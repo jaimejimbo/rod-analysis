@@ -125,7 +125,7 @@ class Experiment(object):
         states = []
         for state in self:
             state.coef = value
-            states.append(methods.compress(state, 
+            states.append(methods.compress(state,
                     level=methods.settings.medium_comp_level))
         self._states = states
 
@@ -708,7 +708,7 @@ class Experiment(object):
                     new_process.start()
                 if finished >= num_processes:
                     break
-            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+            print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
         for process in processes:
             if process.is_alive():
                 process.terminate()
@@ -1029,8 +1029,8 @@ class Experiment(object):
                     pass#string += "\r"
                 else:
                     string += "\n"
-                print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
-                print(string)
+                print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+                print string
                 #sys.stdout.write(string)
                 #sys.stdout.flush()
                 output = output_queue.get()
@@ -1049,7 +1049,7 @@ class Experiment(object):
             for process in processes:
                 if process.is_alive():
                     process.terminate()
-        
+
 
     def divide_system_in_circles_process(self, divisions, index, output_queue):
         """
@@ -1071,7 +1071,8 @@ class Experiment(object):
         function_name = 'plottable_density_matrix_queue'
         kappas = self.kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
-        z_min, z_max = self._generic_scatter_animator(name, function_name,
+        units = "Density [particles/pixel^2]"
+        z_min, z_max = self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
         self._min_density = z_min
         self._max_density = z_max
@@ -1098,7 +1099,8 @@ class Experiment(object):
         function_name = 'correlation_g2_plot_matrix_queue'
         kappas = self.kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
-        self._generic_scatter_animator(name, function_name,
+        units = "g2 [S.U.]"
+        self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
 
     def create_relative_g4_video(self, divisions, folder, fps,
@@ -1112,7 +1114,8 @@ class Experiment(object):
         function_name = 'correlation_g4_plot_matrix_queue'
         kappas = self.kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
-        self._generic_scatter_animator(name, function_name,
+        units = "g4 [S.U.]"
+        self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
 
     def create_average_angle_video(self, divisions, folder, fps,
@@ -1126,11 +1129,12 @@ class Experiment(object):
         function_name = 'plottable_average_angle_matrix_queue'
         kappas = methods.decompress(self._states[0]).kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
-        self._generic_scatter_animator(name, function_name,
+        units = "Average angle [grad]"
+        self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
 
 
-    def _generic_scatter_animator(self, name, function_name,
+    def _generic_scatter_animator(self, name, function_name, units,
                                     divisions, fps=15, number_of_bursts=10):
         """
         Generic animator
@@ -1186,13 +1190,13 @@ class Experiment(object):
             Wrapper.
             """
             self._animate_scatter(x_val, y_val, z_vals_avg,
-                                divisions, name, z_max, z_min)
+                                divisions, name, z_max, z_min, units)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer=self._writer, fps=fps)
         return z_min, z_max
 
     def _animate_scatter(self, x_val, y_val, z_vals,
-                                divisions, name, z_max, z_min):
+                                divisions, name, z_max, z_min, units):
         """
         Specific animator.
         """
@@ -1214,7 +1218,10 @@ class Experiment(object):
         plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
                     vmin=z_min, vmax=z_max)
         plt.gca().invert_yaxis()
-        plt.colorbar()
+        cb = plt.colorbar()
+        plt.xlabel("x [pixels]")
+        plt.ylabel("y [pixels]")
+        cb.set_label(units)
 
     def _get_image_id(self, index):
         """
@@ -1355,9 +1362,11 @@ class Experiment(object):
             array = arrays.pop(0)
             boundaries = [0+time*1 for time in range(400)]
             plt.xlim((0, 200))
-            plt.ylim((0,0.3))
+            plt.ylim((0, 0.3))
             plt.hist(array, bins=boundaries, normed=True)
             plt.suptitle("Cluster length histogram")
+            plt.xlabel("Number of rods in cluster")
+            plt.ylabel("Number of clusters (normalized)")
         except:
             pass
 
@@ -1403,7 +1412,7 @@ class Experiment(object):
             Wrapper
         """
         pass
-        
+
 
     def average_speeds_vectors(self, divisions, max_distance, max_angle_diff):
         """
@@ -1445,7 +1454,7 @@ class Experiment(object):
             state = methods.decompress(self._states[index],
                                 level=methods.settings.medium_comp_level)
             vector_matrix = vector_matrices[index]
-            
+
 
     def create_temperature_video(self, divisions, folder, fps,
                             max_distance, max_angle_diff,
@@ -1536,7 +1545,10 @@ class Experiment(object):
         plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
                     vmax=z_max, vmin=z_min)
         plt.gca().invert_yaxis()
-        plt.colorbar()
+        cb = plt.colorbar()
+        plt.xlabel("x [pixels]")
+        plt.ylabel("y [pixels]")
+        cb.set_label("Temperature [pixels^2/seg^2]")
 
     def _average_cluster_areas(self, z_vals, number_of_bursts=1,
                                min_size=3):
@@ -1564,7 +1576,7 @@ class Experiment(object):
                 break
             for group in groups:
                 for dummy_time in group:
-                    index += 1  
+                    index += 1
                     z_val = z_vals.pop(0)
                     _z_vals.append(z_val)
             try:
@@ -1614,7 +1626,7 @@ class Experiment(object):
             if process.is_alive():
                 process.terminate()
         return areas
-        
+
 
     def _get_cluster_areas_process(self, index, max_distance,
                     max_angle_diff, output_queue, min_size):
@@ -1674,12 +1686,12 @@ class Experiment(object):
         cluster_areas.pop(0)
         log_areas = numpy.array([math.log(area) for area in cluster_areas])
         log_times = numpy.array([math.log(time) for time in times])
-        x_0 = numpy.array([0,0,0,0])
+        x_0 = numpy.array([0, 0, 0, 0])
         function = lambda value, coef1, coef2: coef1 + coef2*value
         popt, pcov = optimization.curve_fit(function, log_times, log_areas)
         std_dev = numpy.sqrt(numpy.diag(pcov))
         return popt[0], popt[1], std_dev
-        
+
 
     def plot_cluster_areas(self, number_of_bursts=1, max_distance=None,
                     max_angle_diff=None, min_size=10):
@@ -1706,7 +1718,7 @@ class Experiment(object):
         self._compute_times(number_of_bursts=number_of_bursts)
         times = self._times
         fig = plt.figure()
-        plt.ylim((0,1))
+        plt.ylim((0, 1))
         plt.xlabel("time[seconds]")
         plt.ylabel("cluster area proportion")
         plt.grid()
@@ -1737,7 +1749,7 @@ class Experiment(object):
                 time = methods.time_difference(self._dates, id_0, id_1)
             time += previous_time
             previous_time = time
-            times.append(time) 
+            times.append(time)
         self._times = times
 
     @property
@@ -1750,7 +1762,7 @@ class Experiment(object):
             group = []
             output_queue = mp.Queue()
             processes = []
-            initial_id  = self._get_image_id(0)
+            initial_id = self._get_image_id(0)
             for index in range(len(self._state_numbers)-1):
                 final_id = self._get_image_id(index+1)
                 date1 = self._dates[initial_id]
@@ -1794,7 +1806,7 @@ class Experiment(object):
             Average temperature over time.
         """
         print "Computing average temperature..."
-        
+
         self._compute_speeds(max_distance, max_angle_diff,
                         5, None)
         indices = []
@@ -1831,6 +1843,8 @@ class Experiment(object):
                                 level=methods.settings.medium_comp_level)
         kappa = int(state.average_kappa)
         name += str(kappa) + ".png"
+        plt.xlabel("time [seconds]")
+        plt.ylabel("average temperature [pixels^2 / s^2]")
         plt.savefig(name)
 
     def average_speeds(self, index, output_queue):
@@ -1858,14 +1872,14 @@ class Experiment(object):
             number = state.number_of_rods
             number_of_rods.append(number)
         supposed_total_number = max(number_of_rods)
-        loses = [float(supposed_total_number-number)/supposed_total_number 
+        loses = [float(supposed_total_number-number)/supposed_total_number
                  for number in number_of_rods]
         loses_2 = [lose**2 for lose in loses]
         loses_average = float(sum(loses))/len(loses)
         loses_2_average = float(sum(loses_2))/len(loses_2)
         std_dev = math.sqrt(loses_2_average-loses_average**2)
         return loses_average, std_dev
-        
+
 
 def compute_local_average_speeds_process(index, output_queue, local_speeds):
     """

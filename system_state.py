@@ -486,7 +486,7 @@ class SystemState(object):
         """
         x_val, y_val, z_val = self.plottable_density_matrix(divisions=divisions)
         output_queue.put([index, x_val, y_val, z_val])
-        
+
 
     def _create_subgroups_matrix(self, divisions):
         """
@@ -602,7 +602,7 @@ class SystemState(object):
         """
         x_val, y_val, z_val = self.correlation_g2_plot_matrix(divisions)
         output_queue.put([index, x_val, y_val, z_val])
-        
+
 
     def correlation_g4_plot_matrix(self, divisions):
         """
@@ -827,7 +827,7 @@ class SystemState(object):
                             max_angle_diff=None, min_size=3):
         """
             Creates an array of lengths of clusters:
-        [1,4,4,5,2] means that there are 1 cluster of lenght 1, 
+        [1,4,4,5,2] means that there are 1 cluster of lenght 1,
         2 of length 4...
         """
         lengths = []
@@ -1099,7 +1099,8 @@ class SubsystemState(SystemState):
         """
         density = 0
         for rod_ in self:
-            density += rod_.kappa
+            #density += rod_.kappa
+            density += 1
         if not density or not self.area:
             self._density = 0
         else:
