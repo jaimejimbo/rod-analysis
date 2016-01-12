@@ -1731,8 +1731,8 @@ class Experiment(object):
         try:
             plt.plot(log_times, log_norm_areas)
         except ValueError:
-            print(len(log_times), len(log_areas))
-            print(log(times), log(areas))
+            print(len(log_times), len(log_norm_areas))
+            print(log_times, log_norm_areas)
         file_name = "cluster_areas_K" + str(self.kappas) + ".png"
         plt.savefig(file_name)
 
