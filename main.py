@@ -14,9 +14,9 @@ strong_comp_level = 0
 #None uses all cpus      
 cpus = 12
 # 1 or True, 0 or False
-run_17 = 1
-run_5 = 1
-run_all = 0
+run_12 = 1
+run_4 = 1
+run_all = 1
 create_videos = 1
 clusters = 1
 avg_temp = 1
@@ -69,74 +69,74 @@ if True:
     else:
         dates = methods.import_image_dates()
 
-    if run_17:
-        print "\t\t\tK17\t\t\t"
-        names, rod_groups_17 = system_state.create_rods(kappas=17.5,
+    if run_12:
+        print "\t\t\tK12\t\t\t"
+        names, rod_groups_12 = system_state.create_rods(kappas=17.5, real_kappas=12,
                                                 allowed_kappa_error=1.5)
-        experiment_17 = experiment.Experiment(system_states_name_list=names,
+        experiment_12 = experiment.Experiment(system_states_name_list=names, kappas=12,
                                             system_states_list=rod_groups_17,
                                             dates=dates, diff_t=5/3.0)
-        experiment_17.set_coef(coef)
+        experiment_12.set_coef(coef)
         
         if create_videos:
-            experiment_17.divide_systems_in_circles(divisions=divisions)
-            experiment_17.create_videos(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
+            experiment_12.divide_systems_in_circles(divisions=divisions)
+            experiment_12.create_videos(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
                                      number_of_bursts=1)
         if clusters:
-            experiment_17.plot_cluster_areas(number_of_bursts=3, max_distance=100,
+            experiment_12.plot_cluster_areas(number_of_bursts=3, max_distance=100,
                     max_angle_diff=10, min_size=10)
-            experiment_17.create_cluster_histogram_video(max_distance=100, max_angle_diff=10, fps=15)
+            experiment_12.create_cluster_histogram_video(max_distance=100, max_angle_diff=10, fps=15)
         if avg_temp:
-            experiment_17.plot_average_temperature(100, 10)
+            experiment_12.plot_average_temperature(100, 10)
         if order_param_exp:
-            indep, param, std_dev = experiment_17.get_order_evolution_coeficient(number_of_bursts=3, max_distance=50,
+            indep, param, std_dev = experiment_12.get_order_evolution_coeficient(number_of_bursts=3, max_distance=50,
                     max_angle_diff=10, min_size=10)
             print "Order parameter: "+str(param)+" Standard deviation: "+str(std_dev)
         if lost_percentage:
-            percentage, std_dev = experiment_17.lost_rods_percentage
+            percentage, std_dev = experiment_12.lost_rods_percentage
             print "Rods lost: "+str(percentage)+"%"+" Standard deviation: "+str(std_dev)
     try:
         names = None
-        experiment_17 = None #methods.compress(experiment_17, level=settings.strong_comp_level)
-        rod_groups_17 = None
+        experiment_12 = None #methods.compress(experiment_12, level=settings.strong_comp_level)
+        rod_groups_12 = None
         gc.collect()
     except NameError:
         pass
     print "\n"
-    if run_5:
-        print "\t\t\tK5\t\t\t"
-        names, rod_groups_5 = system_state.create_rods(kappas=5.5,
+    if run_4:
+        print "\t\t\tK4\t\t\t"
+        names, rod_groups_4 = system_state.create_rods(kappas=5.5, real_kappas=4,
                                                 allowed_kappa_error=.5)
-        experiment_5 = experiment.Experiment(system_states_name_list=names,
+        experiment_4 = experiment.Experiment(system_states_name_list=names, kappas=4,
                                             system_states_list=rod_groups_5,
                                             dates=dates, diff_t=5/3.0)
-        experiment_5.set_coef(coef)
+        experiment_4.set_coef(coef)
         if create_videos:
-            experiment_5.divide_systems_in_circles(divisions=divisions)
-            experiment_5.create_videos(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
+            experiment_4.divide_systems_in_circles(divisions=divisions)
+            experiment_4.create_videos(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
                                      number_of_bursts=1)
         if clusters:
-            #experiment_5.plot_cluster_areas(number_of_bursts=5, max_distance=100,
+            #experiment_4.plot_cluster_areas(number_of_bursts=5, max_distance=100,
             #        max_angle_diff=10, min_size=20)
             pass
         if avg_temp:
-            experiment_5.plot_average_temperature(100, 10)
+            experiment_4.plot_average_temperature(100, 10)
         if lost_percentage:
-            percentage, std_devar = experiment_5.lost_rods_percentage
+            percentage, std_devar = experiment_4.lost_rods_percentage
             print "Rods lost: "+str(percentage)+"%"+" Standard deviation: "+str(std_dev)
     try:
         names = None
-        experiment_5 = None #methods.compress(experiment_5, level=settings.strong_comp_level)
-        rod_groups_5 = None
+        experiment_4 = None #methods.compress(experiment_4, level=settings.strong_comp_level)
+        rod_groups_4 = None
         gc.collect()
     except NameError:
         pass
     print "\n"
     if run_all:
         print "\t\t\tK all\t\t\t"
-        names, rod_groups_all = system_state.create_rods(kappas=10,
+        names, rod_groups_all = system_state.create_rods(kappas=10, real_kappas=1,
                                                 allowed_kappa_error=10)
-        experiment_all = experiment.Experiment(system_states_name_list=names,
+        experiment_all = experiment.Experiment(system_states_name_list=names, kappas=1,
                                             system_states_list=rod_groups_all,
                                             dates=dates, diff_t=5/3.0)
         experiment_all.set_coef(coef)

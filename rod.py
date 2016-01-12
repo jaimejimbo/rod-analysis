@@ -33,7 +33,7 @@ class Rod(object):
         self._hash = 0
         self._direction_matrix = matrix.zeros(2, 2)
         self._kappa = float(feret)/float(minferet)
-        #self._kappa = float(major)/float(minor)
+        self._real_kappa = None
 
     @property
     def area(self):
@@ -143,9 +143,23 @@ class Rod(object):
     @property
     def kappa(self):
         """
-        L/D of rod.
+        Computed L/D of rod.
         """
         return self._kappa
+
+    @property
+    def real_kappa(self):
+        """
+        Real L/D of rod. 
+        """
+        return self._real_kappa
+
+    @real_kappa.setter
+    def real_kappa(self, value):
+        """
+        L/D of rod.
+        """
+        self._real_kappa = value
 
     @property
     def angle(self):

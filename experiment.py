@@ -18,7 +18,7 @@ class Experiment(object):
     """
         Has a list of system states, one for each t.
     """
-    def __init__(self, system_states_name_list=None,
+    def __init__(self, system_states_name_list=None, kappas=None,
                 system_states_list=None, diff_t=1, dates=None):
         """
             Creation of experiment object.
@@ -89,7 +89,7 @@ class Experiment(object):
         self._indices = None
         self._done = False
         self._total_cluster_areas = None
-        self._kappas = None
+        self._kappas = kappas
         #self._inversed = False
         _writer = animation.writers['ffmpeg']
         writer = _writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
@@ -1184,7 +1184,7 @@ class Experiment(object):
             z_min = min(z_mins)
         else:
             z_max = 1
-            z_min = 0
+            z_min = -1
         def animate(dummy_frame):
             """
             Wrapper.
@@ -1485,7 +1485,7 @@ class Experiment(object):
                 break
             for group in groups:
                 for dummy_time in range(len(group)):
-                    z_val = z_vals.pop(0)
+                    z_val = z_vals.pop(0)*self.kappas
                     _z_vals.append(z_val)
             try:
                 average = methods.array_average(_z_vals)
@@ -1717,16 +1717,22 @@ class Experiment(object):
             norm_areas.append(proportion)
         self._compute_times(number_of_bursts=number_of_bursts)
         times = self._times
+        log_times, log_norm_areas = [], []
+        for index in range(len(times)):
+            if index == 0:
+                continue
+            log_times.append(math.log(times[index]))
+            log_norm_areas.append(math.log(norm_areas[index]))
         fig = plt.figure()
         plt.ylim((0, 1))
-        plt.xlabel("time[seconds]")
-        plt.ylabel("cluster area proportion")
+        plt.xlabel("log(time)")
+        plt.ylabel("log(cluster area proportion)")
         plt.grid()
         try:
-            plt.plot(times, norm_areas)
+            plt.plot(log_times, log_norm_areas)
         except ValueError:
-            print(len(times), len(areas))
-            print(times, areas)
+            print(len(log_times), len(log_areas))
+            print(log(times), log(areas))
         file_name = "cluster_areas_K" + str(self.kappas) + ".png"
         plt.savefig(file_name)
 

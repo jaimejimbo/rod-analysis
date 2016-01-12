@@ -12,7 +12,7 @@ class SystemState(object):
         Group of rods in a moment.
     Each image has to be translated into a RodGroup (by this class?)
     """
-    def __init__(self, kappas=10, allowed_kappa_error=.5,
+    def __init__(self, kappas=10, real_kappas=10, allowed_kappa_error=.5,
             radius_correction_ratio=0,
             id_string="", zone_coords=None, rods=None):
         """
@@ -23,6 +23,7 @@ class SystemState(object):
         self._rods = queue.Queue(rods)
         self._is_subsystem = False
         self._kappas = kappas
+        self._real_kappa = None
         self._allowed_kappa_error = allowed_kappa_error
         self._radius_correction_ratio = radius_correction_ratio
         self._id_string = id_string
@@ -52,6 +53,7 @@ class SystemState(object):
         self._divisions = None
         self._coef = 1
         self._fixed = True
+        self._real_kappas = real_kappas
         try:
             self._radius = zone_coords[2]
             self._center_x = zone_coords[0]
@@ -64,6 +66,13 @@ class SystemState(object):
             self._center_x = None
             self._center_y = None
             self._radius = None
+
+    def set_kappa(self, value):
+        """
+            Changes kappa of all rods in system.
+        """
+        for rod_ in self:
+            rod_.kappa = value
 
     @property
     def divisions(self):
@@ -182,7 +191,7 @@ class SystemState(object):
         """
         if not len(self._zone_coords):
             _zone_coords = None
-        clone = SystemState(kappas=self._kappas,
+        clone = SystemState(kappas=self._kappas, real_kappas = self._real_kappas,
                         allowed_kappa_error=self._allowed_kappa_error,
                         radius_correction_ratio=self._radius_correction_ratio,
                         id_string=self.id_string, zone_coords=_zone_coords,
@@ -432,7 +441,7 @@ class SystemState(object):
                                                      self.center)
                 #rods = rods_matrix[index_y][index_x]
                 subsystem = SubsystemState(center, rad, self.zone_coords,
-                                           self._rods, self._kappas,
+                                           self._rods, self._kappas, self._real_kappas,
                                            self._allowed_kappa_error)
                 if distance < self._radius:
                     subsystem.check_rods()
@@ -536,8 +545,8 @@ class SystemState(object):
             for rod2 in self:
                 if rod1 != rod2:
                     angle = math.radians(rod1.angle_between_rods(rod2))
-                    cos2_av += abs(math.cos(angle))/(num*(num-1))
-                    cos4_av += abs(math.cos(2*angle))/(num*(num-1))
+                    cos2_av += math.cos(2*angle)/(num*(num-1))
+                    cos4_av += math.cos(4*angle)/(num*(num-1))
         self._correlation_g2 = cos2_av
         self._correlation_g4 = cos4_av
 
@@ -1049,13 +1058,14 @@ class SubsystemState(SystemState):
     have something in common.
     """
 
-    def __init__(self, center, rad, zone_coords, rods, kappas, allowed_kappa_error):
+    def __init__(self, center, rad, zone_coords, rods, kappas, real_kappas, allowed_kappa_error):
         """
             Initialization
         """
         self._subsystem_coords = (center[0], center[1], rad)
         SystemState.__init__(self, rods=rods, zone_coords=self._subsystem_coords,
-                            kappas=kappas, allowed_kappa_error=allowed_kappa_error)
+                            kappas=kappas, real_kappas=real_kappas,
+                            allowed_kappa_error=allowed_kappa_error)
         self._is_subsystem = True
         self._center = center
         self._radius = rad
@@ -1130,7 +1140,7 @@ class SubsystemState(SystemState):
 
 
 
-def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
+def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
                 radius_correction_ratio=0.1):
     """
     Create one rod for each rod_data and for each file
@@ -1146,7 +1156,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
     states_queue = mp.Queue()
     for index in range(num_of_files):
         process = mp.Process(target=create_rods_process,
-                            args=(kappas, allowed_kappa_error,
+                            args=(kappas, real_kappas, allowed_kappa_error,
                             radius_correction_ratio, names,
                             index, states_queue))
         processes.append(process)
@@ -1169,7 +1179,7 @@ def create_rods(folder="./", kappas=10, allowed_kappa_error=.3,
 
 
 
-def create_rods_process(kappas, allowed_kappa_error,
+def create_rods_process(kappas, real_kappas, allowed_kappa_error,
                         radius_correction_ratio, names,
                         index, states_queue):
     """
@@ -1177,8 +1187,10 @@ def create_rods_process(kappas, allowed_kappa_error,
     """
     name = names[index]
     file_ = open(name, 'r')
-    state = SystemState(kappas, allowed_kappa_error,
-               radius_correction_ratio, name)
+    state = SystemState(kappas=kappas, real_kappas=real_kappas, 
+                        allowed_kappa_error=allowed_kappa_error,
+                        radius_correction_ratio=radius_correction_ratio,
+                        id_string=name)
     data = methods.import_data(file_)
     for dataline in data:
         try:

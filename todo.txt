@@ -61,3 +61,10 @@ bugs:
 
 
 
+usar kappa real                                         (WIP)
+multiplicar TxK                                         (WIP)
+<cos(n*diff(theta))> (-1 a 1)                           (WIP)
+poner area de clusters en log                           
+(pintar recta encima) para t y area.                    (WIP)
+mirar error reg lineal para 3 rafagas y 10 rafagas.     (WIP)
+
