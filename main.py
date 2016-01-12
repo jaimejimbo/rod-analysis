@@ -74,7 +74,7 @@ if True:
         names, rod_groups_12 = system_state.create_rods(kappas=17.5, real_kappas=12,
                                                 allowed_kappa_error=1.5)
         experiment_12 = experiment.Experiment(system_states_name_list=names, kappas=12,
-                                            system_states_list=rod_groups_17,
+                                            system_states_list=rod_groups_12,
                                             dates=dates, diff_t=5/3.0)
         experiment_12.set_coef(coef)
         
@@ -108,7 +108,7 @@ if True:
         names, rod_groups_4 = system_state.create_rods(kappas=5.5, real_kappas=4,
                                                 allowed_kappa_error=.5)
         experiment_4 = experiment.Experiment(system_states_name_list=names, kappas=4,
-                                            system_states_list=rod_groups_5,
+                                            system_states_list=rod_groups_4,
                                             dates=dates, diff_t=5/3.0)
         experiment_4.set_coef(coef)
         if create_videos:
