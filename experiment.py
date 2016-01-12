@@ -4,6 +4,7 @@
 import re, methods, math, copy, gc, sys, os
 import multiprocessing as mp
 from matplotlib import animation
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy
 import numpy as np
@@ -90,6 +91,8 @@ class Experiment(object):
         self._done = False
         self._total_cluster_areas = None
         self._kappas = kappas
+        self._popt = None
+        self._std_dev = None
         #self._inversed = False
         _writer = animation.writers['ffmpeg']
         writer = _writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
@@ -156,6 +159,8 @@ class Experiment(object):
         self._cluster_areas = []
         self._divisions = None
         self._min_density = None
+        self._popt = None
+        self._std_dev = None
         self._max_density = None
         self._indices = None
         self._total_cluster_areas = None
@@ -1071,7 +1076,7 @@ class Experiment(object):
         function_name = 'plottable_density_matrix_queue'
         kappas = self.kappas
         name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
-        units = "Density [particles/pixel^2]"
+        units = "Normalized occupied area [S.U.]"
         z_min, z_max = self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
         self._min_density = z_min
@@ -1173,8 +1178,15 @@ class Experiment(object):
                 if process.is_alive():
                     process.terminate()
         frames = len(z_vals_avg)
-        match = re.match(r'.*?g[2|4].*', function_name)
-        if not match:
+        #match1 = re.match(r'.*?density.*', function_name)
+        match2 = re.match(r'.*?g[2|4].*', function_name)
+        #if match1:
+        #    z_max = 1
+        #    z_min = 0
+        if match2:
+            z_max = 1
+            z_min = -1
+        else:
             z_maxs = []
             z_mins = []
             for z_val in z_vals_avg:
@@ -1182,9 +1194,6 @@ class Experiment(object):
                 z_mins.append(min(z_val))
             z_max = max(z_maxs)
             z_min = min(z_mins)
-        else:
-            z_max = 1
-            z_min = -1
         def animate(dummy_frame):
             """
             Wrapper.
@@ -1208,13 +1217,13 @@ class Experiment(object):
         plt.clf()
         rad = 2000.0/divisions
         size = (rad/8)**2
-        x_min = min(x_val)*.9
-        x_max = max(x_val)*1.1
-        y_min = min(y_val)*.7
-        y_max = max(y_val)*1.1
+        x_min = min(x_val)
+        x_max = max(x_val)
+        y_min = min(y_val)
+        y_max = max(y_val)
         plt.xlim((x_min, x_max))
         plt.ylim((y_min, y_max))
-        plt.suptitle(name)
+        #plt.suptitle(name)
         plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
                     vmin=z_min, vmax=z_max)
         plt.gca().invert_yaxis()
@@ -1259,12 +1268,12 @@ class Experiment(object):
             processes[index].start()
         for index in range(4):
             processes[index].join()"""
-        self.create_density_video(divisions, folder, fps, number_of_bursts)
+        #self.create_density_video(divisions, folder, fps, number_of_bursts)
         self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
         self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
-        self.create_temperature_video(divisions, folder, fps, max_distance,
-                               max_angle_diff, limit, amount_of_rods,
-                               number_of_bursts)
+        #self.create_temperature_video(divisions, folder, fps, max_distance,
+        #                       max_angle_diff, limit, amount_of_rods,
+        #                       number_of_bursts)
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,
@@ -1314,7 +1323,7 @@ class Experiment(object):
             Creates a video of cluster length histogram.
         """
         print "Creating cluster histogram animation..."
-        kappa = self._states[0].average_kappa
+        kappa = self.kappas
         name = "cluster_hist_K"+str(int(kappa))+".mp4"
         processes = []
         output_queue = mp.Queue()
@@ -1393,7 +1402,7 @@ class Experiment(object):
                                             divisions, max_distance,
                                             max_angle_diff)
         fig = plt.figure()
-        kappa = self._states[0].average_kappa
+        kappa = self.kappas
         name = str(folder) + "speeds_vectors_K" + str(kappa)
         bursts_groups = copy.deepcopy(self.bursts_groups)
         end = False
@@ -1485,7 +1494,8 @@ class Experiment(object):
                 break
             for group in groups:
                 for dummy_time in range(len(group)):
-                    z_val = z_vals.pop(0)*self.kappas
+                    z_val = z_vals.pop(0)
+                    z_val *= self.kappas
                     _z_vals.append(z_val)
             try:
                 average = methods.array_average(_z_vals)
@@ -1535,15 +1545,15 @@ class Experiment(object):
         plt.clf()
         rad = 2000.0/divisions
         size = (rad/8)**2
-        x_min = min(x_val)*.9
-        x_max = max(x_val)*1.1
-        y_min = min(y_val)*.7
-        y_max = max(y_val)*1.1
+        x_min = min(x_val)
+        x_max = max(x_val)
+        y_min = min(y_val)
+        y_max = max(y_val)
         plt.xlim((x_min, x_max))
         plt.ylim((y_min, y_max))
         plt.suptitle(name)
         plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
-                    vmax=z_max, vmin=z_min)
+                    vmax=z_max, vmin=z_min) #ValueError: Color array must be two-dimensional
         plt.gca().invert_yaxis()
         cb = plt.colorbar()
         plt.xlabel("x [pixels]")
@@ -1674,23 +1684,37 @@ class Experiment(object):
         """
             Returns coeficient of order param evolution.
         """
-        print "Computing order evolution parameter..."
-        cluster_areas = self.cluster_areas(number_of_bursts=number_of_bursts,
-                                   max_distance=max_distance,
-                                   max_angle_diff=max_angle_diff,
-                                   min_size=min_size)
-        indices = self._indices
-        self._compute_times(number_of_bursts)
-        times = self._times
-        times.pop(0)
-        cluster_areas.pop(0)
-        log_areas = numpy.array([math.log(area) for area in cluster_areas])
-        log_times = numpy.array([math.log(time) for time in times])
-        x_0 = numpy.array([0, 0, 0, 0])
-        function = lambda value, coef1, coef2: coef1 + coef2*value
-        popt, pcov = optimization.curve_fit(function, log_times, log_areas)
-        std_dev = numpy.sqrt(numpy.diag(pcov))
-        return popt[0], popt[1], std_dev
+        if self._popt is None or self._std_dev is None:
+            print "Computing order evolution parameter..."
+            cluster_areas = self.cluster_areas(number_of_bursts=number_of_bursts,
+                                       max_distance=max_distance,
+                                       max_angle_diff=max_angle_diff,
+                                       min_size=min_size)
+            indices = self._indices
+            self._compute_times(number_of_bursts)
+            times = self._times
+            times.pop(0)
+            cluster_areas.pop(0)
+            log_areas = []
+            log_times = []
+            for index in range(len(cluster_areas)):
+                try:
+                    log_areas.append(math.log(cluster_areas[index]))
+                except ValueError:
+                    continue
+                try:
+                    log_times.append(math.log(times[index]))
+                except ValueError:
+                    log_times.pop()
+            log_areas = numpy.array(log_areas)
+            log_times = numpy.array(log_times)
+            x_0 = numpy.array([0, 0, 0, 0])
+            function = lambda value, coef1, coef2: coef1 + coef2*value
+            popt, pcov = optimization.curve_fit(function, log_times, log_areas)
+            std_dev = numpy.sqrt(numpy.diag(pcov))
+            self._popt = popt
+            self._std_dev = std_dev
+        return self._popt[0], self._popt[1], self._std_dev
 
 
     def plot_cluster_areas(self, number_of_bursts=1, max_distance=None,
@@ -1717,22 +1741,25 @@ class Experiment(object):
             norm_areas.append(proportion)
         self._compute_times(number_of_bursts=number_of_bursts)
         times = self._times
-        log_times, log_norm_areas = [], []
-        for index in range(len(times)):
-            if index == 0:
-                continue
-            log_times.append(math.log(times[index]))
-            log_norm_areas.append(math.log(norm_areas[index]))
         fig = plt.figure()
-        plt.ylim((0, 1))
-        plt.xlabel("log(time)")
-        plt.ylabel("log(cluster area proportion)")
-        plt.grid()
+        plt.xlabel("time[seconds]")
+        plt.ylabel("cluster area proportion")
+        self.get_order_evolution_coeficient(number_of_bursts=number_of_bursts,
+                                            max_distance=max_distance,
+                                            max_angle_diff=max_angle_diff,
+                                            min_size=min_size)
+        line = [float(time**self._popt[1])/self._popt[0] for time in times]
+        plt.plot(times, line)
         try:
-            plt.plot(log_times, log_norm_areas)
+            #plt.plot(times, norm_areas)
+            plt.scatter(times, norm_areas)
         except ValueError:
-            print(len(log_times), len(log_norm_areas))
-            print(log_times, log_norm_areas)
+            print(len(times), len(norm_areas))
+            print(times, norm_areas)
+        plt.grid(b=True, which='major', color='b', linestyle='-')
+        plt.grid(b=True, which='minor', color='b', linestyle='--')
+        plt.xscale('log')
+        plt.yscale('log')
         file_name = "cluster_areas_K" + str(self.kappas) + ".png"
         plt.savefig(file_name)
 
@@ -1847,7 +1874,7 @@ class Experiment(object):
         name = "avg_temp_K"
         state = methods.decompress(self._states[0],
                                 level=methods.settings.medium_comp_level)
-        kappa = int(state.average_kappa)
+        kappa = self.kappas
         name += str(kappa) + ".png"
         plt.xlabel("time [seconds]")
         plt.ylabel("average temperature [pixels^2 / s^2]")
@@ -1861,7 +1888,7 @@ class Experiment(object):
         number_of_rods = len(list(speeds.keys()))
         average_speed = 0
         for speed in list(speeds.values()):
-            average_speed += speed
+            average_speed += speed*self.kappas
         average_speed /= number_of_rods
         output_queue.put([index, average_speed])
 

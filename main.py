@@ -15,11 +15,11 @@ strong_comp_level = 0
 cpus = 12
 # 1 or True, 0 or False
 run_12 = 1
-run_4 = 1
-run_all = 1
-create_videos = 1
+run_4 = 0
+run_all = 0
+create_videos = 0
 clusters = 1
-avg_temp = 1
+avg_temp = 0
 order_param_exp = 1
 lost_percentage = 1
 run_imagej = 0
@@ -78,20 +78,20 @@ if True:
                                             dates=dates, diff_t=5/3.0)
         experiment_12.set_coef(coef)
         
-        if create_videos:
+        if False:#create_videos:
             experiment_12.divide_systems_in_circles(divisions=divisions)
             experiment_12.create_videos(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
                                      number_of_bursts=1)
         if clusters:
-            experiment_12.plot_cluster_areas(number_of_bursts=3, max_distance=100,
+            experiment_12.plot_cluster_areas(number_of_bursts=1, max_distance=100,
                     max_angle_diff=10, min_size=10)
-            experiment_12.create_cluster_histogram_video(max_distance=100, max_angle_diff=10, fps=15)
+            #experiment_12.create_cluster_histogram_video(max_distance=100, max_angle_diff=10, fps=15)
         if avg_temp:
             experiment_12.plot_average_temperature(100, 10)
         if order_param_exp:
             indep, param, std_dev = experiment_12.get_order_evolution_coeficient(number_of_bursts=3, max_distance=50,
                     max_angle_diff=10, min_size=10)
-            print "Order parameter: "+str(param)+" Standard deviation: "+str(std_dev)
+            print "Order parameter: "+str(param)+" Standard deviation: "+str(std_dev[1])
         if lost_percentage:
             percentage, std_dev = experiment_12.lost_rods_percentage
             print "Rods lost: "+str(percentage)+"%"+" Standard deviation: "+str(std_dev)

@@ -440,14 +440,15 @@ class SystemState(object):
                 distance = methods.distance_between_points(center,
                                                      self.center)
                 #rods = rods_matrix[index_y][index_x]
-                subsystem = SubsystemState(center, rad, self.zone_coords,
-                                           self._rods, self._kappas, self._real_kappas,
-                                           self._allowed_kappa_error)
                 if distance < self._radius:
+                    subsystem = SubsystemState(center, rad, self.zone_coords,
+                                               self._rods, self._kappas, self._real_kappas,
+                                               self._allowed_kappa_error)
                     subsystem.check_rods()
+                    subsystems.append(subsystem)
                 else:
-                    subsystem.remove_all_rods()
-                subsystems.append(subsystem)
+                    #subsystem.remove_all_rods()
+                    pass
         return subsystems
 
     def _compute_density_matrix(self, divisions, normalized=False,
@@ -460,12 +461,12 @@ class SystemState(object):
         subdivision = methods.decompress(self._actual_subdivision,
                                 level=methods.settings.low_comp_level)
         for subsystem in subdivision:
-            subdensity = [subsystem.center[0], subsystem.center[1]]
             dens = subsystem.density
             if divided_by_area:
                 dens /= subsystem.area
             if normalized:
                 dens /= self.number_of_rods
+            subdensity = [subsystem.center[0], subsystem.center[1]]
             subdensity.append(dens)
             density.append(subdensity)
         subdivision = None
@@ -537,8 +538,8 @@ class SystemState(object):
         """
         num = self.number_of_rods
         if num in [0,1,2] or not self.area:
-            self._correlation_g2 = 0
-            self._correlation_g4 = 0
+            self._correlation_g2 = -10
+            self._correlation_g4 = -10
             return
         cos2_av, cos4_av = 0, 0
         for rod1 in self:
@@ -1109,8 +1110,8 @@ class SubsystemState(SystemState):
         """
         density = 0
         for rod_ in self:
-            #density += rod_.kappa
-            density += 1
+            density += rod_.feret*rod_.min_feret    #area proportion
+            #density += 1
         if not density or not self.area:
             self._density = 0
         else:
