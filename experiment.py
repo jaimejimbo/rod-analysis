@@ -1495,7 +1495,14 @@ class Experiment(object):
             for group in groups:
                 for dummy_time in range(len(group)):
                     z_val = z_vals.pop(0)
-                    z_val *= self.kappas
+                    new_vals = []
+                    for val in z_val:
+                        try:
+                            new_vals.append(val*float(self.kappas))
+                        except TypeError:
+                            new_vals.append(None)
+                    z_val = new_vals
+                    z_val *= float(self.kappas)
                     _z_vals.append(z_val)
             try:
                 average = methods.array_average(_z_vals)
