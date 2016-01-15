@@ -1269,11 +1269,11 @@ class Experiment(object):
         for index in range(4):
             processes[index].join()"""
         #self.create_density_video(divisions, folder, fps, number_of_bursts)
-        self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
-        self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
-        #self.create_temperature_video(divisions, folder, fps, max_distance,
-        #                       max_angle_diff, limit, amount_of_rods,
-        #                       number_of_bursts)
+        #self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
+        #self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
+        self.create_temperature_video(divisions, folder, fps, max_distance,
+                               max_angle_diff, limit, amount_of_rods,
+                               number_of_bursts)
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,
@@ -1706,15 +1706,26 @@ class Experiment(object):
                     log_times.append(math.log(times[index]))
                 except ValueError:
                     log_times.pop()
-            log_areas = numpy.array(log_areas)
-            log_times = numpy.array(log_times)
-            x_0 = numpy.array([0, 0, 0, 0])
-            function = lambda value, coef1, coef2: coef1 + coef2*value
-            popt, pcov = optimization.curve_fit(function, log_times, log_areas)
-            std_dev = numpy.sqrt(numpy.diag(pcov))
-            self._popt = popt
-            self._std_dev = std_dev
-        return self._popt[0], self._popt[1], self._std_dev
+            #log_areas = numpy.array(log_areas)
+            #log_times = numpy.array(log_times)
+            #x_0 = numpy.array([0, 0, 0, 0])
+            #function = lambda value, coef1, coef2: coef1 + coef2*value
+            #popt, pcov = optimization.curve_fit(function, log_times, log_areas)
+            #m, b = popt[1], popt[0]
+            #m, b = np.polyfit(log_times, log_areas, 1)
+            #std_dev = numpy.sqrt(numpy.diag(pcov))
+            #self._popt = popt
+            #self._std_dev = std_dev
+            top = 0
+            bot = 0
+            x_m = float(sum(log_times))/len(log_times)
+            y_m = float(sum(log_areas))/len(log_areas)
+            for index in range(len(log_areas)):
+                top += (log_times[index]-x_m)*(log_areas[index]-y_m)
+                bot += (log_times[index]-x_m)**2
+            m = float(top)/bot
+            b = y_m - m*x_m
+        return m, b     #self._popt[0], self._popt[1], self._std_dev
 
 
     def plot_cluster_areas(self, number_of_bursts=1, max_distance=None,
@@ -1730,32 +1741,56 @@ class Experiment(object):
         total_areas = self._total_cluster_areas
         assert total_areas, "Error"
         norm_areas = []
+        self._compute_times(number_of_bursts=number_of_bursts)
+        times = []
         for index in range(len(areas)):
             area = areas[index]
             total_area = total_areas[index]
             try:
                 proportion = float(area)/total_area
             except ZeroDivisionError:
-                print "Error in cluster areas computing."
-                continue
+                proportion = 0
+                continue #norm_areas.append(proportion)
+            times.append(self._times[index])
             norm_areas.append(proportion)
-        self._compute_times(number_of_bursts=number_of_bursts)
-        times = self._times
         fig = plt.figure()
         plt.xlabel("time[seconds]")
         plt.ylabel("cluster area proportion")
-        self.get_order_evolution_coeficient(number_of_bursts=number_of_bursts,
-                                            max_distance=max_distance,
-                                            max_angle_diff=max_angle_diff,
-                                            min_size=min_size)
-        line = [float(time**self._popt[1])/self._popt[0] for time in times]
+        # There's a bug here, so I use fortran obtained values. 
+        #m, b = self.get_order_evolution_coeficient(number_of_bursts=number_of_bursts,
+        #                                    max_distance=max_distance,
+        #                                    max_angle_diff=max_angle_diff,
+        #                                    min_size=min_size)
+        m = 0.309291
+        b = -3.669453
+        line = [(math.e**b)*(time**m) for time in times]
+        print m, "  ", b
+        print math.e**b
+        print math.e**(-b)
         plt.plot(times, line)
+        clust = open("cluster_areas.txt", "w")
+        for index in range(len(times)):
+            try:
+                string = str(times[index])+"\t"+str(norm_areas[index])+"\n"
+                clust.write(string)
+            except:
+                pass
+        clust.close()
+        clust = open("cluster_areas_log.txt", "w")
+        for index in range(len(times)):
+            try:
+                string = str(math.log(times[index]))+"\t"+str(math.log(norm_areas[index]))+"\n"
+                clust.write(string)
+            except:
+                pass
+        clust.close()
         try:
             #plt.plot(times, norm_areas)
             plt.scatter(times, norm_areas)
         except ValueError:
             print(len(times), len(norm_areas))
             print(times, norm_areas)
+            raise ValueError
         plt.grid(b=True, which='major', color='b', linestyle='-')
         plt.grid(b=True, which='minor', color='b', linestyle='--')
         plt.xscale('log')
