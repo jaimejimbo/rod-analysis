@@ -40,7 +40,7 @@ class Rod(object):
         """
         Returns area covered by rod.
         """
-        return self._major*self._minor
+        return self._feret*self._min_feret
 
     @property
     def feret(self):

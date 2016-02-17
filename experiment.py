@@ -1370,8 +1370,8 @@ class Experiment(object):
             plt.clf()
             array = arrays.pop(0)
             boundaries = [0+time*1 for time in range(400)]
-            plt.xlim((0, 200))
-            plt.ylim((0, 0.3))
+            plt.xlim((0, 1000))
+            plt.ylim((0, 1))
             plt.hist(array, bins=boundaries, normed=True)
             plt.suptitle("Cluster length histogram")
             plt.xlabel("Number of rods in cluster")
@@ -1389,6 +1389,8 @@ class Experiment(object):
         array = state.cluster_lengths(max_distance=max_distance,
                                             max_angle_diff=max_angle_diff,
                                             min_size=1)
+        for index2 in range(len(array)):
+            array[index2] *= index2
         output_queue.put([index, array])
         return
 
@@ -1502,7 +1504,6 @@ class Experiment(object):
                         except TypeError:
                             new_vals.append(None)
                     z_val = new_vals
-                    z_val *= float(self.kappas)
                     _z_vals.append(z_val)
             try:
                 average = methods.array_average(_z_vals)
@@ -1558,7 +1559,7 @@ class Experiment(object):
         y_max = max(y_val)
         plt.xlim((x_min, x_max))
         plt.ylim((y_min, y_max))
-        plt.suptitle(name)
+        #plt.suptitle(name)
         plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
                     vmax=z_max, vmin=z_min) #ValueError: Color array must be two-dimensional
         plt.gca().invert_yaxis()
@@ -1954,6 +1955,16 @@ class Experiment(object):
         loses_2_average = float(sum(loses_2))/len(loses_2)
         std_dev = math.sqrt(loses_2_average-loses_average**2)
         return loses_average, std_dev
+
+    @property
+    def average_covered_area_proportion(self):
+        """
+            Returns average covered area proportion.
+        """
+        props = []
+        for state in self:
+            props.append(state.covered_area_proportion)
+        return float(sum(props))/len(props)
 
 
 def compute_local_average_speeds_process(index, output_queue, local_speeds):

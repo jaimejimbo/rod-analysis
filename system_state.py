@@ -1038,6 +1038,29 @@ class SystemState(object):
         eigen1, dummy_ = self._direction_matrix.diagonalize_2x2()
         return eigen1
 
+    @property
+    def area(self):
+        """
+            Returns area of system.
+        """
+        return math.pi * self._radius**2
+
+
+    @property
+    def covered_area_proportion(self):
+        """
+            Returns covered area proportion by rods.
+        """
+        total_area = self.area
+        covered_area = 0
+        for rod in self:
+            covered_area += rod.area
+        covered_area /= float(len(self))
+        proportion = covered_area / total_area
+        return proportion
+
+
+
 
 
 
