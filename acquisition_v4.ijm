@@ -50,7 +50,7 @@ for(img_num=4118; img_num<=4119; img_num++){
 	selectWindow("Result of Result of 0");
 	rename(a);
     //makeOval(530, 140, 1596, 1596);
-    makeOval(275, 164, 1550, 1550);
+    makeOval(270, 100, 1650, 1650);
 	run("Make Inverse");
 	run("Fill", "slice");
 	run("Invert");

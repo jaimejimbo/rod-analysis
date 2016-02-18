@@ -2004,6 +2004,30 @@ class Experiment(object):
             raise TypeError
         return average_prop
 
+    @property
+    def average_number_of_rods(self):
+        """
+            
+        """
+        number_of_rods = []
+        for state in self:
+            number_of_rods.append(state.number_of_rods)
+        return sum(number_of_rods)/float(len(number_of_rods))
+
+    @property
+    def average_kappa(self):
+        kappas = []
+        for state in self:
+            kappas.append(state.average_kappa)
+        return float(sum(kappas))/len(kappas)
+
+    @property
+    def average_kappa_dev(self):
+        devs = []
+        for state in self:
+            devs.append(state.kappa_dev)
+        return float(sum(devs))/len(devs)
+
 def compute_local_average_speeds_process(index, output_queue, local_speeds):
     """
     Process

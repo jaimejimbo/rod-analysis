@@ -23,6 +23,7 @@ avg_temp = 0
 order_param_exp = 0
 lost_percentage = 0
 run_imagej = 0
+run_props = 1
 # variables
 coef = 3
 divisions = 30
@@ -107,11 +108,21 @@ try:
                                             system_states_list=rod_groups,
                                             dates=dates, diff_t=5/3.0)
         experiment_.set_coef(coef)
-        print experiment_.average_covered_area_proportion
+        msg = str(experiment_.average_kappa) + "\t|\t" + str(experiment_.average_kappa_dev)
+        print msg
+        return experiment_.average_covered_area_proportion, experiment_.average_number_of_rods
         
-
-    run_prop(15.5, 12, .5)
-        
+    if run_props:
+        print "Computing area proportions..."
+        print "kappa\t\t\tdeviation"
+        prop_long, longs = run_prop(15, 12, 2)
+        prop_short, shorts = run_prop(7.8, 6, 1.3)
+        total_prop = prop_long + prop_short
+        print "Total area proportion: ", total_prop
+        print "Long proportion (area): ", float(prop_long)/total_prop
+        print "Number of long rods: ", longs
+        print "Number of short rods: ", shorts
+        print "Total number of rods: ", longs+shorts
     
 
     #os.system("bash tomp4script.sh")
