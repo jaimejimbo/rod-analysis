@@ -1973,15 +1973,16 @@ class Experiment(object):
         props = []
         processes = []
         output_queue = mp.Queue()
-        for index in len(self._states):
+        for index in range(len(self._states)):
             state = self.get(index)
             process = mp.Process(target=state.covered_area_proportion,
                                  args=(index, output_queue))
+            processes.append(process)
             props.append(None)
         running, processes_left = methods.run_processes(processes)
         num_processes = len(processes)
         finished = 0
-        while finished < num_processes:
+        while finished < num_processes+4:
             finished += 1
             if not len(running):
                 break
@@ -1989,14 +1990,19 @@ class Experiment(object):
             index = output[0]
             prop = output[1]
             props[index] = prop
+            #print index, prop
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
-        return float(sum(props))/len(props)
-
+        #for process in processes:
+        #    if process.is_alive():
+        #        process.terminate()
+        try:
+            average_prop = float(sum(props))/len(props)
+        except TypeError:
+            print props
+            raise TypeError
+        return average_prop
 
 def compute_local_average_speeds_process(index, output_queue, local_speeds):
     """

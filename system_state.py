@@ -1054,7 +1054,6 @@ class SystemState(object):
         covered_area = 0
         for rod in self:
             covered_area += rod.area
-        covered_area /= float(len(self))
         proportion = covered_area / total_area
         queue.put([index, proportion])
         return
@@ -1211,10 +1210,11 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
     """
     name = names[index]
     file_ = open(name, 'r')
+    
     state = SystemState(kappas=kappas, real_kappas=real_kappas, 
                         allowed_kappa_error=allowed_kappa_error,
                         radius_correction_ratio=radius_correction_ratio,
-                        id_string=name)
+                        id_string=name, zone_coords=[940.0, 1050.0, 776.0])
     data = methods.import_data(file_)
     for dataline in data:
         try:
@@ -1222,10 +1222,12 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
             new_rod = rod.Rod(parameters)
             state.put_rod(new_rod)
         except ValueError:
+            print "line 1225"
             print names[index]
+            print file_
     file_.close()
     file_ = None
-    #assert not not state, "A state must have been created."
+    assert not not state, "A state must have been created."
     state.check_rods()
     states_queue.put([index, state])
 
