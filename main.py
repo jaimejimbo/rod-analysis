@@ -12,7 +12,7 @@ low_comp_level = 0
 medium_comp_level = 0
 strong_comp_level = 0 
 #None uses all cpus      
-cpus = 12
+cpus = None
 # 1 or True, 0 or False
 run_12 = 0
 run_4 = 0
@@ -22,7 +22,7 @@ clusters = 0
 avg_temp = 0
 order_param_exp = 0
 lost_percentage = 0
-run_imagej = 1
+run_imagej = 0
 # variables
 coef = 3
 divisions = 30
@@ -70,31 +70,29 @@ try:
         dates = methods.import_image_dates()
         
 
-    
-
     def run_default(kappa, real_kappa, error):
         msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
         names, rod_groups = system_state.create_rods(kappas=kappa, real_kappas=real_kappa,
                                                 allowed_kappa_error=error)
-        experiment = experiment.Experiment(system_states_name_list=names, kappas=real_kappa,
+        experiment_ = experiment.Experiment(system_states_name_list=names, kappas=real_kappa,
                                             system_states_list=rod_groups,
                                             dates=dates, diff_t=5/3.0)
-        experiment.set_coef(coef)
+        experiment_.set_coef(coef)
         if create_videos:
-            experiment.divide_systems_in_circles(divisions=divisions)
-            experiment.create_videos(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
+            experiment_.divide_systems_in_circles(divisions=divisions)
+            experiment_.create_videos(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
                                      number_of_bursts=1)
         if clusters:
-            experiment.plot_cluster_areas(number_of_bursts=5, max_distance=100,
+            experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=100,
                     max_angle_diff=10, min_size=20)
         if avg_temp:
-            experiment.plot_average_temperature(100, 10)
+            experiment_.plot_average_temperature(100, 10)
         if lost_percentage:
-            percentage, std_devar = experiment.lost_rods_percentage
+            percentage, std_dev = experiment_.lost_rods_percentage
 	    print "Rods lost: "+str(percentage)+"%"+" Standard deviation: "+str(std_dev)
         try:
             names = None
-            experiment = None #methods.compress(experiment_4, level=settings.strong_comp_level)
+            experiment_ = None
             rod_groups = None
             gc.collect()
         except NameError:
@@ -105,11 +103,14 @@ try:
         msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
         names, rod_groups = system_state.create_rods(kappas=kappa, real_kappas=real_kappa,
                                                 allowed_kappa_error=error)
-        experiment = experiment.Experiment(system_states_name_list=names, kappas=real_kappa,
+        experiment_ = experiment.Experiment(system_states_name_list=names, kappas=real_kappa,
                                             system_states_list=rod_groups,
                                             dates=dates, diff_t=5/3.0)
-        experiment.set_coef(coef)
+        experiment_.set_coef(coef)
+        print experiment_.average_covered_area_proportion
         
+
+    run_prop(15.5, 12, .5)
         
     
 

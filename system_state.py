@@ -1046,8 +1046,7 @@ class SystemState(object):
         return math.pi * self._radius**2
 
 
-    @property
-    def covered_area_proportion(self):
+    def covered_area_proportion(self, index, queue):
         """
             Returns covered area proportion by rods.
         """
@@ -1057,7 +1056,8 @@ class SystemState(object):
             covered_area += rod.area
         covered_area /= float(len(self))
         proportion = covered_area / total_area
-        return proportion
+        queue.put([index, proportion])
+        return
 
 
 
@@ -1225,7 +1225,7 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
             print names[index]
     file_.close()
     file_ = None
-    assert not not state, "A state must have been created."
+    #assert not not state, "A state must have been created."
     state.check_rods()
     states_queue.put([index, state])
 

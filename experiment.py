@@ -120,6 +120,15 @@ class Experiment(object):
             raise ValueError
         return methods.decompress(self._states_dict[identifier])
 
+    def get(self, index):
+        """
+            Getter with index
+        """
+        comp_level = methods.settings.medium_comp_level
+        state = self._states[index]
+        state = methods.decompress(state, level=comp_level)
+        return state
+
 
     def set_coef(self, value):
         """
@@ -1962,8 +1971,30 @@ class Experiment(object):
             Returns average covered area proportion.
         """
         props = []
-        for state in self:
-            props.append(state.covered_area_proportion)
+        processes = []
+        output_queue = mp.Queue()
+        for index in len(self._states):
+            state = self.get(index)
+            process = mp.Process(target=state.covered_area_proportion,
+                                 args=(index, output_queue))
+            props.append(None)
+        running, processes_left = methods.run_processes(processes)
+        num_processes = len(processes)
+        finished = 0
+        while finished < num_processes:
+            finished += 1
+            if not len(running):
+                break
+            output = output_queue.get()
+            index = output[0]
+            prop = output[1]
+            props[index] = prop
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                new_process.start()
+        for process in processes:
+            if process.is_alive():
+                process.terminate()
         return float(sum(props))/len(props)
 
 
