@@ -115,7 +115,7 @@ try:
         width = experiment_.average_rod_width
         cov_area, cov_area_dev = experiment_.average_covered_area_proportion
         num_rods, num_rods_dev = experiment_.average_number_of_rods
-        return cov_area, cov_area_dev, int(num_rods), num_rods_dev, rad, length, width
+        return cov_area, cov_area_dev, int(num_rods), int(num_rods_dev), rad, length, width
         
     if run_props:
         print "Computing area proportions..."
@@ -127,7 +127,7 @@ try:
         rad = float(rad1+rad2)/2
         area = math.pi*rad**2
         total_prop = prop_long + prop_short
-        print area
+        #print area
         waprop = input("Wanted area proportion: ")
         wlprop = input("Wanted longs proportion: ")
         Nl = int(wlprop*waprop*area/rod_areal)

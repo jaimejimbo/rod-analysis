@@ -659,9 +659,9 @@ class SystemState(object):
         if not self._kappa_dev:
             kappa2 = 0
             for rod_ in self:
-                kappa2 += rod_.kappa**2
-            kappa2 /= self.number_of_rods
-            self._kappa_dev = math.sqrt(kappa2-self.average_kappa**2)
+                kappa2 += (rod_.kappa-self.average_kappa)**2
+            kappa2 /= (self.number_of_rods-1)
+            self._kappa_dev = math.sqrt(kappa2)
         return self._kappa_dev
 
     @property
