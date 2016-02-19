@@ -107,6 +107,38 @@ class Experiment(object):
             yield methods.decompress(state, level=comp_level)
 
 
+    @property
+    def average_system_rad(self):
+        """
+            It returns average system rad
+        """
+        rads = []
+        for state in self:
+            rads.append(state.radius)
+        return float(sum(rads))/len(rads)
+
+    @property
+    def average_rod_length(self):
+        """
+            It returns average rod length.
+        """
+        lengths = []
+        for state in self:
+            lengths.append(state.average_rod_length)
+        return float(sum(lengths))/len(lengths)
+        
+
+    @property
+    def average_rod_width(self):
+        """
+            It returns average rod width.
+        """
+        widths = []
+        for state in self:
+            widths.append(state.average_rod_width)
+        return float(sum(widths))/len(widths)
+        
+
     def __getitem__(self, state_num):
         """
             Get the state identified by state_num.
@@ -1997,12 +2029,11 @@ class Experiment(object):
         #for process in processes:
         #    if process.is_alive():
         #        process.terminate()
-        try:
-            average_prop = float(sum(props))/len(props)
-        except TypeError:
-            print props
-            raise TypeError
-        return average_prop
+        avg = float(sum(props))/len(props)
+        std_dev_step1 = [(value-avg)**2 for value in props]
+        std_dev_step2 = float(sum(std_dev_step1))/(len(std_dev_step1)-1)
+        dev = math.sqrt(std_dev_step2)
+        return avg, dev 
 
     @property
     def average_number_of_rods(self):
@@ -2012,7 +2043,11 @@ class Experiment(object):
         number_of_rods = []
         for state in self:
             number_of_rods.append(state.number_of_rods)
-        return sum(number_of_rods)/float(len(number_of_rods))
+        avg = sum(number_of_rods)/float(len(number_of_rods))
+        std_dev_step1 = [(value-avg)**2 for value in number_of_rods]
+        std_dev_step2 = float(sum(std_dev_step1))/(len(std_dev_step1)-1)
+        dev = math.sqrt(std_dev_step2)
+        return avg, dev 
 
     @property
     def average_kappa(self):

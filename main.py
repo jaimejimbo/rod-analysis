@@ -22,7 +22,7 @@ clusters = 0
 avg_temp = 0
 order_param_exp = 0
 lost_percentage = 0
-run_imagej = 0
+run_imagej = 1
 run_props = 1
 # variables
 coef = 3
@@ -54,7 +54,7 @@ settings.write("\n")
 settings.close()
 
 import experiment, system_state, methods, settings
-import os, gc
+import os, gc, math
 
 os.system("clear && clear")
 
@@ -109,20 +109,39 @@ try:
                                             dates=dates, diff_t=5/3.0)
         experiment_.set_coef(coef)
         msg = str(experiment_.average_kappa) + "\t|\t" + str(experiment_.average_kappa_dev)
+        rad = experiment_.average_system_rad
         print msg
-        return experiment_.average_covered_area_proportion, experiment_.average_number_of_rods
+        length = experiment_.average_rod_length
+        width = experiment_.average_rod_width
+        cov_area, cov_area_dev = experiment_.average_covered_area_proportion
+        num_rods, num_rods_dev = experiment_.average_number_of_rods
+        return cov_area, cov_area_dev, int(num_rods), num_rods_dev, rad, length, width
         
     if run_props:
         print "Computing area proportions..."
         print "kappa\t\t\tdeviation"
-        prop_long, longs = run_prop(15, 12, 2)
-        prop_short, shorts = run_prop(7.8, 6, 1.3)
+        prop_long, prop_long_dev, longs, longs_dev, rad1, lengthl, widthl = run_prop(15, 12, 3)
+        prop_short, prop_short_dev, shorts, shorts_dev, rad2, lengths, widths = run_prop(7.8, 6, 2)
+        rod_areal = lengthl*widthl
+        rod_areas = lengths*widths
+        rad = float(rad1+rad2)/2
+        area = math.pi*rad**2
         total_prop = prop_long + prop_short
+        print area
+        waprop = input("Wanted area proportion: ")
+        wlprop = input("Wanted longs proportion: ")
+        Nl = int(wlprop*waprop*area/rod_areal)
+        Ns = int(Nl*rod_areal*(1-wlprop)/(wlprop*rod_areas))
         print "Total area proportion: ", total_prop
-        print "Long proportion (area): ", float(prop_long)/total_prop
-        print "Number of long rods: ", longs
-        print "Number of short rods: ", shorts
+        print "Long proportion (area): ", float(prop_long)/total_prop, prop_long_dev/total_prop
+        print "Number of long rods: ", longs, longs_dev
+        print "Needed long rods: ", Nl
+        print "Difference: ", Nl-longs
+        print "Number of short rods: ", shorts, shorts_dev
+        print "Needed short rods: ", Ns
+        print "Difference: ", Ns-shorts
         print "Total number of rods: ", longs+shorts
+        
     
 
     #os.system("bash tomp4script.sh")

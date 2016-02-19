@@ -1058,8 +1058,25 @@ class SystemState(object):
         queue.put([index, proportion])
         return
 
+    @property
+    def average_rod_length(self):
+        """
+            It returns average rod length.
+        """
+        lengths = []
+        for rod_ in self:
+            lengths.append(rod_.feret)
+        return float(sum(lengths))/len(lengths)
 
-
+    @property
+    def average_rod_width(self):
+        """
+            It returns average rod width.
+        """
+        widths = []
+        for rod_ in self:
+            widths.append(rod_.min_feret)
+        return float(sum(widths))/len(widths)
 
 
 
