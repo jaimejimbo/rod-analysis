@@ -2011,10 +2011,10 @@ class Experiment(object):
                                  args=(index, output_queue))
             processes.append(process)
             props.append(None)
-        running, processes_left = methods.run_processes(processes)
         num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
         finished = 0
-        while finished < num_processes+4:
+        while finished < num_processes:
             finished += 1
             if not len(running):
                 break
@@ -2026,9 +2026,6 @@ class Experiment(object):
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
-        #for process in processes:
-        #    if process.is_alive():
-        #        process.terminate()
         avg = float(sum(props))/len(props)
         std_dev_step1 = [(value-avg)**2 for value in props]
         std_dev_step2 = float(sum(std_dev_step1))/(len(std_dev_step1)-1)

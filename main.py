@@ -14,16 +14,15 @@ strong_comp_level = 0
 #None uses all cpus      
 cpus = None
 # 1 or True, 0 or False
-run_12 = 0
-run_4 = 0
-run_all = 0
-create_videos = 0
-clusters = 0
-avg_temp = 0
-order_param_exp = 0
-lost_percentage = 0
-run_imagej = 1
-run_props = 1
+create_videos = 1
+clusters = 1
+avg_temp = 1
+order_param_exp = 1
+lost_percentage = 1
+run_imagej = 0
+run_props = 0
+run_graphs = 1
+get_image_dates = 0
 # variables
 coef = 3
 divisions = 30
@@ -62,6 +61,11 @@ try:
 #if True:
 
     dates = None
+        
+    if get_image_dates:
+        os.system("rm dates.txt")
+        methods.export_image_dates()
+
     if run_imagej:
         print "Running imagej..."
         methods.imagej()
@@ -69,10 +73,11 @@ try:
         methods.export_image_dates()
     else:
         dates = methods.import_image_dates()
-        
+
 
     def run_default(kappa, real_kappa, error):
         msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
+        print msg
         names, rod_groups = system_state.create_rods(kappas=kappa, real_kappas=real_kappa,
                                                 allowed_kappa_error=error)
         experiment_ = experiment.Experiment(system_states_name_list=names, kappas=real_kappa,
@@ -117,6 +122,7 @@ try:
         num_rods, num_rods_dev = experiment_.average_number_of_rods
         return cov_area, cov_area_dev, int(num_rods), int(num_rods_dev), rad, length, width
         
+
     if run_props:
         print "Computing area proportions..."
         print "kappa\t\t\tdeviation"
@@ -143,6 +149,11 @@ try:
         print "Total number of rods: ", longs+shorts
         
     
+    if run_graphs:
+        print "Creating graphs..."
+        run_default(15, 12, 3)
+        run_default(7.8, 6, 2)
+
 
     #os.system("bash tomp4script.sh")
 except KeyboardInterrupt:
