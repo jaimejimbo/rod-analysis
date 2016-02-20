@@ -94,6 +94,7 @@ class Experiment(object):
         self._popt = None
         self._std_dev = None
         #self._inversed = False
+        self._covered_area_prop = None
         _writer = animation.writers['ffmpeg']
         writer = _writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
         self._writer = writer
@@ -204,6 +205,7 @@ class Experiment(object):
         self._std_dev = None
         self._max_density = None
         self._indices = None
+        self._covered_area_prop = None
         self._total_cluster_areas = None
 
 
@@ -1116,7 +1118,8 @@ class Experiment(object):
         frames = len(self._states)
         function_name = 'plottable_density_matrix_queue'
         kappas = self.kappas
-        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
+        prop = self.average_covered_area_proportion[0]
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+"prop"+str(round(100*prop,1))+'%.mp4'
         units = "Normalized occupied area [S.U.]"
         z_min, z_max = self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
@@ -1144,7 +1147,8 @@ class Experiment(object):
         frames = len(self._states)
         function_name = 'correlation_g2_plot_matrix_queue'
         kappas = self.kappas
-        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
+        prop = self.average_covered_area_proportion[0]
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+"prop"+str(round(100*prop,1))+'%.mp4'
         units = "g2 [S.U.]"
         self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
@@ -1159,7 +1163,8 @@ class Experiment(object):
         frames = len(self._states)
         function_name = 'correlation_g4_plot_matrix_queue'
         kappas = self.kappas
-        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
+        prop = self.average_covered_area_proportion[0]
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+"prop"+str(round(100*prop,1))+'%.mp4'
         units = "g4 [S.U.]"
         self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
@@ -1174,7 +1179,7 @@ class Experiment(object):
         frames = len(self._states)
         function_name = 'plottable_average_angle_matrix_queue'
         kappas = methods.decompress(self._states[0]).kappas
-        name = str(folder)+str(function_name)+"_K"+str(kappas)+'.mp4'
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+"prop"+str(round(100*prop,1))+'%.mp4'
         units = "Average angle [grad]"
         self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
@@ -1309,9 +1314,9 @@ class Experiment(object):
             processes[index].start()
         for index in range(4):
             processes[index].join()"""
-        #self.create_density_video(divisions, folder, fps, number_of_bursts)
-        #self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
-        #self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
+        self.create_density_video(divisions, folder, fps, number_of_bursts)
+        self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
+        self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
         self.create_temperature_video(divisions, folder, fps, max_distance,
                                max_angle_diff, limit, amount_of_rods,
                                number_of_bursts)
@@ -1365,7 +1370,8 @@ class Experiment(object):
         """
         print "Creating cluster histogram animation..."
         kappa = self.kappas
-        name = "cluster_hist_K"+str(int(kappa))+".mp4"
+        prop = self.average_covered_area_proportion[0]
+        name = "cluster_hist_K"+str(int(kappa))+"prop"+str(round(100*prop,1))+"%.mp4"
         processes = []
         output_queue = mp.Queue()
         arrays = []
@@ -1999,6 +2005,14 @@ class Experiment(object):
 
     @property
     def average_covered_area_proportion(self):
+        """
+            Returns average covered area proportion.
+        """
+        if not self._covered_area_prop:
+            self._covered_area_prop = self._average_covered_area_proportion
+        return self._covered_area_prop
+
+    def _average_covered_area_proportion(self):
         """
             Returns average covered area proportion.
         """

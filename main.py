@@ -20,7 +20,7 @@ avg_temp = 1
 order_param_exp = 1
 lost_percentage = 1
 run_imagej = 0
-run_props = 0
+run_props = 1
 run_graphs = 1
 get_image_dates = 0
 # variables
