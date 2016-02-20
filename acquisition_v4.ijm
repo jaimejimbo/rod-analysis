@@ -64,3 +64,5 @@ for(img_num=4118; img_num<=4119; img_num++){
 	saveAs("Results", folder+"/rods_"+img_name);
 	run("Close All");
 }
+run("Quit");
+eval("script", "System.exit(0);");

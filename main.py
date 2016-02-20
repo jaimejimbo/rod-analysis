@@ -40,6 +40,12 @@ divisions = 30
 Script
 """
 
+#coords = []
+#imagej_script = open("acquisition.py", "r")
+#reg_exp = re.compile("")
+#for line in imagej_script:
+#imagej_script.close()
+
 
 settings = open("settings.py", "w")
 settings.write("low_comp_level = {0}".format(low_comp_level))
