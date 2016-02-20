@@ -2009,7 +2009,7 @@ class Experiment(object):
             Returns average covered area proportion.
         """
         if not self._covered_area_prop:
-            self._covered_area_prop = self._average_covered_area_proportion
+            self._covered_area_prop = self._average_covered_area_proportion()
         return self._covered_area_prop
 
     def _average_covered_area_proportion(self):
