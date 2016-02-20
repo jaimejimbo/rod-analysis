@@ -53,6 +53,7 @@ class SystemState(object):
         self._divisions = None
         self._coef = 1
         self._fixed = True
+        self._area = None
         self._real_kappas = real_kappas
         try:
             self._radius = zone_coords[2]
@@ -241,6 +242,7 @@ class SystemState(object):
         reset all important values, so they must be
         computed again.
         """
+        self._area = None
         self._actual_subdivision = []
         self._density_matrix = []
         self._correlation_g2 = None
@@ -318,6 +320,15 @@ class SystemState(object):
                 self._radius = radius
         self._zone_coords = (self._center_x, self._center_y, self._radius)
         return self._center_x, self._center_y, self._radius
+
+    @property
+    def area(self):
+        """
+            Area of the subsystem.
+        """
+        if not self._area:
+            self._area = math.pi*self.radius**2
+        return self._area
 
     @property
     def center(self):
@@ -1038,13 +1049,6 @@ class SystemState(object):
         eigen1, dummy_ = self._direction_matrix.diagonalize_2x2()
         return eigen1
 
-    @property
-    def area(self):
-        """
-            Returns area of system.
-        """
-        return math.pi * self._radius**2
-
 
     def covered_area_proportion(self, index, queue):
         """
@@ -1127,6 +1131,8 @@ class SubsystemState(SystemState):
         """
             Center of the subsystem.
         """
+        if not self._radius:
+            self.compute_center_and_radius()
         return self._center
 
     @property
@@ -1134,14 +1140,9 @@ class SubsystemState(SystemState):
         """
             Radius of the subsystem
         """
+        if not self._radius:
+            self.compute_center_and_radius()
         return self._radius
-
-    @property
-    def area(self):
-        """
-            Area of the subsystem.
-        """
-        return self._area
 
     def _update_density(self):
         """
@@ -1231,7 +1232,7 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
     state = SystemState(kappas=kappas, real_kappas=real_kappas, 
                         allowed_kappa_error=allowed_kappa_error,
                         radius_correction_ratio=radius_correction_ratio,
-                        id_string=name, zone_coords=[985.0, 925.0, 825.0])
+                        id_string=name)#, zone_coords=[985.0, 925.0, 825.0])
     data = methods.import_data(file_)
     for dataline in data:
         try:
