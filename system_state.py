@@ -385,9 +385,9 @@ class SystemState(object):
             start_y = self.center[1]-self.radius
             diff = float(abs(start_x-end_x))/divisions
             # Getting all possible x and y values.
-            possible_x_values = [start_x + (times-1)*diff
+            possible_x_values = [start_x + (times)*diff
                                  for times in range(divisions+2)]
-            possible_y_values = [start_y + (times-1)*diff
+            possible_y_values = [start_y + (times-2)*diff
                                  for times in range(divisions+2)]
             #assert self._coef == 5, "Coeficient error (367)"
             rad = diff*math.sqrt(2)*self._coef/2.0
