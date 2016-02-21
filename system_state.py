@@ -1229,7 +1229,7 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
     state = SystemState(kappas=kappas, real_kappas=real_kappas, 
                         allowed_kappa_error=allowed_kappa_error,
                         radius_correction_ratio=radius_correction_ratio,
-                        id_string=name, zone_coords=[985.0, 925.0, 825.0])
+                        id_string=name, zone_coords=settings.zone_coords)
     data = methods.import_data(file_)
     for dataline in data:
         try:

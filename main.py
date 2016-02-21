@@ -28,7 +28,7 @@ coef = 3
 divisions = 30
 
 
-
+import re
 
 
 
@@ -39,14 +39,45 @@ divisions = 30
 """
 Script
 """
+def get_coords_from_imagej():
+    """
+        Gets center and radius from imagej script.
+    """
+    coords = []
+    imagej_script = open("acquisition_v4.ijm", "r")
+    reg_exp = re.compile(".*makeOval.*")
+    for line in imagej_script:
+        if reg_exp.match(line):
+            data_line = line
+            break
+    zone_coords_re = re.compile(".*makeOval\((.*),(.*),(.*),(.*)\);.*")
+    results_ = zone_coords_re.search(data_line)
+    results = [results_.group(index+1) for index in range(4)]
+    imagej_script.close()
+    rad = float(results[2])/2
+    center_x = float(results[1])+rad 
+    center_y = float(results[0])+rad
+    zone_coords_ = [center_x, center_y, rad]
+    return zone_coords_
 
-#coords = []
-#imagej_script = open("acquisition.py", "r")
-#reg_exp = re.compile("")
-#for line in imagej_script:
-#imagej_script.close()
+def set_coords_in_imagej(zone_coords_):
+    """
+        Sets values in imagej script.
+    """
+    imagej_script = open("acquisition_v4.ijm", "w")
+    reg_exp = re.compile(".*makeOval.*")
+    center_x = zone_coords[0]
+    center_y = zone_coords[1]
+    rad = zone_coords[2]
+    values = "("+str(center_y-rad)+","+str(center_x-rad)+","+str(rad*2)+","+str(rad*2)+");"
+    for line in imagej_script:
+        if reg_exp.match(line):
+            line = "\tmakeOval"+values
+    image_script.close()
 
-
+#zone_coords = []
+#set_coords_in_imagej()
+zone_coords = get_coords_from_imagej()
 settings = open("settings.py", "w")
 settings.write("low_comp_level = {0}".format(low_comp_level))
 settings.write("\n")
@@ -55,6 +86,8 @@ settings.write("\n")
 settings.write("strong_comp_level = {0}".format(strong_comp_level))
 settings.write("\n")
 settings.write("cpus = {0}".format(cpus))
+settings.write("\n")
+settings.write("zone_coords = {0}".format(zone_coords))
 settings.write("\n")
 settings.close()
 
@@ -139,12 +172,13 @@ try:
         rad = float(rad1+rad2)/2
         area = math.pi*rad**2
         total_prop = prop_long + prop_short
+        total_prop_err = prop_short_dev + prop_long_dev
         #print area
         waprop = input("Wanted area proportion: ")
         wlprop = input("Wanted longs proportion: ")
         Nl = int(wlprop*waprop*area/rod_areal)
         Ns = int(Nl*rod_areal*(1-wlprop)/(wlprop*rod_areas))
-        print "Total area proportion: ", round(100*total_prop,2), "%"
+        print "Total area proportion: ", round(100*total_prop, 2), "% ", round(100*total_prop_err, 2), "%"
         print "Long proportion (area): ", round(100*float(prop_long)/total_prop, 2), "% ",round(100*prop_long_dev/total_prop, 2), "%"
         print "Number of long rods: ", longs, longs_dev
         print "Needed long rods: ", Nl
