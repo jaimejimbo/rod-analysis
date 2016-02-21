@@ -290,9 +290,6 @@ class SystemState(object):
             Computes where the center of the system is and its
         radius.
         """
-        self._center_x = 1300
-        self._center_y = 925
-        self._radius = 770.2
         if not self._fixed:
             #There must be rods to make statistics.
             if not self.number_of_rods:
@@ -1232,7 +1229,7 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
     state = SystemState(kappas=kappas, real_kappas=real_kappas, 
                         allowed_kappa_error=allowed_kappa_error,
                         radius_correction_ratio=radius_correction_ratio,
-                        id_string=name)#, zone_coords=[985.0, 925.0, 825.0])
+                        id_string=name, zone_coords=[985.0, 925.0, 825.0])
     data = methods.import_data(file_)
     for dataline in data:
         try:

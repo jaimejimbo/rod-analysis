@@ -144,8 +144,8 @@ try:
         wlprop = input("Wanted longs proportion: ")
         Nl = int(wlprop*waprop*area/rod_areal)
         Ns = int(Nl*rod_areal*(1-wlprop)/(wlprop*rod_areas))
-        print "Total area proportion: ", total_prop
-        print "Long proportion (area): ", float(prop_long)/total_prop, prop_long_dev/total_prop
+        print "Total area proportion: ", round(100*total_prop,2), "%"
+        print "Long proportion (area): ", round(100*float(prop_long)/total_prop, 2), "% ",round(100*prop_long_dev/total_prop, 2), "%"
         print "Number of long rods: ", longs, longs_dev
         print "Needed long rods: ", Nl
         print "Difference: ", Nl-longs
