@@ -22,6 +22,7 @@ lost_percentage = 1
 run_imagej = 0
 run_props = 1
 run_graphs = 1
+run_check_dim = 0
 get_image_dates = 0
 # variables
 coef = 3
@@ -78,6 +79,9 @@ def set_coords_in_imagej(zone_coords_):
 #zone_coords = []
 #set_coords_in_imagej()
 zone_coords = get_coords_from_imagej()
+zone_coords = [zone_coords[1], zone_coords[0], zone_coords[2]]
+#print zone_coords
+#raw_input("")
 settings = open("settings.py", "w")
 settings.write("low_comp_level = {0}".format(low_comp_level))
 settings.write("\n")
@@ -160,7 +164,7 @@ try:
         cov_area, cov_area_dev = experiment_.average_covered_area_proportion
         num_rods, num_rods_dev = experiment_.average_number_of_rods
         return cov_area, cov_area_dev, int(num_rods), int(num_rods_dev), rad, length, width
-        
+    
 
     if run_props:
         print "Computing area proportions..."
@@ -193,6 +197,15 @@ try:
         print "Creating graphs..."
         run_default(15, 12, 3)
         run_default(7.8, 6, 2)
+
+    if run_check_dim:
+        names, rod_groups = system_state.create_rods(kappas=10, real_kappas=12,
+                                                allowed_kappa_error=10)
+        experiment_ = experiment.Experiment(system_states_name_list=names, kappas=12,
+                                            system_states_list=rod_groups,
+                                            dates=dates, diff_t=5/3.0)
+        experiment_.set_coef(coef)
+        experiment_.plot_rods(0)
 
 
     #os.system("bash tomp4script.sh")

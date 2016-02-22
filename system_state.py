@@ -285,12 +285,12 @@ class SystemState(object):
                                 level=methods.settings.low_comp_level)
                 self._cluster_checked_dict[identifier] = False
 
-    def _compute_center_and_radius(self):
+    def compute_center_and_radius(self):
         """
             Computes where the center of the system is and its
         radius.
         """
-        if not self._fixed:
+        if not self._fixed_center_radius:
             #There must be rods to make statistics.
             if not self.number_of_rods:
                 msg = "center_and_radius can't be computed before adding rods"
@@ -303,7 +303,7 @@ class SystemState(object):
             if not_defined and not self._is_subsystem:
                 x_values = []
                 y_values = []
-                for rod_ in list(self._rods):
+                for rod_ in self:
                     x_values.append(rod_.x_mid)
                     y_values.append(rod_.y_mid)
                 #center is the mean position of all particles.
@@ -332,7 +332,7 @@ class SystemState(object):
         """
             Returns center of the system.
         """
-        self._compute_center_and_radius()
+        self.compute_center_and_radius()
         return self._center_x, self._center_y
 
     @property
@@ -340,7 +340,7 @@ class SystemState(object):
         """
             Returns radius of the system.
         """
-        self._compute_center_and_radius()
+        self.compute_center_and_radius()
         return self._radius
 
     @property
@@ -348,7 +348,7 @@ class SystemState(object):
         """
             Returns a tuple with center and radius.
         """
-        self._compute_center_and_radius()
+        self.compute_center_and_radius()
         return self._zone_coords
 
 
@@ -378,17 +378,17 @@ class SystemState(object):
         if divisions != self._divisions:
             self.reset()
             self._divisions = divisions
-            self._compute_center_and_radius()
+            self.compute_center_and_radius()
             # Defining zone and distance between points.
             start_x = self.center[0]-self.radius
             end_x = self.center[0]+self.radius
             start_y = self.center[1]-self.radius
-            diff = float(abs(start_x-end_x))/divisions
+            diff = abs(start_x-end_x)/divisions
             # Getting all possible x and y values.
             possible_x_values = [start_x + (times)*diff
-                                 for times in range(divisions+2)]
-            possible_y_values = [start_y + (times-2)*diff
-                                 for times in range(divisions+2)]
+                                 for times in range(divisions)]
+            possible_y_values = [start_y + (times)*diff
+                                 for times in range(divisions)]
             #assert self._coef == 5, "Coeficient error (367)"
             rad = diff*math.sqrt(2)*self._coef/2.0
             subsystems = self._subsystems(possible_x_values, possible_y_values,
@@ -1079,8 +1079,18 @@ class SystemState(object):
             widths.append(rod_.min_feret)
         return float(sum(widths))/len(widths)
 
-
-
+    @property
+    def rod_centers(self):
+        """
+            It returns centers of rods.
+        """
+        x_values = []
+        y_values = []
+        for rod_ in self:
+            x_val, y_val = rod_.center
+            x_values.append(x_val)
+            y_values.append(y_val)
+        return x_values, y_values
 
 
 
@@ -1243,6 +1253,7 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
     file_.close()
     file_ = None
     assert not not state, "A state must have been created."
+    state.compute_center_and_radius()
     state.check_rods()
     states_queue.put([index, state])
 

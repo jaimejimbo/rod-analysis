@@ -2049,7 +2049,7 @@ class Experiment(object):
     @property
     def average_number_of_rods(self):
         """
-            
+            Returns average number of rods of all states.
         """
         number_of_rods = []
         for state in self:
@@ -2062,6 +2062,9 @@ class Experiment(object):
 
     @property
     def average_kappa(self):
+        """
+            Returns average kappa of all states.
+        """
         kappas = []
         for state in self:
             kappas.append(state.average_kappa)
@@ -2069,10 +2072,32 @@ class Experiment(object):
 
     @property
     def average_kappa_dev(self):
+        """
+            Returns average kappa deviation of all states.
+        """
         devs = []
         for state in self:
             devs.append(state.kappa_dev)
         return float(sum(devs))/len(devs)
+
+    def plot_rods(self, index):
+        """
+        Plot all rods of index-th system.
+        """
+        figure = plt.figure()
+        fig = plt.gcf()
+        state = self.get(index)
+        x_vals, y_vals = state.rod_centers
+        center_x, center_y = state.center
+        rad = state.radius
+        plt.scatter(center_x, center_y, color='b', s=10)
+        plt.plot([center_x, center_x+rad],[center_y, center_y])
+        plt.plot([center_x, center_x],[center_y, center_y+rad])
+        plt.plot([center_x, center_x-rad],[center_y, center_y])
+        plt.plot([center_x, center_x],[center_y, center_y-rad])
+        plt.scatter(x_vals, y_vals, color='r')
+        plt.show()
+        
 
 def compute_local_average_speeds_process(index, output_queue, local_speeds):
     """
