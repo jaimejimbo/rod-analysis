@@ -1209,6 +1209,32 @@ class Experiment(object):
             running, processes_left = methods.run_processes(processes, cpus=20)
             finished = 0
             while finished < num_processes:
+                now = datetime.datetime.now()
+                seconds_passed = (now-previous_time).total_seconds()
+                times.append(seconds_passed)
+                progress = int(finished*100/num_processes)
+                previous_time = now
+                string = "Progress: %d%%  " % (progress)
+                perten = progress/10
+                string += "["
+                string += "#"*int(perten*4)
+                string += "-"*int((9-perten)*4)
+                string += "]"
+                if counter >= 3:
+                    counter = 0
+                    avg_time = sum(times)*1.0/len(times)
+                    time_left = int(len(processes_left)*avg_time/60)
+                if not time_left is None:
+                    if time_left:
+                        string += "\t" + str(time_left) + " minutes"
+                    else:
+                        string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+                if not finished >= num_processes:
+                    pass#string += "\r"
+                else:
+                    string += "\n"
+                print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+                print string
                 finished += 1
                 output = output_queue.get()
                 index = output[0]
