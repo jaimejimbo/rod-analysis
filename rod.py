@@ -8,7 +8,7 @@ class Rod(object):
     Rod object.
     """
 
-    def __init__(self, args_tuple):
+    def __init__(self, args_tuple, real_kappa=None):
         """
         Initialization of rod
         """
@@ -33,14 +33,14 @@ class Rod(object):
         self._hash = 0
         self._direction_matrix = matrix.zeros(2, 2)
         self._kappa = float(feret)/float(minferet)
-        self._real_kappa = None
+        self._real_kappa = real_kappa
 
     @property
     def area(self):
         """
         Returns area covered by rod.
         """
-        return self._feret*self._min_feret
+        return self._feret*self._feret/float(self._real_kappa)
 
     @property
     def feret(self):

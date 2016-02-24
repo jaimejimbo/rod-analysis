@@ -1047,14 +1047,18 @@ class SystemState(object):
         return eigen1
 
 
-    def covered_area_proportion(self, index, queue):
+    def covered_area_proportion(self, index, queue, rod_dimensions, system_rad):
         """
             Returns covered area proportion by rods.
         """
-        total_area = self.area
-        covered_area = 0
-        for rod in self:
-            covered_area += rod.area
+        if not rod_dimensions or not system_rad:
+            total_area = self.area
+            covered_area = 0
+            for rod in self:
+                covered_area += rod.area
+        else:
+            total_area = math.pi*system_rad**2
+            covered_area = len(self)*rod_dimensions[0]*rod_dimensions[1]
         proportion = covered_area / total_area
         queue.put([index, proportion])
         return
@@ -1244,7 +1248,7 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
     for dataline in data:
         try:
             parameters = tuple(dataline)
-            new_rod = rod.Rod(parameters)
+            new_rod = rod.Rod(parameters, real_kappa=real_kappas)
             state.put_rod(new_rod)
         except ValueError:
             print "line 1225"

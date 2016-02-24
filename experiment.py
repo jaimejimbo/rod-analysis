@@ -2029,16 +2029,15 @@ class Experiment(object):
         std_dev = math.sqrt(loses_2_average-loses_average**2)
         return loses_average, std_dev
 
-    @property
-    def average_covered_area_proportion(self):
+    def average_covered_area_proportion(self, rod_dimensions=None, system_rad=None, reset=None):
         """
             Returns average covered area proportion.
         """
-        if not self._covered_area_prop:
-            self._covered_area_prop = self._average_covered_area_proportion()
+        if not self._covered_area_prop or bool(reset):
+            self._covered_area_prop = self._average_covered_area_proportion(rod_dimensions, system_rad)
         return self._covered_area_prop
 
-    def _average_covered_area_proportion(self):
+    def _average_covered_area_proportion(self, rod_dimensions, system_rad):
         """
             Returns average covered area proportion.
         """
@@ -2048,7 +2047,8 @@ class Experiment(object):
         for index in range(len(self._states)):
             state = self.get(index)
             process = mp.Process(target=state.covered_area_proportion,
-                                 args=(index, output_queue))
+                                 args=(index, output_queue,
+                                       rod_dimensions, system_rad))
             processes.append(process)
             props.append(None)
         num_processes = len(processes)

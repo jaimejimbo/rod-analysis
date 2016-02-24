@@ -8,8 +8,8 @@ Main script.
 Settings
 """
 #0-9 or None to disable
-low_comp_level = 0
-medium_comp_level = 0
+low_comp_level = None
+medium_comp_level = None
 strong_comp_level = 0 
 #None uses all cpus      
 cpus = None
@@ -19,9 +19,9 @@ clusters = 1
 avg_temp = 1
 order_param_exp = 1
 lost_percentage = 1
-run_imagej = 0
+run_imagej = 1
 run_props = 1
-run_graphs = 1
+run_graphs = 0
 run_check_dim = 0
 get_image_dates = 0
 # variables
@@ -161,7 +161,7 @@ try:
         print msg
         length = experiment_.average_rod_length
         width = experiment_.average_rod_width
-        cov_area, cov_area_dev = experiment_.average_covered_area_proportion
+        cov_area, cov_area_dev = experiment_.average_covered_area_proportion(rod_dimensions=None, system_rad=None, reset=None)
         num_rods, num_rods_dev = experiment_.average_number_of_rods
         return cov_area, cov_area_dev, int(num_rods), int(num_rods_dev), rad, length, width
     
