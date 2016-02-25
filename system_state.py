@@ -1047,18 +1047,14 @@ class SystemState(object):
         return eigen1
 
 
-    def covered_area_proportion(self, index, queue, rod_dimensions, system_rad):
+    def covered_area_proportion(self, index, queue):
         """
             Returns covered area proportion by rods.
         """
-        if not rod_dimensions or not system_rad:
-            total_area = self.area
-            covered_area = 0
-            for rod in self:
-                covered_area += rod.area
-        else:
-            total_area = math.pi*system_rad**2
-            covered_area = len(self)*rod_dimensions[0]*rod_dimensions[1]
+        total_area = self.area
+        covered_area = 0
+        for rod in self:
+            covered_area += rod.area
         proportion = covered_area / total_area
         queue.put([index, proportion])
         return
