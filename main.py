@@ -19,9 +19,9 @@ clusters = 1
 avg_temp = 1
 order_param_exp = 1
 lost_percentage = 1
-run_imagej = 0
+run_imagej = 1
 run_props = 1
-run_graphs = 0
+run_graphs = 1
 run_check_dim = 0
 get_image_dates = 0
 # variables
@@ -74,7 +74,7 @@ def set_coords_in_imagej(zone_coords_):
     for line in imagej_script:
         if reg_exp.match(line):
             line = "\tmakeOval"+values
-    image_script.close()
+    imagej_script.close()
 
 #zone_coords = []
 #set_coords_in_imagej()
@@ -108,15 +108,14 @@ if True:
             
         if get_image_dates:
             os.system("rm dates.txt")
-            methods.export_image_dates()
-
-        if run_imagej:
-            print "Running imagej..."
-            methods.imagej()
             dates = methods.get_image_dates()
             methods.export_image_dates()
         else:
             dates = methods.import_image_dates()
+
+        if run_imagej:
+            print "Running imagej..."
+            methods.imagej()
 
 
         def run_default(kappa, real_kappa, error):
