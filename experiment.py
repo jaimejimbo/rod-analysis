@@ -1204,6 +1204,7 @@ class Experiment(object):
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes, cpus=20)
             finished = 0
+            previous_time = datetime.datetime.now()
             while finished < num_processes:
                 now = datetime.datetime.now()
                 seconds_passed = (now-previous_time).total_seconds()
