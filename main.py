@@ -9,7 +9,7 @@ Settings
 """
 #0-9 or None to disable
 low_comp_level = None
-medium_comp_level = 0
+medium_comp_level = 1
 strong_comp_level = None
 #None uses all cpus      
 cpus = None
@@ -20,7 +20,7 @@ avg_temp = 1
 order_param_exp = 1
 lost_percentage = 1
 run_imagej = 1
-run_props = 1
+run_props = 0
 run_graphs = 1
 run_check_dim = 0
 get_image_dates = 0
@@ -96,7 +96,10 @@ settings.write("\n")
 settings.close()
 
 import experiment, system_state, methods, settings
-import os, gc, math
+import os, gc, math#, guppy
+
+#hp = guppy.hpy()
+#hp.setrelheap()
 
 os.system("clear && clear")
 
@@ -215,6 +218,7 @@ if True:
     except AssertionError as error:
         print "Assertion error({0})".format(error)
         os.system("sudo pkill -f main.py")
+#print hp.heap()
 print "Type exit() to exit."
 def exit():
     print "Give root password to kill all remaining zombie processes"

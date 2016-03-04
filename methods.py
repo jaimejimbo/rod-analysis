@@ -567,3 +567,11 @@ def decompress(obj, level=settings.low_comp_level):
     dumps = zlib.decompress(obj)
     data = cPickle.loads(dumps)
     return data
+
+def gaussian(distance, sigma=settings.sigma):
+    """
+    Returns gaussian probability for distance.
+    """
+    norm = 1.0/(sigma*math.sqrt(2*math.pi))
+    vaue = math.exp((-distance**2)/(2.0*sigma))
+    return norm*value

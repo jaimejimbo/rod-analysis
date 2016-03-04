@@ -55,6 +55,7 @@ class SystemState(object):
         self._fixed = True
         self._area = None
         self._real_kappas = real_kappas
+        self._gaussian_exp = {}
         try:
             self._radius = zone_coords[2]
             self._center_x = zone_coords[0]
@@ -940,7 +941,6 @@ class SystemState(object):
         Now angle is the relative between rods.
         N^2
         """
-        print "HOLA"
         if self._relative_g2 is None:
             if not self.number_of_rods:
                 self._relative_g2 = 0
@@ -949,8 +949,13 @@ class SystemState(object):
                 for rod1 in self:
                     for rod2 in self:
                         if rod1 != rod2:
+                            distance = methods.distance_between_points(rod1.center, rod2.center)
+                            correction = methods.gaussian(distance)
                             angle = math.radians(rod1.angle_between_rods(rod2))
                             cos_av += abs(math.cos(angle))/self.number_of_rods*(self.number_of_rods-1)
+                            distance = methods.distance_between_points(rod1.center, rod2.center)
+                            correction = methods.gaussian(distance)
+                            cos_av *= correction
                 self._relative_g2 = cos_av
         return self._relative_g2
 
@@ -971,6 +976,9 @@ class SystemState(object):
                         if rod1 != rod2:
                             angle = math.radians(rod1.angle_between_rods(rod2))
                             cos_av += abs(2*math.cos(angle))/self.number_of_rods*(self.number_of_rods-1)
+                            distance = methods.distance_between_points(rod1.center, rod2.center)
+                            correction = methods.gaussian(distance)
+                            cos_av *= correction
                 cos_av /= self.number_of_rods*(self.number_of_rods-1)
                 self._relative_g4 = cos_av
         return self._relative_g4
@@ -1126,6 +1134,7 @@ class SubsystemState(SystemState):
                                             self._center)
         self._area = methods.effective_area(self._radius,
                                     self._position_rad, self._main_rad)
+        self._gaussian_exp = {}
 
     def remove_all_rods(self):
         """
@@ -1157,8 +1166,7 @@ class SubsystemState(SystemState):
         """
         density = 0
         for rod_ in self:
-            density += rod_.feret*rod_.min_feret    #area proportion
-            #density += 1
+            density += rod_.feret*rod_.min_feret*self._gaussian_exp[rod_.identifier]
         if not density or not self.area:
             self._density = 0
         else:
@@ -1184,6 +1192,10 @@ class SubsystemState(SystemState):
                                 level=methods.settings.low_comp_level))
         self._rods = queue.Queue(rods)
         self.reset()
+        for rod_ in self:
+            distance = methods.distance_between_points(self.center, rod_.center)
+            proportion = methods.gaussian(distance)
+            self._gaussian_exp[rod_.identifier] = proportion
 
 
 
