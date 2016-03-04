@@ -265,7 +265,7 @@ class Experiment(object):
             now = datetime.datetime.now()
             seconds_passed = (now-previous_time).total_seconds()
             times.append(seconds_passed)
-                progress = int(finished*400/num_processes)/4
+            progress = int(finished*400/num_processes)/4
             previous_time = now
             string = "Progress: %d%%  " % (progress)
             perten = progress/10
