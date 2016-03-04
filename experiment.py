@@ -1198,7 +1198,9 @@ class Experiment(object):
         groups = self.bursts_groups
         bursts_ = len(groups)
         print " "
+        finished = 0
         for group in groups:
+            finished += 1
             counter += 1
             now = datetime.datetime.now()
             seconds_passed = (now-previous_time).total_seconds()
