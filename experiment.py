@@ -268,7 +268,7 @@ class Experiment(object):
             progress = int(finished*400/num_processes)/4
             previous_time = now
             string = "Progress: %d%%  " % (progress)
-            perten = progress/10
+            perten = progress/10.0
             string += "["
             string += "#"*int(perten*4)
             string += "-"*int((9-perten)*4)
@@ -724,7 +724,7 @@ class Experiment(object):
                 progress = int(finished*400/num_processes)/4
                 previous_time = now
                 string = "\rProgress: %d%%  " % (progress)
-                perten = progress/10
+                perten = progress/10.0
                 string += "["
                 string += "#"*int(perten*4)
                 string += "-"*int((9-perten)*4)
@@ -1059,7 +1059,7 @@ class Experiment(object):
                 progress = int(finished*400/num_processes)/4
                 previous_time = now
                 string = "Progress: %d%%  " % (progress)
-                perten = progress/10
+                perten = progress/10.0
                 string += "["
                 string += "#"*int(perten*4)
                 string += "-"*int((9-perten)*4)
@@ -1195,7 +1195,7 @@ class Experiment(object):
         times = []
         time_left = None
         counter = 0
-        groups = self.burst_groups
+        groups = self.bursts_groups
         bursts_ = len(groups)
         print " "
         for group in groups:
@@ -1206,7 +1206,7 @@ class Experiment(object):
             progress = int(finished*400/bursts_)/4
             previous_time = now
             string = "Progress: %d%%  " % (progress)
-            perten = progress/10
+            perten = progress/10.0
             string += "["
             string += "#"*int(perten*4)
             string += "-"*int((9-perten)*4)
@@ -1219,7 +1219,7 @@ class Experiment(object):
                 if time_left:
                     string += "\t" + str(time_left) + " minutes"
                 else:
-                    string += "\t" + str(int(len(self.burst_groups)*avg_time)) + " seconds"
+                    string += "\t" + str(int(len(self.bursts_groups)*avg_time)) + " seconds"
             if not finished >= num_processes:
                 pass#string += "\r"
             else:
