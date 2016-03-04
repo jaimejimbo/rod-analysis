@@ -1050,7 +1050,7 @@ class Experiment(object):
             counter = 0
             time_left = None
             times = []
-            print "\n\t"
+            print " "
             while True:
                 counter += 1
                 now = datetime.datetime.now()
@@ -1206,7 +1206,11 @@ class Experiment(object):
             finished = 0
             previous_time = datetime.datetime.now()
             times = []
+            time_left = None
+            counter = 0
+            print " "
             while finished < num_processes:
+                counter += 1
                 now = datetime.datetime.now()
                 seconds_passed = (now-previous_time).total_seconds()
                 times.append(seconds_passed)
