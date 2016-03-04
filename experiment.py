@@ -268,7 +268,7 @@ class Experiment(object):
             progress = int(finished*400/num_processes)/4
             previous_time = now
             string = "Progress: %d%%  " % (progress)
-            perten = progress/10.0
+            perten = progress/10
             string += "["
             string += "#"*int(perten*4)
             string += "-"*int((9-perten)*4)
@@ -724,7 +724,7 @@ class Experiment(object):
                 progress = int(finished*400/num_processes)/4
                 previous_time = now
                 string = "\rProgress: %d%%  " % (progress)
-                perten = progress/10.0
+                perten = progress/10
                 string += "["
                 string += "#"*int(perten*4)
                 string += "-"*int((9-perten)*4)
@@ -1059,7 +1059,7 @@ class Experiment(object):
                 progress = int(finished*400/num_processes)/4
                 previous_time = now
                 string = "Progress: %d%%  " % (progress)
-                perten = progress/10.0
+                perten = progress/10
                 string += "["
                 string += "#"*int(perten*4)
                 string += "-"*int((9-perten)*4)
@@ -1210,7 +1210,7 @@ class Experiment(object):
             progress = int(finished*400/bursts_)/4
             previous_time = now
             string = "Progress: %d%%  " % (progress)
-            perten = progress/10.0
+            perten = progress/10
             string += "["
             string += "#"*int(perten*4)
             string += "-"*int((9-perten)*4)

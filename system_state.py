@@ -953,9 +953,9 @@ class SystemState(object):
                             correction = methods.gaussian(distance)
                             angle = math.radians(rod1.angle_between_rods(rod2))
                             cos_av += abs(math.cos(angle))/self.number_of_rods*(self.number_of_rods-1)
-                            distance = methods.distance_between_points(rod1.center, rod2.center)
-                            correction = methods.gaussian(distance)
-                            cos_av *= correction
+                            #distance = methods.distance_between_points(rod1.center, rod2.center)
+                            #correction = methods.gaussian(distance)
+                            #cos_av *= correction
                 self._relative_g2 = cos_av
         return self._relative_g2
 
@@ -976,9 +976,9 @@ class SystemState(object):
                         if rod1 != rod2:
                             angle = math.radians(rod1.angle_between_rods(rod2))
                             cos_av += abs(2*math.cos(angle))/self.number_of_rods*(self.number_of_rods-1)
-                            distance = methods.distance_between_points(rod1.center, rod2.center)
-                            correction = methods.gaussian(distance)
-                            cos_av *= correction
+                            #distance = methods.distance_between_points(rod1.center, rod2.center)
+                            #correction = methods.gaussian(distance)
+                            #cos_av *= correction
                 cos_av /= self.number_of_rods*(self.number_of_rods-1)
                 self._relative_g4 = cos_av
         return self._relative_g4
