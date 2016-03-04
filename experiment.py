@@ -1175,6 +1175,7 @@ class Experiment(object):
         frames = len(self._states)
         function_name = 'plottable_average_angle_matrix_queue'
         kappas = methods.decompress(self._states[0]).kappas
+        prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+"prop"+str(round(100*prop,1))+'%.mp4'
         units = "Average angle [grad]"
         self._generic_scatter_animator(name, function_name, units,
@@ -1201,6 +1202,7 @@ class Experiment(object):
         finished = 0
         for group in groups:
             finished += 1
+            left = bursts_-finished
             counter += 1
             now = datetime.datetime.now()
             seconds_passed = (now-previous_time).total_seconds()
@@ -1216,13 +1218,13 @@ class Experiment(object):
             if counter >= 3:
                 counter = 0
                 avg_time = sum(times)*1.0/len(times)
-                time_left = int(len(processes_left)*avg_time/60)
+                time_left = int(left*avg_time/60)
             if not time_left is None:
                 if time_left:
                     string += "\t" + str(time_left) + " minutes"
                 else:
                     string += "\t" + str(int(len(self.bursts_groups)*avg_time)) + " seconds"
-            if not finished >= num_processes:
+            if not finished >= bursts_:
                 pass#string += "\r"
             else:
                 string += "\n"
