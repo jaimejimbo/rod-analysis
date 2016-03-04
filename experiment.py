@@ -1050,7 +1050,7 @@ class Experiment(object):
             counter = 0
             time_left = None
             times = []
-            print " "
+            print "\n\t"
             while True:
                 counter += 1
                 now = datetime.datetime.now()
@@ -1114,7 +1114,6 @@ class Experiment(object):
         Creates a video of density's evolution.
         """
         print("Creating densities video...")
-        #self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_density_matrix_queue'
         kappas = self.kappas
@@ -1143,7 +1142,6 @@ class Experiment(object):
         Creates a video of correlation g2 evolution.
         """
         print("Creating g2 video...")
-        #self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'correlation_g2_plot_matrix_queue'
         kappas = self.kappas
@@ -1159,7 +1157,6 @@ class Experiment(object):
         Creates a video of correlation g4 evolution.
         """
         print("Creating g4 video...")
-        #self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'correlation_g4_plot_matrix_queue'
         kappas = self.kappas
@@ -1175,7 +1172,6 @@ class Experiment(object):
         Creates a video of average angle evolution.
         """
         print("Creating average angle video...")
-        #self.divide_systems_in_circles(divisions=divisions)
         frames = len(self._states)
         function_name = 'plottable_average_angle_matrix_queue'
         kappas = methods.decompress(self._states[0]).kappas

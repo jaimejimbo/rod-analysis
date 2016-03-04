@@ -9,8 +9,8 @@ Settings
 """
 #0-9 or None to disable
 low_comp_level = None
-medium_comp_level = None
-strong_comp_level = 0 
+medium_comp_level = 0
+strong_comp_level = None
 #None uses all cpus      
 cpus = None
 # 1 or True, 0 or False
@@ -128,7 +128,6 @@ if True:
                                                 dates=dates, diff_t=5/3.0)
             experiment_.set_coef(coef)
             if create_videos:
-                experiment_.divide_systems_in_circles(divisions=divisions)
                 experiment_.create_videos(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
                                          number_of_bursts=1)
             if clusters:

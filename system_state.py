@@ -1215,7 +1215,7 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
         finished += 1
         [index, state] = states_queue.get()
         states[index] = methods.compress(state,
-                                level=methods.settings.low_comp_level)
+                                level=methods.settings.medium_comp_level)
         if len(processes_left):
             new_process = processes_left.pop(0)
             new_process.start()
