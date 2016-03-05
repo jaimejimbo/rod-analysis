@@ -254,7 +254,7 @@ class Experiment(object):
                                         output_queue, limit, amount_of_rods)))
         num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
-        finished = 0
+        finished_ = 0
         previous_time = datetime.datetime.now()
         counter = 0
         time_left = None
@@ -265,7 +265,7 @@ class Experiment(object):
             now = datetime.datetime.now()
             seconds_passed = (now-previous_time).total_seconds()
             times.append(seconds_passed)
-            progress = int(finished*100/num_processes)
+            progress = int(finished_*100/num_processes)
             previous_time = now
             string = "Progress: %d%%  " % (progress)
             perten = progress/10.0
@@ -291,7 +291,7 @@ class Experiment(object):
             print(string)
             #sys.stdout.write(string)
             #sys.stdout.flush()
-            finished += 1
+            finished_ += 1
             output_row = output_queue.get()
             index = output_row[0]
             self._evolution_dictionaries[index] = output_row[1]
@@ -299,7 +299,7 @@ class Experiment(object):
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
-            if finished >= num_processes:
+            if finished_ >= num_processes:
                 break
         for process in processes:
             if process.is_alive():
@@ -1207,15 +1207,15 @@ class Experiment(object):
         groups = self.bursts_groups
         bursts_ = len(groups)
         print " "
-        finished = 0
+        finished_ = 0
         for group in groups:
-            finished += 1
-            left = bursts_-finished
+            finished_ += 1
+            left = bursts_-finished_
             counter += 1
             now = datetime.datetime.now()
             seconds_passed = (now-previous_time).total_seconds()
             times.append(seconds_passed)
-            progress = int(finished*100/bursts_)
+            progress = int(finished_*100/bursts_)
             previous_time = now
             string = "Progress: %d%%  " % (progress)
             perten = progress/10.0
