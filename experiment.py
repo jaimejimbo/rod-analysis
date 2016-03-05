@@ -270,8 +270,9 @@ class Experiment(object):
             string = "Progress: %d%%  " % (progress)
             perten = progress/10.0
             string += "["
-            string += "#"*int(perten*4)
-            string += "-"*int((9.75-perten)*4)
+            prog = int(perten*4)
+            string += "#"*prog
+            string += "-"*(40-prog)
             string += "]"
             if counter >= 3:
                 counter = 0
@@ -727,7 +728,7 @@ class Experiment(object):
                 perten = progress/10.0
                 string += "["
                 string += "#"*int(perten*4)
-                string += "-"*int((9.75-perten)*4)
+                string += "-"*int((10-perten)*4)
                 string += "]"
                 if counter >= 3:
                     counter = 0
@@ -1062,7 +1063,7 @@ class Experiment(object):
                 perten = progress/10.0
                 string += "["
                 string += "#"*int(perten*4)
-                string += "-"*int((9.75-perten)*4)
+                string += "-"*int((10-perten)*4)
                 string += "]"
                 if counter >= 3:
                     counter = 0
@@ -1219,8 +1220,9 @@ class Experiment(object):
             string = "Progress: %d%%  " % (progress)
             perten = progress/10.0
             string += "["
-            string += "#"*int(perten*4)
-            string += "-"*int((9.75-perten)*4)
+            prog = int(perten*4)
+            string += "#"*prog
+            string += "-"*(40-prog)
             string += "]"
             if counter >= 3:
                 counter = 0
