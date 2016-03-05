@@ -283,7 +283,7 @@ class Experiment(object):
                     string += "\t" + str(time_left) + " minutes"
                 else:
                     string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
-            if not finished >= num_processes:
+            if not finished_ >= num_processes:
                 pass #string += "\r"
             else:
                 string += "\n"
