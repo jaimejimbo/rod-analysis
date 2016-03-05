@@ -1182,6 +1182,13 @@ class Experiment(object):
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
 
 
+    @property
+    def radius(self):
+        """
+            Returns radius of systems (first)
+        """
+        return self.get(1).radius
+
     def _generic_scatter_animator(self, name, function_name, units,
                                     divisions, fps=15, number_of_bursts=10):
         """
@@ -1295,12 +1302,12 @@ class Experiment(object):
             return
         plt.cla()
         plt.clf()
-        rad = 2000.0/divisions
+        rad = float(self.radius)/divisions
         size = (rad/8)**2
-        x_min = min(x_val)
-        x_max = max(x_val)
-        y_min = min(y_val)
-        y_max = max(y_val)
+        x_min = min(x_val)-rad*1.1
+        x_max = max(x_val)+rad*1.1
+        y_min = min(y_val)-rad*1.1
+        y_max = max(y_val)+rad*1.1
         plt.xlim((x_min, x_max))
         plt.ylim((y_min, y_max))
         #plt.suptitle(name)

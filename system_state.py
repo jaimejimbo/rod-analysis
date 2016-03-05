@@ -379,8 +379,8 @@ class SystemState(object):
         if divisions != self._divisions:
             self.reset()
             self._divisions = divisions
-            self.compute_center_and_radius()
             # Defining zone and distance between points.
+            subsystem_rad = float(self.radius)/divisions
             start_x = self.center[0]-self.radius
             end_x = self.center[0]+self.radius
             start_y = self.center[1]-self.radius
@@ -390,15 +390,11 @@ class SystemState(object):
                                  for times in range(divisions)]
             possible_y_values = [start_y + (times)*diff
                                  for times in range(divisions)]
-            #assert self._coef == 5, "Coeficient error (367)"
             rad = diff*math.sqrt(2)*self._coef/2.0
             subsystems = self._subsystems(possible_x_values, possible_y_values,
                                           rad, diff, divisions)
             self._actual_subdivision = methods.compress(subsystems,
                                 level=methods.settings.low_comp_level)
-            subsystems = None
-            possible_x_values = None
-            possible_y_values = None
         return
 
     def _separate_rods_by_coords(self, rods_list, possible_x_values,
@@ -435,7 +431,6 @@ class SystemState(object):
             Creates subsystems
         """
         subsystems = []
-        rods_list = copy.deepcopy(list(self._rods))
         #rods_matrix = self._separate_rods_by_coords(rods_list, possible_x_values,
         #                                            possible_y_values, rad, diff,
         #                                            divisions)
@@ -449,7 +444,7 @@ class SystemState(object):
                 distance = methods.distance_between_points(center,
                                                      self.center)
                 #rods = rods_matrix[index_y][index_x]
-                if distance < self._radius:
+                if distance < self.radius:
                     subsystem = SubsystemState(center, rad, self.zone_coords,
                                                self._rods, self._kappas, self._real_kappas,
                                                self._allowed_kappa_error)
@@ -1195,8 +1190,6 @@ class SubsystemState(SystemState):
         for rod_ in self:
             distance = methods.distance_between_points(self.center, rod_.center)
             proportion = methods.gaussian(distance)
-            self._gaussian_exp[rod_.identifier] = proportion
-
 
 
 
