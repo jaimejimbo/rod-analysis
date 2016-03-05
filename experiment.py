@@ -265,13 +265,13 @@ class Experiment(object):
             now = datetime.datetime.now()
             seconds_passed = (now-previous_time).total_seconds()
             times.append(seconds_passed)
-            progress = int(finished*400/num_processes)/4
+            progress = int(finished*100/num_processes)
             previous_time = now
             string = "Progress: %d%%  " % (progress)
-            perten = progress/10
+            perten = progress/10.0
             string += "["
             string += "#"*int(perten*4)
-            string += "-"*int((9-perten)*4)
+            string += "-"*int((9.75-perten)*4)
             string += "]"
             if counter >= 3:
                 counter = 0
@@ -721,13 +721,13 @@ class Experiment(object):
                 now = datetime.datetime.now()
                 seconds_passed = (now-previous_time).total_seconds()
                 times.append(seconds_passed)
-                progress = int(finished*400/num_processes)/4
+                progress = int(finished*100/num_processes)
                 previous_time = now
                 string = "\rProgress: %d%%  " % (progress)
-                perten = progress/10
+                perten = progress/10.0
                 string += "["
                 string += "#"*int(perten*4)
-                string += "-"*int((9-perten)*4)
+                string += "-"*int((9.75-perten)*4)
                 string += "]"
                 if counter >= 3:
                     counter = 0
@@ -1056,13 +1056,13 @@ class Experiment(object):
                 now = datetime.datetime.now()
                 seconds_passed = (now-previous_time).total_seconds()
                 times.append(seconds_passed)
-                progress = int(finished*400/num_processes)/4
+                progress = int(finished*100/num_processes)
                 previous_time = now
                 string = "Progress: %d%%  " % (progress)
-                perten = progress/10
+                perten = progress/10.0
                 string += "["
                 string += "#"*int(perten*4)
-                string += "-"*int((9-perten)*4)
+                string += "-"*int((9.75-perten)*4)
                 string += "]"
                 if counter >= 3:
                     counter = 0
@@ -1214,13 +1214,13 @@ class Experiment(object):
             now = datetime.datetime.now()
             seconds_passed = (now-previous_time).total_seconds()
             times.append(seconds_passed)
-            progress = int(finished*400/bursts_)/4
+            progress = int(finished*100/bursts_)
             previous_time = now
             string = "Progress: %d%%  " % (progress)
-            perten = progress/10
+            perten = progress/10.0
             string += "["
             string += "#"*int(perten*4)
-            string += "-"*int((9-perten)*4)
+            string += "-"*int((9.75-perten)*4)
             string += "]"
             if counter >= 3:
                 counter = 0
@@ -1231,10 +1231,6 @@ class Experiment(object):
                     string += "\t" + str(time_left) + " minutes"
                 else:
                     string += "\t" + str(int(len(self.bursts_groups)*avg_time)) + " seconds"
-            if not finished >= bursts_:
-                pass#string += "\r"
-            else:
-                string += "\n"
             print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
             print string
             output_queue = mp.Queue()
@@ -1289,7 +1285,7 @@ class Experiment(object):
                                 divisions, name, z_max, z_min, units)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer=self._writer, fps=fps)
-        print CURSOR_UP_ONE + ERASE_LINE
+        print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
         return z_min, z_max
 
     def _animate_scatter(self, x_val, y_val, z_vals,
@@ -1303,7 +1299,7 @@ class Experiment(object):
             return
         plt.cla()
         plt.clf()
-        rad = float(self.radius)/divisions
+        rad = float(self.radius*1.3)/divisions
         size = (rad/4)**2
         x_min = min(x_val)-rad*1.1
         x_max = max(x_val)+rad*1.1
@@ -1640,12 +1636,12 @@ class Experiment(object):
             return
         plt.cla()
         plt.clf()
-        rad = 2000.0/divisions
-        size = (rad/8)**2
-        x_min = min(x_val)
-        x_max = max(x_val)
-        y_min = min(y_val)
-        y_max = max(y_val)
+        rad = float(self.radius*1.3)/divisions
+        size = (rad/4)**2
+        x_min = min(x_val)-rad*1.1
+        x_max = max(x_val)+rad*1.1
+        y_min = min(y_val)-rad*1.1
+        y_max = max(y_val)+rad*1.1
         plt.xlim((x_min, x_max))
         plt.ylim((y_min, y_max))
         #plt.suptitle(name)
