@@ -572,6 +572,8 @@ def gaussian(distance, sigma=settings.sigma):
     """
     Returns gaussian probability for distance.
     """
+    if not sigma:
+        return 1
     norm = 1.0/(sigma*math.sqrt(2*math.pi))
     value = math.exp((-distance**2)/(2.0*sigma**2))
     return norm*value
