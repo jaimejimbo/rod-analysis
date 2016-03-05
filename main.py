@@ -27,7 +27,8 @@ get_image_dates = 0
 # variables
 coef = 3
 divisions = 30
-
+#sigma = sigma_coef * subsystem_rad
+sigma_coef = .5
 
 import re
 
@@ -94,7 +95,7 @@ settings.write("\n")
 settings.write("zone_coords = {0}".format(zone_coords))
 settings.write("\n")
 rad = zone_coords[2]
-gaussian_sigma = float(rad)/divisions
+gaussian_sigma = sigma_coef*float(rad)/divisions
 settings.write("sigma = {0}".format(gaussian_sigma))
 settings.write("\n")
 settings.close()
