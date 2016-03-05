@@ -1304,7 +1304,7 @@ class Experiment(object):
         plt.cla()
         plt.clf()
         rad = float(self.radius)/divisions
-        size = (rad/8)**2
+        size = (rad/4)**2
         x_min = min(x_val)-rad*1.1
         x_max = max(x_val)+rad*1.1
         y_min = min(y_val)-rad*1.1
