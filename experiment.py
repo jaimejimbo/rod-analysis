@@ -1289,6 +1289,7 @@ class Experiment(object):
                                 divisions, name, z_max, z_min, units)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer=self._writer, fps=fps)
+        print CURSOR_UP_ONE + ERASE_LINE
         return z_min, z_max
 
     def _animate_scatter(self, x_val, y_val, z_vals,
