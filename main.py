@@ -20,10 +20,10 @@ avg_temp = 1
 order_param_exp = 1
 lost_percentage = 1
 run_imagej = 1
-run_props = 0
-run_graphs = 1
+run_props = 1
+run_graphs = 0
 run_check_dim = 0
-get_image_dates = 0
+get_image_dates = 1
 # variables
 coef = 3
 divisions = 30
@@ -180,7 +180,7 @@ if True:
         
 
         if run_props:
-            log = open("props.log", '-w')
+            log = open("props.log", 'w')
             log.writeln("\tArea proprtions")
             log.wrtieln("kappa\t\t\tdeviation")
             print "Computing area proportions..."
