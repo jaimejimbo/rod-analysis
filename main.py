@@ -129,9 +129,9 @@ if True:
         def run_default(kappa, real_kappa, error):
             file_ = str(real_kappa)+".log"
             log = open(file_)
-            msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
+            msg = "\t\t\tK"+str(real_kappa)+"\t\t\t\n"
             print msg
-            log.writeln(line)
+            log.write(msg)
             names, rod_groups = system_state.create_rods(kappas=kappa, real_kappas=real_kappa,
                                                     allowed_kappa_error=error)
             experiment_ = experiment.Experiment(system_states_name_list=names, kappas=real_kappa,
@@ -148,7 +148,7 @@ if True:
                 experiment_.plot_average_temperature(100, 10)
             if lost_percentage:
                 percentage, std_dev = experiment_.lost_rods_percentage
-	        line = "Rods lost: "+str(percentage)+"%"+" Standard deviation: "+str(std_dev)
+	        line = "Rods lost: "+str(percentage)+"%"+" Standard deviation: "+str(std_dev) + "\n"
 	        print line
 	        log.writeln(line)
             try:
@@ -181,8 +181,8 @@ if True:
 
         if run_props:
             log = open("props.log", 'w')
-            log.writeln("\tArea proprtions")
-            log.wrtieln("kappa\t\t\tdeviation")
+            log.write("\tArea proprtions\n")
+            log.wrtie("kappa\t\t\tdeviation\n")
             print "Computing area proportions..."
             print "kappa\t\t\tdeviation"
             prop_long, prop_long_dev, longs, longs_dev, rad1 = run_prop(15, 12, 3)
@@ -197,20 +197,20 @@ if True:
             total_prop_err = prop_short_dev + prop_long_dev
             #print area
             tot_area_prop = round(100*total_prop, 2), "% ", round(100*total_prop_err, 2)
-            line = "Total area proportion: "+str(tot_area_prop)+"%"
-            log.writeln(line)
+            line = "Total area proportion: "+str(tot_area_prop)+"%\n"
+            log.write(line)
             print line
-            line = "Long proportion (area): "+str(round(100*float(prop_long)/total_prop, 2))+"% dev:"+str(round(100*prop_long_dev/total_prop, 2))+"%" 
-            log.writeln(line)
+            line = "Long proportion (area): "+str(round(100*float(prop_long)/total_prop, 2))+"% dev:"+str(round(100*prop_long_dev/total_prop, 2))+"%\n" 
+            log.write(line)
             print line
-            line = "Number of long rods: "+str(longs)+" dev "+str(longs_dev)
-            log.writeln(line)
+            line = "Number of long rods: "+str(longs)+" dev "+str(longs_dev) +"\n"
+            log.write(line)
             print line
-            line = "Number of short rods: "+str(shorts)+" dev "+str(shorts_dev)
-            log.writeln(line)
+            line = "Number of short rods: "+str(shorts)+" dev "+str(shorts_dev) + "\n"
+            log.write(line)
             print line
-            line = "Total number of rods: "+str(longs+shorts)
-            log.writeln(line)
+            line = "Total number of rods: "+str(longs+shorts) + "\n"
+            log.write(line)
             print line
             waprop = input("Wanted area proportion: ")
             wlprop = input("Wanted longs proportion: ")
@@ -222,8 +222,8 @@ if True:
             print "Difference: ", Nl-longs
             print "Needed short rods: ", Ns
             print "Difference: ", Ns-shorts
-            line += "Longs: "+str(Nl)+"\nShorts: "+str(Ns)
-            log.writeln(line)
+            line += "Longs: "+str(Nl)+"\nShorts: "+str(Ns) + "\n"
+            log.write(line)
             log.close()
         
         if run_graphs:
