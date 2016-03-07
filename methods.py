@@ -371,7 +371,7 @@ def imagej():
 
         run_imagej = raw_input("Run imagej script?(Yn)")
         if run_imagej == "y" or not run_imagej:
-            os.system("imagej ./imagej_script.ijm")
+            os.system("imagej -x 4000 ./imagej_script.ijm")
     except ValueError:
         pass
 
@@ -485,7 +485,7 @@ def run_processes(processes, cpus=None):
         Runs all processes using all cores.
     """
     running = []
-    if not cpus:
+    if not cpus or cpus is None:
         cpus = settings.cpus
         if not cpus:
             cpus = int(mp.cpu_count())

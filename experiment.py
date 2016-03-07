@@ -99,6 +99,12 @@ class Experiment(object):
         writer = _writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
         self._writer = writer
 
+    def __len__(self):
+        """
+        len magic method
+        """
+        return len(self._states)
+
     def __iter__(self):
         """
             Magic method for looping.
@@ -167,12 +173,80 @@ class Experiment(object):
         """
             Changes coef for dividing in circles.
         """
+        print "Setting coefficient..."
         states = []
-        for state in self:
-            state.coef = value
-            states.append(methods.compress(state,
-                    level=methods.settings.medium_comp_level))
+        output_queue = mp.Queue()
+        processes = []
+        for index in range(len(self)):
+            process = mp.Process(target=self.set_coef_process,
+                                 args=(index, output_queue, value))
+            processes.append(process)
+            states.append(None)
+        num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
+        finished_ = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
+        while True:
+            counter += 1
+            now = datetime.datetime.now()
+            seconds_passed = (now-previous_time).total_seconds()
+            times.append(seconds_passed)
+            progress = int(finished_*100/num_processes)
+            previous_time = now
+            string = "Progress: %d%%  " % (progress)
+            perten = progress/10.0
+            string += "["
+            prog = int(perten*4)
+            string += "#"*prog
+            string += "-"*(40-prog)
+            string += "]"
+            if counter >= 3:
+                counter = 0
+                avg_time = sum(times)*1.0/len(times)
+                time_left = int(len(processes_left)*avg_time/60)
+            if not time_left is None:
+                if time_left:
+                    string += "\t" + str(time_left) + " minutes"
+                else:
+                    string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+            if not finished_ >= num_processes:
+                pass #string += "\r"
+            else:
+                string += "\n"
+            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+            print(string)
+            #sys.stdout.write(string)
+            #sys.stdout.flush()
+            finished_ += 1
+            output_row = output_queue.get()
+            index = output_row[0]
+            compressed_state = output_row[1]
+            states[index] = compressed_state
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                new_process.start()
+            if finished_ >= num_processes:
+                break
+        for process in processes:
+            if process.is_alive():
+                process.terminate()
+        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
         self._states = states
+        return
+
+    def set_coef_process(self, index, output_queue, value):
+        """
+            Process.
+        """
+        state = self.get(index)
+        state.coef = value
+        output = methods.compress(state,
+                    level=methods.settings.medium_comp_level)
+        output_queue.put([index, output])
 
     def _reset(self):
         """
@@ -1921,6 +1995,7 @@ class Experiment(object):
         Returns a list of groups of indices that are in a row.
         """
         if not len(self._bursts_groups):
+            print "Obtaining bursts groups..."
             groups = []
             group = []
             output_queue = mp.Queue()
@@ -1937,8 +2012,41 @@ class Experiment(object):
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
             finished = 0
+            previous_time = datetime.datetime.now()
+            counter = 0
+            time_left = None
+            times = []
             results = []
-            while finished < num_processes:
+            print " "
+            while True:
+                counter += 1
+                now = datetime.datetime.now()
+                seconds_passed = (now-previous_time).total_seconds()
+                times.append(seconds_passed)
+                progress = int(finished*100/num_processes)
+                previous_time = now
+                string = "Progress: %d%%  " % (progress)
+                perten = progress/10.0
+                string += "["
+                prog = int(perten*4)
+                string += "#"*prog
+                string += "-"*(40-prog)
+                string += "]"
+                if counter >= 3:
+                    counter = 0
+                    avg_time = sum(times)*1.0/len(times)
+                    time_left = int(len(processes_left)*avg_time/60)
+                if not time_left is None:
+                    if time_left:
+                        string += "\t" + str(time_left) + " minutes"
+                    else:
+                        string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+                if not finished >= num_processes:
+                    pass #string += "\r"
+                else:
+                    string += "\n"
+                print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+                print(string)
                 finished += 1
                 if not len(running):
                     break

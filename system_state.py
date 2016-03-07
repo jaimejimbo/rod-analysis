@@ -4,7 +4,11 @@
 import math, queue, matrix, copy
 import multiprocessing as mp
 import methods, rod, settings
-import cPickle, zlib
+import cPickle, zlib, datetime
+
+
+CURSOR_UP_ONE = '\x1b[1A'
+ERASE_LINE = '\x1b[2K'
 
 
 class SystemState(object):
@@ -1190,6 +1194,7 @@ class SubsystemState(SystemState):
         for rod_ in self:
             distance = methods.distance_between_points(self.center, rod_.center)
             proportion = methods.gaussian(distance)
+            self._gaussian_exp[rod_.identifier] = proportion
 
 
 
@@ -1199,6 +1204,7 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
     Create one rod for each rod_data and for each file
     returns [RodGroup1, RodGroup2, ...]
     """
+    print "Importing data..."
     names = methods.get_file_names(folder=folder)
     num_of_files = len(names)
     if not num_of_files:
@@ -1215,9 +1221,43 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
         processes.append(process)
     num_processes = len(processes)
     running, processes_left = methods.run_processes(processes)
-    finished = 0
-    while finished < num_processes:
-        finished += 1
+    finished_ = 0
+    previous_time = datetime.datetime.now()
+    counter = 0
+    time_left = None
+    times = []
+    print " "
+    while True:
+        counter += 1
+        now = datetime.datetime.now()
+        seconds_passed = (now-previous_time).total_seconds()
+        times.append(seconds_passed)
+        progress = int(finished_*100/num_processes)
+        previous_time = now
+        string = "Progress: %d%%  " % (progress)
+        perten = progress/10.0
+        string += "["
+        prog = int(perten*4)
+        string += "#"*prog
+        string += "-"*(40-prog)
+        string += "]"
+        if counter >= 3:
+            counter = 0
+            avg_time = sum(times)*1.0/len(times)
+            time_left = int(len(processes_left)*avg_time/60)
+        if not time_left is None:
+            if time_left:
+                string += "\t" + str(time_left) + " minutes"
+            else:
+                string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+        if not finished_ >= num_processes:
+            pass
+        else:
+            string += "\n"
+            break
+        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        print(string)
+        finished_ += 1
         [index, state] = states_queue.get()
         states[index] = methods.compress(state,
                                 level=methods.settings.medium_comp_level)
@@ -1227,6 +1267,7 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
     for process in processes:
         if process.is_alive():
             process.terminate()
+    print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
     return names, states
 
 
