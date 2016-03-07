@@ -10,6 +10,7 @@ import numpy
 import numpy as np
 import scipy.optimize as optimization
 import datetime
+import settings
 
 
 CURSOR_UP_ONE = '\x1b[1A'
@@ -775,6 +776,7 @@ class Experiment(object):
         self.compute_dictionaries(max_distance, max_angle_diff,
                                 limit, amount_of_rods)
         if not len(self._speeds):
+            print "Computing speeds..."
             speeds_queue = mp.Queue()
             angular_speeds_queue = mp.Queue()
             processes = []
@@ -1190,7 +1192,7 @@ class Experiment(object):
         """
         print("Creating densities video...")
         frames = len(self._states)
-        function_name = 'plottable_density_matrix_queue'
+        function_name = 'plottable_density_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+"prop"+str(round(100*prop,1))+'%.mp4'
@@ -1218,7 +1220,7 @@ class Experiment(object):
         """
         print("Creating g2 video...")
         frames = len(self._states)
-        function_name = 'correlation_g2_plot_matrix_queue'
+        function_name = 'correlation_g2_plot_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+"prop"+str(round(100*prop,1))+'%.mp4'
@@ -1233,7 +1235,7 @@ class Experiment(object):
         """
         print("Creating g4 video...")
         frames = len(self._states)
-        function_name = 'correlation_g4_plot_matrix_queue'
+        function_name = 'correlation_g4_plot_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+"prop"+str(round(100*prop,1))+'%.mp4'
@@ -1248,7 +1250,7 @@ class Experiment(object):
         """
         print("Creating average angle video...")
         frames = len(self._states)
-        function_name = 'plottable_average_angle_matrix_queue'
+        function_name = 'plottable_average_angle_matrix'
         kappas = methods.decompress(self._states[0]).kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+"prop"+str(round(100*prop,1))+'%.mp4'
@@ -1282,6 +1284,16 @@ class Experiment(object):
         bursts_ = len(groups)
         print " "
         finished_ = 0
+        match2 = re.match(r'.*?g[2|4].*', function_name)
+        #if match1:
+        #    z_max = 1
+        #    z_min = 0
+        if match2:
+            z_max = 1
+            z_min = -1
+        else:
+            z_maxs = []
+            z_mins = []
         for group in groups:
             finished_ += 1
             left = bursts_-finished_
@@ -1312,11 +1324,8 @@ class Experiment(object):
             output_queue = mp.Queue()
             processes = []
             for index in group:
-                state = methods.decompress(self._states[index],
-                                    level=methods.settings.medium_comp_level)
-                function = getattr(state, function_name)
-                process = mp.Process(target=function,
-                                args=(divisions, index, output_queue))
+                process = mp.Process(target=self._generic_scatter_animator_process,
+                                     args=(divisions, index, output_queue, function_name))
                 processes.append(process)
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes, cpus=20)
@@ -1328,31 +1337,24 @@ class Experiment(object):
                 x_val = output[1]
                 y_val = output[2]
                 z_val = output[3]
+                if not match2:
+                    z_maxs.append(max(z_val))
+                    z_mins.append(min(z_val))
                 z_vals.append(z_val)
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     new_process.start()
-            z_vals_avg.append(methods.array_average(z_vals))
+            z_vals_avg.append(methods.compress(methods.array_average(z_vals),
+                                           level=settings.medium_comp_level))
             for process in processes:
                 if process.is_alive():
                     process.terminate()
-        frames = len(z_vals_avg)
-        #match1 = re.match(r'.*?density.*', function_name)
-        match2 = re.match(r'.*?g[2|4].*', function_name)
-        #if match1:
-        #    z_max = 1
-        #    z_min = 0
-        if match2:
-            z_max = 1
-            z_min = -1
-        else:
-            z_maxs = []
-            z_mins = []
-            for z_val in z_vals_avg:
-                z_maxs.append(max(z_val))
-                z_mins.append(min(z_val))
+        print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+        if not match2:
             z_max = max(z_maxs)
             z_min = min(z_mins)
+        frames = len(z_vals_avg)
+        #match1 = re.match(r'.*?density.*', function_name)
         def animate(dummy_frame):
             """
             Wrapper.
@@ -1361,16 +1363,25 @@ class Experiment(object):
                                 divisions, name, z_max, z_min, units)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer=self._writer, fps=fps)
-        print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
         return z_min, z_max
 
+    def _generic_scatter_animator_process(self, divisions, index, output_queue, function_name):
+        """
+        Process
+        """
+        state = methods.decompress(self._states[index],
+                            level=methods.settings.medium_comp_level)
+        function = getattr(state, function_name)
+        values = function(divisions)
+        output_queue.put([index, values[0], values[1], values[2]])
+        
     def _animate_scatter(self, x_val, y_val, z_vals,
                                 divisions, name, z_max, z_min, units):
         """
         Specific animator.
         """
         try:
-            z_val = z_vals.pop(0)
+            z_val = methods.decompress(z_vals.pop(0), level=settings.medium_comp_level)
         except IndexError:
             return
         plt.cla()
@@ -1638,6 +1649,8 @@ class Experiment(object):
         x_vals, y_vals, z_vals = self.plottable_local_average_quadratic_speeds(
                                         max_distance, max_angle_diff, limit,
                                         amount_of_rods, divisions)
+        x_vals = x_vals[0]
+        y_vals = y_vals[0]
         bursts_groups = copy.deepcopy(self.bursts_groups)
         end = False
         z_vals_avg = []
@@ -1670,16 +1683,17 @@ class Experiment(object):
                 average = methods.array_average(_z_vals)
             except IndexError:
                 average = _z_vals
-            z_vals_avg.append(average)
+            z_vals_avg.append(methods.compress(average, settings.medium_comp_level))
         fig = plt.figure()
         state = methods.decompress(self._states[0],
-                                level=methods.settings.medium_comp_level)
+                                level=settings.medium_comp_level)
         kappas = state.kappas
         name = str(folder)+"Temperature"+str(kappas)+".mp4"
         z_maxs = []
         z_mins = []
         try:
-            for z_val in z_vals_avg:
+            for z_val_ in z_vals_avg:
+                z_val = methods.decompress(z_val_, settings.medium_comp_level)
                 z_maxs.append(max(z_val))
                 z_mins.append(min(z_val))
         except ValueError:
@@ -1687,14 +1701,14 @@ class Experiment(object):
             raise ValueError
         z_max = max(z_maxs)
         z_min = min(z_mins)
+        z_maxs = None
+        z_mins = None
         frames = len(z_vals_avg)
-        x_val = x_vals[0]
-        y_val = y_vals[0]
         def animate(dummy_frame):
             """
             Animation function.
             """
-            self._temperature_video_wrapper(x_val, y_val,
+            self._temperature_video_wrapper(x_vals, y_vals,
                                         z_vals_avg, divisions, name,
                                         z_max, z_min)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
@@ -1707,7 +1721,7 @@ class Experiment(object):
         Wrapper
         """
         try:
-            z_val = z_vals.pop(0)
+            z_val = methods.decompress(z_vals.pop(0), settings.medium_comp_level)
         except IndexError:
             return
         plt.cla()
@@ -2017,7 +2031,6 @@ class Experiment(object):
             time_left = None
             times = []
             results = []
-            print " "
             while True:
                 counter += 1
                 now = datetime.datetime.now()
@@ -2044,7 +2057,7 @@ class Experiment(object):
                 if not finished >= num_processes:
                     pass #string += "\r"
                 else:
-                    string += "\n"
+                    break
                 print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
                 print(string)
                 finished += 1
@@ -2070,16 +2083,17 @@ class Experiment(object):
                     groups.append(group)
                     group = []
             self._bursts_groups = groups
+            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
         return self._bursts_groups
 
-    def plot_average_temperature(self, max_distance, max_angle_diff):
+    def plot_average_temperature(self, max_distance, max_angle_diff, limit):
         """
             Average temperature over time.
         """
         print "Computing average temperature..."
 
         self._compute_speeds(max_distance, max_angle_diff,
-                        5, None)
+                        limit, None)
         indices = []
         average_speeds = []
         processes = []
@@ -2168,8 +2182,7 @@ class Experiment(object):
         processes = []
         output_queue = mp.Queue()
         for index in range(len(self._states)):
-            state = self.get(index)
-            process = mp.Process(target=state.covered_area_proportion,
+            process = mp.Process(target=self._average_covered_area_prorportion_process,
                                  args=(index, output_queue))
             processes.append(process)
             props.append(None)
@@ -2192,7 +2205,17 @@ class Experiment(object):
         std_dev_step1 = [(value-avg)**2 for value in props]
         std_dev_step2 = float(sum(std_dev_step1))/(len(std_dev_step1)-1)
         dev = math.sqrt(std_dev_step2)
-        return avg, dev 
+        return avg, dev
+
+    def _average_covered_area_prorportion_process(self, index, output_queue):
+        """
+        Process
+        """
+        state = self.get(index)
+        prop = state.covered_area_proportion()
+        output_queue.put([index, prop])
+        return
+        
 
     @property
     def average_number_of_rods(self):
