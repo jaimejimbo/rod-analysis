@@ -371,7 +371,7 @@ def imagej():
 
         run_imagej = raw_input("Run imagej script?(Yn)")
         if run_imagej == "y" or not run_imagej:
-            os.system("imagej -x 4000 ./imagej_script.ijm")
+            os.system("imagej ./imagej_script.ijm")
     except ValueError:
         pass
 
