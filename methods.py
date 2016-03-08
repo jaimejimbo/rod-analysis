@@ -6,6 +6,17 @@ import multiprocessing as mp
 from PIL import Image
 import cPickle, zlib
 import settings
+import pyopencl as cl
+import numpy
+
+using_cl = False
+
+try:
+    ctx = cl.create_some_context()
+    queue = cl.CommandQueue(ctx)
+    using_cl = True
+except:
+    using_cl = False
 
 def change_compression_coef(new_coef):
     """
@@ -373,7 +384,7 @@ def imagej():
         if run_imagej == "y" or not run_imagej:
             os.system("imagej ./imagej_script.ijm")
     except ValueError:
-        pass
+        print "Any image in folder"
 
 
 
@@ -506,31 +517,88 @@ def array_average(array_of_arrays):
     """
     Gets average array value over a list of arrays.
     """
-    number_of_arrays = len(array_of_arrays)
-    if not number_of_arrays:
-        return None
-    array_length = len(array_of_arrays[0])
-    if not array_length:
-        return sum(array_of_arrays)/number_of_arrays
-    output = [0 for dummy in range(array_length)]
-    array_of_arrays_2 = []
-    for array in array_of_arrays:
-        valid_array = True
-        for index in range(len(array)):
-            if array[index] is None:
-                number_of_arrays -= 1
-                valid_array = False
-        if valid_array:
-            array_of_arrays_2.append(array)
-    number_of_arrays = len(array_of_arrays_2)
-    for array in array_of_arrays_2:
-        if len(array) != array_length:
-            print len(array), array_length
-            msg = "Arrays are not of same length."
-            raise ValueError(msg)
-        for index in range(len(array)):
-            output[index] += float(array[index])/number_of_arrays
-    return output
+    if not using_cl:
+        number_of_arrays = len(array_of_arrays)
+        if not number_of_arrays:
+            return None
+        array_length = len(array_of_arrays[0])
+        if not array_length:
+            return sum(array_of_arrays)/number_of_arrays
+        output = [0 for dummy in range(array_length)]
+        array_of_arrays_2 = []
+        for array in array_of_arrays:
+            valid_array = True
+            for index in range(len(array)):
+                if array[index] is None:
+                    number_of_arrays -= 1
+                    valid_array = False
+            if valid_array:
+                array_of_arrays_2.append(array)
+        number_of_arrays = len(array_of_arrays_2)
+        for array in array_of_arrays_2:
+            if len(array) != array_length:
+                print len(array), array_length
+                msg = "Arrays are not of same length."
+                raise ValueError(msg)
+            for index in range(len(array)):
+                output[index] += float(array[index])/number_of_arrays
+        return output
+    else:
+        number_of_arrays = len(array_of_arrays)
+        if not number_of_arrays:
+            return None
+        array_length = len(array_of_arrays[0])
+        if not array_length:
+            return sum(array_of_arrays)/number_of_arrays
+        output = array_of_arrays[0]
+        for index in range(number_of_arrays):
+            output = sum_arrays_with_cl(output, array_of_arrays[index])
+        return normalize_opencl(output, number_of_arrays)        
+
+def sum_arrays_with_cl(array1, array2):
+    """
+        Sums 2 arrays with GPU. 
+    """
+    mf = cl.mem_flags
+    a_array = numpy.array(array1)
+    b_array = numpy.array(array2)
+    a_buf = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=a_array)
+    b_buf = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=b_array)
+    dest_buf = cl.Buffer(ctx, mf.WRITE_ONLY, 2*b_array.nbytes)
+    prg = cl.Program(ctx, """
+    __kernel void sum(__global const float *a,
+    __global const float *b, __global float *c)
+    {
+      int gid = get_global_id(0);
+      c[gid] = a[gid] + b[gid];
+    }
+    """).build()
+    prg.sum(queue, a_array.shape, None, a_buf, b_buf, dest_buf)
+    a_plus_b = numpy.empty_like(a_array)
+    cl.enqueue_copy(queue, a_plus_b, dest_buf)
+    return list(a_plus_b)
+
+def normalize_opencl(array, length):
+    """
+        Normalizes array with GPU.
+    """
+    mf = cl.mem_flags
+    np_array = numpy.array(array)
+    a_buf = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np_array)
+    length_buf = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=numpy.array([length]))
+    dest_buf = cl.Buffer(ctx, mf.WRITE_ONLY, np_array)
+    prg = cl.Program(ctx, """
+    __kernel void norm(__global const float *a,
+                      __global const float *N, __global float *c)
+    {
+      int gid = get_global_id(0);
+      c[gid] = a[gid]/b[0];
+    }
+    """).build()
+    prg.norm(queue, np_array.shape, None, a_buf, numpy.array([length]), dest_buf)
+    output = numpy.empty_like(np_array)
+    cl.enqueue_copy(queue, output, dest_buf)
+    return list(output)
 
 def vector_module(vector):
     """
