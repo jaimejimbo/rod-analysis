@@ -440,23 +440,22 @@ class SystemState(object):
         #                                            divisions)
         y_vals = range(len(possible_y_values))
         x_vals = range(len(possible_x_values))
-        for index_y in y_vals:
-            actual_y = possible_y_values[index_y]
-            for index_x in x_vals:
-                actual_x = possible_x_values[index_x]
-                center = (actual_x, actual_y)
-                distance = methods.distance_between_points(center,
-                                                     self.center)
-                #rods = rods_matrix[index_y][index_x]
-                if distance < self.radius:
-                    subsystem = SubsystemState(center, rad, self.zone_coords,
-                                               self._rods, self._kappas, self._real_kappas,
-                                               self._allowed_kappa_error)
-                    subsystem.check_rods()
-                    subsystems.append(subsystem)
-                else:
-                    #subsystem.remove_all_rods()
-                    pass
+        centers = []
+        for actual_y in possible_y_values:
+            for actual_x in possible_x_values:
+                centers.append((actual_x, actual_y))
+        array2 = [self.center for dummy in range(len(centers))]
+        distances = methods.compute_distances(centers, array2)
+        print distances
+        for index in range(len(centers)):
+            distance = distances[index]
+            center = centers[index]
+            if distance < self.radius:
+                subsystem = SubsystemState(center, rad, self.zone_coords,
+                                           self._rods, self._kappas, self._real_kappas,
+                                           self._allowed_kappa_error)
+                subsystem.check_rods()
+                subsystems.append(subsystem)
         return subsystems
 
     def _compute_density_matrix(self, divisions, normalized=False,

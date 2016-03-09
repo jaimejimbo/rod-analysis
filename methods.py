@@ -560,11 +560,11 @@ def sum_arrays_with_cl(array1, array2):
         Sums 2 arrays with GPU. 
     """
     mf = cl.mem_flags
-    a_array = numpy.array(array1)
-    b_array = numpy.array(array2)
+    a_array = numpy.array(array1).astype(numpy.float32)
+    b_array = numpy.array(array2).astype(numpy.float32)
     a_buf = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=a_array)
     b_buf = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=b_array)
-    dest_buf = cl.Buffer(ctx, mf.WRITE_ONLY, 2*b_array.nbytes)
+    dest_buf = cl.Buffer(ctx, mf.WRITE_ONLY, b_array.nbytes)
     prg = cl.Program(ctx, """
     __kernel void sum(__global const float *a,
     __global const float *b, __global float *c)
@@ -578,24 +578,24 @@ def sum_arrays_with_cl(array1, array2):
     cl.enqueue_copy(queue, a_plus_b, dest_buf)
     return list(a_plus_b)
 
-def normalize_opencl(array, length):
+def array_x_scalar_cl(array, value):
     """
-        Normalizes array with GPU.
+        Multiplies an array by a scalar.
     """
     mf = cl.mem_flags
-    np_array = numpy.array(array)
+    np_array = numpy.array(array).astype(numpy.float32)
+    scalar = numpy.float32(value)
     a_buf = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np_array)
-    length_buf = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=numpy.array([length]))
-    dest_buf = cl.Buffer(ctx, mf.WRITE_ONLY, np_array)
+    dest_buf = cl.Buffer(ctx, mf.WRITE_ONLY, np_array.nbytes)
     prg = cl.Program(ctx, """
     __kernel void norm(__global const float *a,
-                      __global const float *N, __global float *c)
+                      const float b, __global float *c)
     {
       int gid = get_global_id(0);
-      c[gid] = a[gid]/b[0];
+      c[gid] = a[gid]*b;
     }
     """).build()
-    prg.norm(queue, np_array.shape, None, a_buf, numpy.array([length]), dest_buf)
+    prg.norm(queue, np_array.shape, None, a_buf, scalar, dest_buf)
     output = numpy.empty_like(np_array)
     cl.enqueue_copy(queue, output, dest_buf)
     return list(output)
@@ -645,3 +645,56 @@ def gaussian(distance, sigma=settings.sigma):
     norm = 1.0/(sigma*math.sqrt(2*math.pi))
     value = math.exp((-distance**2)/(2.0*sigma**2))
     return norm*value
+
+def compute_distances(array1, array2):
+    """
+    Wrapper
+    """
+    if using_cl:
+        return compute_distances_cl(array1, array2)
+    else:
+        distances = []
+        for index in range(len(array1)):
+            point1 = array1[index]
+            point2 = array2[index]
+            distances.append(distance_between_points(point1, point2))
+        return distances
+
+def compute_distances_cl(array1, array2):
+    """
+    Computes distances with gpu
+    """
+    mf = cl.mem_flags
+    x_array_1 = []
+    y_array_1 = []
+    x_array_2 = []
+    y_array_2 = []
+    for value in array1:
+        x_array_1.append(value[0])
+        y_array_1.append(value[1])
+    for value in array2:
+        x_array_2.append(value[0])
+        y_array_2.append(value[1])
+    x_array_1 = numpy.array(x_array_1).astype(numpy.float32)
+    x_array_2 = numpy.array(x_array_2).astype(numpy.float32)
+    y_array_1 = numpy.array(y_array_1).astype(numpy.float32)
+    y_array_2 = numpy.array(y_array_2).astype(numpy.float32)
+    a_buf = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=x_array_1)
+    b_buf = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=x_array_2)
+    c_buf = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=y_array_1)
+    d_buf = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=y_array_2)
+    dest_buf = cl.Buffer(ctx, mf.WRITE_ONLY, x_array_1.nbytes)
+    prg = cl.Program(ctx, """
+    __kernel void sum(__global const float *x1,
+    __global const float *x2, __global float *y1,
+    __global const float *y2, __global float *res)
+    {
+      int gid = get_global_id(0);
+      res[gid] = sqrt(pown((x1[gid]-x2[gid]),2)+pown((y1[gid]-y2[gid]),2));
+    }
+    """).build()
+    prg.sum(queue, x_array_1.shape, None, a_buf, b_buf, c_buf, d_buf, dest_buf)
+    output = numpy.empty_like(x_array_1)
+    cl.enqueue_copy(queue, output, dest_buf)
+    return list(output)
+
