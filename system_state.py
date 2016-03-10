@@ -446,7 +446,6 @@ class SystemState(object):
                 centers.append((actual_x, actual_y))
         array2 = [self.center for dummy in range(len(centers))]
         distances = methods.compute_distances(centers, array2)
-        print distances
         for index in range(len(centers)):
             distance = distances[index]
             center = centers[index]

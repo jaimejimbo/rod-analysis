@@ -145,7 +145,7 @@ if True:
                 experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=100,
                         max_angle_diff=10, min_size=20)
             if avg_temp:
-                experiment_.plot_average_temperature(100, 10)
+                experiment_.plot_average_temperature(100, 10, 5)
             if lost_percentage:
                 percentage, std_dev = experiment_.lost_rods_percentage
             msg = "Rods lost: "+str(percentage)+"%\t"+" Standard deviation: "+str(std_dev)
