@@ -29,6 +29,7 @@ coef = 1
 divisions = 10
 #sigma = sigma_coef * subsystem_rad
 sigma_coef = 2
+changing_props = False
 
 import re
 
@@ -127,6 +128,8 @@ if True:
 
 
         def run_default(kappa, real_kappa, error):
+            name = str(int(real_kappa)) + "_default.log"
+            log = open(name, 'w')
             msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
             print msg
             names, rod_groups = system_state.create_rods(kappas=kappa, real_kappas=real_kappa,
@@ -145,7 +148,8 @@ if True:
                 experiment_.plot_average_temperature(100, 10)
             if lost_percentage:
                 percentage, std_dev = experiment_.lost_rods_percentage
-            print "Rods lost: "+str(percentage)+"%"+" Standard deviation: "+str(std_dev)
+            msg = "Rods lost: "+str(percentage)+"%\t"+" Standard deviation: "+str(std_dev)
+            log.write(str(msg+"\n"))
             try:
                 names = None
                 experiment_ = None
@@ -153,7 +157,7 @@ if True:
                 gc.collect()
             except NameError:
                 pass
-            print "\n"
+            log.close()
 
         def run_prop(kappa, real_kappa, error):
             msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
@@ -170,14 +174,17 @@ if True:
             width = experiment_.average_rod_width
             cov_area, cov_area_dev = experiment_.average_covered_area_proportion
             num_rods, num_rods_dev = experiment_.average_number_of_rods
-            return cov_area, cov_area_dev, int(num_rods), int(num_rods_dev), rad
+            return cov_area, cov_area_dev, int(num_rods), int(num_rods_dev), rad, msg
         
 
         if run_props:
             print "Computing area proportions..."
             print "kappa\t\t\tdeviation"
-            prop_long, prop_long_dev, longs, longs_dev, rad1 = run_prop(15, 12, 3)
-            prop_short, prop_short_dev, shorts, shorts_dev, rad2 = run_prop(7.8, 6, 2)
+            log = open("props.log",'w')
+            prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop(15, 12, 3)
+            prop_short, prop_short_dev, shorts, shorts_dev, rad2, msg2 = run_prop(7.8, 6, 2)
+            log.write(str(msg1+"\n"))
+            log.write(str(msg2+"\n"))
             areal = rad1**2*math.pi
             areas = rad2**2*math.pi
             rod_areal = float(areal*prop_long)/longs
@@ -187,19 +194,22 @@ if True:
             total_prop = prop_long + prop_short
             total_prop_err = prop_short_dev + prop_long_dev
             #print area
-            print "Total area proportion: ", round(100*total_prop, 2), "% ", round(100*total_prop_err, 2), "%"
-            print "Long proportion (area): ", round(100*float(prop_long)/total_prop, 2), "% ",round(100*prop_long_dev/total_prop, 2), "%"
-            print "Number of long rods: ", longs, longs_dev
-            print "Number of short rods: ", shorts, shorts_dev
-            print "Total number of rods: ", longs+shorts
-            waprop = input("Wanted area proportion: ")
-            wlprop = input("Wanted longs proportion: ")
-            Nl = int(wlprop*waprop*area/rod_areal)
-            Ns = int(Nl*rod_areal*(1-wlprop)/(wlprop*rod_areas))
-            print "Needed long rods: ", Nl
-            print "Difference: ", Nl-longs
-            print "Needed short rods: ", Ns
-            print "Difference: ", Ns-shorts
+            msg = "Total area proportion: "+str(round(100*total_prop, 2))+"% "+str(round(100*total_prop_err, 2))+"%\n"
+            msg += "Long proportion (area): "+str(round(100*float(prop_long)/total_prop, 2))+"% "+str(round(100*prop_long_dev/total_prop, 2))+ "%\n"
+            msg += "Number of long rods: "+str(longs)+"\t"+str(longs_dev)+"\n"
+            msg += "Number of short rods: "+str(shorts)+"\t"+str(shorts_dev)+"\n"
+            msg += "Total number of rods: "+str(longs+shorts)+"\n"
+            log.write(msg)
+            if changing_props:
+                waprop = input("Wanted area proportion: ")
+                wlprop = input("Wanted longs proportion: ")
+                Nl = int(wlprop*waprop*area/rod_areal)
+                Ns = int(Nl*rod_areal*(1-wlprop)/(wlprop*rod_areas))
+                print "Needed long rods: ", Nl
+                print "Difference: ", Nl-longs
+                print "Needed short rods: ", Ns
+                print "Difference: ", Ns-shorts
+            log.close()
             
         
         if run_graphs:
