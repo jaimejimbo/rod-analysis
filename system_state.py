@@ -1224,6 +1224,7 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
     time_left = None
     times = []
     print " "
+    empty_states = []
     while True:
         counter += 1
         now = datetime.datetime.now()
@@ -1256,14 +1257,28 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
         print(string)
         finished_ += 1
         [index, state] = states_queue.get()
-        states[index] = methods.compress(state,
-                                level=methods.settings.medium_comp_level)
+        if state is not None:
+            states[index] = methods.compress(state,
+                                    level=methods.settings.medium_comp_level)
+        else:
+            empty_states.append(index)
         if len(processes_left):
             new_process = processes_left.pop(0)
             new_process.start()
     for process in processes:
         if process.is_alive():
             process.terminate()
+    for empty_state in empty_states:
+        diff = 1
+        while True:
+            new_state = empty_state - diff
+            if states[new_state] is not None:
+                break
+            diff += 1
+        new_state = methods.decompress(states[new_state],
+                        level=methods.settings.medium_comp_level).clone()
+        states[empty_state] = methods.compress(new_state,
+                                level=methods.settings.medium_comp_level)
     print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
     return names, states
 
@@ -1295,7 +1310,9 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
             print file_
     file_.close()
     file_ = None
-    assert not not state, "A state must have been created."
+    if not state:
+        states_queue.put([index, None])
+        #raise ValueError("A state must have been created.")
     state.compute_center_and_radius()
     state.check_rods()
     states_queue.put([index, state])

@@ -13,7 +13,7 @@ using_cl = False
 
 try:
     ctx = cl.create_some_context()
-    queue = cl.CommandQueue(ctx)
+    queue_cl = cl.CommandQueue(ctx)
     using_cl = True
 except:
     using_cl = False
@@ -575,7 +575,7 @@ def sum_arrays_with_cl(array1, array2):
     """).build()
     prg.sum(queue, a_array.shape, None, a_buf, b_buf, dest_buf)
     a_plus_b = numpy.empty_like(a_array)
-    cl.enqueue_copy(queue, a_plus_b, dest_buf)
+    cl.enqueue_copy(queue_cl, a_plus_b, dest_buf)
     return list(a_plus_b)
 
 def array_x_scalar_cl(array, value):
@@ -597,7 +597,7 @@ def array_x_scalar_cl(array, value):
     """).build()
     prg.norm(queue, np_array.shape, None, a_buf, scalar, dest_buf)
     output = numpy.empty_like(np_array)
-    cl.enqueue_copy(queue, output, dest_buf)
+    cl.enqueue_copy(queue_cl, output, dest_buf)
     return list(output)
 
 def vector_module(vector):
@@ -695,6 +695,6 @@ def compute_distances_cl(array1, array2):
     """).build()
     prg.sum(queue, x_array_1.shape, None, a_buf, b_buf, c_buf, d_buf, dest_buf)
     output = numpy.empty_like(x_array_1)
-    cl.enqueue_copy(queue, output, dest_buf)
+    cl.enqueue_copy(queue_cl, output, dest_buf)
     return list(output)
 
