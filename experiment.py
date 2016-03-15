@@ -1161,8 +1161,7 @@ class Experiment(object):
                 output = output_queue.get()
                 index = output[0]
                 state = output[1]
-                states[index] = methods.compress(state,
-                                        level=methods.settings.medium_comp_level)
+                states[index] = state
                 finished += 1
                 if len(processes_left):
                     new_process = processes_left.pop(0)
@@ -1183,6 +1182,7 @@ class Experiment(object):
         state = methods.decompress(self._states[index],
                                 methods.settings.medium_comp_level)
         state.divide_in_circles(divisions)
+        state = methods.compress(state, level=methods.settings.medium_comp_level)
         output_queue.put([index, state])
 
     def create_density_video(self, divisions, folder, fps,

@@ -445,6 +445,7 @@ class SystemState(object):
                 centers.append((actual_x, actual_y))
         array2 = [self.center for dummy in range(len(centers))]
         distances = methods.compute_distances(centers, array2)
+        array2 = None
         for index in range(len(centers)):
             distance = distances[index]
             center = centers[index]
@@ -1178,14 +1179,13 @@ class SubsystemState(SystemState):
         rods = []
         for rod_ in self:
             if rod_.is_in_circle(self.center, self.radius):
+                distance = methods.distance_between_points(self.center, rod_.center)
+                proportion = methods.gaussian(distance)
+                self._gaussian_exp[rod_.identifier] = proportion
                 rods.append(methods.compress(rod_,
                                 level=methods.settings.low_comp_level))
-        self._rods = queue.Queue(rods)
         self.reset()
-        for rod_ in self:
-            distance = methods.distance_between_points(self.center, rod_.center)
-            proportion = methods.gaussian(distance)
-            self._gaussian_exp[rod_.identifier] = proportion
+        self._rods = queue.Queue(rods)
 
 
 
