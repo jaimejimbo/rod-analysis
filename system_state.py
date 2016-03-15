@@ -36,7 +36,7 @@ class SystemState(object):
         self._density_matrix = []
         self._correlation_g2 = None
         self._correlation_g4 = None
-        self._correlation_g2_ =  = []
+        self._correlation_g2_subsystems = []
         self._correlation_g4_subsystems = []
         self._relative_g2_subsystems = []
         self._relative_g4_subsystems = []
