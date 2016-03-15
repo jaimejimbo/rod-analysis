@@ -1271,7 +1271,8 @@ class Experiment(object):
         """
         Generic animator
         """
-        fig = plt.figure()
+        if not settings.to_file:
+            fig = plt.figure()    
         z_vals = []
         z_vals_avg = []
         x_val = []
@@ -1692,7 +1693,8 @@ class Experiment(object):
             except IndexError:
                 average = _z_vals
             z_vals_avg.append(methods.compress(average, settings.medium_comp_level))
-        fig = plt.figure()
+        if not settings.to_file:
+            fig = plt.figure()  
         state = methods.decompress(self._states[0],
                                 level=settings.medium_comp_level)
         kappas = state.kappas
@@ -1951,9 +1953,10 @@ class Experiment(object):
                 continue #norm_areas.append(proportion)
             times.append(self._times[index])
             norm_areas.append(proportion)
-        fig = plt.figure()
-        plt.xlabel("time[seconds]")
-        plt.ylabel("cluster area proportion")
+        if not settings.to_file:
+            fig = plt.figure()
+            plt.xlabel("time[seconds]")
+            plt.ylabel("cluster area proportion")
         # There's a bug here, so I use fortran obtained values. 
         #m, b = self.get_order_evolution_coeficient(number_of_bursts=number_of_bursts,
         #                                    max_distance=max_distance,
