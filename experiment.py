@@ -211,9 +211,9 @@ class Experiment(object):
                 time_left = int(len(processes_left)*avg_time/60)
             if not time_left is None:
                 if time_left:
-                    string += "\t" + str(time_left) + " minutes"
+                    string += "    " + str(time_left) + " minutes"
                 else:
-                    string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+                    string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
             if not finished_ >= num_processes:
                 pass #string += "\r"
             else:
@@ -355,9 +355,9 @@ class Experiment(object):
                 time_left = int(len(processes_left)*avg_time/60)
             if not time_left is None:
                 if time_left:
-                    string += "\t" + str(time_left) + " minutes"
+                    string += "    " + str(time_left) + " minutes"
                 else:
-                    string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+                    string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
             if not finished_ >= num_processes:
                 pass #string += "\r"
             else:
@@ -812,9 +812,9 @@ class Experiment(object):
                     time_left = int(len(processes_left)*avg_time/60)
                 if not time_left is None:
                     if time_left:
-                        string += "\t" + str(time_left) + " minutes"
+                        string += "    " + str(time_left) + " minutes"
                     else:
-                        string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+                        string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
                 if not finished >= num_processes:
                     pass#string += "\r"
                 else:
@@ -1147,9 +1147,9 @@ class Experiment(object):
                     time_left = int(len(processes_left)*avg_time/60)
                 if not time_left is None:
                     if time_left:
-                        string += "\t" + str(time_left) + " minutes"
+                        string += "    " + str(time_left) + " minutes"
                     else:
-                        string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+                        string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
                 if not finished >= num_processes:
                     pass#string += "\r"
                 else:
@@ -1317,9 +1317,9 @@ class Experiment(object):
                 time_left = int(left*avg_time/60)
             if not time_left is None:
                 if time_left:
-                    string += "\t" + str(time_left) + " minutes"
+                    string += "    " + str(time_left) + " minutes"
                 else:
-                    string += "\t" + str(int(len(self.bursts_groups)*avg_time)) + " seconds"
+                    string += "    " + str(int(len(self.bursts_groups)*avg_time)) + " seconds"
             print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
             print string
             output_queue = mp.Queue()
@@ -1979,7 +1979,7 @@ class Experiment(object):
         clust = open("cluster_areas.txt", "w")
         for index in range(len(times)):
             try:
-                string = str(times[index])+"\t"+str(norm_areas[index])+"\n"
+                string = str(times[index])+"    "+str(norm_areas[index])+"\n"
                 clust.write(string)
             except:
                 pass
@@ -1987,7 +1987,7 @@ class Experiment(object):
         clust = open("cluster_areas_log.txt", "w")
         for index in range(len(times)):
             try:
-                string = str(math.log(times[index]))+"\t"+str(math.log(norm_areas[index]))+"\n"
+                string = str(math.log(times[index]))+"    "+str(math.log(norm_areas[index]))+"\n"
                 clust.write(string)
             except:
                 pass
@@ -2083,9 +2083,9 @@ class Experiment(object):
                     time_left = int(len(processes_left)*avg_time/60)
                 if not time_left is None:
                     if time_left:
-                        string += "\t" + str(time_left) + " minutes"
+                        string += "    " + str(time_left) + " minutes"
                     else:
-                        string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+                        string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
                 if not finished >= num_processes:
                     pass #string += "\r"
                 else:
