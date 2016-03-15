@@ -1361,9 +1361,17 @@ class Experiment(object):
             """
             self._animate_scatter(x_val, y_val, z_vals_avg,
                                 divisions, name, z_max, z_min, units)
-        anim = animation.FuncAnimation(fig, animate, frames=frames)
-        anim.save(name, writer=self._writer, fps=fps)
-        return z_min, z_max
+	    if not settings.to_file:
+		    anim = animation.FuncAnimation(fig, animate, frames=frames)
+		    anim.save(name, writer=self._writer, fps=fps)
+		    return z_min, z_max
+	    else:
+		    output_file_name = name + ".data"
+		    output_file = open(output_file_name, 'w')
+		    data = methods.compress([x_val, y_val, z_vals_avg, divisions, z_max, z_min, units], level=9)
+		    output_file.write(data)
+		    output_file.close()
+		    return z_min, z_max
 
     def _generic_scatter_animator_process(self, divisions, index, output_queue, function_name):
         """
@@ -1711,8 +1719,15 @@ class Experiment(object):
             self._temperature_video_wrapper(x_vals, y_vals,
                                         z_vals_avg, divisions, name,
                                         z_max, z_min)
-        anim = animation.FuncAnimation(fig, animate, frames=frames)
-        anim.save(name, writer=self._writer, fps=fps)
+        if not settings.to_file:
+            anim = animation.FuncAnimation(fig, animate, frames=frames)
+            anim.save(name, writer=self._writer, fps=fps)
+        else:
+            output_file_name = name + ".data"
+            output_file = open(output_file_name, 'w')
+            data = methods.compress([x_vals, y_vals, z_vals_avg, divisions, z_max, z_min, "Temperature [pixels^2/seg^2]"], level=9)
+            output_file.write(data)
+            output_file.close()
 
 
     def _temperature_video_wrapper(self, x_val, y_val, z_vals,
@@ -1950,7 +1965,14 @@ class Experiment(object):
         print m, "  ", b
         print math.e**b
         print math.e**(-b)
-        plt.plot(times, line)
+        if not settings.to_file:
+            plt.plot(times, line)
+        else:
+		    output_file_name = "linear_approx_K"+str(self.kappas)+".data"
+		    output_file = open(output_file_name, 'w')
+		    data = methods.compress([times, line], level=9)
+		    output_file.write(data)
+		    output_file.close()
         clust = open("cluster_areas.txt", "w")
         for index in range(len(times)):
             try:
@@ -1967,19 +1989,26 @@ class Experiment(object):
             except:
                 pass
         clust.close()
-        try:
-            #plt.plot(times, norm_areas)
-            plt.scatter(times, norm_areas)
-        except ValueError:
-            print(len(times), len(norm_areas))
-            print(times, norm_areas)
-            raise ValueError
-        plt.grid(b=True, which='major', color='b', linestyle='-')
-        plt.grid(b=True, which='minor', color='b', linestyle='--')
-        plt.xscale('log')
-        plt.yscale('log')
-        file_name = "cluster_areas_K" + str(self.kappas) + ".png"
-        plt.savefig(file_name)
+        if not settings.to_file:
+            try:
+                #plt.plot(times, norm_areas)
+                plt.scatter(times, norm_areas)
+            except ValueError:
+                print(len(times), len(norm_areas))
+                print(times, norm_areas)
+                raise ValueError
+            plt.grid(b=True, which='major', color='b', linestyle='-')
+            plt.grid(b=True, which='minor', color='b', linestyle='--')
+            plt.xscale('log')
+            plt.yscale('log')
+            file_name = "cluster_areas_K" + str(self.kappas) + ".png"
+            plt.savefig(file_name)
+        else:
+	        output_file_name = "cluster_areas_K"+str(self.kappas)+".data"
+	        output_file = open(output_file_name, 'w')
+	        data = methods.compress([times, norm_areas], level=9)
+	        output_file.write(data)
+	        output_file.close()
 
     def _compute_times(self, number_of_bursts):
         """
@@ -2121,16 +2150,21 @@ class Experiment(object):
         for process in processes:
             if process.is_alive():
                 process.terminate()
-        plt.figure()
-        plt.plot(indices, average_speeds)
-        name = "avg_temp_K"
-        state = methods.decompress(self._states[0],
-                                level=methods.settings.medium_comp_level)
-        kappa = self.kappas
-        name += str(kappa) + ".png"
-        plt.xlabel("time [seconds]")
-        plt.ylabel("average temperature [pixels^2 / s^2]")
-        plt.savefig(name)
+        if not settings.to_file:
+            plt.figure()
+            plt.plot(indices, average_speeds)
+            name = "avg_temp_K"
+            kappa = self.kappas
+            name += str(kappa) + ".png"
+            plt.xlabel("time [seconds]")
+            plt.ylabel("average temperature [pixels^2 / s^2]")
+            plt.savefig(name)
+        else:
+            name = "average_temperature_K"+self.kappas+".data"
+            output_file = open(name, 'w')
+            data = methods.compress([indices, average_speeds], level=9)
+            output_file.write(data)
+            output_file.close()
 
     def average_speeds(self, index, output_queue):
         """
