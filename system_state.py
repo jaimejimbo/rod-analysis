@@ -397,8 +397,7 @@ class SystemState(object):
             rad = diff*math.sqrt(2)*self._coef/2.0
             subsystems = self._subsystems(possible_x_values, possible_y_values,
                                           rad, diff, divisions)
-            self._actual_subdivision = methods.compress(subsystems,
-                                level=methods.settings.low_comp_level)
+            self._actual_subdivision = subsystems
         return
 
     def _separate_rods_by_coords(self, rods_list, possible_x_values,
@@ -454,7 +453,7 @@ class SystemState(object):
                                            self._rods, self._kappas, self._real_kappas,
                                            self._allowed_kappa_error)
                 subsystem.check_rods()
-                subsystems.append(subsystem)
+                subsystems.append(methods.compress(subsystem, level=settings.low_comp_level))
         return subsystems
 
     def _compute_density_matrix(self, divisions, normalized=False,
@@ -464,9 +463,9 @@ class SystemState(object):
         """
         self.divide_in_circles(divisions)
         density = []
-        subdivision = methods.decompress(self._actual_subdivision,
+        for subsystem_ in self._actual_subdivision:
+            subsystem = methods.decompress(subsystem_,
                                 level=methods.settings.low_comp_level)
-        for subsystem in subdivision:
             dens = subsystem.density
             if divided_by_area:
                 dens /= subsystem.area
@@ -512,13 +511,12 @@ class SystemState(object):
             self.reset()
         if not len(self._subdivision_centers):
             self.divide_in_circles(divisions)
-            act_sub = methods.decompress(self._actual_subdivision,
-                                level=methods.settings.low_comp_level)
+            act_sub = self._actual_subdivision
             actual_y = act_sub[0].center[1]
             row = []
             subgroups_matrix = []
             for index in range(len(act_sub)):
-                element = act_sub[index]
+                element = methods.decompress(act_sub[index], level=methods.settings.low_comp_level)
                 element_y = element.center[1]
                 if element_y != actual_y:
                     subgroups_matrix.append(row)
@@ -581,9 +579,9 @@ class SystemState(object):
         """
         self.divide_in_circles(divisions)
         if self._correlation_g2 is None or self._correlation_g4 is None:
-            subdivision = methods.decompress(self._actual_subdivision,
-                                level=methods.settings.low_comp_level)
-            for subsystem in subdivision:
+            subdivision = self._actual_subdivision
+            for subsystem_ in subdivision:
+                subsystem = methods.decompress(subsystem_, level=methods.settings.low_comp_level)
                 correlation_g2 = [subsystem.center[0], subsystem.center[1]]
                 correlation_g4 = [subsystem.center[0], subsystem.center[1]]
                 correlation_g2.append(subsystem.correlation_g2)
@@ -697,9 +695,9 @@ class SystemState(object):
             Computes average angle matrix
         """
         #self.divide_in_circles(divisions)
-        subdivision = methods.decompress(self._actual_subdivision,
-                                level=methods.settings.low_comp_level)
-        for subsystem in subdivision:
+        subdivision = self._actual_subdivision
+        for subsystem_ in subdivision:
+            subsystem = methods.decompress(subsystem_, level=methods.settings.low_comp_level)
             row = [subsystem.center[0], subsystem.center[1]]
             row.append(subsystem.average_angle)
             self._angle_matrix.append(row)
@@ -988,9 +986,9 @@ class SystemState(object):
         len_correlation_g2 = len(self._relative_g2_subsystems)
         len_correlation_g4 = len(self._relative_g4_subsystems)
         if  len_correlation_g2 == 0 or len_correlation_g4 == 0:
-            subsystems = methods.decompress(self._actual_subdivision,
-                                level=methods.settings.low_comp_level)
-            for subsystem in subsystems:
+            subdivision = self._actual_subdivision
+            for subsystem_ in subdivision:
+                subsystem = methods.decompress(subsystem_, level=methods.settings.low_comp_level)
                 correlation_g2 = [subsystem.center[0], subsystem.center[1]]
                 correlation_g4 = [subsystem.center[0], subsystem.center[1]]
                 correlation_g2.append(subsystem.relative_g2)
@@ -1011,9 +1009,9 @@ class SystemState(object):
         x_values = []
         y_values = []
         z_values = []
-        subsystems = methods.decompress(self._relative_g2_subsystems,
-                                level=methods.settings.low_comp_level)
-        for subsystem in subsystems:
+        subdivision = self._actual_subdivision
+        for subsystem_ in subdivision:
+            subsystem = methods.decompress(subsystem_, level=methods.settings.low_comp_level)
             x_values.append(subsystem[0])
             y_values.append(subsystem[1])
             z_values.append(subsystem[2])
@@ -1029,9 +1027,9 @@ class SystemState(object):
         x_values = []
         y_values = []
         z_values = []
-        subsystems = methods.decompress(self._relative_g4_subsystems,
-                                level=methods.settings.low_comp_level)
-        for subsystem in subsystems:
+        subdivision = self._actual_subdivision
+        for subsystem_ in subdivision:
+            subsystem = methods.decompress(subsystem_, level=methods.settings.low_comp_level)
             x_values.append(subsystem[0])
             y_values.append(subsystem[1])
             z_values.append(subsystem[2])
