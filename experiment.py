@@ -366,8 +366,8 @@ class Experiment(object):
             finished_ += 1
             output_row = output_queue.get()
             index = output_row[0]
-            self._evolution_dictionaries[index] = output_row[1]
-            self._relative_dictionaries[index] = output_row[2]
+            self._evolution_dictionaries[index] = methods.compress(output_row[1])
+            self._relative_dictionaries[index] = methods.compress(output_row[2])
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
@@ -384,10 +384,10 @@ class Experiment(object):
         """
             Allows to create a process and use all cores.
         """
-        initial_state = self._states[index]
-        final_state = self._states[index+1]
-        evol_dict = self._evolution_dictionaries[index]
-        relative_dict = self._relative_dictionaries[index]
+        initial_state = methods.decompress(self._states[index])
+        final_state = methods.decompress(self._states[index+1])
+        evol_dict = methods.decompress(self._evolution_dictionaries[index])
+        relative_dict = methods.decompress(self._relative_dictionaries[index])
         for initial_rod in initial_state:
             initial_id = initial_rod.identifier
             if not amount_of_rods:
@@ -421,12 +421,10 @@ class Experiment(object):
             Allows to create a process and use all cores.
         It limits possible final rods amount.
         """
-        initial_state = methods.decompress(self._states[index],
-                                level=methods.settings.medium_comp_level)
-        final_state = methods.decompress(self._states[index+1],
-                                level=methods.settings.medium_comp_level)
-        evol_dict = self._evolution_dictionaries[index]
-        relative_dict = self._relative_dictionaries[index]
+        initial_state = methods.decompress(self._states[index])
+        final_state = methods.decompress(self._states[index+1])
+        evol_dict = methods.decompress(self._evolution_dictionaries[index])
+        relative_dict = methods.decompress(self._relative_dictionaries[index])
         for initial_rod in initial_state:
             initial_id = initial_rod.identifier
             if not amount_of_rods:
@@ -475,7 +473,7 @@ class Experiment(object):
         """
             Remove final rod from the rest of rods' evolutions.
         """
-        evol_dict = self._evolution_dictionaries[index]
+        evol_dict = methods.decompress(self._evolution_dictionaries[index])
         system_end = self._states[index+1]
         final_rod = system_end[list(final_rod_id)[0]]
         changed = False
@@ -518,8 +516,8 @@ class Experiment(object):
             index = output[0]
             evol_dict = output[1]
             relative_dict = output[2]
-            self._evolution_dictionaries[index] = evol_dict
-            self._relative_dictionaries[index] = relative_dict
+            self._evolution_dictionaries[index] = methods.compress(evol_dict)
+            self._relative_dictionaries[index] = methods.compress(relative_dict)
             index = selected[0]
             self._final_rods[index] -= selected[1]
             if len(processes_left):
@@ -536,8 +534,8 @@ class Experiment(object):
         Process.
         """
         selected = set([])
-        evol_dict = self._evolution_dictionaries[index]
-        relative_dict = self._relative_dictionaries[index]
+        evol_dict = methods.decompress(self._evolution_dictionaries[index])
+        relative_dict = methods.decompress(self._relative_dictionaries[index])
         for initial_rod_id in list(evol_dict.keys()):
             final_rod_id, distance, angle_diff = self._closer_rod(index,
                                           initial_rod_id, selected,
@@ -547,7 +545,7 @@ class Experiment(object):
             if distance:
                 relative_dict[initial_rod_id] = (distance, angle_diff)
             selected |= set([final_rod_id])
-        output_queue.put([index, evol_dict, relative_dict])
+        output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict)])
         selected_queue.put([index, selected])
 
 
@@ -556,9 +554,9 @@ class Experiment(object):
             If there are multiple choices,
         this erase all but the closest.
         """
-        evol_dict = self._evolution_dictionaries[index]
+        evol_dict = methods.decompress(self._evolution_dictionaries[index])
         final_rods = evol_dict[initial_rod_id]
-        relative_dict = self._relative_dictionaries[index][initial_rod_id]
+        relative_dict = methods.decompress(self._relative_dictionaries[index])[initial_rod_id]
         min_distance = max_distance
         final_rod = None
         final_rod_list = list(final_rods)
@@ -659,7 +657,7 @@ class Experiment(object):
         Process.
         """
         speeds_vectors = {}
-        evol_dict = self._evolution_dictionaries[index]
+        evol_dict = methods.decompress(self._evolution_dictionaries[index])
         initial_state = methods.decompress(self._states[index],
                                 level=methods.settings.medium_comp_level)
         final_state = methods.decompress(self._states[index+1],
@@ -715,8 +713,8 @@ class Experiment(object):
             index = output[0]
             evol_dict = output[1]
             relative_dict = output[2]
-            self._evolution_dictionaries[index] = evol_dict
-            self._relative_dictionaries[index] = relative_dict
+            self._evolution_dictionaries[index] = methods.compress(evol_dict)
+            self._relative_dictionaries[index] = methods.compress(relative_dict)
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
@@ -729,9 +727,9 @@ class Experiment(object):
         """
         Process for method.
         """
-        evol_dict = self._evolution_dictionaries[index]
+        evol_dict = methods.decompress(self._evolution_dictionaries[index])
         initial_rods = set([])
-        relative_dict = self._relative_dictionaries[index]
+        relative_dict = methods.decompress(self._relative_dictionaries[index])
         self._initial_rods[index] = initial_rods
         final_rods = self._final_rods[index]
         initial_state = self._states[index]

@@ -23,6 +23,7 @@ run_graphs = 1
 run_check_dim = 0
 get_image_dates = 0
 to_file = 1
+plot = 0
 # variables
 coef = 3
 divisions = 30
@@ -95,6 +96,8 @@ settings.write("\n")
 settings.write("zone_coords = {0}".format(zone_coords))
 settings.write("\n")
 settings.write("to_file = {0}".format(to_file))
+settings.write("\n")
+settings.write("plot = {0}".format(plot))
 settings.write("\n")
 rad = zone_coords[2]
 gaussian_sigma = sigma_coef*float(rad)/divisions
