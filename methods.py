@@ -9,7 +9,7 @@ import settings
 import numpy
 from matplotlib import animation
 
-using_cl = False
+using_cl = 1
 
 _writer = animation.writers['ffmpeg']
 writer = _writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
@@ -558,7 +558,7 @@ def array_average(array_of_arrays):
         output = array_of_arrays[0]
         for index in range(number_of_arrays):
             output = sum_arrays_with_cl(output, array_of_arrays[index])
-        return normalize_opencl(output, number_of_arrays)        
+        return array_x_scalar_cl(output, 1.0/number_of_arrays)        
 
 def sum_arrays_with_cl(array1, array2):
     """
