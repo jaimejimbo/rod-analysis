@@ -1271,11 +1271,11 @@ class Experiment(object):
         groups = self.bursts_groups
         bursts_ = len(groups)
         print " "
-        x_val, y_val, z_vals_avg, z_max, z_min = self.get_z_vals(groups, bursts, function_name)
+        x_val, y_val, z_vals_avg, z_max, z_min = self.get_z_vals(groups, bursts_, function_name, divisions)
         frames = len(z_vals_avg)
         #match1 = re.match(r'.*?density.*', function_name)
-        if not settings.plot:
-            methods.create_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, self.radius)
+        if settings.plot:
+            methods.create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, self.radius)
         if settings.to_file:
             output_file_name = name + ".data"
             output_file = open(output_file_name, 'w')
@@ -1294,7 +1294,7 @@ class Experiment(object):
         output_queue.put([index, values[0], values[1], values[2]])
 
 
-    def get_z_vals(self, groups, bursts, function_name):
+    def get_z_vals(self, groups, bursts_, function_name, divisions):
         """
             Get z values for function.
         """
@@ -1307,6 +1307,13 @@ class Experiment(object):
         z_vals_avg = []
         x_val = []
         y_val = []
+        match2 = re.match(r'.*?g[2|4].*', function_name)
+        if match2:
+            z_max = 1
+            z_min = -1
+        else:
+            z_maxs = []
+            z_mins = []
         for group in groups:
             finished_ += 1
             left = bursts_-finished_
@@ -1363,16 +1370,9 @@ class Experiment(object):
                 if process.is_alive():
                     process.terminate()
         print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
-        match2 = re.match(r'.*?g[2|4].*', function_name)
         #if match1:
         #    z_max = 1
         #    z_min = 0
-        if match2:
-            z_max = 1
-            z_min = -1
-        else:
-            z_maxs = []
-            z_mins = []
         if not match2:
             z_max = max(z_maxs)
             z_min = min(z_mins)
@@ -1507,7 +1507,7 @@ class Experiment(object):
             self._cluster_video_wrapper(arrays)
         frames = len(self._states)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
-        anim.save(name, writer=self._writer, fps=fps)
+        anim.save(name, writer=methods.WRITER, fps=fps)
 
     def _cluster_video_wrapper(self, arrays):
         """
@@ -1564,7 +1564,7 @@ class Experiment(object):
             self._speeds_vectors_video_wrapper(vectors_matrices)    #BUG
         frames = len(self._states)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
-        anim.save(name, writer=self._writer, fps=fps)
+        anim.save(name, writer=methods.WRITER, fps=fps)
 
     def _speeds_vectors_video_wrapper(self, vectors_matrix):
         """
@@ -1680,21 +1680,14 @@ class Experiment(object):
         z_min = min(z_mins)
         z_maxs = None
         z_mins = None
-        frames = len(z_vals_avg)
-        def animate(dummy_frame):
-            """
-            Animation function.
-            """
-            self._temperature_video_wrapper(x_vals, y_vals,
-                                        z_vals_avg, divisions, name,
-                                        z_max, z_min)
-        if not settings.to_file:
-            anim = animation.FuncAnimation(fig, animate, frames=frames)
-            anim.save(name, writer=self._writer, fps=fps)
-        else:
+        units = "Temperature [pixels^2/seg^2]"
+        rad = self.radius
+        if settings.plot:
+            methods.create_scatter_animation(x_vals, y_vals, z_vals_avg, divisions, z_max, z_min, units, name, radius=rad)
+        if settings.to_file:
             output_file_name = name + ".data"
             output_file = open(output_file_name, 'w')
-            data = methods.compress([x_vals, y_vals, z_vals_avg, divisions, z_max, z_min, "Temperature [pixels^2/seg^2]"], level=9)
+            data = methods.compress([x_vals, y_vals, z_vals_avg, divisions, z_max, z_min, units, name, self.radius], level=9)
             output_file.write(data)
             output_file.close()
 

@@ -733,7 +733,7 @@ def animate_scatter(x_val, y_val, z_vals,
     plt.ylabel("y [pixels]")
     cb.set_label(units)
 
-def create_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius=800, fps=15):
+def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius=800, fps=15):
     """
     Creates animation from data.
     """
@@ -756,7 +756,7 @@ def import_and_plot(source, radius=None, level=9):
     src = open(source, 'r')
     [x_val, y_val, z_vals_avg, divisions, z_max, z_min, units] = decompress(src.read(),level=level)    
     src.close()
-    create_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, source)
+    create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, source)
 
 
 
