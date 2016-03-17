@@ -6,17 +6,22 @@ import multiprocessing as mp
 from PIL import Image
 import cPickle, zlib
 import settings
-import pyopencl as cl
 import numpy
+from matplotlib import animation
 
 using_cl = False
 
-try:
+_writer = animation.writers['ffmpeg']
+writer = _writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+WRITER = writer
+
+"""try:
+    import pyopencl as cl
     ctx = cl.create_some_context()
-    queue_cl = cl.CommandQueue(ctx)
+    queue = cl.CommandQueue(ctx)
     using_cl = True
 except:
-    using_cl = False
+    using_cl = False"""
 
 def change_compression_coef(new_coef):
     """
@@ -575,7 +580,7 @@ def sum_arrays_with_cl(array1, array2):
     """).build()
     prg.sum(queue, a_array.shape, None, a_buf, b_buf, dest_buf)
     a_plus_b = numpy.empty_like(a_array)
-    cl.enqueue_copy(queue_cl, a_plus_b, dest_buf)
+    cl.enqueue_copy(queue, a_plus_b, dest_buf)
     return list(a_plus_b)
 
 def array_x_scalar_cl(array, value):
@@ -597,7 +602,7 @@ def array_x_scalar_cl(array, value):
     """).build()
     prg.norm(queue, np_array.shape, None, a_buf, scalar, dest_buf)
     output = numpy.empty_like(np_array)
-    cl.enqueue_copy(queue_cl, output, dest_buf)
+    cl.enqueue_copy(queue, output, dest_buf)
     return list(output)
 
 def vector_module(vector):
@@ -616,7 +621,7 @@ def vector_angle(vector):
         angle = math.pi
     return angle
 
-def compress(obj, level=settings.medium_comp_level):
+def compress(obj, level=settings.low_comp_level):
     """
     Compress data of an object.
     """
@@ -626,7 +631,7 @@ def compress(obj, level=settings.medium_comp_level):
     compressed = zlib.compress(dumps, level)
     return compressed
 
-def decompress(obj, level=settings.medium_comp_level):
+def decompress(obj, level=settings.low_comp_level):
     """
     Decompress an object.
     """
@@ -695,6 +700,63 @@ def compute_distances_cl(array1, array2):
     """).build()
     prg.sum(queue, x_array_1.shape, None, a_buf, b_buf, c_buf, d_buf, dest_buf)
     output = numpy.empty_like(x_array_1)
-    cl.enqueue_copy(queue_cl, output, dest_buf)
+    cl.enqueue_copy(queue, output, dest_buf)
     return list(output)
+
+import matplotlib.pyplot as plt
+        
+def animate_scatter(x_val, y_val, z_vals,
+                        divisions, name, z_max, z_min, units, radius):
+    """
+    Specific animator.
+    """
+    try:
+        z_val = decompress(z_vals.pop(0), level=settings.medium_comp_level)
+    except IndexError:
+        return
+    plt.cla()
+    plt.clf()
+    rad = float(radius*1.3)/divisions
+    size = (rad/4)**2
+    x_min = min(x_val)-rad*1.1
+    x_max = max(x_val)+rad*1.1
+    y_min = min(y_val)-rad*1.1
+    y_max = max(y_val)+rad*1.1
+    plt.xlim((x_min, x_max))
+    plt.ylim((y_min, y_max))
+    #plt.suptitle(name)
+    plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
+                vmin=z_min, vmax=z_max)
+    plt.gca().invert_yaxis()
+    cb = plt.colorbar()
+    plt.xlabel("x [pixels]")
+    plt.ylabel("y [pixels]")
+    cb.set_label(units)
+
+def create_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius=800, fps=15):
+    """
+    Creates animation from data.
+    """
+    fig = plt.figure()
+    frames = len(z_vals_avg)
+    def animate(dummy_frame):
+        """
+        Wrapper.
+        """
+        animate_scatter(x_val, y_val, z_vals_avg,
+                            divisions, name, z_max, z_min, units, radius)
+    anim = animation.FuncAnimation(fig, animate, frames=frames)
+    anim.save(name, writer=WRITER, fps=fps)
+
+
+def import_and_plot(source, radius=None, level=9):
+    """
+    Imports data from a compressed file and plots it.
+    """
+    src = open(source, 'r')
+    [x_val, y_val, z_vals_avg, divisions, z_max, z_min, units] = decompress(src.read(),level=level)    
+    src.close()
+    create_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, source)
+
+
 

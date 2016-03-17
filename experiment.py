@@ -96,9 +96,6 @@ class Experiment(object):
         self._std_dev = None
         #self._inversed = False
         self._covered_area_prop = None
-        _writer = animation.writers['ffmpeg']
-        writer = _writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
-        self._writer = writer
 
     def __len__(self):
         """
@@ -211,9 +208,9 @@ class Experiment(object):
                 time_left = int(len(processes_left)*avg_time/60)
             if not time_left is None:
                 if time_left:
-                    string += "    " + str(time_left) + " minutes"
+                    string += "\t" + str(time_left) + " minutes"
                 else:
-                    string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
+                    string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
             if not finished_ >= num_processes:
                 pass #string += "\r"
             else:
@@ -355,9 +352,9 @@ class Experiment(object):
                 time_left = int(len(processes_left)*avg_time/60)
             if not time_left is None:
                 if time_left:
-                    string += "    " + str(time_left) + " minutes"
+                    string += "\t" + str(time_left) + " minutes"
                 else:
-                    string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
+                    string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
             if not finished_ >= num_processes:
                 pass #string += "\r"
             else:
@@ -812,9 +809,9 @@ class Experiment(object):
                     time_left = int(len(processes_left)*avg_time/60)
                 if not time_left is None:
                     if time_left:
-                        string += "    " + str(time_left) + " minutes"
+                        string += "\t" + str(time_left) + " minutes"
                     else:
-                        string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
+                        string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
                 if not finished >= num_processes:
                     pass#string += "\r"
                 else:
@@ -961,12 +958,12 @@ class Experiment(object):
                 for rod in subsystem:
                     rod_id = rod.identifier
                     try:
-                        speed = methods.decompress(self._speeds[index]).[rod_id]
-                        angular_speed = methods.decompress(self._angular_speeds[index]).[rod_id]
+                        speed = self._speeds[index][rod_id]
+                        angular_speed = self._angular_speeds[index][rod_id]
                         subsystem_dict[rod_id] = (speed, angular_speed)
                     except KeyError:
                         pass
-                speeds_row.append(methods.compress(subsystem_dict))
+                speeds_row.append(subsystem_dict)
             speeds_matrix.append(speeds_row)
         output_queue.put([index, speeds_matrix])
 
@@ -1147,9 +1144,9 @@ class Experiment(object):
                     time_left = int(len(processes_left)*avg_time/60)
                 if not time_left is None:
                     if time_left:
-                        string += "    " + str(time_left) + " minutes"
+                        string += "\t" + str(time_left) + " minutes"
                     else:
-                        string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
+                        string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
                 if not finished >= num_processes:
                     pass#string += "\r"
                 else:
@@ -1271,30 +1268,45 @@ class Experiment(object):
         """
         Generic animator
         """
-        if not settings.to_file:
-            fig = plt.figure()    
+        groups = self.bursts_groups
+        bursts_ = len(groups)
+        print " "
+        x_val, y_val, z_vals_avg, z_max, z_min = self.get_z_vals(groups, bursts, function_name)
+        frames = len(z_vals_avg)
+        #match1 = re.match(r'.*?density.*', function_name)
+        if not settings.plot:
+            methods.create_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, self.radius)
+        if settings.to_file:
+            output_file_name = name + ".data"
+            output_file = open(output_file_name, 'w')
+            data = methods.compress([x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, self.radius], level=9)
+            output_file.write(data)
+            output_file.close()
+
+    def _generic_scatter_animator_process(self, divisions, index, output_queue, function_name):
+        """
+        Process
+        """
+        state = methods.decompress(self._states[index],
+                            level=methods.settings.medium_comp_level)
+        function = getattr(state, function_name)
+        values = function(divisions)
+        output_queue.put([index, values[0], values[1], values[2]])
+
+
+    def get_z_vals(self, groups, bursts, function_name):
+        """
+            Get z values for function.
+        """
+        finished_ = 0
+        previous_time = datetime.datetime.now()
+        times = []
+        time_left = None
+        counter = 0    
         z_vals = []
         z_vals_avg = []
         x_val = []
         y_val = []
-        previous_time = datetime.datetime.now()
-        times = []
-        time_left = None
-        counter = 0
-        groups = self.bursts_groups
-        bursts_ = len(groups)
-        print " "
-        finished_ = 0
-        match2 = re.match(r'.*?g[2|4].*', function_name)
-        #if match1:
-        #    z_max = 1
-        #    z_min = 0
-        if match2:
-            z_max = 1
-            z_min = -1
-        else:
-            z_maxs = []
-            z_mins = []
         for group in groups:
             finished_ += 1
             left = bursts_-finished_
@@ -1317,9 +1329,9 @@ class Experiment(object):
                 time_left = int(left*avg_time/60)
             if not time_left is None:
                 if time_left:
-                    string += "    " + str(time_left) + " minutes"
+                    string += "\t" + str(time_left) + " minutes"
                 else:
-                    string += "    " + str(int(len(self.bursts_groups)*avg_time)) + " seconds"
+                    string += "\t" + str(int(len(self.bursts_groups)*avg_time)) + " seconds"
             print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
             print string
             output_queue = mp.Queue()
@@ -1329,7 +1341,7 @@ class Experiment(object):
                                      args=(divisions, index, output_queue, function_name))
                 processes.append(process)
             num_processes = len(processes)
-            running, processes_left = methods.run_processes(processes, cpus=20)
+            running, processes_left = methods.run_processes(processes)
             finished = 0
             while finished < num_processes:
                 finished += 1
@@ -1351,66 +1363,21 @@ class Experiment(object):
                 if process.is_alive():
                     process.terminate()
         print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+        match2 = re.match(r'.*?g[2|4].*', function_name)
+        #if match1:
+        #    z_max = 1
+        #    z_min = 0
+        if match2:
+            z_max = 1
+            z_min = -1
+        else:
+            z_maxs = []
+            z_mins = []
         if not match2:
             z_max = max(z_maxs)
             z_min = min(z_mins)
-        frames = len(z_vals_avg)
-        #match1 = re.match(r'.*?density.*', function_name)
-        def animate(dummy_frame):
-            """
-            Wrapper.
-            """
-            self._animate_scatter(x_val, y_val, z_vals_avg,
-                                divisions, name, z_max, z_min, units)
-	    if not settings.to_file:
-		    anim = animation.FuncAnimation(fig, animate, frames=frames)
-		    anim.save(name, writer=self._writer, fps=fps)
-		    return z_min, z_max
-	    else:
-		    output_file_name = name + ".data"
-		    output_file = open(output_file_name, 'w')
-		    data = methods.compress([x_val, y_val, z_vals_avg, divisions, z_max, z_min, units], level=9)
-		    output_file.write(data)
-		    output_file.close()
-		    return z_min, z_max
+        return x_val, y_val, z_vals_avg, z_max, z_min
 
-    def _generic_scatter_animator_process(self, divisions, index, output_queue, function_name):
-        """
-        Process
-        """
-        state = methods.decompress(self._states[index],
-                            level=methods.settings.medium_comp_level)
-        function = getattr(state, function_name)
-        values = function(divisions)
-        output_queue.put([index, values[0], values[1], values[2]])
-        
-    def _animate_scatter(self, x_val, y_val, z_vals,
-                                divisions, name, z_max, z_min, units):
-        """
-        Specific animator.
-        """
-        try:
-            z_val = methods.decompress(z_vals.pop(0))
-        except IndexError:
-            return
-        plt.cla()
-        plt.clf()
-        rad = float(self.radius*1.3)/divisions
-        size = (rad/4)**2
-        x_min = min(x_val)-rad*1.1
-        x_max = max(x_val)+rad*1.1
-        y_min = min(y_val)-rad*1.1
-        y_max = max(y_val)+rad*1.1
-        plt.xlim((x_min, x_max))
-        plt.ylim((y_min, y_max))
-        #plt.suptitle(name)
-        plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
-                    vmin=z_min, vmax=z_max)
-        plt.gca().invert_yaxis()
-        cb = plt.colorbar()
-        plt.xlabel("x [pixels]")
-        plt.ylabel("y [pixels]")
-        cb.set_label(units)
 
     def _get_image_id(self, index):
         """
@@ -1979,7 +1946,7 @@ class Experiment(object):
         clust = open("cluster_areas.txt", "w")
         for index in range(len(times)):
             try:
-                string = str(times[index])+"    "+str(norm_areas[index])+"\n"
+                string = str(times[index])+"\t"+str(norm_areas[index])+"\n"
                 clust.write(string)
             except:
                 pass
@@ -1987,7 +1954,7 @@ class Experiment(object):
         clust = open("cluster_areas_log.txt", "w")
         for index in range(len(times)):
             try:
-                string = str(math.log(times[index]))+"    "+str(math.log(norm_areas[index]))+"\n"
+                string = str(math.log(times[index]))+"\t"+str(math.log(norm_areas[index]))+"\n"
                 clust.write(string)
             except:
                 pass
@@ -2083,9 +2050,9 @@ class Experiment(object):
                     time_left = int(len(processes_left)*avg_time/60)
                 if not time_left is None:
                     if time_left:
-                        string += "    " + str(time_left) + " minutes"
+                        string += "\t" + str(time_left) + " minutes"
                     else:
-                        string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
+                        string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
                 if not finished >= num_processes:
                     pass #string += "\r"
                 else:
@@ -2163,7 +2130,7 @@ class Experiment(object):
             plt.ylabel("average temperature [pixels^2 / s^2]")
             plt.savefig(name)
         else:
-            name = "average_temperature_K"+self.kappas+".data"
+            name = "average_temperature_K"+str(self.kappas)+".data"
             output_file = open(name, 'w')
             data = methods.compress([indices, average_speeds], level=9)
             output_file.write(data)

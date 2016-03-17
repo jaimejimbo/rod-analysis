@@ -1,5 +1,3 @@
-#!/usr/bin/python -i
-
 """
 Main script.
 """
@@ -8,11 +6,11 @@ Main script.
 Settings
 """
 #0-9 or None to disable
-low_comp_level = None
-medium_comp_level = 0
-strong_comp_level = None
+low_comp_level = 0
+medium_comp_level = 1
+strong_comp_level = 2
 #None uses all cpus      
-cpus = None
+cpus = 2
 # 1 or True, 0 or False
 create_videos = 1
 clusters = 1
@@ -24,12 +22,13 @@ run_props = 0
 run_graphs = 1
 run_check_dim = 0
 get_image_dates = 0
+to_file = 1
 # variables
-coef = 1
-divisions = 10
+coef = 3
+divisions = 30
 #sigma = sigma_coef * subsystem_rad
-sigma_coef = 2
-changing_props = False
+sigma_coef = 1
+changing_props = 0
 
 import re
 
@@ -94,6 +93,8 @@ settings.write("\n")
 settings.write("cpus = {0}".format(cpus))
 settings.write("\n")
 settings.write("zone_coords = {0}".format(zone_coords))
+settings.write("\n")
+settings.write("to_file = {0}".format(to_file))
 settings.write("\n")
 rad = zone_coords[2]
 gaussian_sigma = sigma_coef*float(rad)/divisions
@@ -229,12 +230,11 @@ if True:
 
         #os.system("bash tomp4script.sh")
     #except KeyboardInterrupt:
-    #    os.system("sudo pkill -f main.py")
+    #    os.system("pkill -f main.py")
     except AssertionError as error:
         print "Assertion error({0})".format(error)
-        os.system("sudo pkill -f main.py")
+        os.system("pkill -f main.py")
 #print hp.heap()
 print "Type exit() to exit."
 def exit():
-    print "Give root password to kill all remaining zombie processes"
-    os.system("sudo pkill -f main.py")
+    os.system("pkill -f main.py")
