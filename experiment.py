@@ -961,12 +961,12 @@ class Experiment(object):
                 for rod in subsystem:
                     rod_id = rod.identifier
                     try:
-                        speed = self._speeds[index][rod_id]
-                        angular_speed = self._angular_speeds[index][rod_id]
+                        speed = methods.decompress(self._speeds[index]).[rod_id]
+                        angular_speed = methods.decompress(self._angular_speeds[index]).[rod_id]
                         subsystem_dict[rod_id] = (speed, angular_speed)
                     except KeyError:
                         pass
-                speeds_row.append(subsystem_dict)
+                speeds_row.append(methods.compress(subsystem_dict))
             speeds_matrix.append(speeds_row)
         output_queue.put([index, speeds_matrix])
 
@@ -1390,7 +1390,7 @@ class Experiment(object):
         Specific animator.
         """
         try:
-            z_val = methods.decompress(z_vals.pop(0), level=settings.medium_comp_level)
+            z_val = methods.decompress(z_vals.pop(0))
         except IndexError:
             return
         plt.cla()

@@ -1252,8 +1252,7 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
         finished_ += 1
         [index, state] = states_queue.get()
         if state is not None:
-            states[index] = methods.compress(state,
-                                    level=settings.medium_comp_level)
+            states[index] = methods.compress(state)
         else:
             empty_states.append(index)
         if len(processes_left):
@@ -1269,10 +1268,8 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
             if states[new_state] is not None:
                 break
             diff += 1
-        new_state = methods.decompress(states[new_state],
-                        level=settings.medium_comp_level).clone()
-        states[empty_state] = methods.compress(new_state,
-                                level=settings.medium_comp_level)
+        new_state = methods.decompress(states[new_state]).clone()
+        states[empty_state] = methods.compress(new_state)
     print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
     return names, states
 
