@@ -15,13 +15,13 @@ _writer = animation.writers['ffmpeg']
 writer = _writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 WRITER = writer
 
-"""try:
+try:
     import pyopencl as cl
     ctx = cl.create_some_context()
     queue = cl.CommandQueue(ctx)
-    using_cl = True
+    using_cl = 1
 except:
-    using_cl = False"""
+    using_cl = 0
 
 def change_compression_coef(new_coef):
     """

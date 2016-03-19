@@ -287,8 +287,8 @@ class Experiment(object):
         Each key is a rod's id.
         """
         for dummy_index in range(len(self._states)):
-            self._evolution_dictionaries.append({})
-            self._relative_dictionaries.append({})
+            self._evolution_dictionaries.append(methods.compress({}))
+            self._relative_dictionaries.append(methods.compress({}))
             self._conflictive_final_rods.append(set([]))
             self._final_rods.append(set([]))
             self._initial_rods.append(set([]))
@@ -298,13 +298,15 @@ class Experiment(object):
             if not state:
                 msg = "State is not defined."
                 raise TypeError(msg)
-            evol_dict = self._evolution_dictionaries[index]
-            relative_dict = self._relative_dictionaries[index]
+            evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.low_comp_level)
+            relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.low_comp_level)
             for rod_ in state:
                 self._initial_rods[index] |= set([rod_.identifier])
                 rod_id = rod_.identifier
                 evol_dict[rod_id] = set([])
                 relative_dict[rod_id] = {}
+            self._evolution_dictionaries[index] = methods.compress(evol_dict, level=settings.low_comp_level)
+            self._relative_dictionaries[index] = methods.compress(relative_dict, level=settings.low_comp_level)
         for index in range(len(self._states)-1):
             self._final_rods[index] = self._initial_rods[index+1].copy()
 
@@ -366,8 +368,8 @@ class Experiment(object):
             finished_ += 1
             output_row = output_queue.get()
             index = output_row[0]
-            self._evolution_dictionaries[index] = methods.compress(output_row[1])
-            self._relative_dictionaries[index] = methods.compress(output_row[2])
+            self._evolution_dictionaries[index] = output_row[1]
+            self._relative_dictionaries[index] = output_row[2]
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
@@ -386,8 +388,8 @@ class Experiment(object):
         """
         initial_state = methods.decompress(self._states[index])
         final_state = methods.decompress(self._states[index+1])
-        evol_dict = methods.decompress(self._evolution_dictionaries[index])
-        relative_dict = methods.decompress(self._relative_dictionaries[index])
+        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.low_comp_level)
+        relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.low_comp_level)
         for initial_rod in initial_state:
             initial_id = initial_rod.identifier
             if not amount_of_rods:
@@ -411,7 +413,7 @@ class Experiment(object):
         for initial_id in list(relative_dict.keys()):
             if len(relative_dict[initial_id]) == 1:
                 relative_dict[initial_id] = list(relative_dict[initial_id].values())[0]
-        output_queue.put([index, evol_dict, relative_dict])
+        output_queue.put([index, methods.compress(evol_dict, level=settings.low_comp_level), methods.compress(relative_dict, level=settings.low_comp_level)])
 
 
     def _fill_dicts_process_limited(self, index, max_distance,
@@ -423,8 +425,8 @@ class Experiment(object):
         """
         initial_state = methods.decompress(self._states[index])
         final_state = methods.decompress(self._states[index+1])
-        evol_dict = methods.decompress(self._evolution_dictionaries[index])
-        relative_dict = methods.decompress(self._relative_dictionaries[index])
+        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.low_comp_level)
+        relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.low_comp_level)
         for initial_rod in initial_state:
             initial_id = initial_rod.identifier
             if not amount_of_rods:
@@ -467,13 +469,13 @@ class Experiment(object):
         for initial_id in list(relative_dict.keys()):
             if len(relative_dict[initial_id]) == 1:
                 relative_dict[initial_id] = list(relative_dict[initial_id].values())[0]
-        output_queue.put([index, evol_dict, relative_dict])
+        output_queue.put([index, methods.compress(evol_dict, level=settings.low_comp_level), methods.compress(relative_dict, level=settings.low_comp_level)])
 
     def _remove_final_rod(self, index, initial_rod_id, final_rod_id):
         """
             Remove final rod from the rest of rods' evolutions.
         """
-        evol_dict = methods.decompress(self._evolution_dictionaries[index])
+        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.low_comp_level)
         system_end = self._states[index+1]
         final_rod = system_end[list(final_rod_id)[0]]
         changed = False
@@ -516,8 +518,8 @@ class Experiment(object):
             index = output[0]
             evol_dict = output[1]
             relative_dict = output[2]
-            self._evolution_dictionaries[index] = methods.compress(evol_dict)
-            self._relative_dictionaries[index] = methods.compress(relative_dict)
+            self._evolution_dictionaries[index] = evol_dict
+            self._relative_dictionaries[index] = relative_dict
             index = selected[0]
             self._final_rods[index] -= selected[1]
             if len(processes_left):
@@ -534,8 +536,8 @@ class Experiment(object):
         Process.
         """
         selected = set([])
-        evol_dict = methods.decompress(self._evolution_dictionaries[index])
-        relative_dict = methods.decompress(self._relative_dictionaries[index])
+        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.low_comp_level)
+        relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.low_comp_level)
         for initial_rod_id in list(evol_dict.keys()):
             final_rod_id, distance, angle_diff = self._closer_rod(index,
                                           initial_rod_id, selected,
@@ -545,7 +547,7 @@ class Experiment(object):
             if distance:
                 relative_dict[initial_rod_id] = (distance, angle_diff)
             selected |= set([final_rod_id])
-        output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict)])
+        output_queue.put([index, methods.compress(evol_dict, level=settings.low_comp_level), methods.compress(relative_dict, level=settings.low_comp_level)])
         selected_queue.put([index, selected])
 
 
@@ -554,9 +556,9 @@ class Experiment(object):
             If there are multiple choices,
         this erase all but the closest.
         """
-        evol_dict = methods.decompress(self._evolution_dictionaries[index])
+        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.low_comp_level)
         final_rods = evol_dict[initial_rod_id]
-        relative_dict = methods.decompress(self._relative_dictionaries[index])[initial_rod_id]
+        relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.low_comp_level)[initial_rod_id]
         min_distance = max_distance
         final_rod = None
         final_rod_list = list(final_rods)
@@ -657,7 +659,7 @@ class Experiment(object):
         Process.
         """
         speeds_vectors = {}
-        evol_dict = methods.decompress(self._evolution_dictionaries[index])
+        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.low_comp_level)
         initial_state = methods.decompress(self._states[index],
                                 level=methods.settings.medium_comp_level)
         final_state = methods.decompress(self._states[index+1],
@@ -673,7 +675,7 @@ class Experiment(object):
                     final_rod = final_state[final_rod_id]
                     vector = initial_rod.vector_to_rod(final_rod)
                     speeds_vectors[initial_rod_id] = vector
-        output_queue.put([index, speeds_vectors])
+        output_queue.put([index, methods.compress(speeds_vectors)])
 
 
     def evolution_dictionaries(self, max_distance=100, max_angle_diff=90,
@@ -713,8 +715,8 @@ class Experiment(object):
             index = output[0]
             evol_dict = output[1]
             relative_dict = output[2]
-            self._evolution_dictionaries[index] = methods.compress(evol_dict)
-            self._relative_dictionaries[index] = methods.compress(relative_dict)
+            self._evolution_dictionaries[index] = evol_dict
+            self._relative_dictionaries[index] = relative_dict
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
@@ -727,9 +729,9 @@ class Experiment(object):
         """
         Process for method.
         """
-        evol_dict = methods.decompress(self._evolution_dictionaries[index])
+        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.low_comp_level)
         initial_rods = set([])
-        relative_dict = methods.decompress(self._relative_dictionaries[index])
+        relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.low_comp_level)
         self._initial_rods[index] = initial_rods
         final_rods = self._final_rods[index]
         initial_state = self._states[index]
@@ -756,7 +758,7 @@ class Experiment(object):
                 angle_diff = -1
             relative_dict[selected_rod_id] = (min_distance, angle_diff)
             initial_rods -= set([selected_rod_id])
-        output_queue.put([index, evol_dict, relative_dict])
+        output_queue.put([index, methods.compress(evol_dict, level=settings.low_comp_level), methods.compress(relative_dict, level=settings.low_comp_level)])
 
 
     def _compute_speeds(self, max_distance, max_angle_diff, limit, amount_of_rods):
@@ -839,7 +841,7 @@ class Experiment(object):
         """
         Returns an array of speeds.
         """
-        rel_dict = self._relative_dictionaries[index]
+        rel_dict = methods.decompress(self._relative_dictionaries[index], level=settings.low_comp_level)
         speeds = {}
         angular_speeds = {}
         for initial_rod_id in list(rel_dict.keys()):
@@ -990,8 +992,8 @@ class Experiment(object):
                 finished += 1
                 output = output_queue.get()
                 index = output[0]
-                self._local_average_quadratic_speeds[index] = output[1]
-                self._local_average_quadratic_angular_speeds[index] = output[2]
+                self._local_average_quadratic_speeds[index] = methods.compress(output[1])
+                self._local_average_quadratic_angular_speeds[index] = methods.compress(output[2])
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     new_process.start()
@@ -1073,9 +1075,9 @@ class Experiment(object):
         """
         Process
         """
-        quad_speeds = quad_speeds_array[index]
-        ang_speeds = ang_speeds_array[index]
-        state = self._states[index]
+        quad_speeds = methods.decompress(quad_speeds_array[index])
+        ang_speeds = methods.decompress(ang_speeds_array[index])
+        state = self.get(index)
         subgroups = state.subgroups_matrix(divisions)
         densities = []
         speeds = []
@@ -1192,7 +1194,7 @@ class Experiment(object):
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+"prop"+str(round(100*prop,1))+'%.mp4'
         units = "Normalized occupied area [S.U.]"
-        z_min, z_max = self._generic_scatter_animator(name, function_name, units,
+        z_max, z_min = self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
         self._min_density = z_min
         self._max_density = z_max
@@ -1280,6 +1282,7 @@ class Experiment(object):
             data = methods.compress([x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, self.radius], level=9)
             output_file.write(data)
             output_file.close()
+        return z_max, z_min
 
     def _generic_scatter_animator_process(self, divisions, index, output_queue, function_name):
         """
@@ -1394,28 +1397,9 @@ class Experiment(object):
         Creates a video per property of the system that shows evolution.
         """
         self.divide_systems_in_circles(divisions)
-        """processes = []
-        process = mp.Process(target=self.create_density_video,
-                             args=(divisions, folder, fps, number_of_bursts))
-        processes.append(process)
-        process = mp.Process(target=self.create_relative_g2_video,
-                             args=(divisions, folder, fps, number_of_bursts))
-        processes.append(process)
-        process = mp.Process(target=self.create_relative_g4_video,
-                             args=(divisions, folder, fps, number_of_bursts))
-        processes.append(process)
-        process = mp.Process(target=self.create_temperature_video,
-                             args=(divisions, folder, fps, max_distance,
-                               max_angle_diff, limit, amount_of_rods,
-                               number_of_bursts))
-        processes.append(process)
-        for index in range(4):
-            processes[index].start()
-        for index in range(4):
-            processes[index].join()"""
-        self.create_density_video(divisions, folder, fps, number_of_bursts)
-        self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
-        self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
+        #self.create_density_video(divisions, folder, fps, number_of_bursts)
+        #self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
+        #self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
         self.create_temperature_video(divisions, folder, fps, max_distance,
                                max_angle_diff, limit, amount_of_rods,
                                number_of_bursts)
