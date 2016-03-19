@@ -1046,7 +1046,6 @@ class SystemState(object):
         eigen1, dummy_ = self._direction_matrix.diagonalize_2x2()
         return eigen1
 
-
     def covered_area_proportion(self):
         """
             Returns covered area proportion by rods.
@@ -1057,6 +1056,12 @@ class SystemState(object):
             covered_area += rod.area
         proportion = covered_area / total_area
         return proportion
+
+    def covered_area_proportion(self, index, output_queue):
+        """
+        Wrapper
+        """
+        output_queue.put([index, self.covered_area_proportion()])
 
     @property
     def average_rod_length(self):
