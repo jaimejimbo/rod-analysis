@@ -11,16 +11,16 @@ low_comp_level = 0
 medium_comp_level = 1
 strong_comp_level = 2
 #None uses all cpus      
-cpus = 2
+cpus = None
 # 1 or True, 0 or False
 create_videos = 1
 clusters = 1
 avg_temp = 1
 order_param_exp = 1
 lost_percentage = 1
-run_imagej = 1
-run_props = 0
-run_graphs = 1
+run_imagej = 0
+run_props = 1
+run_graphs = 0
 run_check_dim = 0
 get_image_dates = 0
 to_file = 1
@@ -31,7 +31,6 @@ divisions = 30
 #sigma = sigma_coef * subsystem_rad
 sigma_coef = 1
 changing_props = 0
-
 import re
 
 
@@ -136,7 +135,7 @@ if True:
             name = str(int(real_kappa)) + "_default.log"
             log = open(name, 'w')
             msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
-            print msg
+            #print msg
             names, rod_groups = system_state.create_rods(kappas=kappa, real_kappas=real_kappa,
                                                     allowed_kappa_error=error)
             experiment_ = experiment.Experiment(system_states_name_list=names, kappas=real_kappa,
@@ -184,10 +183,12 @@ if True:
 
         if run_props:
             print "Computing area proportions..."
-            print "kappa\t\t\tdeviation"
             log = open("props.log",'w')
             prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop(15, 12, 3)
             prop_short, prop_short_dev, shorts, shorts_dev, rad2, msg2 = run_prop(7.8, 6, 2)
+            print "kappa\t\t\tdeviation"
+            print msg1
+            print msg2
             log.write(str(msg1+"\n"))
             log.write(str(msg2+"\n"))
             areal = rad1**2*math.pi

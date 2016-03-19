@@ -841,7 +841,7 @@ class Experiment(object):
         """
         Returns an array of speeds.
         """
-        rel_dict = self._relative_dictionaries[index]
+        rel_dict = methods.decompress(self._relative_dictionaries[index], level=settings.low_comp_level)
         speeds = {}
         angular_speeds = {}
         for initial_rod_id in list(rel_dict.keys()):
@@ -1397,28 +1397,9 @@ class Experiment(object):
         Creates a video per property of the system that shows evolution.
         """
         self.divide_systems_in_circles(divisions)
-        """processes = []
-        process = mp.Process(target=self.create_density_video,
-                             args=(divisions, folder, fps, number_of_bursts))
-        processes.append(process)
-        process = mp.Process(target=self.create_relative_g2_video,
-                             args=(divisions, folder, fps, number_of_bursts))
-        processes.append(process)
-        process = mp.Process(target=self.create_relative_g4_video,
-                             args=(divisions, folder, fps, number_of_bursts))
-        processes.append(process)
-        process = mp.Process(target=self.create_temperature_video,
-                             args=(divisions, folder, fps, max_distance,
-                               max_angle_diff, limit, amount_of_rods,
-                               number_of_bursts))
-        processes.append(process)
-        for index in range(4):
-            processes[index].start()
-        for index in range(4):
-            processes[index].join()"""
-        self.create_density_video(divisions, folder, fps, number_of_bursts)
-        self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
-        self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
+        #self.create_density_video(divisions, folder, fps, number_of_bursts)
+        #self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
+        #self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
         self.create_temperature_video(divisions, folder, fps, max_distance,
                                max_angle_diff, limit, amount_of_rods,
                                number_of_bursts)

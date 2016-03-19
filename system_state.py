@@ -1057,7 +1057,7 @@ class SystemState(object):
         proportion = covered_area / total_area
         return proportion
 
-    def covered_area_proportion(self, index, output_queue):
+    def covered_area_proportion_queue(self, index, output_queue):
         """
         Wrapper
         """
