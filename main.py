@@ -218,8 +218,14 @@ if True:
         
         if run_graphs:
             print "Creating graphs..."
-            run_default(15, 12, 3)
-            run_default(7.8, 6, 2)
+            try:
+            	run_default(15, 12, 3)
+            except:
+                pass
+            try:
+                run_default(7.8, 6, 2)
+            except:
+                pass
 
         if run_check_dim:
             names, rod_groups = system_state.create_rods(kappas=10, real_kappas=12,

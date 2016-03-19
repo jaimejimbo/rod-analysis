@@ -9,7 +9,7 @@ import settings
 import numpy
 from matplotlib import animation
 
-using_cl = 1
+using_cl = 0
 
 _writer = animation.writers['ffmpeg']
 writer = _writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
