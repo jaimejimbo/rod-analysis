@@ -287,8 +287,8 @@ class Experiment(object):
         Each key is a rod's id.
         """
         for dummy_index in range(len(self._states)):
-            self._evolution_dictionaries.append(methods.compress({}))
-            self._relative_dictionaries.append(methods.compress({}))
+            self._evolution_dictionaries.append(methods.compress({}, level=settings.low_comp_level))
+            self._relative_dictionaries.append(methods.compress({}, level=settings.low_comp_level))
             self._conflictive_final_rods.append(set([]))
             self._final_rods.append(set([]))
             self._initial_rods.append(set([]))
