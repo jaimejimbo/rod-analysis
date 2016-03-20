@@ -19,8 +19,8 @@ avg_temp = 1
 order_param_exp = 1
 lost_percentage = 1
 run_imagej = 0
-run_props = 1
-run_graphs = 0
+run_props = 0
+run_graphs = 1
 run_check_dim = 0
 get_image_dates = 0
 to_file = 1
@@ -29,7 +29,7 @@ plot = 0
 coef = 3
 divisions = 30
 #sigma = sigma_coef * subsystem_rad
-sigma_coef = 1
+sigma_coef = 2
 changing_props = 0
 import re
 
@@ -135,7 +135,8 @@ if True:
             name = str(int(real_kappa)) + "_default.log"
             log = open(name, 'w')
             msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
-            #print msg
+            print msg
+            log.write(str(msg+"\n"))
             names, rod_groups = system_state.create_rods(kappas=kappa, real_kappas=real_kappa,
                                                     allowed_kappa_error=error)
             experiment_ = experiment.Experiment(system_states_name_list=names, kappas=real_kappa,
@@ -162,6 +163,7 @@ if True:
             except NameError:
                 pass
             log.close()
+            print "\n\n\n"
 
         def run_prop(kappa, real_kappa, error):
             msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
@@ -220,14 +222,8 @@ if True:
         
         if run_graphs:
             print "Creating graphs..."
-            try:
-            	run_default(15, 12, 3)
-            except:
-                pass
-            try:
-                run_default(7.8, 6, 2)
-            except:
-                pass
+            run_default(15, 12, 3)
+            run_default(7.8, 6, 2)
 
         if run_check_dim:
             names, rod_groups = system_state.create_rods(kappas=10, real_kappas=12,
