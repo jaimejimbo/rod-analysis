@@ -10,6 +10,8 @@ Settings
 low_comp_level = 0
 medium_comp_level = 1
 strong_comp_level = 2
+#Reduces cpu usage (0 for disable)
+waiting_time = .1
 #None uses all cpus      
 cpus = None
 # 1 or True, 0 or False
@@ -99,6 +101,8 @@ settings.write("to_file = {0}".format(to_file))
 settings.write("\n")
 settings.write("plot = {0}".format(plot))
 settings.write("\n")
+settings.write("waiting_time = {0}".format(waiting_time))
+settings.write("\n")
 rad = zone_coords[2]
 gaussian_sigma = sigma_coef*float(rad)/divisions
 settings.write("sigma = {0}".format(gaussian_sigma))
@@ -106,7 +110,7 @@ settings.write("\n")
 settings.close()
 
 import experiment, system_state, methods, settings
-import os, gc, math#, guppy
+import os, gc, math, time#, guppy
 
 #hp = guppy.hpy()
 #hp.setrelheap()

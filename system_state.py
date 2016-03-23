@@ -4,7 +4,7 @@
 import math, queue, matrix, copy
 import multiprocessing as mp
 import methods, rod, settings
-import cPickle, zlib, datetime
+import cPickle, zlib, datetime, time
 
 
 CURSOR_UP_ONE = '\x1b[1A'
@@ -1244,9 +1244,9 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
             time_left = int(len(processes_left)*avg_time/60)
         if not time_left is None:
             if time_left:
-                string += "\t" + str(time_left) + " minutes"
+                string += "    " + str(time_left) + " minutes"
             else:
-                string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+                string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
         if not finished_ >= num_processes:
             pass
         else:
@@ -1263,6 +1263,7 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
             empty_states.append(index)
         if len(processes_left):
             new_process = processes_left.pop(0)
+            time.sleep(settings.waiting_time)
             new_process.start()
     for process in processes:
         if process.is_alive():

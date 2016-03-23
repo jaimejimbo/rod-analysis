@@ -10,7 +10,7 @@ import numpy
 import numpy as np
 import scipy.optimize as optimization
 import datetime
-import settings
+import settings, time
 
 
 CURSOR_UP_ONE = '\x1b[1A'
@@ -208,9 +208,9 @@ class Experiment(object):
                 time_left = int(len(processes_left)*avg_time/60)
             if not time_left is None:
                 if time_left:
-                    string += "\t" + str(time_left) + " minutes"
+                    string += "    " + str(time_left) + " minutes"
                 else:
-                    string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+                    string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
             if not finished_ >= num_processes:
                 pass #string += "\r"
             else:
@@ -226,6 +226,7 @@ class Experiment(object):
             states[index] = compressed_state
             if len(processes_left):
                 new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
                 new_process.start()
             if finished_ >= num_processes:
                 break
@@ -354,9 +355,9 @@ class Experiment(object):
                 time_left = int(len(processes_left)*avg_time/60)
             if not time_left is None:
                 if time_left:
-                    string += "\t" + str(time_left) + " minutes"
+                    string += "    " + str(time_left) + " minutes"
                 else:
-                    string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+                    string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
             if not finished_ >= num_processes:
                 pass #string += "\r"
             else:
@@ -372,6 +373,7 @@ class Experiment(object):
             self._relative_dictionaries[index] = output_row[2]
             if len(processes_left):
                 new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
                 new_process.start()
             if finished_ >= num_processes:
                 break
@@ -524,6 +526,7 @@ class Experiment(object):
             self._final_rods[index] -= selected[1]
             if len(processes_left):
                 new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
                 new_process.start()
         for process in processes:
             if process.is_alive():
@@ -649,6 +652,7 @@ class Experiment(object):
             self._speeds_vectors[index] = speeds_vectors
             if len(processes_left):
                 new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
                 new_process.start()
         for process in processes:
             if process.is_alive():
@@ -719,6 +723,7 @@ class Experiment(object):
             self._relative_dictionaries[index] = relative_dict
             if len(processes_left):
                 new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
                 new_process.start()
         for process in processes:
             if process.is_alive():
@@ -809,9 +814,9 @@ class Experiment(object):
                     time_left = int(len(processes_left)*avg_time/60)
                 if not time_left is None:
                     if time_left:
-                        string += "\t" + str(time_left) + " minutes"
+                        string += "    " + str(time_left) + " minutes"
                     else:
-                        string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+                        string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
                 if not finished >= num_processes:
                     pass#string += "\r"
                 else:
@@ -935,6 +940,7 @@ class Experiment(object):
             self._local_speeds[index] = speeds_matrix
             if len(processes_left):
                 new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
                 new_process.start()
             if finished >= num_processes:
                 break
@@ -1144,9 +1150,9 @@ class Experiment(object):
                     time_left = int(len(processes_left)*avg_time/60)
                 if not time_left is None:
                     if time_left:
-                        string += "\t" + str(time_left) + " minutes"
+                        string += "    " + str(time_left) + " minutes"
                     else:
-                        string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+                        string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
                 if not finished >= num_processes:
                     pass#string += "\r"
                 else:
@@ -1337,9 +1343,9 @@ class Experiment(object):
                 time_left = int(left*avg_time/60)
             if not time_left is None:
                 if time_left:
-                    string += "\t" + str(time_left) + " minutes"
+                    string += "    " + str(time_left) + " minutes"
                 else:
-                    string += "\t" + str(int(len(self.bursts_groups)*avg_time)) + " seconds"
+                    string += "    " + str(int(len(self.bursts_groups)*avg_time)) + " seconds"
             print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
             print string
             output_queue = mp.Queue()
@@ -1478,6 +1484,7 @@ class Experiment(object):
             arrays[index] = array
             if len(processes_left):
                 new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
                 new_process.start()
         for process in processes:
             if process.is_alive():
@@ -1586,6 +1593,7 @@ class Experiment(object):
             vector_matrices[index] = vector_matrix
             if len(processes_left):
                 new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
                 new_process.start()
         for process in processes:
             if process.is_alive():
@@ -1773,6 +1781,7 @@ class Experiment(object):
             areas[index] = area
             if len(processes_left):
                 new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
                 new_process.start()
         for process in processes:
             if process.is_alive():
@@ -1921,7 +1930,7 @@ class Experiment(object):
         clust = open("cluster_areas.txt", "w")
         for index in range(len(times)):
             try:
-                string = str(times[index])+"\t"+str(norm_areas[index])+"\n"
+                string = str(times[index])+"    "+str(norm_areas[index])+"\n"
                 clust.write(string)
             except:
                 pass
@@ -1929,7 +1938,7 @@ class Experiment(object):
         clust = open("cluster_areas_log.txt", "w")
         for index in range(len(times)):
             try:
-                string = str(math.log(times[index]))+"\t"+str(math.log(norm_areas[index]))+"\n"
+                string = str(math.log(times[index]))+"    "+str(math.log(norm_areas[index]))+"\n"
                 clust.write(string)
             except:
                 pass
@@ -2025,9 +2034,9 @@ class Experiment(object):
                     time_left = int(len(processes_left)*avg_time/60)
                 if not time_left is None:
                     if time_left:
-                        string += "\t" + str(time_left) + " minutes"
+                        string += "    " + str(time_left) + " minutes"
                     else:
-                        string += "\t" + str(int(len(processes_left)*avg_time)) + " seconds"
+                        string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
                 if not finished >= num_processes:
                     pass #string += "\r"
                 else:
@@ -2091,6 +2100,7 @@ class Experiment(object):
             average_speeds[index] = average_speed
             if len(processes_left):
                 new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
                 new_process.start()
         for process in processes:
             if process.is_alive():
@@ -2179,6 +2189,7 @@ class Experiment(object):
             #print index, prop
             if len(processes_left):
                 new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
                 new_process.start()
         avg = float(sum(props))/len(props)
         std_dev_step1 = [(value-avg)**2 for value in props]
