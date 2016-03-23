@@ -832,7 +832,7 @@ class Experiment(object):
                 self._angular_speeds.append(angular_speeds)
                 if len(processes_left):
                     new_process = processes_left.pop(0)
-	                time.sleep(settings.waiting_time)
+                    time.sleep(settings.waiting_time)
                     new_process.start()
                 if finished >= num_processes:
                     break
@@ -1003,7 +1003,7 @@ class Experiment(object):
                 self._local_average_quadratic_angular_speeds[index] = methods.compress(output[2])
                 if len(processes_left):
                     new_process = processes_left.pop(0)
-        	        time.sleep(settings.waiting_time)
+                    time.sleep(settings.waiting_time)
                     new_process.start()
             for process in processes:
                 if process.is_alive():
@@ -1069,7 +1069,7 @@ class Experiment(object):
                 self._speeds_matrices[output[3]](output[2])
                 if len(processes_left):
                     new_process = processes_left.pop(0)
-        	        time.sleep(settings.waiting_time)
+                    time.sleep(settings.waiting_time)
                     new_process.start()
             for process in processes:
                 if process.is_alive():
@@ -1171,7 +1171,7 @@ class Experiment(object):
                 finished += 1
                 if len(processes_left):
                     new_process = processes_left.pop(0)
-        	        time.sleep(settings.waiting_time)
+                    time.sleep(settings.waiting_time)
                     new_process.start()
                 if finished >= num_processes:
                     break
@@ -1374,7 +1374,7 @@ class Experiment(object):
                 z_vals.append(z_val)
                 if len(processes_left):
                     new_process = processes_left.pop(0)
-        	        time.sleep(settings.waiting_time)
+                    time.sleep(settings.waiting_time)
                     new_process.start()
             z_vals_avg.append(methods.compress(methods.array_average(z_vals),
                                            level=settings.medium_comp_level))
