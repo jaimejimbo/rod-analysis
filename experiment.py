@@ -832,7 +832,7 @@ class Experiment(object):
                 self._angular_speeds.append(angular_speeds)
                 if len(processes_left):
                     new_process = processes_left.pop(0)
-        	        time.sleep(settings.waiting_time)
+	                time.sleep(settings.waiting_time)
                     new_process.start()
                 if finished >= num_processes:
                     break
