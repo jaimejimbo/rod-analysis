@@ -1172,7 +1172,11 @@ class Experiment(object):
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
-                    new_process.start()
+                    try:
+                        new_process.start()
+                    except OSError:
+                        os.system("cat /proc/meminfo | grep -i free")
+                        raise OSError("Out of memory")
                 if finished >= num_processes:
                     break
             self._states = states
