@@ -1257,8 +1257,7 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
         finished_ += 1
         [index, state] = states_queue.get()
         if state is not None:
-            states[index] = methods.compress(state,
-                                    level=methods.settings.medium_comp_level)
+            states[index] = state
         else:
             empty_states.append(index)
         if len(processes_left):
@@ -1315,5 +1314,7 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
         #raise ValueError("A state must have been created.")
     state.compute_center_and_radius()
     state.check_rods()
+    state = methods.compress(state,
+                             level=methods.settings.medium_comp_level)
     states_queue.put([index, state])
 
