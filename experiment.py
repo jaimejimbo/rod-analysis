@@ -11,6 +11,7 @@ import numpy as np
 import scipy.optimize as optimization
 import datetime
 import settings, time
+from sys import getsizeof
 
 
 CURSOR_UP_ONE = '\x1b[1A'
@@ -223,7 +224,7 @@ class Experiment(object):
             output_row = output_queue.get()
             index = output_row[0]
             compressed_state = output_row[1]
-            states[index] = compressed_state
+            self._states[index] = compressed_state
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
@@ -234,7 +235,6 @@ class Experiment(object):
             if process.is_alive():
                 process.terminate()
         print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
-        self._states = states
         return
 
     def set_coef_process(self, index, output_queue, value):
@@ -1160,14 +1160,16 @@ class Experiment(object):
                     pass#string += "\r"
                 else:
                     string += "\n"
+                #print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
                 print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
                 print string
+                #print getsizeof(self._states)
                 #sys.stdout.write(string)
                 #sys.stdout.flush()
                 output = output_queue.get()
                 index = output[0]
                 state = output[1]
-                states[index] = state
+                self._states[index] = state
                 finished += 1
                 if len(processes_left):
                     new_process = processes_left.pop(0)
@@ -1179,7 +1181,6 @@ class Experiment(object):
                         raise OSError("Out of memory")
                 if finished >= num_processes:
                     break
-            self._states = states
             print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
             for process in processes:
                 if process.is_alive():
