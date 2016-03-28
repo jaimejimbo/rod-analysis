@@ -5,7 +5,7 @@
 - tracks?                                               (DONE)
 - dynamics                                              (DONE)
     · velocities and temperature                        (DONE)
-· local velocities/temperature			        (DONE)
+· local velocities/temperature			                (DONE)
     · density as a function of local temperature.       (DONE)
 - main code (plot and study system)                     (DONE)
     · density animation                                 (DONE)
@@ -48,7 +48,8 @@ Segregation
 - Order param(cluster area)                             (DONE)
 - Normalized order param(cluster area)                  (DONE)
 - Exponent                                              (DONE)
-
+- Circunferencia alrededor de las zonas de 
+ alta densidad (calcular longitud).                     (not started)
  
 bugs:
 - Temperatures seem to be not computed correctly.       (DONE?)
@@ -58,6 +59,8 @@ bugs:
 - Clusters not computed correctly                       (DONE)
 - Use time correctly for clusters graph!                (DONE)
 - Decompressing issues                                  (DONE)
+- 1CPU en "computing bursts groups"(not started)        (not started)
+- 1CPU al dibujar                                       (not started)
 
 
 
@@ -67,4 +70,5 @@ multiplicar TxK                                         (DONE)
 poner area de clusters en log                           
 (pintar recta encima) para t y area.                    (WIP)
 mirar error reg lineal para 3 rafagas y 10 rafagas.     (WIP)
+
 
