@@ -1442,7 +1442,7 @@ class Experiment(object):
             for row_index in range(len(subgroups)):
                 for col_index in range(len(subgroups[row_index])):
                     subgroup = subgroups[row_index][col_index]
-                    quad_speed = quad_speeds[index][row_index][col_index]
+                    quad_speed = methods.decompress(quad_speeds[index])[row_index][col_index]
                     #assert len(quad_speeds) > index, "1228"
                     #for index2 in range(len(quad_speeds)):
                     #    assert len(quad_speeds[index2]) > row_index, "1230"
