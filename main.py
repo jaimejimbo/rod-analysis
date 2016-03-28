@@ -11,7 +11,12 @@ low_comp_level = 0
 medium_comp_level = 1
 strong_comp_level = 2
 #Reduces cpu usage (0 for disable)
-waiting_time = .1
+waiting_time = 0
+if not waiting_time:
+    waiting_time = 0    
+waiting_time_proccess = .1
+if not waiting_time:
+    waiting_time_process = 0  
 #None uses all cpus      
 cpus = None
 # 1 or True, 0 or False
@@ -102,6 +107,8 @@ settings.write("\n")
 settings.write("plot = {0}".format(plot))
 settings.write("\n")
 settings.write("waiting_time = {0}".format(waiting_time))
+settings.write("\n")
+settings.write("waiting_time_process = {0}".format(waiting_time_process))
 settings.write("\n")
 rad = zone_coords[2]
 gaussian_sigma = sigma_coef*float(rad)/divisions

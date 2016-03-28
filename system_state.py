@@ -449,6 +449,7 @@ class SystemState(object):
         for index in range(len(centers)):
             distance = distances[index]
             center = centers[index]
+            time.sleep(settings.waiting_time_process)
             if distance < self.radius:
                 subsystem = SubsystemState(center, rad, self.zone_coords,
                                            self._rods, self._kappas, self._real_kappas,
