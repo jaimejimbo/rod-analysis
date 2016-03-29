@@ -289,13 +289,13 @@ class Experiment(object):
             Create evolucion dictionaries keys.
         Each key is a rod's id.
         """
-        for dummy_index in range(len(self._states)):
+        for dummy_index in range(len(self)):
             self._evolution_dictionaries.append(methods.compress({}, level=settings.low_comp_level))
             self._relative_dictionaries.append(methods.compress({}, level=settings.low_comp_level))
             self._conflictive_final_rods.append(set([]))
             self._final_rods.append(set([]))
             self._initial_rods.append(set([]))
-        for index in range(len(self._states)):
+        for index in range(len(self)):
             state = methods.decompress(self._states[index],
                                     level=methods.settings.medium_comp_level)
             if not state:
@@ -310,7 +310,7 @@ class Experiment(object):
                 relative_dict[rod_id] = {}
             self._evolution_dictionaries[index] = methods.compress(evol_dict, level=settings.low_comp_level)
             self._relative_dictionaries[index] = methods.compress(relative_dict, level=settings.low_comp_level)
-        for index in range(len(self._states)-1):
+        for index in range(len(self)-1):
             self._final_rods[index] = self._initial_rods[index+1].copy()
 
 
@@ -325,7 +325,7 @@ class Experiment(object):
                                                 limit, amount_of_rods)
         processes = []
         output_queue = mp.Queue()
-        for index in range(len(self._states)-1):
+        for index in range(len(self)-1):
             processes.append(mp.Process(target=self._fill_dicts_process_limited,
                                     args=(index, max_distance, max_angle_diff,
                                         output_queue, limit, amount_of_rods)))
@@ -1059,7 +1059,7 @@ class Experiment(object):
                                     divisions=divisions)
             output_queue = mp.Queue()
             processes = []
-            for index in range(len(self._states)-1):
+            for index in range(len(self)-1):
                 process = mp.Process(target=self._density_and_quad_speed_process,
                             args=(index, output_queue, quad_speeds_array,
                                   ang_speeds_array, divisions))
@@ -1129,7 +1129,7 @@ class Experiment(object):
             processes = []
             output_queue = mp.Queue()
             states = []
-            for index in range(len(self._states)):
+            for index in range(len(self)):
                 states.append(None)
                 process = mp.Process(target=self.divide_system_in_circles_process,
                                      args=(divisions, index, output_queue))
@@ -1211,7 +1211,7 @@ class Experiment(object):
         Creates a video of density's evolution.
         """
         print("Creating densities video...")
-        frames = len(self._states)
+        frames = len(self)
         function_name = 'plottable_density_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
@@ -1239,7 +1239,7 @@ class Experiment(object):
         Creates a video of correlation g2 evolution.
         """
         print("Creating g2 video...")
-        frames = len(self._states)
+        frames = len(self)
         function_name = 'correlation_g2_plot_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
@@ -1254,7 +1254,7 @@ class Experiment(object):
         Creates a video of correlation g4 evolution.
         """
         print("Creating g4 video...")
-        frames = len(self._states)
+        frames = len(self)
         function_name = 'correlation_g4_plot_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
@@ -1269,7 +1269,7 @@ class Experiment(object):
         Creates a video of average angle evolution.
         """
         print("Creating average angle video...")
-        frames = len(self._states)
+        frames = len(self)
         function_name = 'plottable_average_angle_matrix'
         kappas = methods.decompress(self._states[0]).kappas
         prop = self.average_covered_area_proportion[0]
@@ -1410,7 +1410,7 @@ class Experiment(object):
         processes = []
         output_queue = mp.Queue()
         self._image_id_by_index = {}
-        for index in len(self):
+        for index in range(len(self)):
             process = mp.Process(target=self._get_image_ids_process, args=(index, output_queue))
             processes.append(process)
         num_processes = len(processes)
@@ -1467,7 +1467,7 @@ class Experiment(object):
         #                                max_angle_diff, limit,
         #                                amount_of_rods, divisions)
         x_vals, y_vals, z_vals = [], [], []
-        for index in range(len(self._states)-1):
+        for index in range(len(self)-1):
             state = methods.decompress(self._states[index],
                                         level=methods.settings.medium_comp_level)
             subgroups = state.subgroups_matrix(divisions)
@@ -1508,7 +1508,7 @@ class Experiment(object):
         output_queue = mp.Queue()
         arrays = []
         fig = plt.figure()
-        for index in range(len(self._states)):
+        for index in range(len(self)):
             process = mp.Process(target=self.create_cluster_hist_video_process,
                                  args=(index, max_distance, max_angle_diff,
                                        output_queue))
@@ -1537,7 +1537,7 @@ class Experiment(object):
             Animation function.
             """
             self._cluster_video_wrapper(arrays)
-        frames = len(self._states)
+        frames = len(self)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer=methods.WRITER, fps=fps)
 
@@ -1594,7 +1594,7 @@ class Experiment(object):
             Animation function.
             """
             self._speeds_vectors_video_wrapper(vectors_matrices)    #BUG
-        frames = len(self._states)
+        frames = len(self)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer=methods.WRITER, fps=fps)
 
@@ -1613,7 +1613,7 @@ class Experiment(object):
         speeds = self.speeds_vectors
         processes = []
         vector_matrices = []
-        speeds_num = len(self._states)-1
+        speeds_num = len(self)-1
         for index in range(speeds_num):
             speeds_ = speeds[index]
             compressed_state = self._states[index]
@@ -1805,7 +1805,7 @@ class Experiment(object):
         output_queue = mp.Queue()
         processes = []
         areas = []
-        for index in range(len(self._states)):
+        for index in range(len(self)):
             process = mp.Process(target=self._get_cluster_areas_process,
                                  args=(index, max_distance,
                                     max_angle_diff, output_queue, min_size))
@@ -2187,7 +2187,7 @@ class Experiment(object):
         """
         print "Computing lost rods percentaje..."
         number_of_rods = []
-        for index in range(len(self._states)):
+        for index in range(len(self)):
             state = methods.decompress(self._states[index],
                                 level=methods.settings.medium_comp_level)
             number = state.number_of_rods
@@ -2217,7 +2217,7 @@ class Experiment(object):
         props = []
         processes = []
         output_queue = mp.Queue()
-        for index in range(len(self._states)):
+        for index in range(len(self)):
             process = mp.Process(target=self._average_covered_area_prorportion_process,
                                  args=(index, output_queue))
             processes.append(process)
