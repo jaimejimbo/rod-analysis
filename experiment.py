@@ -295,23 +295,54 @@ class Experiment(object):
             self._conflictive_final_rods.append(set([]))
             self._final_rods.append(set([]))
             self._initial_rods.append(set([]))
+        processes = []
+        output_queue = mp.Queue()
         for index in range(len(self)):
-            state = methods.decompress(self._states[index],
-                                    level=methods.settings.medium_comp_level)
-            if not state:
-                msg = "State is not defined."
-                raise TypeError(msg)
-            evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.low_comp_level)
-            relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.low_comp_level)
-            for rod_ in state:
-                self._initial_rods[index] |= set([rod_.identifier])
-                rod_id = rod_.identifier
-                evol_dict[rod_id] = set([])
-                relative_dict[rod_id] = {}
-            self._evolution_dictionaries[index] = methods.compress(evol_dict, level=settings.low_comp_level)
-            self._relative_dictionaries[index] = methods.compress(relative_dict, level=settings.low_comp_level)
-        for index in range(len(self)-1):
-            self._final_rods[index] = self._initial_rods[index+1].copy()
+            process = mp.Process(target=self._create_dicts_keys_process,
+                                args=(index, output_queue))
+            processes.append(process)
+        num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
+        finished = 0
+        while True:
+            finished += 1
+            [index, evol_dict, rel_dict, final_rods] = output_queue.get()
+            self._evolution_dictionaries[index] = evol_dict
+            self._relative_dictionaries[index] = rel_dict
+            if final_rods is None:
+                pass
+            else:
+                self._final_rods[index] = final_rods
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
+                new_process.start()
+            if finished >= num_processes:
+                break
+
+    def _create_dicts_keys_process(self, index, output_queue):
+        """
+        Process
+        """
+        state = methods.decompress(self._states[index],
+                                level=methods.settings.medium_comp_level)
+        if not state:
+            msg = "State is not defined."
+            raise TypeError(msg)
+        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.low_comp_level)
+        relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.low_comp_level)
+        for rod_ in state:
+            self._initial_rods[index] |= set([rod_.identifier])
+            rod_id = rod_.identifier
+            evol_dict[rod_id] = set([])
+            relative_dict[rod_id] = {}
+        evol_dict = methods.compress(evol_dict, level=settings.low_comp_level)
+        rel_dict = methods.compress(relative_dict, level=settings.low_comp_level)
+        try:
+            final_rods = self._initial_rods[index+1].copy()#methods.compress(self._initial_rods[index+1].copy(), level=settings.low_comp_level)
+        except:
+            final_rods = None
+        output_queue.put([index, evol_dict, rel_dict, final_rods])
 
 
     def _fill_dicts(self, max_distance, max_angle_diff,
@@ -1291,6 +1322,7 @@ class Experiment(object):
         """
         Generic animator
         """
+        print "Plotting..."
         groups = self.bursts_groups
         bursts_ = len(groups)
         print " "
@@ -1407,6 +1439,7 @@ class Experiment(object):
         """
         Creates a dictionary with image ids referenced with indices.
         """
+        print "Creating dictionary dict[index] = image_id"
         processes = []
         output_queue = mp.Queue()
         self._image_id_by_index = {}
@@ -1420,6 +1453,13 @@ class Experiment(object):
             finished += 1
             [index, output] = output_queue.get()
             self._image_id_by_index[index] = output
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
+                new_process.start()
+        for process in processes:
+            if process.is_alive():
+                process.terminate()
         
     def _get_image_ids_process(self, index, output_queue):
         """
@@ -2039,8 +2079,8 @@ class Experiment(object):
             groups = []
             group = []
             output_queue = mp.Queue()
-            print "[DEBUG]:\tTime before entering loop (2010) and when exiting (2025)"
-            print datetime.datetime.now()
+            #print "[DEBUG]:\tTime before entering loop (2010) and when exiting (2025)"
+            #print datetime.datetime.now()
             processes = []
             initial_id = self._get_image_id(0)
             ### It seems that a lot of time is wasted here (1CPU) XXX CHECK XXX
@@ -2055,7 +2095,8 @@ class Experiment(object):
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
             finished = 0
-            print datetime.datetime.now()
+            #print datetime.datetime.now()
+            #print ""
             previous_time = datetime.datetime.now()
             counter = 0
             time_left = None
