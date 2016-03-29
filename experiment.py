@@ -80,6 +80,7 @@ class Experiment(object):
         self._local_speeds = []
         self._local_average_quadratic_speeds = []
         self._local_average_quadratic_angular_speeds = []
+        self._image_id_by_index = {}
         self._densities_array = []
         self._quad_speeds_array = []
         self._dates = dates
@@ -280,6 +281,7 @@ class Experiment(object):
         self._indices = None
         self._covered_area_prop = None
         self._total_cluster_areas = None
+        self._image_id_by_index = {}
 
 
     def _create_dict_keys(self):
@@ -427,9 +429,11 @@ class Experiment(object):
         """
         initial_state = methods.decompress(self._states[index])
         final_state = methods.decompress(self._states[index+1])
+        assert type(initial_state) != type("string"), "initial state can't be a string."
         evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.low_comp_level)
         relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.low_comp_level)
         for initial_rod in initial_state:
+            #initial rod esta comprimido
             initial_id = initial_rod.identifier
             if not amount_of_rods:
                 available_final_rods = list(final_state)
@@ -786,6 +790,8 @@ class Experiment(object):
                 process = mp.Process(target=self._compute_speeds_process,
                                      args=(index, speeds_queue,
                                             angular_speeds_queue))
+                self._speeds.append(None)
+                self._angular_speeds.append(None)
                 processes.append(process)
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
@@ -826,10 +832,10 @@ class Experiment(object):
                 #sys.stdout.write(string)
                 #sys.stdout.flush()
                 finished += 1
-                speeds = speeds_queue.get()
-                angular_speeds = angular_speeds_queue.get()
-                self._speeds.append(speeds)
-                self._angular_speeds.append(angular_speeds)
+                index_speeds, speeds = speeds_queue.get()
+                index_angular_speeds, angular_speeds = angular_speeds_queue.get()
+                self._speeds[index_speeds] = speeds
+                self._angular_speeds[index_angular_speeds] = angular_speeds
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
@@ -859,8 +865,8 @@ class Experiment(object):
                 angular_speeds[initial_rod_id] = angular_speed
             except TypeError:
                 pass
-        speeds_queue.put(speeds)
-        angular_speeds_queue.put(angular_speeds)
+        speeds_queue.put([index, methods.compress(speeds)])
+        angular_speeds_queue.put([index, methods.compress(angular_speeds)])
 
 
     def speeds(self, max_distance=100, max_angle_diff=90, limit=5,
@@ -881,9 +887,10 @@ class Experiment(object):
         self._compute_speeds(max_distance, max_angle_diff, limit, amount_of_rods)
         output = []
         for index in range(len(self._speeds)):
-            num_of_rods = len(self._speeds[index])
+            speeds = methods.decompress(self._speeds[index])
+            num_of_rods = len(speeds)
             output.append(0)
-            for speed in list(self._speeds[index].values()):
+            for speed in list(speeds.values()):
                 output[index] += speed**2/num_of_rods
         return output
 
@@ -958,6 +965,8 @@ class Experiment(object):
                                 level=methods.settings.medium_comp_level)
         subgroups_matrix = state.subgroups_matrix(divisions)
         speeds_matrix = []
+        speeds = methods.decompress(self._speeds[index])
+        angular_speeds = methods.decompress(self._angular_speeds[index])
         for row in subgroups_matrix:
             speeds_row = []
             for subsystem in row:
@@ -965,14 +974,14 @@ class Experiment(object):
                 for rod in subsystem:
                     rod_id = rod.identifier
                     try:
-                        speed = self._speeds[index][rod_id]
-                        angular_speed = self._angular_speeds[index][rod_id]
+                        speed = speeds[rod_id]
+                        angular_speed = angular_speeds[rod_id]
                         subsystem_dict[rod_id] = (speed, angular_speed)
                     except KeyError:
                         pass
                 speeds_row.append(subsystem_dict)
             speeds_matrix.append(speeds_row)
-        output_queue.put([index, speeds_matrix])
+        output_queue.put([index, methods.compress(speeds_matrix)])
 
 
     def _compute_local_average_speeds(self, max_distance=100, max_angle_diff=90,
@@ -986,9 +995,8 @@ class Experiment(object):
             local_speeds = self.local_speeds(max_distance, max_angle_diff,
                                             limit, amount_of_rods, divisions)
             for index in range(len(self._evolution_dictionaries)-1):
-                local_speeds_ = local_speeds[index]
                 process = mp.Process(target=compute_local_average_speeds_process,
-                                    args=(index, output_queue, local_speeds_))
+                                    args=(index, output_queue, local_speeds))
                 self._local_average_quadratic_speeds.append(None)
                 self._local_average_quadratic_angular_speeds.append(None)
                 processes.append(process)
@@ -999,8 +1007,8 @@ class Experiment(object):
                 finished += 1
                 output = output_queue.get()
                 index = output[0]
-                self._local_average_quadratic_speeds[index] = methods.compress(output[1])
-                self._local_average_quadratic_angular_speeds[index] = methods.compress(output[2])
+                self._local_average_quadratic_speeds[index] = output[1]
+                self._local_average_quadratic_angular_speeds[index] = output[2]
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
@@ -1395,16 +1403,40 @@ class Experiment(object):
             z_min = min(z_mins)
         return x_val, y_val, z_vals_avg, z_max, z_min
 
+    def _get_image_ids(self):
+        """
+        Creates a dictionary with image ids referenced with indices.
+        """
+        processes = []
+        output_queue = mp.Queue()
+        self._image_id_by_index = {}
+        for index in len(self):
+            process = mp.Process(target=self._get_image_ids_process, args=(index, output_queue))
+            processes.append(process)
+        num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
+        finished = 0
+        while finished < num_processes:
+            finished += 1
+            [index, output] = output_queue.get()
+            self._image_id_by_index[index] = output
+        
+    def _get_image_ids_process(self, index, output_queue):
+        """
+        Process
+        """
+        state = methods.decompress(self._states[index],
+                                level=methods.settings.medium_comp_level)
+        output = methods.get_number_from_string(state.id_string)
+        output_queue.put([index, output])
 
     def _get_image_id(self, index):
         """
         Returns consecutive system images' ids.
         """
-        state = methods.decompress(self._states[index],
-                                level=methods.settings.medium_comp_level)
-        image1_id_str = state.id_string
-        image1_id = methods.get_number_from_string(image1_id_str)
-        return image1_id
+        if not len(self._image_id_by_index.keys()):
+            self._get_image_ids()
+        return self._image_id_by_index[index]
 
     def create_videos(self, divisions=5, folder="./", fps=1,
                             max_distance=100, max_angle_diff=90, limit=5,
@@ -1427,6 +1459,7 @@ class Experiment(object):
         """
         Returns plotable data.
         """
+        ###################################
         quad_speeds = self.local_average_quadratic_speed(max_distance,
                                         max_angle_diff, limit,
                                         amount_of_rods, divisions)
@@ -1583,10 +1616,9 @@ class Experiment(object):
         speeds_num = len(self._states)-1
         for index in range(speeds_num):
             speeds_ = speeds[index]
-            state = methods.decompress(self._states[index],
-                                level=methods.settings.medium_comp_level)
+            compressed_state = self._states[index]
             process = mp.Process(target=average_speeds_vectors_video_process,
-                                 args=(divisions, index, state,
+                                 args=(divisions, index, compressed_state,
                                      speeds_, output_queue))
             processes.append(process)
             vector_matrices.append(None)
@@ -1665,6 +1697,7 @@ class Experiment(object):
         state = methods.decompress(self._states[0],
                                 level=settings.medium_comp_level)
         kappas = state.kappas
+        state = None
         name = str(folder)+"Temperature"+str(kappas)+".mp4"
         z_maxs = []
         z_mins = []
@@ -2006,8 +2039,11 @@ class Experiment(object):
             groups = []
             group = []
             output_queue = mp.Queue()
+            print "[DEBUG]:\tTime before entering loop (2010) and when exiting (2025)"
+            print datetime.datetime.now()
             processes = []
             initial_id = self._get_image_id(0)
+            ### It seems that a lot of time is wasted here (1CPU) XXX CHECK XXX
             for index in range(len(self._state_numbers)-1):
                 final_id = self._get_image_id(index+1)
                 date1 = self._dates[initial_id]
@@ -2019,6 +2055,7 @@ class Experiment(object):
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
             finished = 0
+            print datetime.datetime.now()
             previous_time = datetime.datetime.now()
             counter = 0
             time_left = None
@@ -2135,7 +2172,7 @@ class Experiment(object):
         """
             Averages speeds of all rods.
         """
-        speeds = self._speeds[index]
+        speeds = methods.decompress(self._speeds[index])
         number_of_rods = len(list(speeds.keys()))
         average_speed = 0
         for speed in list(speeds.values()):
@@ -2276,6 +2313,7 @@ def compute_local_average_speeds_process(index, output_queue, local_speeds):
     """
     speeds_matrix = []
     angular_speeds_matrix = []
+    local_speeds_ = methods.decompress(local_speeds[index])
     for row in local_speeds:
         speeds_row = []
         angular_speeds_row = []
@@ -2290,13 +2328,15 @@ def compute_local_average_speeds_process(index, output_queue, local_speeds):
             angular_speeds_row.append(quadratic_angular_speed)
         speeds_matrix.append(speeds_row)
         angular_speeds_matrix.append(angular_speeds_row)
-    output_queue.put([index, speeds_matrix, angular_speeds_matrix])
+    output_queue.put([index, methods.compress(speeds_matrix), methods.compress(angular_speeds_matrix)])
 
-def average_speeds_vectors_video_process(divisions, index, state,
+def average_speeds_vectors_video_process(divisions, index, compressed_state,
                                      speeds, output_queue):
     """
         Process
     """
+    state = methods.decompress(compressed_state,
+                        level=methods.settings.medium_comp_level)
     subgroups_matrix = state.subgroups_matrix(divisions)
     emp = [None, None]
     vectors_matrix = [[emp for dummy in range(len(subgroups_matrix[idx]))]

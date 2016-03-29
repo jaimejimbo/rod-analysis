@@ -1,3 +1,6 @@
+ToDo of rod-analysis project.
+
+
 - density                                               (DONE)
 - average angle                                         (DONE)
 - correlations g2,g4                                    (DONE)
@@ -5,7 +8,7 @@
 - tracks?                                               (DONE)
 - dynamics                                              (DONE)
     · velocities and temperature                        (DONE)
-· local velocities/temperature			                (DONE)
+· local velocities/temperature                          (DONE)
     · density as a function of local temperature.       (DONE)
 - main code (plot and study system)                     (DONE)
     · density animation                                 (DONE)
@@ -59,8 +62,9 @@ bugs:
 - Clusters not computed correctly                       (DONE)
 - Use time correctly for clusters graph!                (DONE)
 - Decompressing issues                                  (DONE)
-- 1CPU en "computing bursts groups"(not started)        (not started)
+- 1CPU en "computing bursts groups"(not started)        (WIP)
 - 1CPU al dibujar                                       (not started)
+- Uso de memoria excesiva (Temperaturas)                (WIP)
 
 
 
@@ -68,7 +72,7 @@ usar kappa real                                         (DONE)
 multiplicar TxK                                         (DONE)
 <cos(n*diff(theta))> (-1 a 1)                           (DONE)
 poner area de clusters en log                           
-(pintar recta encima) para t y area.                    (WIP)
-mirar error reg lineal para 3 rafagas y 10 rafagas.     (WIP)
+(pintar recta encima) para t y area.                    (DONE)
+mirar error reg lineal para 3 rafagas y 10 rafagas.     (DONE)
 
 
