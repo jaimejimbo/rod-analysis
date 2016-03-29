@@ -38,6 +38,7 @@ divisions = 50
 #sigma = sigma_coef * subsystem_rad
 sigma_coef = 3
 changing_props = 0
+discard_exceptions = 1
 import re
 
 
@@ -233,14 +234,18 @@ if True:
         
         if run_graphs:
             print "Creating graphs..."
-            try:
+            if not discard_exceptions:
+                try:
+                    run_default(15, 12, 3)
+                except:
+                    pass
+                try:
+                    run_default(7.8, 6, 2)
+                except:
+                    pass
+            else:
                 run_default(15, 12, 3)
-            except:
-                pass
-            try:
                 run_default(7.8, 6, 2)
-            except:
-                pass
 
         if run_check_dim:
             names, rod_groups = system_state.create_rods(kappas=10, real_kappas=12,
