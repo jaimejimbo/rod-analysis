@@ -7,14 +7,14 @@ Main script.
 Settings
 """
 #0-9 or None to disable
-low_comp_level = 0
-medium_comp_level = 1
-strong_comp_level = 2
+low_comp_level = None
+medium_comp_level = 0
+strong_comp_level = None
 #Reduces cpu usage (0 for disable)
 waiting_time = 0
 if not waiting_time:
     waiting_time = 0    
-waiting_time_proccess = .1
+waiting_time_proccess = 0
 if not waiting_time:
     waiting_time_process = 0  
 #None uses all cpus      
@@ -31,12 +31,12 @@ run_graphs = 1
 run_check_dim = 0
 get_image_dates = 0
 to_file = 1
-plot = 0
+plot = 1
 # variables
-coef = 3
-divisions = 30
+coef = 5
+divisions = 50
 #sigma = sigma_coef * subsystem_rad
-sigma_coef = 2
+sigma_coef = 3
 changing_props = 0
 import re
 
@@ -233,8 +233,14 @@ if True:
         
         if run_graphs:
             print "Creating graphs..."
-            run_default(15, 12, 3)
-            run_default(7.8, 6, 2)
+            try:
+                run_default(15, 12, 3)
+            except:
+                pass
+            try:
+                run_default(7.8, 6, 2)
+            except:
+                pass
 
         if run_check_dim:
             names, rod_groups = system_state.create_rods(kappas=10, real_kappas=12,
