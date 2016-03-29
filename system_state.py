@@ -1315,7 +1315,6 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
         #raise ValueError("A state must have been created.")
     state.compute_center_and_radius()
     state.check_rods()
-    state = methods.compress(state,
-                             level=methods.settings.medium_comp_level)
+    state = methods.compress(state, level=settings.medium_comp_level)
     states_queue.put([index, state])
 
