@@ -2134,6 +2134,7 @@ class Experiment(object):
             time_left = None
             times = []
             results = []
+            print ""
             while True:
                 counter += 1
                 now = datetime.datetime.now()
@@ -2390,16 +2391,20 @@ def compute_local_average_speeds_process(index, output_queue, local_speeds):
     for row in local_speeds:
         speeds_row = []
         angular_speeds_row = []
-        row_ = methods.decompress(row, level=settings.medium_comp_level)
-        for dictionary in row_:
+        #row_ = methods.decompress(row, level=settings.medium_comp_level)
+        for dictionary in row:
             quadratic_speed = 0
             quadratic_angular_speed = 0
             num_rods = len(dictionary)
-            for speeds in dictionary:                        #XXX bug: list object has no attribute 'values' XXX -> Changed: dictionary.keys() -> dictionary
-                quadratic_speed += float(speeds[0]**2)/num_rods
-                quadratic_angular_speed += float(speeds[1]**2)/num_rods
-            speeds_row.append(quadratic_speed)
-            angular_speeds_row.append(quadratic_angular_speed)
+            try:
+                for speeds in list(dictionary.keys()):                        #XXX bug: list object has no attribute 'values' XXX -> Changed: dictionary.keys() -> dictionary
+                    quadratic_speed += float(speeds[0]**2)/num_rods
+                    quadratic_angular_speed += float(speeds[1]**2)/num_rods
+                speeds_row.append(quadratic_speed)
+                angular_speeds_row.append(quadratic_angular_speed)
+                print "Correct: " + str(index)
+            except AttributeError:
+                print "Incorrect: " + str(index)
         speeds_matrix.append(speeds_row)
         angular_speeds_matrix.append(angular_speeds_row)
     output_queue.put([index, methods.compress(speeds_matrix, level=settings.medium_comp_level), 
