@@ -62,9 +62,10 @@ bugs:
 - Clusters not computed correctly                       (DONE)
 - Use time correctly for clusters graph!                (DONE)
 - Decompressing issues                                  (DONE)
-- 1CPU en "computing bursts groups"(not started)        (WIP)
-- 1CPU al dibujar                                       (not started)
+- 1CPU en "computing bursts groups"                     (DONE)
 - Uso de memoria excesiva (Temperaturas)                (WIP)
+- Parece que al calcular densidades usa 
+    1 CPU menos                                         (not started)
 
 
 

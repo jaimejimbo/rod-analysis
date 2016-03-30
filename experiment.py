@@ -641,11 +641,31 @@ class Experiment(object):
             self._reset()
         if not len(self._evolution_dictionaries):
             self._create_dict_keys()
+            # type(self._evolution_dictionaries)    #list
+            # type(self._evolution_dictionaries[0]) #str
+            # type(self._relative_dictionaries)     #list
+            # type(self._relative_dictionaries[0])  #str
             self._fill_dicts(max_distance, max_angle_diff, limit=limit,
                                 amount_of_rods=amount_of_rods)
+            # type(self._evolution_dictionaries)    #list
+            # type(self._evolution_dictionaries[0]) #str
+            # type(self._relative_dictionaries)     #list
+            # type(self._relative_dictionaries[0])  #str
             self._leave_only_closer(max_distance=max_distance)
+            # type(self._evolution_dictionaries)    #list
+            # type(self._evolution_dictionaries[0]) #str
+            # type(self._relative_dictionaries)     #list
+            # type(self._relative_dictionaries[0])  #str
             self._join_rods_left(max_distance=max_distance)
+            # type(self._evolution_dictionaries)    #list
+            # type(self._evolution_dictionaries[0]) #str
+            # type(self._relative_dictionaries)     #list
+            # type(self._relative_dictionaries[0])  #str
             self._get_vectors()
+            # type(self._evolution_dictionaries)    #list
+            # type(self._evolution_dictionaries[0]) #str
+            # type(self._relative_dictionaries)     #list
+            # type(self._relative_dictionaries[0])  #str
 
     def vectors_dictionaries(self, max_distance=100, max_angle_diff=90,
                             limit=5, amount_of_rods=200):
@@ -971,6 +991,10 @@ class Experiment(object):
         counter = 0
         time_left = None
         times = []
+        print type(self._evolution_dictionaries)    #list
+        print type(self._evolution_dictionaries[0]) #str
+        print type(self._relative_dictionaries)     #list
+        print type(self._relative_dictionaries[0])  #str
         while True:
             finished += 1
             output = output_queue.get()
@@ -986,6 +1010,10 @@ class Experiment(object):
         for process in processes:
             if process.is_alive():
                 process.terminate()
+        print type(self._evolution_dictionaries)    #list
+        print type(self._evolution_dictionaries[0]) #str
+        print type(self._relative_dictionaries)     #list
+        print type(self._relative_dictionaries[0])  #str
 
 
     def _compute_local_speeds_process(self, index, output_queue, divisions):
@@ -1021,6 +1049,7 @@ class Experiment(object):
         Compute local average speeds.
         """
         if not len(self._local_average_quadratic_speeds):
+            print "Computing local average speeds..."
             output_queue = mp.Queue()
             processes = []
             local_speeds = self.local_speeds(max_distance, max_angle_diff,
@@ -2361,12 +2390,12 @@ def compute_local_average_speeds_process(index, output_queue, local_speeds):
     for row in local_speeds:
         speeds_row = []
         angular_speeds_row = []
-        for dictionary in row:
+        row_ = methods.decompress(row, level=settings.medium_comp_level)
+        for dictionary in row_:
             quadratic_speed = 0
             quadratic_angular_speed = 0
-            dictionary = methods.decompress(dictionary, level=settings.medium_comp_level)
             num_rods = len(dictionary)
-            for speeds in list(dictionary.values()):
+            for speeds in dictionary:                        #XXX bug: list object has no attribute 'values' XXX -> Changed: dictionary.keys() -> dictionary
                 quadratic_speed += float(speeds[0]**2)/num_rods
                 quadratic_angular_speed += float(speeds[1]**2)/num_rods
             speeds_row.append(quadratic_speed)
