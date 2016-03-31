@@ -976,6 +976,10 @@ class Experiment(object):
         """
         Creates an array of matrices. Each matrix's entry is a dictionariy such
         as {rod_id: (speed, angular_speed)}
+        [index1_loc, index2_loc...]
+            index1 = compress([subsys11_dic, subsys12_dic...,
+                               subsys21_dic, subsys22_dic...])
+                subsys1_dic = {rod_id: (speed, angular_speed)}
         """
         print "Computing local speeds..."
         output_queue = mp.Queue()
@@ -983,7 +987,7 @@ class Experiment(object):
         for index in range(len(self._evolution_dictionaries)-1):
             process = mp.Process(target=self._compute_local_speeds_process,
                                 args=(index, output_queue, divisions))
-            self._local_speeds.append({})
+            self._local_speeds.append(None)
             processes.append(process)
         num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
@@ -991,10 +995,6 @@ class Experiment(object):
         counter = 0
         time_left = None
         times = []
-        print type(self._evolution_dictionaries)    #list
-        print type(self._evolution_dictionaries[0]) #str
-        print type(self._relative_dictionaries)     #list
-        print type(self._relative_dictionaries[0])  #str
         while True:
             finished += 1
             output = output_queue.get()
@@ -1010,10 +1010,6 @@ class Experiment(object):
         for process in processes:
             if process.is_alive():
                 process.terminate()
-        print type(self._evolution_dictionaries)    #list
-        print type(self._evolution_dictionaries[0]) #str
-        print type(self._relative_dictionaries)     #list
-        print type(self._relative_dictionaries[0])  #str
 
 
     def _compute_local_speeds_process(self, index, output_queue, divisions):
@@ -1056,7 +1052,7 @@ class Experiment(object):
                                             limit, amount_of_rods, divisions)
             for index in range(len(self._evolution_dictionaries)-1):
                 process = mp.Process(target=compute_local_average_speeds_process,
-                                    args=(index, output_queue, local_speeds))
+                                    args=(index, output_queue, local_speeds, divisions))
                 self._local_average_quadratic_speeds.append(None)
                 self._local_average_quadratic_angular_speeds.append(None)
                 processes.append(process)
@@ -1481,6 +1477,7 @@ class Experiment(object):
         num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
         finished = 0
+        print ""
         while finished < num_processes:
             finished += 1
             [index, output] = output_queue.get()
@@ -2134,7 +2131,6 @@ class Experiment(object):
             time_left = None
             times = []
             results = []
-            print ""
             while True:
                 counter += 1
                 now = datetime.datetime.now()
@@ -2381,32 +2377,31 @@ class Experiment(object):
         plt.show()
         
 
-def compute_local_average_speeds_process(index, output_queue, local_speeds):
+def compute_local_average_speeds_process(index, output_queue, local_speeds, divisions):
     """
     Process
+        [index1_loc, index2_loc...]
+            index1_loc = compress([subsys1_dic, subsys2_dic...])
+                subsys1_dic = {rod_id: (speed, angular_speed)}
     """
     speeds_matrix = []
     angular_speeds_matrix = []
     local_speeds_ = methods.decompress(local_speeds[index], level=settings.medium_comp_level)
-    for row in local_speeds:
-        speeds_row = []
-        angular_speeds_row = []
-        #row_ = methods.decompress(row, level=settings.medium_comp_level)
-        for dictionary in row:
-            quadratic_speed = 0
-            quadratic_angular_speed = 0
-            num_rods = len(dictionary)
-            try:
-                for speeds in list(dictionary.keys()):                        #XXX bug: list object has no attribute 'values' XXX -> Changed: dictionary.keys() -> dictionary
-                    quadratic_speed += float(speeds[0]**2)/num_rods
-                    quadratic_angular_speed += float(speeds[1]**2)/num_rods
-                speeds_row.append(quadratic_speed)
-                angular_speeds_row.append(quadratic_angular_speed)
-                print "Correct: " + str(index)
-            except AttributeError:
-                print "Incorrect: " + str(index)
-        speeds_matrix.append(speeds_row)
-        angular_speeds_matrix.append(angular_speeds_row)
+    speeds_matrix = [[None for dummy_1 in range(divisions)] for dummy_2 in range(divisions)]
+    angular_speeds_matrix = [[None for dummy_1 in range(divisions)] for dummy_2 in range(divisions)]
+    for row in range(len(local_speeds_)):
+        for col in range(len(local_speeds_[0])):
+            subsys_dict = local_speeds_[row][col]
+            subsys_quad_avg_speed = 0
+            subsys_quad_avg_ang_speed = 0
+            num_rods = len(subsys_dict)
+            # print subsys_dict #es una lista de diccionarios.
+            # print subsys_dict.values()
+            for speeds in subsys_dict.values():
+                subsys_quad_avg_speed += float(speeds[0]**2)/num_rods       #speeds (int)
+                subsys_quad_avg_ang_speed += float(speeds[1]**2)/num_rods
+            speeds_matrix[row][col] = subsys_quad_avg_speed
+            angular_speeds_matrix[row][col] = subsys_quad_avg_ang_speed
     output_queue.put([index, methods.compress(speeds_matrix, level=settings.medium_comp_level), 
                     methods.compress(angular_speeds_matrix, level=settings.medium_comp_level)])
 

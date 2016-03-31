@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/python -i
+
 """
 Main script.
 """
@@ -10,13 +11,6 @@ Settings
 low_comp_level = None
 medium_comp_level = 0
 strong_comp_level = None
-#Reduces cpu usage (0 for disable)
-waiting_time = 0
-if not waiting_time:
-    waiting_time = 0    
-waiting_time_proccess = 0
-if not waiting_time:
-    waiting_time_process = 0  
 #None uses all cpus      
 cpus = None
 # 1 or True, 0 or False
@@ -26,19 +20,17 @@ avg_temp = 1
 order_param_exp = 1
 lost_percentage = 1
 run_imagej = 0
-run_props = 0
+run_props = 1
 run_graphs = 1
 run_check_dim = 0
 get_image_dates = 0
-to_file = 1
-plot = 1
 # variables
-coef = 5
-divisions = 50
+coef = 1
+divisions = 10
 #sigma = sigma_coef * subsystem_rad
-sigma_coef = 3
-changing_props = 0
-discard_exceptions = 1
+sigma_coef = 2
+changing_props = 1
+
 import re
 
 
@@ -103,14 +95,6 @@ settings.write("cpus = {0}".format(cpus))
 settings.write("\n")
 settings.write("zone_coords = {0}".format(zone_coords))
 settings.write("\n")
-settings.write("to_file = {0}".format(to_file))
-settings.write("\n")
-settings.write("plot = {0}".format(plot))
-settings.write("\n")
-settings.write("waiting_time = {0}".format(waiting_time))
-settings.write("\n")
-settings.write("waiting_time_process = {0}".format(waiting_time_process))
-settings.write("\n")
 rad = zone_coords[2]
 gaussian_sigma = sigma_coef*float(rad)/divisions
 settings.write("sigma = {0}".format(gaussian_sigma))
@@ -118,7 +102,7 @@ settings.write("\n")
 settings.close()
 
 import experiment, system_state, methods, settings
-import os, gc, math, time#, guppy
+import os, gc, math#, guppy
 
 #hp = guppy.hpy()
 #hp.setrelheap()
@@ -148,7 +132,6 @@ if True:
             log = open(name, 'w')
             msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
             print msg
-            log.write(str(msg+"\n"))
             names, rod_groups = system_state.create_rods(kappas=kappa, real_kappas=real_kappa,
                                                     allowed_kappa_error=error)
             experiment_ = experiment.Experiment(system_states_name_list=names, kappas=real_kappa,
@@ -175,7 +158,6 @@ if True:
             except NameError:
                 pass
             log.close()
-            print "\n\n\n"
 
         def run_prop(kappa, real_kappa, error):
             msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
@@ -197,14 +179,14 @@ if True:
 
         if run_props:
             print "Computing area proportions..."
+            print "kappa\t\t\tdeviation"
             log = open("props.log",'w')
             prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop(15, 12, 3)
             prop_short, prop_short_dev, shorts, shorts_dev, rad2, msg2 = run_prop(7.8, 6, 2)
-            print "kappa\t\t\tdeviation"
-            print msg1
-            print msg2
             log.write(str(msg1+"\n"))
             log.write(str(msg2+"\n"))
+            print msg1
+            print msg2
             areal = rad1**2*math.pi
             areas = rad2**2*math.pi
             rod_areal = float(areal*prop_long)/longs
@@ -220,11 +202,11 @@ if True:
             msg += "Number of short rods: "+str(shorts)+"\t"+str(shorts_dev)+"\n"
             msg += "Total number of rods: "+str(longs+shorts)+"\n"
             log.write(msg)
+            print msg
             if changing_props:
                 waprop = input("Wanted area proportion: ")
                 wlprop = input("Wanted longs proportion: ")
-                Nl = int(wlprop*waprop*area/rod_areal)
-                Ns = int(Nl*rod_areal*(1-wlprop)/(wlprop*rod_areas))
+                Nl, Ns = methods.needed_rods(wlprop, waprop, area, areal, areas, longs, shorts)
                 print "Needed long rods: ", Nl
                 print "Difference: ", Nl-longs
                 print "Needed short rods: ", Ns
@@ -234,18 +216,8 @@ if True:
         
         if run_graphs:
             print "Creating graphs..."
-            if not discard_exceptions:
-                try:
-                    run_default(15, 12, 3)
-                except:
-                    pass
-                try:
-                    run_default(7.8, 6, 2)
-                except:
-                    pass
-            else:
-                run_default(15, 12, 3)
-                run_default(7.8, 6, 2)
+            run_default(15, 12, 3)
+            run_default(7.8, 6, 2)
 
         if run_check_dim:
             names, rod_groups = system_state.create_rods(kappas=10, real_kappas=12,
@@ -259,11 +231,12 @@ if True:
 
         #os.system("bash tomp4script.sh")
     #except KeyboardInterrupt:
-    #    os.system("pkill -f main.py")
+    #    os.system("sudo pkill -f main.py")
     except AssertionError as error:
         print "Assertion error({0})".format(error)
-        os.system("pkill -f main.py")
+        os.system("sudo pkill -f main.py")
 #print hp.heap()
 print "Type exit() to exit."
 def exit():
-    os.system("pkill -f main.py")
+    print "Give root password to kill all remaining zombie processes"
+    os.system("sudo pkill -f main.py")
