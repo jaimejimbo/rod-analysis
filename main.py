@@ -96,7 +96,10 @@ settings.write("\n")
 settings.write("zone_coords = {0}".format(zone_coords))
 settings.write("\n")
 rad = zone_coords[2]
-gaussian_sigma = sigma_coef*float(rad)/divisions
+if sigma_coef:
+    gaussian_sigma = sigma_coef*float(rad)/divisions
+else:
+    gaussian_sigma = sigma_coef
 settings.write("sigma = {0}".format(gaussian_sigma))
 settings.write("\n")
 settings.close()
