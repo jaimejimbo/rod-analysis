@@ -326,7 +326,7 @@ def get_number_from_string(name):
 
 
 
-def import_data(_file, split_char='\t', regular_expression=r'[0-9]\.?[0-9]*'):
+def import_data(_file, split_char='    ', regular_expression=r'[0-9]\.?[0-9]*'):
     """
     Import data of a file
     Returns an array with data
@@ -377,7 +377,7 @@ def imagej():
                 output_line += str(start) + "; img_num<="
                 output_line += str(end)+ "; img_num++){\n"
             if re.match(r'.*\"\.\".*', line):
-                output_line = "\tfolder = \""+str(current_folder)+"\";"
+                output_line = "    folder = \""+str(current_folder)+"\";"
             imagej_script.write(output_line)
 
         imagej_template.close()
@@ -416,7 +416,7 @@ def export_image_dates(file_name="dates.txt", folder="./"):
     output_file = open(file_path, 'w')
     dates = get_image_dates(folder)
     for image_number in dates.keys():
-        line = str(image_number) + "\t"
+        line = str(image_number) + "    "
         date = dates[image_number]
         line += str(date) + "\n"
         output_file.write(line)
@@ -431,7 +431,7 @@ def import_image_dates(file_name="dates.txt", folder="./"):
     dates = {}
     for line in output_file:
         data = line.strip('\n')
-        data = data.split('\t')
+        data = data.split('    ')
         dates[int(data[0])] = data[1]
     return dates
 
@@ -759,9 +759,9 @@ def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, 
 
  
 def import_and_plot(source, radius=None, level=9):
-     """
+    """
     Imports data from a compressed file and plots it.
-     """
+    """
     src = open(source, 'r')
     [x_val, y_val, z_vals_avg, divisions, z_max, z_min, units] = decompress(src.read(),level=level)    
     src.close()
