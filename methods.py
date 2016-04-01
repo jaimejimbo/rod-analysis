@@ -712,3 +712,69 @@ def needed_rods(wanted_long_prop, wanted_area_prop, area, long_area, short_area,
     needed_shorts = int(needed_longs*long_rod_area*(1-wanted_long_prop)/(wanted_long_prop*short_rod_area))
     return needed_longs, needed_shorts
 
+import matplotlib.pyplot as plt
+        
+def animate_scatter(x_val, y_val, z_vals,
+                        divisions, name, z_max, z_min, units, radius):
+    """
+    Specific animator.
+    """
+    try:
+        z_val = decompress(z_vals.pop(0), level=settings.medium_comp_level)
+    except IndexError:
+        return
+    plt.cla()
+    plt.clf()
+    rad = float(radius*1.3)/divisions
+    size = (rad/4)**2
+    x_min = min(x_val)-rad*1.1
+    x_max = max(x_val)+rad*1.1
+    y_min = min(y_val)-rad*1.1
+    y_max = max(y_val)+rad*1.1
+    plt.xlim((x_min, x_max))
+    plt.ylim((y_min, y_max))
+    #plt.suptitle(name)
+    plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
+                vmin=z_min, vmax=z_max)
+    plt.gca().invert_yaxis()
+    cb = plt.colorbar()
+    plt.xlabel("x [pixels]")
+    plt.ylabel("y [pixels]")
+    cb.set_label(units)
+
+def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius=800, fps=15):
+    """
+    Creates animation from data.
+    """
+    fig = plt.figure()
+    frames = len(z_vals_avg)
+    def animate(dummy_frame):
+        """
+        Wrapper.
+        """
+        animate_scatter(x_val, y_val, z_vals_avg,
+                            divisions, name, z_max, z_min, units, radius)
+    anim = animation.FuncAnimation(fig, animate, frames=frames)
+    anim.save(name, writer=WRITER, fps=fps)
+
+ 
+def import_and_plot(source, radius=None, level=9):
+     """
+    Imports data from a compressed file and plots it.
+     """
+    src = open(source, 'r')
+    [x_val, y_val, z_vals_avg, divisions, z_max, z_min, units] = decompress(src.read(),level=level)    
+    src.close()
+    create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, source)
+
+
+def needed_rods(wanted_long_prop, wanted_area_prop, area, long_area, short_area, longs, shorts):
+    """
+    Computes needed long rods / short rods to be added/removed.
+    """
+    long_rod_area = float(long_area*prop_long)/longs
+    short_rod_area = float(short_area*prop_short)/shorts
+    needed_longs = int(wanted_long_prop*wanted_area_prop*area/long_rod_area)
+    needed_shorts = int(needed_longs*long_rod_area*(1-wanted_long_prop)/(wanted_long_prop*short_rod_area))
+    return needed_longs, needed_shorts
+
