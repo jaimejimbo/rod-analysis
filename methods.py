@@ -7,6 +7,7 @@ from PIL import Image
 import cPickle, zlib
 import settings
 import numpy
+from matplotlib import animation
 
 using_cl = False
 _writer = animation.writers['ffmpeg']
