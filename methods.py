@@ -9,7 +9,9 @@ import settings
 import numpy
 
 using_cl = False
-
+_writer = animation.writers['ffmpeg']
+writer = _writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+WRITER = writer
 try:
     import pyopencl as cl
     ctx = cl.create_some_context()
