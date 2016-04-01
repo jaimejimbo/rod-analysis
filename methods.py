@@ -326,7 +326,7 @@ def get_number_from_string(name):
 
 
 
-def import_data(_file, split_char='    ', regular_expression=r'[0-9]\.?[0-9]*'):
+def import_data(_file, split_char='\t', regular_expression=r'[0-9]\.?[0-9]*'):
     """
     Import data of a file
     Returns an array with data
@@ -377,7 +377,7 @@ def imagej():
                 output_line += str(start) + "; img_num<="
                 output_line += str(end)+ "; img_num++){\n"
             if re.match(r'.*\"\.\".*', line):
-                output_line = "    folder = \""+str(current_folder)+"\";"
+                output_line = "\tfolder = \""+str(current_folder)+"\";"
             imagej_script.write(output_line)
 
         imagej_template.close()
@@ -410,13 +410,13 @@ def export_image_dates(file_name="dates.txt", folder="./"):
     """
     Saves all dates in a file.
     Creates a file with dates of images:
-    image_name      date
+    image_name\tdate
     """
     file_path = str(folder) + str(file_name)
     output_file = open(file_path, 'w')
     dates = get_image_dates(folder)
     for image_number in dates.keys():
-        line = str(image_number) + "    "
+        line = str(image_number) + "\t"
         date = dates[image_number]
         line += str(date) + "\n"
         output_file.write(line)
@@ -431,7 +431,7 @@ def import_image_dates(file_name="dates.txt", folder="./"):
     dates = {}
     for line in output_file:
         data = line.strip('\n')
-        data = data.split('    ')
+        data = data.split('\t')
         dates[int(data[0])] = data[1]
     return dates
 
@@ -556,7 +556,7 @@ def array_average(array_of_arrays):
         output = array_of_arrays[0]
         for index in range(number_of_arrays):
             output = sum_arrays_with_cl(output, array_of_arrays[index])
-        return normalize_opencl(output, number_of_arrays)        
+        return normalize_opencl(output, number_of_arrays)
 
 def sum_arrays_with_cl(array1, array2):
     """
@@ -763,7 +763,7 @@ def import_and_plot(source, radius=None, level=9):
     Imports data from a compressed file and plots it.
     """
     src = open(source, 'r')
-    [x_val, y_val, z_vals_avg, divisions, z_max, z_min, units] = decompress(src.read(),level=level)    
+    [x_val, y_val, z_vals_avg, divisions, z_max, z_min, units] = decompress(src.read(),level=level)
     src.close()
     create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, source)
 
