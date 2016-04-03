@@ -11,7 +11,7 @@ from matplotlib import animation
 
 using_cl = False
 _writer = animation.writers['ffmpeg']
-writer = _writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+writer = _writer(fps=15, metadata=dict(artist='Jaime Perez Aparicio'), bitrate=1800)
 WRITER = writer
 try:
     import pyopencl as cl
@@ -289,7 +289,7 @@ def import_files(folder="./", regular_expression=r'rods_[0-9]*'):
     if not re.match(r"\.?/?[a-zA-Z0-9\.]/*", folder):
         print "You must provide a folder like: \"./\" or \"/home/user/\""
         raise ValueError
-    names = get_file_names(folder=folder, regular_expression=regular_expression)
+    names = binary_order(get_file_names(folder=folder, regular_expression=regular_expression), get_number_from_string)
     files = []
     for name in names:
         files.append(open(name, 'r'))
@@ -307,7 +307,7 @@ def get_file_names(folder="./", regular_expression=r'^rods_[0-9]{4}$'):
     for _file in files:
         if reg1.match(_file) and not extension.match(_file):
             names.append(_file)
-    return binary_order(names, get_number_from_string)
+    return names
 
 
 
@@ -713,7 +713,7 @@ def needed_rods(wanted_long_prop, wanted_area_prop, area, long_area, short_area,
     return needed_longs, needed_shorts
 
 import matplotlib.pyplot as plt
-        
+
 def animate_scatter(x_val, y_val, z_vals,
                         divisions, name, z_max, z_min, units, radius):
     """
@@ -763,9 +763,16 @@ def import_and_plot(source, radius=None, level=9):
     Imports data from a compressed file and plots it.
     """
     src = open(source, 'r')
-    [x_val, y_val, z_vals_avg, divisions, z_max, z_min, units] = decompress(src.read(),level=level)
+    name = source[:-5]
+    print name
+    values = decompress(src.read(), level=level)
+    #[x_val, y_val, z_vals_avg, divisions, z_max, z_min, units]
+    x_val, y_val, z_vals_avg = values[0], values[1], values[2]
+    divisions = values[3]
+    z_max, z_min = values[4], values[5]
+    units = values[6]
     src.close()
-    create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, source)
+    create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name)
 
 
 def needed_rods(wanted_long_prop, wanted_area_prop, area, long_area, short_area, longs, shorts):
@@ -777,4 +784,20 @@ def needed_rods(wanted_long_prop, wanted_area_prop, area, long_area, short_area,
     needed_longs = int(wanted_long_prop*wanted_area_prop*area/long_rod_area)
     needed_shorts = int(needed_longs*long_rod_area*(1-wanted_long_prop)/(wanted_long_prop*short_rod_area))
     return needed_longs, needed_shorts
+
+
+def plot_all_data_files(radius=None, level=9, folder="./"):
+    """
+    Import all .data files and plot its data.
+    """
+    print "Ploting saved data..."
+    regular_expression = re.compile(r'.*\.data')
+    files = get_file_names(folder=folder, regular_expression=regular_expression)
+    for file_ in files:
+        import_and_plot(file_)
+        
+
+
+
+
 
