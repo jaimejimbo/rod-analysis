@@ -2021,16 +2021,21 @@ class Experiment(object):
             plt.xlabel("time[seconds]")
             plt.ylabel("cluster area proportion")
         # There's a bug here, so I use fortran obtained values. 
-        #m, b = self.get_order_evolution_coeficient(number_of_bursts=number_of_bursts,
-        #                                    max_distance=max_distance,
-        #                                    max_angle_diff=max_angle_diff,
-        #                                    min_size=min_size)
-        m = 0.309291
-        b = -3.669453
+        m, b = self.get_order_evolution_coeficient(number_of_bursts=number_of_bursts,
+                                            max_distance=max_distance,
+                                            max_angle_diff=max_angle_diff,
+                                            min_size=min_size)
+        # m = 0.309291
+        # b = -3.669453
         line = [(math.e**b)*(time**m) for time in times]
-        print m, "  ", b
-        print math.e**b
-        print math.e**(-b)
+        # print m, "  ", b
+        # print math.e**b
+        # print math.e**(-b)
+        name = "coef_K"+str(self.kappas)+".log"
+        output = open(name, 'w')
+        text = "Coeficient: "+str(m)+"\nIndep: "+str(b) +"\n"
+        output.write(text)
+        output.close()
         if not settings.to_file:
             plt.plot(times, line)
         else:

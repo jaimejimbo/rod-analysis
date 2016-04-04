@@ -8,7 +8,7 @@ Settings
 """
 #0-9 or None to disable
 low_comp_level = None
-medium_comp_level = 0
+medium_comp_level = 6
 strong_comp_level = None
 #Reduces cpu usage (0 for disable)
 waiting_time = 0
@@ -21,17 +21,17 @@ if not waiting_time:
 cpus = None
 # 1 or True, 0 or False
 create_videos = 1
-clusters = 1
-avg_temp = 1
-order_param_exp = 1
-lost_percentage = 1
+clusters = 0
+avg_temp = 0
+order_param_exp = 0
+lost_percentage = 0
 run_imagej = 0
 run_props = 0
 run_graphs = 1
 run_check_dim = 0
 get_image_dates = 0
 to_file = 1
-plot = 1
+plot = 0
 # variables
 coef = 5
 divisions = 50
@@ -168,8 +168,8 @@ if True:
                 experiment_.plot_average_temperature(100, 10, 5)
             if lost_percentage:
                 percentage, std_dev = experiment_.lost_rods_percentage
-            msg = "Rods lost: "+str(percentage)+"%\t"+" Standard deviation: "+str(std_dev)
-            log.write(str(msg+"\n"))
+                msg = "Rods lost: "+str(percentage)+"%\t"+" Standard deviation: "+str(std_dev)
+                log.write(str(msg+"\n"))
             try:
                 names = None
                 experiment_ = None
