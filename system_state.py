@@ -1186,7 +1186,7 @@ class SubsystemState(SystemState):
         for rod_ in self:
             if rod_.is_in_circle(self.center, self.radius):
                 distance = methods.distance_between_points(self.center, rod_.center)
-                proportion = methods.gaussian(distance)
+                proportion = methods.norm_gaussian(distance, self.radius)
                 self._gaussian_exp[rod_.identifier] = proportion
                 rods.append(methods.compress(rod_,
                                 level=methods.settings.low_comp_level))

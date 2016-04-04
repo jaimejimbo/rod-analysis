@@ -649,6 +649,13 @@ def gaussian(distance, sigma=settings.sigma):
     value = math.exp((-distance**2)/(2.0*sigma**2))
     return norm*value
 
+def norm_gaussian(distance, rad, sigma=settings.sigma):
+    """
+    Returns gaussian prob for distance (normalized to circle).
+    """
+    norm = math.erf(rad/(math.sqrt(2)*sigma))
+    return gaussian(distance, sigma=sigma)*1.0/norm
+
 def compute_distances(array1, array2):
     """
     Wrapper
