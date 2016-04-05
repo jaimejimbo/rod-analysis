@@ -32,6 +32,7 @@ run_check_dim = 0
 get_image_dates = 0
 to_file = 1
 plot = 0
+only_density = 1
 # variables
 coef = 5
 divisions = 50
@@ -160,7 +161,7 @@ if True:
             experiment_.set_coef(coef)
             if create_videos:
                 experiment_.create_videos(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
-                                         number_of_bursts=1)
+                                         number_of_bursts=1, only_density=only_density)
             if clusters:
                 experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=100,
                         max_angle_diff=10, min_size=20)

@@ -1509,17 +1509,18 @@ class Experiment(object):
 
     def create_videos(self, divisions=5, folder="./", fps=1,
                             max_distance=100, max_angle_diff=90, limit=5,
-                            amount_of_rods=200, number_of_bursts=1):
+                            amount_of_rods=200, number_of_bursts=1, only_density=False):
         """
         Creates a video per property of the system that shows evolution.
         """
         self.divide_systems_in_circles(divisions)
         self.create_density_video(divisions, folder, fps, number_of_bursts)
-        self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
-        self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
-        self.create_temperature_video(divisions, folder, fps, max_distance,
-                               max_angle_diff, limit, amount_of_rods,
-                               number_of_bursts)
+        if not only_density:
+            self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
+            self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
+            self.create_temperature_video(divisions, folder, fps, max_distance,
+                                   max_angle_diff, limit, amount_of_rods,
+                                   number_of_bursts)
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,
