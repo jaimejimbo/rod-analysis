@@ -653,6 +653,8 @@ def norm_gaussian(distance, rad, sigma=settings.sigma):
     """
     Returns gaussian prob for distance (normalized to circle).
     """
+    if not sigma:
+        return 1
     norm = math.erf(rad/(math.sqrt(2)*sigma))
     return gaussian(distance, sigma=sigma)*1.0/norm
 
