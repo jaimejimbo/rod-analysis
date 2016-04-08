@@ -2028,7 +2028,10 @@ class Experiment(object):
                                             min_size=min_size)
         # m = 0.309291
         # b = -3.669453
-        line = [(math.e**b)*(time**m) for time in times]
+        line = []
+        for time in times:
+            if time != 0:
+                line.append((math.e**b)*(time**m)]
         # print m, "  ", b
         # print math.e**b
         # print math.e**(-b)
