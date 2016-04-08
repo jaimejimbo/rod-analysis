@@ -1312,6 +1312,7 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
     file_ = None
     if not state:
         states_queue.put([index, None])
+        return
         #raise ValueError("A state must have been created.")
     state.compute_center_and_radius()
     state.check_rods()
