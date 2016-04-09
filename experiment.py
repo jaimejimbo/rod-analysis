@@ -2031,7 +2031,7 @@ class Experiment(object):
         line = []
         for time in times:
             if time != 0:
-                line.append((math.e**b)*(time**m)])
+                line.append((math.e**b)*(time**m))
         # print m, "  ", b
         # print math.e**b
         # print math.e**(-b)
