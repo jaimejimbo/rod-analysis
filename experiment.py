@@ -1390,6 +1390,7 @@ class Experiment(object):
         x_val = []
         y_val = []
         match2 = re.match(r'.*?g[2|4].*', function_name)
+        print ""
         if match2:
             z_max = 1
             z_min = -1
@@ -1431,9 +1432,9 @@ class Experiment(object):
                 processes.append(process)
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
-            finished = 0
-            while finished < num_processes:
-                finished += 1
+            finished_ = 0
+            while finished_ < num_processes:
+                finished_ += 1
                 output = output_queue.get()
                 index = output[0]
                 x_val = output[1]
@@ -1449,11 +1450,11 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
                     new_process.start()
-            z_vals_avg.append(methods.compress(methods.array_average(z_vals),
-                                           level=settings.medium_comp_level))
             for process in processes:
                 if process.is_alive():
                     process.terminate()
+            z_vals_avg.append(methods.compress(methods.array_average(z_vals),
+                                           level=settings.medium_comp_level))
         print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
         #if match1:
         #    z_max = 1
@@ -1477,10 +1478,49 @@ class Experiment(object):
         num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
         finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
         print ""
         while finished < num_processes:
+            counter += 1
+            now = datetime.datetime.now()
+            seconds_passed = (now-previous_time).total_seconds()
+            times.append(seconds_passed)
+            progress = int(finished*100/num_processes)
+            previous_time = now
+            string = "Progress: %d%%  " % (progress)
+            perten = progress/10.0
+            string += "["
+            string += "#"*int(perten*4)
+            string += "-"*int((10-perten)*4)
+            string += "]"
+            if counter >= 3:
+                counter = 0
+                avg_time = sum(times)*1.0/len(times)
+                time_left = int(len(processes_left)*avg_time/60)
+            if not time_left is None:
+                if time_left:
+                    string += "    " + str(time_left) + " minutes"
+                else:
+                    string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
+            if not finished >= num_processes:
+                pass#string += "\r"
+            else:
+                string += "\n"
+            #print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+            print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+            print string
+            #print getsizeof(self._states)
+            #sys.stdout.write(string)
+            #sys.stdout.flush()
             finished += 1
-            [index, output] = output_queue.get()
+            try:
+                [index, output] = output_queue.get()
+            except:
+                print finished, num_processes, len(processes_left), len(running), len(output_queue)
+                break 
             self._image_id_by_index[index] = output
             if len(processes_left):
                 new_process = processes_left.pop(0)
@@ -1497,6 +1537,7 @@ class Experiment(object):
         state = methods.decompress(self._states[index],
                                 level=methods.settings.medium_comp_level)
         output = methods.get_number_from_string(state.id_string)
+        state = None
         output_queue.put([index, output])
 
     def _get_image_id(self, index):
