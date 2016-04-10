@@ -1505,16 +1505,8 @@ class Experiment(object):
                     string += "    " + str(time_left) + " minutes"
                 else:
                     string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-            if not finished >= num_processes:
-                pass#string += "\r"
-            else:
-                string += "\n"
-            #print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
             print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
             print string
-            #print getsizeof(self._states)
-            #sys.stdout.write(string)
-            #sys.stdout.flush()
             finished += 1
             try:
                 [index, output] = output_queue.get()
@@ -1529,6 +1521,7 @@ class Experiment(object):
         for process in processes:
             if process.is_alive():
                 process.terminate()
+        print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
         
     def _get_image_ids_process(self, index, output_queue):
         """
