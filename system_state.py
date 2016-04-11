@@ -1226,7 +1226,7 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
     times = []
     print " "
     empty_states = []
-    while True:
+    while finished_ < num_processes:
         counter += 1
         now = datetime.datetime.now()
         seconds_passed = (now-previous_time).total_seconds()
@@ -1249,11 +1249,6 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
                 string += "    " + str(time_left) + " minutes"
             else:
                 string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-        if not finished_ >= num_processes:
-            pass
-        else:
-            string += "\n"
-            break
         print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
         print(string)
         finished_ += 1

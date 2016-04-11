@@ -100,6 +100,7 @@ class Experiment(object):
         self._std_dev = None
         #self._inversed = False
         self._covered_area_prop = None
+        self._image_ids_done = False
 
     def __len__(self):
         """
@@ -229,7 +230,7 @@ class Experiment(object):
         for process in processes:
             if process.is_alive():
                 process.terminate()
-        # print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
         return
 
     def set_coef_process(self, index, output_queue, value):
@@ -276,6 +277,7 @@ class Experiment(object):
         self._covered_area_prop = None
         self._total_cluster_areas = None
         self._image_id_by_index = {}
+        self._image_ids_done = False
 
 
     def _create_dict_keys(self):
@@ -401,7 +403,7 @@ class Experiment(object):
         for process in processes:
             if process.is_alive():
                 process.terminate()
-        # print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
 
 
     def _fill_dicts_process(self, index, max_distance, max_angle_diff,
@@ -851,8 +853,8 @@ class Experiment(object):
                 string = "\rProgress: %d%%  " % (progress)
                 perten = progress/10.0
                 string += "["
-                string += "#"*int(perten*4)
-                string += "-"*int((10-perten)*4)
+                string += WHITE_BLOCK*int(perten*4)
+                string += " "*int((10-perten)*4)
                 string += "]"
                 if counter >= 3:
                     counter = 0
@@ -1191,8 +1193,8 @@ class Experiment(object):
                 string = "Progress: %d%%  " % (progress)
                 perten = progress/10.0
                 string += "["
-                string += "#"*int(perten*4)
-                string += "-"*int((10-perten)*4)
+                string += WHITE_BLOCK*int(perten*4)
+                string += " "*int((10-perten)*4)
                 string += "]"
                 if counter >= 3:
                     counter = 0
@@ -1333,7 +1335,6 @@ class Experiment(object):
         print "Plotting..."
         groups = self.bursts_groups
         bursts_ = len(groups)
-        print " "
         x_val, y_val, z_vals_avg, z_max, z_min = self.get_z_vals(groups, bursts_, function_name, divisions)
         frames = len(z_vals_avg)
         #match1 = re.match(r'.*?density.*', function_name)
@@ -1373,7 +1374,7 @@ class Experiment(object):
         x_val = []
         y_val = []
         match2 = re.match(r'.*?g[2|4].*', function_name)
-        print ""
+        print "Getting values\n"
         if match2:
             z_max = 1
             z_min = -1
@@ -1453,6 +1454,7 @@ class Experiment(object):
         """
         print "Creating dictionary dict[index] = image_id"
         processes = []
+        self._image_ids_done = True
         output_queue = mp.Queue()
         self._image_id_by_index = {}
         for index in range(len(self)):
@@ -1476,8 +1478,8 @@ class Experiment(object):
             string = "Progress: %d%%  " % (progress)
             perten = progress/10.0
             string += "["
-            string += "#"*int(perten*4)
-            string += "-"*int((10-perten)*4)
+            string += WHITE_BLOCK*int(perten*4)
+            string += " "*int((10-perten)*4)
             string += "]"
             if counter >= 3:
                 counter = 0
@@ -1504,6 +1506,7 @@ class Experiment(object):
         for process in processes:
             if process.is_alive():
                 process.terminate()
+        # print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
         
     def _get_image_ids_process(self, index, output_queue):
         """
@@ -1519,8 +1522,9 @@ class Experiment(object):
         """
         Returns consecutive system images' ids.
         """
-        if not len(self._image_id_by_index.keys()):
+        if not self._image_ids_done:
             self._get_image_ids()
+            self._image_ids_done = True
         return self._image_id_by_index[index]
 
     def create_videos(self, divisions=5, folder="./", fps=1,
@@ -1844,7 +1848,7 @@ class Experiment(object):
         """
         Wrapper
         """
-        bursts_groups = copy.deepcopy(self.bursts_groups)
+        bursts_groups = self.burst_groups
         end = False
         z_vals_avg = []
         index = 0
@@ -1879,7 +1883,6 @@ class Experiment(object):
                     average = sum(not_none_vals)/float(len(not_none_vals))
                 except ZeroDivisionError:
                     average = 0
-                    ############    Check this.
             z_vals_avg.append(average)
         return z_vals_avg, indices
 
@@ -2133,11 +2136,8 @@ class Experiment(object):
             groups = []
             group = []
             output_queue = mp.Queue()
-            #print "[DEBUG]:\tTime before entering loop (2010) and when exiting (2025)"
-            #print datetime.datetime.now()
             processes = []
             initial_id = self._get_image_id(0)
-            ### It seems that a lot of time is wasted here (1CPU) XXX CHECK XXX
             for index in range(len(self._state_numbers)-1):
                 final_id = self._get_image_id(index+1)
                 date1 = self._dates[initial_id]
@@ -2149,8 +2149,6 @@ class Experiment(object):
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
             finished = 0
-            #print datetime.datetime.now()
-            #print ""
             previous_time = datetime.datetime.now()
             counter = 0
             time_left = None
@@ -2204,7 +2202,7 @@ class Experiment(object):
                     groups.append(group)
                     group = []
             self._bursts_groups = groups
-            #print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
         return self._bursts_groups
 
     def plot_average_temperature(self, max_distance, max_angle_diff, limit):
