@@ -8,7 +8,7 @@ Settings
 """
 #0-9 or None to disable
 low_comp_level = None
-medium_comp_level = 6
+medium_comp_level = 0
 strong_comp_level = None
 #Reduces cpu usage (0 for disable)
 waiting_time = 0
@@ -26,13 +26,13 @@ avg_temp = 1
 order_param_exp = 1
 lost_percentage = 1
 run_imagej = 0
-run_props = 1
+run_props = 0
 run_graphs = 1
 run_check_dim = 0
 get_image_dates = 0
 to_file = 1
 plot = 0
-only_density = 0
+only_density = 1
 # variables
 coef = 5
 divisions = 50
@@ -150,7 +150,6 @@ if True:
         def run_default(kappa, real_kappa, error):
             name = str(int(real_kappa)) + "_default.log"
             log = open(name, 'w')
-            print ""
             msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
             print msg
             log.write(str(msg+"\n"))
@@ -241,17 +240,15 @@ if True:
             print "Creating graphs..."
             if discard_exceptions:
                 try:
-                    run_default(15, 12, 3)
+                    pass#run_default(15, 12, 3)
                 except:
                     pass
-                gc.collect()
                 try:
                     run_default(7.8, 6, 2)
                 except:
                     pass
             else:
                 run_default(15, 12, 3)
-                gc.collect()
                 run_default(7.8, 6, 2)
 
         if run_check_dim:

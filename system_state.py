@@ -9,6 +9,7 @@ import cPickle, zlib, datetime, time
 
 CURSOR_UP_ONE = '\x1b[1A'
 ERASE_LINE = '\x1b[2K'
+WHITE_BLOCK = u'\u25A0'
 
 
 class SystemState(object):
@@ -1236,8 +1237,8 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
         perten = progress/10.0
         string += "["
         prog = int(perten*4)
-        string += "#"*prog
-        string += "-"*(40-prog)
+        string += WHITE_BLOCK*prog
+        string += " "*(40-prog)
         string += "]"
         if counter >= 3:
             counter = 0

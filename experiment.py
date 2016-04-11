@@ -16,6 +16,7 @@ from sys import getsizeof
 
 CURSOR_UP_ONE = '\x1b[1A'
 ERASE_LINE = '\x1b[2K'
+WHITE_BLOCK = u'\u25A0'
 
 class Experiment(object):
     """
@@ -200,8 +201,8 @@ class Experiment(object):
             perten = progress/10.0
             string += "["
             prog = int(perten*4)
-            string += "#"*prog
-            string += "-"*(40-prog)
+            string += WHITE_BLOCK*prog
+            string += " "*(40-prog)
             string += "]"
             if counter >= 3:
                 counter = 0
@@ -212,14 +213,8 @@ class Experiment(object):
                     string += "    " + str(time_left) + " minutes"
                 else:
                     string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-            if not finished_ >= num_processes:
-                pass #string += "\r"
-            else:
-                string += "\n"
             print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
             print(string)
-            #sys.stdout.write(string)
-            #sys.stdout.flush()
             finished_ += 1
             output_row = output_queue.get()
             index = output_row[0]
@@ -234,7 +229,7 @@ class Experiment(object):
         for process in processes:
             if process.is_alive():
                 process.terminate()
-        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        # print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
         return
 
     def set_coef_process(self, index, output_queue, value):
@@ -378,8 +373,8 @@ class Experiment(object):
             perten = progress/10.0
             string += "["
             prog = int(perten*4)
-            string += "#"*prog
-            string += "-"*(40-prog)
+            string += WHITE_BLOCK*prog
+            string += " "*(40-prog)
             string += "]"
             if counter >= 3:
                 counter = 0
@@ -390,14 +385,8 @@ class Experiment(object):
                     string += "    " + str(time_left) + " minutes"
                 else:
                     string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-            if not finished_ >= num_processes:
-                pass #string += "\r"
-            else:
-                string += "\n"
             print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
             print(string)
-            #sys.stdout.write(string)
-            #sys.stdout.flush()
             finished_ += 1
             output_row = output_queue.get()
             index = output_row[0]
@@ -412,7 +401,7 @@ class Experiment(object):
         for process in processes:
             if process.is_alive():
                 process.terminate()
-        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        # print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
 
 
     def _fill_dicts_process(self, index, max_distance, max_angle_diff,
@@ -874,14 +863,8 @@ class Experiment(object):
                         string += "    " + str(time_left) + " minutes"
                     else:
                         string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-                if not finished >= num_processes:
-                    pass#string += "\r"
-                else:
-                    string += "\n"
                 print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
                 print(string)
-                #sys.stdout.write(string)
-                #sys.stdout.flush()
                 finished += 1
                 index_speeds, speeds = speeds_queue.get()
                 index_angular_speeds, angular_speeds = angular_speeds_queue.get()
@@ -894,9 +877,9 @@ class Experiment(object):
                 if finished >= num_processes:
                     break
             print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
+            for process in processes:
+                if process.is_alive():
+                    process.terminate()
 
 
     def _compute_speeds_process(self, index, speeds_queue,
@@ -1350,7 +1333,7 @@ class Experiment(object):
         print "Plotting..."
         groups = self.bursts_groups
         bursts_ = len(groups)
-        # print " "
+        print " "
         x_val, y_val, z_vals_avg, z_max, z_min = self.get_z_vals(groups, bursts_, function_name, divisions)
         frames = len(z_vals_avg)
         #match1 = re.match(r'.*?density.*', function_name)
@@ -1410,8 +1393,8 @@ class Experiment(object):
             perten = progress/10.0
             string += "["
             prog = int(perten*4)
-            string += "#"*prog
-            string += "-"*(40-prog)
+            string += WHITE_BLOCK*prog
+            string += " "*(40-prog)
             string += "]"
             if counter >= 3:
                 counter = 0
@@ -1521,7 +1504,6 @@ class Experiment(object):
         for process in processes:
             if process.is_alive():
                 process.terminate()
-        print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
         
     def _get_image_ids_process(self, index, output_queue):
         """
@@ -2174,7 +2156,7 @@ class Experiment(object):
             time_left = None
             times = []
             results = []
-            while True:
+            while finished < num_processes:
                 counter += 1
                 now = datetime.datetime.now()
                 seconds_passed = (now-previous_time).total_seconds()
@@ -2185,8 +2167,8 @@ class Experiment(object):
                 perten = progress/10.0
                 string += "["
                 prog = int(perten*4)
-                string += "#"*prog
-                string += "-"*(40-prog)
+                string += WHITE_BLOCK*prog
+                string += " "*(40-prog)
                 string += "]"
                 if counter >= 3:
                     counter = 0
@@ -2197,10 +2179,6 @@ class Experiment(object):
                         string += "    " + str(time_left) + " minutes"
                     else:
                         string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-                if not finished >= num_processes:
-                    pass #string += "\r"
-                else:
-                    break
                 print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
                 print(string)
                 finished += 1
@@ -2226,7 +2204,7 @@ class Experiment(object):
                     groups.append(group)
                     group = []
             self._bursts_groups = groups
-            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+            #print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
         return self._bursts_groups
 
     def plot_average_temperature(self, max_distance, max_angle_diff, limit):

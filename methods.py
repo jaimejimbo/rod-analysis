@@ -773,7 +773,7 @@ def import_and_plot(source, radius=None, level=9):
     """
     src = open(source, 'r')
     name = source[:-5]
-    print name
+    # print name
     values = decompress(src.read(), level=level)
     #[x_val, y_val, z_vals_avg, divisions, z_max, z_min, units]
     x_val, y_val, z_vals_avg = values[0], values[1], values[2]
@@ -801,10 +801,20 @@ def plot_all_data_files(radius=None, level=9, folder="./"):
     """
     print "Ploting saved data..."
     regular_expression = re.compile(r'.*\.data')
+    dens_re = re.compile(r'.*dens.*\.data')
+    g2_g4_re = re.compile(r'.*g[2-4].*\.data')
+    temp_re = re.compile(r'.*temp.*\.data')
+    cluster_re = re.compile(r'.*cluster.*\.data')
     files = get_file_names(folder=folder, regular_expression=regular_expression)
     for file_ in files:
-        import_and_plot(file_)
-        
+        if dens_re.match(file_):
+            print "Ploting "+file_
+            import_and_plot(file_)
+        elif g2_g4_re.match(file_):
+            print "Ploting "+file_
+            import_and_plot(file_)
+        else:
+            print "Ignoring "+file_+". Method not implemented yet."
 
 
 
