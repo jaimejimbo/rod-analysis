@@ -21,23 +21,23 @@ if not waiting_time:
 cpus = None
 # 1 or True, 0 or False
 create_videos = 1
-clusters = 0
-avg_temp = 0
-order_param_exp = 0
-lost_percentage = 0
+clusters = 1
+avg_temp = 1
+order_param_exp = 1
+lost_percentage = 1
 run_imagej = 0
-run_props = 0
+run_props = 1
 run_graphs = 1
 run_check_dim = 0
 get_image_dates = 0
 to_file = 1
 plot = 0
-only_density = 1
+only_density = 0
 # variables
 coef = 5
 divisions = 50
 #sigma = sigma_coef * subsystem_rad
-sigma_coef = 3
+sigma_coef = None
 changing_props = 0
 discard_exceptions = 1
 import re
@@ -150,6 +150,7 @@ if True:
         def run_default(kappa, real_kappa, error):
             name = str(int(real_kappa)) + "_default.log"
             log = open(name, 'w')
+            print ""
             msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
             print msg
             log.write(str(msg+"\n"))
@@ -238,17 +239,19 @@ if True:
         
         if run_graphs:
             print "Creating graphs..."
-            if not discard_exceptions:
+            if discard_exceptions:
                 try:
                     run_default(15, 12, 3)
                 except:
                     pass
+                gc.collect()
                 try:
                     run_default(7.8, 6, 2)
                 except:
                     pass
             else:
                 run_default(15, 12, 3)
+                gc.collect()
                 run_default(7.8, 6, 2)
 
         if run_check_dim:

@@ -1350,7 +1350,7 @@ class Experiment(object):
         print "Plotting..."
         groups = self.bursts_groups
         bursts_ = len(groups)
-        print " "
+        # print " "
         x_val, y_val, z_vals_avg, z_max, z_min = self.get_z_vals(groups, bursts_, function_name, divisions)
         frames = len(z_vals_avg)
         #match1 = re.match(r'.*?density.*', function_name)
