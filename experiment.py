@@ -13,13 +13,11 @@ import datetime
 import settings, time
 from sys import getsizeof
 
+CURSOR_UP_ONE = '\x1b[1A'
+ERASE_LINE = '\x1b[2K'
 if settings.special_chars:
-    CURSOR_UP_ONE = '\x1b[1A'
-    ERASE_LINE = '\x1b[2K'
     WHITE_BLOCK = u'\u25A0'
 else:
-    CURSOR_UP_ONE = ''
-    ERASE_LINE = ''
     WHITE_BLOCK = 'X'
     
 
