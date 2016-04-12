@@ -19,7 +19,7 @@ if settings.special_chars:
     WHITE_BLOCK = u'\u25A0'
 else:
     WHITE_BLOCK = 'X'
-    
+
 
 class Experiment(object):
     """
@@ -138,7 +138,7 @@ class Experiment(object):
         for state in self:
             lengths.append(state.average_rod_length)
         return float(sum(lengths))/len(lengths)
-        
+
 
     @property
     def average_rod_width(self):
@@ -149,7 +149,7 @@ class Experiment(object):
         for state in self:
             widths.append(state.average_rod_width)
         return float(sum(widths))/len(widths)
-        
+
 
     def __getitem__(self, state_num):
         """
@@ -1370,7 +1370,7 @@ class Experiment(object):
         previous_time = datetime.datetime.now()
         times = []
         time_left = None
-        counter = 0    
+        counter = 0
         z_vals = []
         z_vals_avg = []
         x_val = []
@@ -1497,7 +1497,7 @@ class Experiment(object):
                 [index, output] = output_queue.get()
             except:
                 print finished, num_processes, len(processes_left), len(running), len(output_queue)
-                break 
+                break
             self._image_id_by_index[index] = output
             if len(processes_left):
                 new_process = processes_left.pop(0)
@@ -1506,7 +1506,7 @@ class Experiment(object):
         for process in processes:
             if process.is_alive():
                 process.terminate()
-        
+
     def _get_image_ids_process(self, index, output_queue):
         """
         Process
@@ -1548,13 +1548,9 @@ class Experiment(object):
         """
         Returns plotable data.
         """
-        ###################################
         quad_speeds = self.local_average_quadratic_speed(max_distance,
                                         max_angle_diff, limit,
                                         amount_of_rods, divisions)
-        #quad_ang_speeds = self.local_average_quadratic_angular_speed(max_distance,
-        #                                max_angle_diff, limit,
-        #                                amount_of_rods, divisions)
         x_vals, y_vals, z_vals = [], [], []
         for index in range(len(self)-1):
             state = methods.decompress(self._states[index],
@@ -1565,19 +1561,11 @@ class Experiment(object):
                 for col_index in range(len(subgroups[row_index])):
                     subgroup = subgroups[row_index][col_index]
                     quad_speed = methods.decompress(quad_speeds[index], level=settings.medium_comp_level)[row_index][col_index]
-                    #assert len(quad_speeds) > index, "1228"
-                    #for index2 in range(len(quad_speeds)):
-                    #    assert len(quad_speeds[index2]) > row_index, "1230"
-                    #    for index3 in range(len(quad_speeds[index2])):
-                    #        assert len(quad_speeds[index2][index3]) > col_index, "1232"
-                    #ang_speed = quad_ang_speeds[index][row_index][col_index]
                     center = subgroup.center
                     center_x = center[0]
                     center_y = center[1]
-                    #total_speed = quad_speed + ang_speed
                     x_val.append(center_x)
                     y_val.append(center_y)
-                    #z_val.append(total_speed)
                     z_val.append(quad_speed)
             x_vals.append(x_val)
             y_vals.append(y_val)
@@ -1675,7 +1663,7 @@ class Experiment(object):
         fig = plt.figure()
         kappa = self.kappas
         name = str(folder) + "speeds_vectors_K" + str(kappa)
-        bursts_groups = copy.deepcopy(self.bursts_groups)
+        bursts_groups = self.bursts_groups#copy.deepcopy(self.bursts_groups)
         end = False
         vectors_matrices_avg = []
         def animate(dummy_frame):
@@ -1748,7 +1736,7 @@ class Experiment(object):
                                         amount_of_rods, divisions)
         x_vals = x_vals[0]
         y_vals = y_vals[0]
-        bursts_groups = copy.deepcopy(self.bursts_groups)
+        bursts_groups = self.burst_groups#copy.deepcopy(self.bursts_groups)
         end = False
         z_vals_avg = []
         number_of_bursts *= 5
@@ -1782,7 +1770,7 @@ class Experiment(object):
                 average = _z_vals
             z_vals_avg.append(methods.compress(average, level=settings.medium_comp_level))
         if not settings.to_file:
-            fig = plt.figure()  
+            fig = plt.figure()
         state = methods.decompress(self._states[0],
                                 level=settings.medium_comp_level)
         kappas = state.kappas
@@ -2039,7 +2027,7 @@ class Experiment(object):
             fig = plt.figure()
             plt.xlabel("time[seconds]")
             plt.ylabel("cluster area proportion")
-        # There's a bug here, so I use fortran obtained values. 
+        # There's a bug here, so I use fortran obtained values.
         m, b = self.get_order_evolution_coeficient(number_of_bursts=number_of_bursts,
                                             max_distance=max_distance,
                                             max_angle_diff=max_angle_diff,
@@ -2340,7 +2328,7 @@ class Experiment(object):
         prop = state.covered_area_proportion()
         output_queue.put([index, prop])
         return
-        
+
 
     @property
     def average_number_of_rods(self):
@@ -2354,7 +2342,7 @@ class Experiment(object):
         std_dev_step1 = [(value-avg)**2 for value in number_of_rods]
         std_dev_step2 = float(sum(std_dev_step1))/(len(std_dev_step1)-1)
         dev = math.sqrt(std_dev_step2)
-        return avg, dev 
+        return avg, dev
 
     @property
     def average_kappa(self):
@@ -2393,7 +2381,7 @@ class Experiment(object):
         plt.plot([center_x, center_x],[center_y, center_y-rad])
         plt.scatter(x_vals, y_vals, color='r')
         plt.show()
-        
+
 
 def compute_local_average_speeds_process(index, output_queue, local_speeds, divisions):
     """
@@ -2420,7 +2408,7 @@ def compute_local_average_speeds_process(index, output_queue, local_speeds, divi
                 subsys_quad_avg_ang_speed += float(speeds[1]**2)/num_rods
             speeds_matrix[row][col] = subsys_quad_avg_speed
             angular_speeds_matrix[row][col] = subsys_quad_avg_ang_speed
-    output_queue.put([index, methods.compress(speeds_matrix, level=settings.medium_comp_level), 
+    output_queue.put([index, methods.compress(speeds_matrix, level=settings.medium_comp_level),
                     methods.compress(angular_speeds_matrix, level=settings.medium_comp_level)])
 
 def average_speeds_vectors_video_process(divisions, index, compressed_state,

@@ -818,5 +818,20 @@ def plot_all_data_files(radius=None, level=9, folder="./"):
 
 
 
-
+def reset_dates_ids(folder="./", start=0):
+    """
+    When imgs goes over id limit, they restart in start(default 0), so 
+    """
+    src = folder + "dates.txt"
+    input_ = open(src, 'r')
+    output_file = folder + "dates_reordered.txt"
+    output_ = open(output_file, 'w')
+    id_ = start
+    for line in input_:
+        date = line.split("\t")[1]
+        line = str(id_) + "\t" + str(date) + "\n"
+        output_.write(line)
+        id_ += 1
+    output_.close()
+    input_.close()
 
