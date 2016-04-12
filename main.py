@@ -243,7 +243,7 @@ if True:
             print "Creating graphs..."
             if discard_exceptions:
                 try:
-                    pass#run_default(15, 12, 3)
+                    run_default(15, 12, 3)
                 except:
                     pass
                 try:
