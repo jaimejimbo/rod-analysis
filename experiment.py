@@ -1342,7 +1342,6 @@ class Experiment(object):
         bursts_ = len(groups)
         x_val, y_val, z_vals_avg, z_max, z_min = self.get_z_vals(groups, bursts_, function_name, divisions)
         frames = len(z_vals_avg)
-        #match1 = re.match(r'.*?density.*', function_name)
         if settings.plot:
             methods.create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, self.radius)
         if settings.to_file:
@@ -1421,9 +1420,10 @@ class Experiment(object):
                 processes.append(process)
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
-            finished_ = 0
-            while finished_ < num_processes:
-                finished_ += 1
+            finished__ = 0
+            z_vals = []
+            while finished__ < num_processes:
+                finished__ += 1
                 output = output_queue.get()
                 index = output[0]
                 x_val = output[1]
@@ -1439,15 +1439,12 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
                     new_process.start()
+            z_vals_avg.append(methods.compress(methods.array_average(z_vals),
+                                           level=settings.medium_comp_level))
             for process in processes:
                 if process.is_alive():
                     process.terminate()
-            z_vals_avg.append(methods.compress(methods.array_average(z_vals),
-                                           level=settings.medium_comp_level))
         print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
-        #if match1:
-        #    z_max = 1
-        #    z_min = 0
         if not match2:
             z_max = max(z_maxs)
             z_min = min(z_mins)
@@ -1511,7 +1508,6 @@ class Experiment(object):
         for process in processes:
             if process.is_alive():
                 process.terminate()
-        # print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
         
     def _get_image_ids_process(self, index, output_queue):
         """
