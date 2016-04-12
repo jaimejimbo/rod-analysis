@@ -32,7 +32,7 @@ run_check_dim = 0
 get_image_dates = 0
 to_file = 1
 plot = 0
-only_density = 1
+only_density = 0
 # variables
 coef = 5
 divisions = 50
@@ -40,6 +40,7 @@ divisions = 50
 sigma_coef = None
 changing_props = 0
 discard_exceptions = 1
+special_chars = 0
 import re
 
 
@@ -109,6 +110,8 @@ settings.write("\n")
 settings.write("plot = {0}".format(plot))
 settings.write("\n")
 settings.write("waiting_time = {0}".format(waiting_time))
+settings.write("\n")
+settings.write("special_chars = {0}".format(special_chars))
 settings.write("\n")
 settings.write("waiting_time_process = {0}".format(waiting_time_process))
 settings.write("\n")
