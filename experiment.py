@@ -1336,7 +1336,7 @@ class Experiment(object):
         Generic animator
         """
         print "Plotting..."
-        groups = self.bursts_groups
+        groups = copy.deepcopy(self.bursts_groups)
         bursts_ = len(groups)
         x_val, y_val, z_vals_avg, z_max, z_min = self.get_z_vals(groups, bursts_, function_name, divisions)
         frames = len(z_vals_avg)
@@ -1663,7 +1663,7 @@ class Experiment(object):
         fig = plt.figure()
         kappa = self.kappas
         name = str(folder) + "speeds_vectors_K" + str(kappa)
-        bursts_groups = self.bursts_groups#copy.deepcopy(self.bursts_groups)
+        bursts_groups = copy.deepcopy(self.bursts_groups)
         end = False
         vectors_matrices_avg = []
         def animate(dummy_frame):
@@ -1736,7 +1736,7 @@ class Experiment(object):
                                         amount_of_rods, divisions)
         x_vals = x_vals[0]
         y_vals = y_vals[0]
-        bursts_groups = self.burst_groups#copy.deepcopy(self.bursts_groups)
+        bursts_groups = copy.deepcopy(self.bursts_groups)
         end = False
         z_vals_avg = []
         number_of_bursts *= 5

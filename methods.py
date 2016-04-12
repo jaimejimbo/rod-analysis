@@ -829,7 +829,14 @@ def reset_dates_ids(folder="./", start=0):
     id_ = start
     for line in input_:
         date = line.split("\t")[1]
-        line = str(id_) + "\t" + str(date) + "\n"
+        line = ""
+        if id_<10:
+            line += "000"
+        elif id_<100:
+            line += "00"
+        elif id_<1000:
+            line += "0"
+        line += str(id_) + "\t" + str(date)
         output_.write(line)
         id_ += 1
     output_.close()

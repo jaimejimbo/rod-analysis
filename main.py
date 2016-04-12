@@ -39,8 +39,8 @@ divisions = 50
 #sigma = sigma_coef * subsystem_rad
 sigma_coef = None
 changing_props = 0
-discard_exceptions = 1
-special_chars = 0
+discard_exceptions = 0
+special_chars = 1
 import re
 
 
