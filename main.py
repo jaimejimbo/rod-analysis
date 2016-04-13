@@ -191,7 +191,7 @@ if True:
             experiment_ = experiment.Experiment(system_states_name_list=names, kappas=real_kappa,
                                                 system_states_list=rod_groups,
                                                 dates=dates, diff_t=5/3.0)
-            experiment_.set_coef(coef)
+            # experiment_.set_coef(coef)
             msg = str(experiment_.average_kappa) + "\t|\t" + str(experiment_.average_kappa_dev)
             rad = experiment_.average_system_rad
             print msg
