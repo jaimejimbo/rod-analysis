@@ -20,14 +20,14 @@ if not waiting_time:
 #None uses all cpus      
 cpus = None
 # 1 or True, 0 or False
-create_videos = 1
+create_videos = 0
 clusters = 1
 avg_temp = 1
 order_param_exp = 1
 lost_percentage = 1
 run_imagej = 0
-run_props = 0
-run_graphs = 1
+run_props = 1
+run_graphs = 0
 run_check_dim = 0
 get_image_dates = 0
 to_file = 1
@@ -40,7 +40,7 @@ divisions = 50
 sigma_coef = None
 changing_props = 0
 discard_exceptions = 0
-special_chars = 1
+special_chars = 0
 import re
 
 

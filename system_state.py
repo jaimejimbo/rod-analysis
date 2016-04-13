@@ -199,8 +199,9 @@ class SystemState(object):
         """
         Returns a copy of this object.
         """
-        if not len(self._zone_coords):
-            _zone_coords = None
+        _zone_coords = None
+        if len(self._zone_coords):
+            _zone_coords = self._zone_coords
         clone = SystemState(kappas=self._kappas, real_kappas = self._real_kappas,
                         allowed_kappa_error=self._allowed_kappa_error,
                         radius_correction_ratio=self._radius_correction_ratio,
@@ -1275,7 +1276,7 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
                 break
             diff += 1
         new_state = methods.decompress(states[new_state],
-                        level=methods.settings.medium_comp_level).clone()
+                        level=methods.settings.medium_comp_level).clone
         states[empty_state] = methods.compress(new_state,
                                 level=methods.settings.medium_comp_level)
     print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
