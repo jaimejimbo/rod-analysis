@@ -1232,30 +1232,9 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
     empty_states = []
     while finished_ < num_processes:
         counter += 1
-        now = datetime.datetime.now()
-        seconds_passed = (now-previous_time).total_seconds()
-        times.append(seconds_passed)
-        progress = int(finished_*100/num_processes)
-        previous_time = now
-        string = "Progress: %d%%  " % (progress)
-        perten = progress/10.0
-        string += "["
-        prog = int(perten*4)
-        string += WHITE_BLOCK*prog
-        string += " "*(40-prog)
-        string += "]"
-        if counter >= 3:
-            counter = 0
-            avg_time = sum(times)*1.0/len(times)
-            time_left = int(len(processes_left)*avg_time/60)
-        if not time_left is None:
-            if time_left:
-                string += "    " + str(time_left) + " minutes"
-            else:
-                string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
-        print(string)
         finished_ += 1
+        previous_time = methods.print_progress(finished_, num_processes,
+                                counter, times, time_left, previous_time)
         [index, state] = states_queue.get()
         if state is not None:
             states[index] = state

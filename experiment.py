@@ -196,30 +196,9 @@ class Experiment(object):
         print " "
         while True:
             counter += 1
-            now = datetime.datetime.now()
-            seconds_passed = (now-previous_time).total_seconds()
-            times.append(seconds_passed)
-            progress = int(finished_*100/num_processes)
-            previous_time = now
-            string = "Progress: %d%%  " % (progress)
-            perten = progress/10.0
-            string += "["
-            prog = int(perten*4)
-            string += WHITE_BLOCK*prog
-            string += " "*(40-prog)
-            string += "]"
-            if counter >= 3:
-                counter = 0
-                avg_time = sum(times)*1.0/len(times)
-                time_left = int(len(processes_left)*avg_time/60)
-            if not time_left is None:
-                if time_left:
-                    string += "    " + str(time_left) + " minutes"
-                else:
-                    string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
-            print(string)
             finished_ += 1
+            previous_time = methods.print_progress(finished_, num_processes, counter,
+                                                   times, time_left, previous_time)
             output_row = output_queue.get()
             index = output_row[0]
             compressed_state = output_row[1]
@@ -369,30 +348,9 @@ class Experiment(object):
         print " "
         while True:
             counter += 1
-            now = datetime.datetime.now()
-            seconds_passed = (now-previous_time).total_seconds()
-            times.append(seconds_passed)
-            progress = int(finished_*100/num_processes)
-            previous_time = now
-            string = "Progress: %d%%  " % (progress)
-            perten = progress/10.0
-            string += "["
-            prog = int(perten*4)
-            string += WHITE_BLOCK*prog
-            string += " "*(40-prog)
-            string += "]"
-            if counter >= 3:
-                counter = 0
-                avg_time = sum(times)*1.0/len(times)
-                time_left = int(len(processes_left)*avg_time/60)
-            if not time_left is None:
-                if time_left:
-                    string += "    " + str(time_left) + " minutes"
-                else:
-                    string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
-            print(string)
             finished_ += 1
+            previous_time = methods.print_progress(finished_, num_processes,
+                                    counter, times, time_left, previous_time)
             output_row = output_queue.get()
             index = output_row[0]
             self._evolution_dictionaries[index] = output_row[1]
@@ -848,29 +806,9 @@ class Experiment(object):
             print " "
             while True:
                 counter += 1
-                now = datetime.datetime.now()
-                seconds_passed = (now-previous_time).total_seconds()
-                times.append(seconds_passed)
-                progress = int(finished*100/num_processes)
-                previous_time = now
-                string = "\rProgress: %d%%  " % (progress)
-                perten = progress/10.0
-                string += "["
-                string += WHITE_BLOCK*int(perten*4)
-                string += " "*int((10-perten)*4)
-                string += "]"
-                if counter >= 3:
-                    counter = 0
-                    avg_time = sum(times)*1.0/len(times)
-                    time_left = int(len(processes_left)*avg_time/60)
-                if not time_left is None:
-                    if time_left:
-                        string += "    " + str(time_left) + " minutes"
-                    else:
-                        string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-                print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
-                print(string)
                 finished += 1
+                previous_time = methods.print_progress(finished, num_processes,
+                                        counter, times, time_left, previous_time)
                 index_speeds, speeds = speeds_queue.get()
                 index_angular_speeds, angular_speeds = angular_speeds_queue.get()
                 self._speeds[index_speeds] = speeds
@@ -1188,41 +1126,13 @@ class Experiment(object):
             print " "
             while True:
                 counter += 1
-                now = datetime.datetime.now()
-                seconds_passed = (now-previous_time).total_seconds()
-                times.append(seconds_passed)
-                progress = int(finished*100/num_processes)
-                previous_time = now
-                string = "Progress: %d%%  " % (progress)
-                perten = progress/10.0
-                string += "["
-                string += WHITE_BLOCK*int(perten*4)
-                string += " "*int((10-perten)*4)
-                string += "]"
-                if counter >= 3:
-                    counter = 0
-                    avg_time = sum(times)*1.0/len(times)
-                    time_left = int(len(processes_left)*avg_time/60)
-                if not time_left is None:
-                    if time_left:
-                        string += "    " + str(time_left) + " minutes"
-                    else:
-                        string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-                if not finished >= num_processes:
-                    pass#string += "\r"
-                else:
-                    string += "\n"
-                #print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
-                print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
-                print string
-                #print getsizeof(self._states)
-                #sys.stdout.write(string)
-                #sys.stdout.flush()
+                finished += 1
+                previous_time = methods.print_progress(finished, num_processes,
+                                        counter, times, time_left, previous_time)
                 output = output_queue.get()
                 index = output[0]
                 state = output[1]
                 self._states[index] = state
-                finished += 1
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
@@ -1385,31 +1295,8 @@ class Experiment(object):
             z_mins = []
         for group in groups:
             finished_ += 1
-            left = bursts_-finished_
             counter += 1
-            now = datetime.datetime.now()
-            seconds_passed = (now-previous_time).total_seconds()
-            times.append(seconds_passed)
-            progress = int(finished_*100/bursts_)
-            previous_time = now
-            string = "Progress: %d%%  " % (progress)
-            perten = progress/10.0
-            string += "["
-            prog = int(perten*4)
-            string += WHITE_BLOCK*prog
-            string += " "*(40-prog)
-            string += "]"
-            if counter >= 3:
-                counter = 0
-                avg_time = sum(times)*1.0/len(times)
-                time_left = int(left*avg_time/60)
-            if not time_left is None:
-                if time_left:
-                    string += "    " + str(time_left) + " minutes"
-                else:
-                    string += "    " + str(int(len(self.bursts_groups)*avg_time)) + " seconds"
-            print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
-            print string
+            methods.print_progress(finished_, bursts_, counter, times, time_left, previous_time)
             output_queue = mp.Queue()
             processes = []
             for index in group:
@@ -1470,29 +1357,9 @@ class Experiment(object):
         print ""
         while finished < num_processes:
             counter += 1
-            now = datetime.datetime.now()
-            seconds_passed = (now-previous_time).total_seconds()
-            times.append(seconds_passed)
-            progress = int(finished*100/num_processes)
-            previous_time = now
-            string = "Progress: %d%%  " % (progress)
-            perten = progress/10.0
-            string += "["
-            string += WHITE_BLOCK*int(perten*4)
-            string += " "*int((10-perten)*4)
-            string += "]"
-            if counter >= 3:
-                counter = 0
-                avg_time = sum(times)*1.0/len(times)
-                time_left = int(len(processes_left)*avg_time/60)
-            if not time_left is None:
-                if time_left:
-                    string += "    " + str(time_left) + " minutes"
-                else:
-                    string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-            print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
-            print string
             finished += 1
+            previous_time = methods.print_progress(finished, num_processes, counter,
+                                        times, time_left, previous_time)
             try:
                 [index, output] = output_queue.get()
             except:
@@ -1835,7 +1702,7 @@ class Experiment(object):
         """
         Wrapper
         """
-        bursts_groups = self.burst_groups
+        bursts_groups = self.bursts_groups
         end = False
         z_vals_avg = []
         index = 0
@@ -2143,30 +2010,9 @@ class Experiment(object):
             results = []
             while finished < num_processes:
                 counter += 1
-                now = datetime.datetime.now()
-                seconds_passed = (now-previous_time).total_seconds()
-                times.append(seconds_passed)
-                progress = int(finished*100/num_processes)
-                previous_time = now
-                string = "Progress: %d%%  " % (progress)
-                perten = progress/10.0
-                string += "["
-                prog = int(perten*4)
-                string += WHITE_BLOCK*prog
-                string += " "*(40-prog)
-                string += "]"
-                if counter >= 3:
-                    counter = 0
-                    avg_time = sum(times)*1.0/len(times)
-                    time_left = int(len(processes_left)*avg_time/60)
-                if not time_left is None:
-                    if time_left:
-                        string += "    " + str(time_left) + " minutes"
-                    else:
-                        string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-                print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
-                print(string)
                 finished += 1
+                previous_time = methods.print_progress(finished, num_processes, 
+                                    counter, times, time_left, previous_time)
                 if not len(running):
                     break
                 output = output_queue.get()

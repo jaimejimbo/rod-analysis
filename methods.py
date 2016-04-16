@@ -8,6 +8,15 @@ import cPickle, zlib
 import settings
 import numpy
 from matplotlib import animation
+import datetime
+
+
+CURSOR_UP_ONE = '\x1b[1A'
+ERASE_LINE = '\x1b[2K'
+if settings.special_chars:
+    WHITE_BLOCK = u'\u25A0'
+else:
+    WHITE_BLOCK = 'X'
 
 using_cl = False
 _writer = animation.writers['ffmpeg']
@@ -841,4 +850,34 @@ def reset_dates_ids(folder="./", start=0):
         id_ += 1
     output_.close()
     input_.close()
+
+def print_progress(done, total, counter, times, time_left, previous_time):
+    """
+    Print progress of stack of tasks.
+    """
+    left = total-done
+    now = datetime.datetime.now()
+    seconds_passed = (now-previous_time).total_seconds()
+    times.append(seconds_passed)
+    progress = int(done*100/total)
+    previous_time = now
+    string = "Progress: %d%%  " % (progress)
+    perten = progress/10.0
+    string += "["
+    prog = int(perten*4)
+    string += WHITE_BLOCK*prog
+    string += " "*(40-prog)
+    string += "]"
+    if counter >= 3:
+        counter = 0
+        avg_time = sum(times)*1.0/len(times)
+        time_left = int(left*avg_time/60)
+    if not time_left is None:
+        if time_left:
+            string += "    " + str(time_left) + " minutes"
+        else:
+            string += "    " + str(int(left*avg_time)) + " seconds"
+    print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+    print string
+    return previous_time
 
