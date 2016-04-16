@@ -193,7 +193,7 @@ class Experiment(object):
         time_left = None
         times = []
         print " "
-        while finished > num_processes:
+        while finished_ > num_processes:
             counter += 1
             finished_ += 1
             previous_time = methods.print_progress(finished_, num_processes, counter,
@@ -1075,11 +1075,7 @@ class Experiment(object):
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
-                    try:
-                        new_process.start()
-                    except OSError:
-                        os.system("cat /proc/meminfo | grep -i free")
-                        raise OSError("Out of memory")
+                    new_process.start()
             print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
 
 
