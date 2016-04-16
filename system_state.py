@@ -301,7 +301,7 @@ class SystemState(object):
         radius.
         """
         if not self._fixed_center_radius:
-            #There must be rods to make statistics.
+            # There must be rods to make statistics.
             if not self.number_of_rods:
                 msg = "center_and_radius can't be computed before adding rods"
                 raise ValueError(msg)
@@ -316,10 +316,10 @@ class SystemState(object):
                 for rod_ in self:
                     x_values.append(rod_.x_mid)
                     y_values.append(rod_.y_mid)
-                #center is the mean position of all particles.
+                # center is the mean position of all particles.
                 center_x = sum(x_values)*1.0/self.number_of_rods
                 center_y = sum(y_values)*1.0/self.number_of_rods
-                #radius is the average of maximum distances /2.
+                # radius is the average of maximum distances /2.
                 radius = (max(x_values)-min(x_values)+max(y_values)-min(y_values))
                 radius *= (1-self._radius_correction_ratio)/4.0
                 self._center_x = center_x
@@ -439,9 +439,6 @@ class SystemState(object):
             Creates subsystems
         """
         subsystems = []
-        #rods_matrix = self._separate_rods_by_coords(rods_list, possible_x_values,
-        #                                            possible_y_values, rad, diff,
-        #                                            divisions)
         y_vals = range(len(possible_y_values))
         x_vals = range(len(possible_x_values))
         centers = []
@@ -639,7 +636,6 @@ class SystemState(object):
             y_values.append(subsystem[1])
             z_values.append(subsystem[2])
         g4_subsystems = None
-        #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
 
     def correlation_g4_plot_matrix_queue(self, divisions, index, output_queue):
@@ -684,7 +680,6 @@ class SystemState(object):
                 angle = 0
                 for rod_ in list(self._rods):
                     angle2 = rod_.angle
-                    # angle = angle + pi (simetry)
                     if angle2 > math.pi:
                         angle2 -= math.pi
                     angle += angle2
@@ -700,7 +695,6 @@ class SystemState(object):
         """
             Computes average angle matrix
         """
-        #self.divide_in_circles(divisions)
         subdivision = self._actual_subdivision
         for subsystem_ in subdivision:
             subsystem = methods.decompress(subsystem_,
@@ -726,7 +720,6 @@ class SystemState(object):
             y_values.append(subsystem[1])
             z_values.append(subsystem[2])
         angle_matrix = None
-        #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
 
     def plottable_average_angle_matrix_queue(self, divisions, index, output_queue):
@@ -816,7 +809,6 @@ class SystemState(object):
                 if len(cluster):
                     clusters.append(cluster)
             self._clusters = clusters
-        #print clusters
         return clusters
 
     def clusters(self, max_distance=None, max_angle_diff=None, min_size=3):
@@ -955,9 +947,6 @@ class SystemState(object):
                             correction = methods.gaussian(distance)
                             angle = math.radians(rod1.angle_between_rods(rod2))
                             cos_av += abs(math.cos(angle))/self.number_of_rods*(self.number_of_rods-1)
-                            #distance = methods.distance_between_points(rod1.center, rod2.center)
-                            #correction = methods.gaussian(distance)
-                            #cos_av *= correction
                 self._relative_g2 = cos_av
         return self._relative_g2
 
@@ -978,9 +967,6 @@ class SystemState(object):
                         if rod1 != rod2:
                             angle = math.radians(rod1.angle_between_rods(rod2))
                             cos_av += abs(2*math.cos(angle))/self.number_of_rods*(self.number_of_rods-1)
-                            #distance = methods.distance_between_points(rod1.center, rod2.center)
-                            #correction = methods.gaussian(distance)
-                            #cos_av *= correction
                 cos_av /= self.number_of_rods*(self.number_of_rods-1)
                 self._relative_g4 = cos_av
         return self._relative_g4
@@ -989,7 +975,6 @@ class SystemState(object):
         """
             Computes correlation_g2 and correlation_g4 matrices for subgroups.
         """
-        #self.divide_in_circles(divisions)
         len_correlation_g2 = len(self._relative_g2_subsystems)
         len_correlation_g4 = len(self._relative_g4_subsystems)
         if  len_correlation_g2 == 0 or len_correlation_g4 == 0:
@@ -1019,7 +1004,6 @@ class SystemState(object):
             y_values.append(subsystem[1])
             z_values.append(subsystem[2])
         subsystems = None
-        #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
 
     def relative_g4_plot_matrix(self, divisions):
@@ -1036,7 +1020,6 @@ class SystemState(object):
             x_values.append(subsystem[0])
             y_values.append(subsystem[1])
             z_values.append(subsystem[2])
-        #return self._transform_for_pcolor(z_values, rad)
         return x_values, y_values, z_values
 
     @property
@@ -1292,7 +1275,6 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
     if not state:
         states_queue.put([index, None])
         return
-        #raise ValueError("A state must have been created.")
     state.compute_center_and_radius()
     state.check_rods()
     state = methods.compress(state, level=settings.medium_comp_level)

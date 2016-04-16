@@ -101,7 +101,6 @@ class Experiment(object):
         self._kappas = kappas
         self._popt = None
         self._std_dev = None
-        #self._inversed = False
         self._covered_area_prop = None
         self._image_ids_done = False
 
@@ -309,7 +308,7 @@ class Experiment(object):
         evol_dict = methods.compress(evol_dict, level=settings.medium_comp_level)
         rel_dict = methods.compress(relative_dict, level=settings.medium_comp_level)
         try:
-            final_rods = self._initial_rods[index+1].copy()#methods.compress(self._initial_rods[index+1].copy(), level=settings.medium_comp_level)
+            final_rods = self._initial_rods[index+1].copy()
         except:
             final_rods = None
         output_queue.put([index, evol_dict, rel_dict, final_rods])
@@ -398,12 +397,10 @@ class Experiment(object):
         """
         initial_state = methods.decompress(self._states[index], level=settings.medium_comp_level)
         final_state = methods.decompress(self._states[index+1], level=settings.medium_comp_level)
-        # XXX Esta saltando el assert XXX
         assert type(initial_state) != type("string"), "initial state can't be a string."
         evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
         relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
         for initial_rod in initial_state:
-            #initial rod esta comprimido
             initial_id = initial_rod.identifier
             if not amount_of_rods:
                 available_final_rods = list(final_state)
@@ -577,31 +574,11 @@ class Experiment(object):
             self._reset()
         if not len(self._evolution_dictionaries):
             self._create_dict_keys()
-            # type(self._evolution_dictionaries)    #list
-            # type(self._evolution_dictionaries[0]) #str
-            # type(self._relative_dictionaries)     #list
-            # type(self._relative_dictionaries[0])  #str
             self._fill_dicts(max_distance, max_angle_diff, limit=limit,
                                 amount_of_rods=amount_of_rods)
-            # type(self._evolution_dictionaries)    #list
-            # type(self._evolution_dictionaries[0]) #str
-            # type(self._relative_dictionaries)     #list
-            # type(self._relative_dictionaries[0])  #str
             self._leave_only_closer(max_distance=max_distance)
-            # type(self._evolution_dictionaries)    #list
-            # type(self._evolution_dictionaries[0]) #str
-            # type(self._relative_dictionaries)     #list
-            # type(self._relative_dictionaries[0])  #str
             self._join_rods_left(max_distance=max_distance)
-            # type(self._evolution_dictionaries)    #list
-            # type(self._evolution_dictionaries[0]) #str
-            # type(self._relative_dictionaries)     #list
-            # type(self._relative_dictionaries[0])  #str
             self._get_vectors()
-            # type(self._evolution_dictionaries)    #list
-            # type(self._evolution_dictionaries[0]) #str
-            # type(self._relative_dictionaries)     #list
-            # type(self._relative_dictionaries[0])  #str
 
     def vectors_dictionaries(self, max_distance=100, max_angle_diff=90,
                             limit=5, amount_of_rods=200):
@@ -1485,7 +1462,7 @@ class Experiment(object):
             """
             Animation function.
             """
-            self._speeds_vectors_video_wrapper(vectors_matrices)    #BUG
+            self._speeds_vectors_video_wrapper(vectors_matrices)    #XXX BUG
         frames = len(self)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer=methods.WRITER, fps=fps)
@@ -1633,9 +1610,8 @@ class Experiment(object):
         y_max = max(y_val)+rad*1.1
         plt.xlim((x_min, x_max))
         plt.ylim((y_min, y_max))
-        #plt.suptitle(name)
         plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
-                    vmax=z_max, vmin=z_min) #ValueError: Color array must be two-dimensional
+                    vmax=z_max, vmin=z_min)
         plt.gca().invert_yaxis()
         cb = plt.colorbar()
         plt.xlabel("x [pixels]")
@@ -1785,16 +1761,6 @@ class Experiment(object):
                     log_times.append(math.log(times[index]))
                 except ValueError:
                     log_times.pop()
-            #log_areas = numpy.array(log_areas)
-            #log_times = numpy.array(log_times)
-            #x_0 = numpy.array([0, 0, 0, 0])
-            #function = lambda value, coef1, coef2: coef1 + coef2*value
-            #popt, pcov = optimization.curve_fit(function, log_times, log_areas)
-            #m, b = popt[1], popt[0]
-            #m, b = np.polyfit(log_times, log_areas, 1)
-            #std_dev = numpy.sqrt(numpy.diag(pcov))
-            #self._popt = popt
-            #self._std_dev = std_dev
             top = 0
             bot = 0
             x_m = float(sum(log_times))/len(log_times)
@@ -1804,7 +1770,7 @@ class Experiment(object):
                 bot += (log_times[index]-x_m)**2
             m = float(top)/bot
             b = y_m - m*x_m
-        return m, b     #self._popt[0], self._popt[1], self._std_dev
+        return m, b
 
 
     def plot_cluster_areas(self, number_of_bursts=1, max_distance=None,
@@ -1829,27 +1795,21 @@ class Experiment(object):
                 proportion = float(area)/total_area
             except ZeroDivisionError:
                 proportion = 0
-                continue #norm_areas.append(proportion)
+                continue
             times.append(self._times[index])
             norm_areas.append(proportion)
         if not settings.to_file:
             fig = plt.figure()
             plt.xlabel("time[seconds]")
             plt.ylabel("cluster area proportion")
-        # There's a bug here, so I use fortran obtained values.
         m, b = self.get_order_evolution_coeficient(number_of_bursts=number_of_bursts,
                                             max_distance=max_distance,
                                             max_angle_diff=max_angle_diff,
                                             min_size=min_size)
-        # m = 0.309291
-        # b = -3.669453
         line = []
         for time in times:
             if time != 0:
                 line.append((math.e**b)*(time**m))
-        # print m, "  ", b
-        # print math.e**b
-        # print math.e**(-b)
         name = "coef_K"+str(self.kappas)+".log"
         output = open(name, 'w')
         text = "Coeficient: "+str(m)+"\nIndep: "+str(b) +"\n"
@@ -1881,7 +1841,6 @@ class Experiment(object):
         clust.close()
         if not settings.to_file:
             try:
-                #plt.plot(times, norm_areas)
                 plt.scatter(times, norm_areas)
             except ValueError:
                 print(len(times), len(norm_areas))
@@ -2091,7 +2050,6 @@ class Experiment(object):
             index = output[0]
             prop = output[1]
             props[index] = prop
-            #print index, prop
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
@@ -2196,10 +2154,8 @@ def compute_local_average_speeds_process(index, output_queue, local_speeds, divi
             subsys_quad_avg_speed = 0
             subsys_quad_avg_ang_speed = 0
             num_rods = len(subsys_dict)
-            # print subsys_dict #es una lista de diccionarios.
-            # print subsys_dict.values()
             for speeds in subsys_dict.values():
-                subsys_quad_avg_speed += float(speeds[0]**2)/num_rods       #speeds (int)
+                subsys_quad_avg_speed += float(speeds[0]**2)/num_rods
                 subsys_quad_avg_ang_speed += float(speeds[1]**2)/num_rods
             speeds_matrix[row][col] = subsys_quad_avg_speed
             angular_speeds_matrix[row][col] = subsys_quad_avg_ang_speed

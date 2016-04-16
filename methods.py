@@ -92,7 +92,6 @@ def effective_area(small_rad, small_position_rad, main_rad):
     # circle completely included in the bigger one
     if small_rad+small_position_rad <= main_rad:
         return math.pi*small_rad**2
-    # assert small_position_rad <= main_rad, "Circle is outside the bigger one"
     min_dist = compute_min_dist(small_rad, small_position_rad, main_rad)
     if min_dist >= small_rad:
         return math.pi*small_rad**2
@@ -751,7 +750,6 @@ def animate_scatter(x_val, y_val, z_vals,
     y_max = max(y_val)+rad*1.1
     plt.xlim((x_min, x_max))
     plt.ylim((y_min, y_max))
-    #plt.suptitle(name)
     plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
                 vmin=z_min, vmax=z_max)
     plt.gca().invert_yaxis()
@@ -782,9 +780,7 @@ def import_and_plot(source, radius=None, level=9):
     """
     src = open(source, 'r')
     name = source[:-5]
-    # print name
     values = decompress(src.read(), level=level)
-    #[x_val, y_val, z_vals_avg, divisions, z_max, z_min, units]
     x_val, y_val, z_vals_avg = values[0], values[1], values[2]
     divisions = values[3]
     z_max, z_min = values[4], values[5]
