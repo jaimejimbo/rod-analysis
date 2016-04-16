@@ -2382,6 +2382,19 @@ class Experiment(object):
         plt.scatter(x_vals, y_vals, color='r')
         plt.show()
 
+    def plot_number_of_rods_over_time(self):
+        """
+        Plot number of rods over time.
+        """
+        times = [time for time in range(len(self))]
+        number_of_rods = []
+        for system in self:
+            number_of_rods.append(system.number_of_rods)
+        figure = plt.figure()
+        plt.plot(times, number_of_rods)
+        name = "num_rods_time_K" + str(self.kappas) + ".png"
+        plt.savefig(name)
+
 
 def compute_local_average_speeds_process(index, output_queue, local_speeds, divisions):
     """
