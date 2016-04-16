@@ -194,7 +194,7 @@ class Experiment(object):
         time_left = None
         times = []
         print " "
-        while True:
+        while finished > num_processes:
             counter += 1
             finished_ += 1
             previous_time = methods.print_progress(finished_, num_processes, counter,
@@ -207,13 +207,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-            if finished_ >= num_processes:
-                break
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
         print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
-        return
 
     def set_coef_process(self, index, output_queue, value):
         """
@@ -282,7 +276,7 @@ class Experiment(object):
         num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
         finished = 0
-        while True:
+        while finished < num_processes:
             finished += 1
             [index, evol_dict, rel_dict, final_rods] = output_queue.get()
             self._evolution_dictionaries[index] = evol_dict
@@ -295,8 +289,6 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-            if finished >= num_processes:
-                break
 
     def _create_dicts_keys_process(self, index, output_queue):
         """
@@ -346,7 +338,7 @@ class Experiment(object):
         time_left = None
         times = []
         print " "
-        while True:
+        while finished < num_processes:
             counter += 1
             finished_ += 1
             previous_time = methods.print_progress(finished_, num_processes,
@@ -359,11 +351,6 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-            if finished_ >= num_processes:
-                break
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
         print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
 
 
@@ -515,9 +502,6 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
 
 
     def _leave_only_closer_process(self, index, output_queue,
@@ -661,9 +645,6 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
 
     def _get_vectors_process(self, index, output_queue):
         """
@@ -732,9 +713,6 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
 
 
     def _join_rods_left_process(self, index, output_queue, max_distance=50):
@@ -804,7 +782,7 @@ class Experiment(object):
             time_left = None
             times = []
             print " "
-            while True:
+            while finished < num_processes:
                 counter += 1
                 finished += 1
                 previous_time = methods.print_progress(finished, num_processes,
@@ -817,12 +795,7 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
                     new_process.start()
-                if finished >= num_processes:
-                    break
             print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
-            for process in processes:
-                if process.is_alive():
-                    process.terminate()
 
 
     def _compute_speeds_process(self, index, speeds_queue,
@@ -921,7 +894,7 @@ class Experiment(object):
         counter = 0
         time_left = None
         times = []
-        while True:
+        while finished < num_processes:
             finished += 1
             output = output_queue.get()
             index = output[0]
@@ -931,11 +904,6 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-            if finished >= num_processes:
-                break
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
 
 
     def _compute_local_speeds_process(self, index, output_queue, divisions):
@@ -995,9 +963,6 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
                     new_process.start()
-            for process in processes:
-                if process.is_alive():
-                    process.terminate()
 
     def local_average_quadratic_speed(self, max_distance=100, max_angle_diff=90,
                                         limit=5, amount_of_rods=200, divisions=5):
@@ -1061,9 +1026,6 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
                     new_process.start()
-            for process in processes:
-                if process.is_alive():
-                    process.terminate()
             self._densities_array = densities
             self._quad_speeds_array = quad_speeds
         return [self._densities_array, self._quad_speeds_array]
@@ -1124,7 +1086,7 @@ class Experiment(object):
             time_left = None
             times = []
             print " "
-            while True:
+            while finished < num_processes:
                 counter += 1
                 finished += 1
                 previous_time = methods.print_progress(finished, num_processes,
@@ -1141,12 +1103,7 @@ class Experiment(object):
                     except OSError:
                         os.system("cat /proc/meminfo | grep -i free")
                         raise OSError("Out of memory")
-                if finished >= num_processes:
-                    break
             print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
-            for process in processes:
-                if process.is_alive():
-                    process.terminate()
 
 
     def divide_system_in_circles_process(self, divisions, index, output_queue):
@@ -1326,9 +1283,6 @@ class Experiment(object):
                     new_process.start()
             z_vals_avg.append(methods.compress(methods.array_average(z_vals),
                                            level=settings.medium_comp_level))
-            for process in processes:
-                if process.is_alive():
-                    process.terminate()
         print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
         if not match2:
             z_max = max(z_maxs)
@@ -1370,9 +1324,6 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
 
     def _get_image_ids_process(self, index, output_queue):
         """
@@ -1473,9 +1424,6 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
         def animate(dummy_frame):
             """
             Animation function.
@@ -1581,9 +1529,6 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
         vectors = []
         for index in range(speeds_num):
             state = methods.decompress(self._states[index],
@@ -1769,9 +1714,6 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
         return areas
 
 
@@ -2022,9 +1964,6 @@ class Experiment(object):
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     new_process.start()
-            for process in processes:
-                if process.is_alive():
-                    process.terminate()
             for result in results:
                 index = result[0]
                 burst = result[1]
@@ -2071,9 +2010,6 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
         if not settings.to_file:
             plt.figure()
             plt.plot(indices, average_speeds)
