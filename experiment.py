@@ -314,40 +314,6 @@ class Experiment(object):
                 new_process.start()
         print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
 
-    def _fill_dicts_process(self, index, max_distance, max_angle_diff,
-                            output_queue, amount_of_rods=None):
-        """
-            Allows to create a process and use all cores.
-        """
-        initial_state = methods.decompress(self._states[index], level=settings.medium_comp_level)
-        final_state = methods.decompress(self._states[index+1], level=settings.medium_comp_level)
-        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
-        relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
-        for initial_rod in initial_state:
-            initial_id = initial_rod.identifier
-            if not amount_of_rods:
-                available_final_rods = final_state._get_rods_range(0,
-                                        final_state.number_of_rods)
-            else:
-                start_id = initial_id-amount_of_rods/2
-                end_id = initial_id+amount_of_rods/2
-                available_final_rods = final_state._get_rods_range(start_id,
-                                                                    end_id)
-            for final_rod in available_final_rods:
-                final_id = final_rod.identifier
-                distance = initial_rod.distance_to_rod(final_rod)
-                angle = initial_rod.angle_between_rods(final_rod)
-                angle = min([angle, 180-angle])
-                speed = float(distance)/self._diff_t
-                if distance <= max_distance and angle <= max_angle_diff:
-                    evol_dict[initial_id] |= set([final_id])
-                    relative_dict[initial_id][final_id] = (distance,
-                                                        angle, speed)
-        for initial_id in list(relative_dict.keys()):
-            if len(relative_dict[initial_id]) == 1:
-                relative_dict[initial_id] = list(relative_dict[initial_id].values())[0]
-        output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
-
     def _fill_dicts_process_limited(self, index, max_distance,
                                 max_angle_diff, output_queue,
                                 limit=5, amount_of_rods=None):
