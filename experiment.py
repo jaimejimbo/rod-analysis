@@ -107,6 +107,8 @@ class Experiment(object):
         self._std_dev = None
         self._covered_area_prop = None
         self._image_ids_done = False
+        self._average_kappa = None
+        self._kappa_dev = None
 
     def __len__(self):
         """
@@ -1990,25 +1992,68 @@ class Experiment(object):
         dev = math.sqrt(std_dev_step2)
         return avg, dev
 
+    def _compute_average_kappas(self):
+        """
+        Computes average_kappa and kappa_dev.
+        """
+        if not self._average_kappa:
+            print "Computing covered area proportion..."
+            kappas = []
+            kappas_dev = []
+            processes = []
+            output_queue = mp.Queue()
+            for index in range(len(self)):
+                process = mp.Process(target=self._compute_average_kappas_process,
+                                     args=(index, output_queue))
+                processes.append(process)
+            num_processes = len(processes)
+            running, processes_left = methods.run_processes(processes)
+            finished = 0
+            previous_time = datetime.datetime.now()
+            counter = 0
+            time_left = None
+            times = []
+            results = []
+            print " "
+            while finished < num_processes:
+                counter += 1
+                finished += 1
+                previous_time = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
+                if not len(running):
+                    break
+                [avg, dev] = output_queue.get()
+                kappas.append(avg)
+                kappas_dev.append(dev)
+            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+            self._average_kappa = sum(kappas)*1.0/len(kappas)
+            self._kappa_dev = sum(kappas_dev)*1.0/len(kappas_dev)
+        
+    def _compute_average_kappas_process(self, index, output_queue):
+        """
+        Process
+        """
+        state = self[index]
+        avg = state.average_kappa
+        dev = state.kappa_dev
+        output_queue.put([avg, dev])
+        
+
     @property
     def average_kappa(self):
         """
             Returns average kappa of all states.
         """
-        kappas = []
-        for state in self:
-            kappas.append(state.average_kappa)
-        return float(sum(kappas))/len(kappas)
+        self._compute_average_kappas()
+        return self._average_kappa
 
     @property
     def average_kappa_dev(self):
         """
             Returns average kappa deviation of all states.
         """
-        devs = []
-        for state in self:
-            devs.append(state.kappa_dev)
-        return float(sum(devs))/len(devs)
+        self._compute_average_kappas()
+        return self._kappa_dev
 
     def plot_rods(self, index):
         """
