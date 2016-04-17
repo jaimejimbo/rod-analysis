@@ -109,6 +109,11 @@ class Experiment(object):
         self._image_ids_done = False
         self._average_kappa = None
         self._kappa_dev = None
+        self._average_rad = None
+        self._average_rod_length = None
+        self._average_rod_width = None
+        self._number_of_rods = None
+        self._number_of_rods_dev = None
 
     def __len__(self):
         """
@@ -122,36 +127,6 @@ class Experiment(object):
         """
         for state in self._states:
             yield methods.decompress(state, level=settings.medium_comp_level)
-
-    @property
-    def average_system_rad(self):
-        """
-            It returns average system rad
-        """
-        rads = []
-        for state in self:
-            rads.append(state.radius)
-        return float(sum(rads))/len(rads)
-
-    @property
-    def average_rod_length(self):
-        """
-            It returns average rod length.
-        """
-        lengths = []
-        for state in self:
-            lengths.append(state.average_rod_length)
-        return float(sum(lengths))/len(lengths)
-
-    @property
-    def average_rod_width(self):
-        """
-            It returns average rod width.
-        """
-        widths = []
-        for state in self:
-            widths.append(state.average_rod_width)
-        return float(sum(widths))/len(widths)
 
     def __getitem__(self, state_num):
         """
@@ -1966,32 +1941,22 @@ class Experiment(object):
         prop = state.covered_area_proportion()
         output_queue.put([index, prop])
 
-    @property
-    def average_number_of_rods(self):
+    def _compute_averages(self):
         """
-            Returns average number of rods of all states.
-        """
-        number_of_rods = []
-        for state in self:
-            number_of_rods.append(state.number_of_rods)
-        avg = sum(number_of_rods)/float(len(number_of_rods))
-        std_dev_step1 = [(value-avg)**2 for value in number_of_rods]
-        std_dev_step2 = float(sum(std_dev_step1))/(len(std_dev_step1)-1)
-        dev = math.sqrt(std_dev_step2)
-        return avg, dev
-
-    def _compute_average_kappas(self):
-        """
-        Computes average_kappa and kappa_dev.
+        Computes experiment averages.
         """
         if not self._average_kappa:
-            print "Computing covered area proportion..."
+            print "Computing experiment averages..."
             kappas = []
             kappas_dev = []
+            avg_rads = []
+            avg_rod_lengths = []
+            avg_rod_widths = []
+            number_of_rods_ = []
             processes = []
             output_queue = mp.Queue()
             for index in range(len(self)):
-                process = mp.Process(target=self._compute_average_kappas_process,
+                process = mp.Process(target=self._compute_averages_process,
                                      args=(index, output_queue))
                 processes.append(process)
             num_processes = len(processes)
@@ -2008,9 +1973,15 @@ class Experiment(object):
                 finished += 1
                 previous_time = methods.print_progress(finished, num_processes,
                                     counter, times, time_left, previous_time)
-                [avg, dev] = output_queue.get()
-                kappas.append(avg)
-                kappas_dev.append(dev)
+                [avg_kappa, kappa_dev, avg_rad,
+                 avg_rod_length, avg_rod_width,
+                 number_of_rods] = output_queue.get()
+                kappas.append(avg_kappa)
+                kappas_dev.append(kappa_dev)
+                avg_rads.append(avg_rad)
+                avg_rod_lengths.append(avg_rod_length)
+                avg_rod_widths.append(avg_rod_width)
+                number_of_rods_.append(number_of_rods)
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
@@ -2018,23 +1989,42 @@ class Experiment(object):
             print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
             self._average_kappa = sum(kappas)*1.0/len(kappas)
             self._kappa_dev = sum(kappas_dev)*1.0/len(kappas_dev)
+            self._average_rad = sum(avg_rads)*1.0/len(avg_rads)
+            self._average_rod_length = sum(avg_rod_lengths)*1.0/len(avg_rod_lengths)
+            self._average_rod_width = sum(avg_rod_widths)*1.0/len(avg_rod_widths)
+            self._number_of_rods = sum(number_of_rods_)/float(len(number_of_rods_))
+            std_dev_step1 = [(value-self._number_of_rods)**2 for value in number_of_rods_]
+            std_dev_step2 = float(sum(std_dev_step1))/(len(std_dev_step1)-1)
+            deviation = math.sqrt(std_dev_step2)
+            self._number_of_rods_dev = deviation
         
-    def _compute_average_kappas_process(self, index, output_queue):
+    def _compute_averages_process(self, index, output_queue):
         """
         Process
         """
         state = self.get(index)
-        avg = state.average_kappa
-        dev = state.kappa_dev
-        output_queue.put([avg, dev])
-        
+        avg_kappa = state.average_kappa
+        kappa_dev = state.kappa_dev
+        rad = state.radius
+        rod_length = state.average_rod_length
+        rod_width = state.average_rod_width
+        number_of_rods = state.number_of_rods
+        output_queue.put([avg_kappa, kappa_dev, rad, rod_length, rod_width, number_of_rods])
+
+    @property
+    def average_number_of_rods(self):
+        """
+            Returns average number of rods of all states.
+        """
+        self._compute_averages()
+        return self._number_of_rods, self._number_of_rods_dev
 
     @property
     def average_kappa(self):
         """
             Returns average kappa of all states.
         """
-        self._compute_average_kappas()
+        self._compute_averages()
         return self._average_kappa
 
     @property
@@ -2042,8 +2032,33 @@ class Experiment(object):
         """
             Returns average kappa deviation of all states.
         """
-        self._compute_average_kappas()
+        self._compute_averages()
         return self._kappa_dev
+
+
+    @property
+    def average_system_rad(self):
+        """
+            It returns average system rad
+        """
+        self._compute_averages()
+        return self._average_rad
+
+    @property
+    def average_rod_length(self):
+        """
+            It returns average rod length.
+        """
+        self._compute_averages()
+        return self._average_rod_length
+
+    @property
+    def average_rod_width(self):
+        """
+            It returns average rod width.
+        """
+        self._compute_averages()
+        return self._average_rod_width
 
     def plot_rods(self, index):
         """

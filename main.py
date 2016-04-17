@@ -203,7 +203,7 @@ if True:
         
 
         if run_props:
-            print "Computing area proportions..."
+            print "Computing experiment statistics..."
             log = open("props.log",'w')
             prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop(15, 12, 3)
             prop_short, prop_short_dev, shorts, shorts_dev, rad2, msg2 = run_prop(7.8, 6, 2)
