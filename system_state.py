@@ -6,14 +6,12 @@ import multiprocessing as mp
 import methods, rod, settings
 import cPickle, zlib, datetime, time
 
-
 CURSOR_UP_ONE = '\x1b[1A'
 ERASE_LINE = '\x1b[2K'
 if settings.special_chars:
     WHITE_BLOCK = u'\u25A0'
 else:
     WHITE_BLOCK = 'X'
-
 
 class SystemState(object):
     """
@@ -31,10 +29,27 @@ class SystemState(object):
         self._rods = queue.Queue(rods)
         self._is_subsystem = False
         self._kappas = kappas
-        self._real_kappa = None
+        self._real_kappas = real_kappas
         self._allowed_kappa_error = allowed_kappa_error
         self._radius_correction_ratio = radius_correction_ratio
         self._id_string = id_string
+        self._gaussian_exp = {}
+        try:
+            self._radius = zone_coords[2]
+            self._center_x = zone_coords[0]
+            self._center_y = zone_coords[1]
+            self._zone_coords = zone_coords
+            self._fixed_center_radius = True
+        except IndexError:
+            self._fixed_center_radius = False
+        self._reset()
+
+    def _reset(self):
+        """
+            Called when system is changed..
+        reset all important values, so they must be
+        computed again.
+        """
         self._actual_subdivision = []
         self._subdivision_centers = []
         self._density_matrix = []
@@ -62,20 +77,12 @@ class SystemState(object):
         self._coef = 1
         self._fixed = True
         self._area = None
-        self._real_kappas = real_kappas
-        self._gaussian_exp = {}
-        try:
-            self._radius = zone_coords[2]
-            self._center_x = zone_coords[0]
-            self._center_y = zone_coords[1]
-            self._zone_coords = zone_coords
-            self._fixed_center_radius = True
-        except IndexError:
-            self._fixed_center_radius = False
-            self._zone_cords = zone_coords
+        if not self._fixed_center_radius:
+            self._zone_cords = None
             self._center_x = None
             self._center_y = None
             self._radius = None
+
 
     def set_kappa(self, value):
         """
@@ -97,7 +104,7 @@ class SystemState(object):
             Changes divisions value.
         """
         self._divisions = value
-        self.reset()
+        self._reset()
 
     @property
     def coef(self):
@@ -111,7 +118,7 @@ class SystemState(object):
         """
             Changes coef value.
         """
-        self.reset()
+        self._reset()
         self._coef = value
 
     @property
@@ -246,44 +253,6 @@ class SystemState(object):
         self._rods.delete(methods.compress(rod_,
                                 level=methods.settings.low_comp_level))
 
-    def reset(self):
-        """
-            Called when system is changed..
-        reset all important values, so they must be
-        computed again.
-        """
-        self._area = None
-        self._actual_subdivision = []
-        self._density_matrix = []
-        self._correlation_g2 = None
-        self._correlation_g4 = None
-        self._correlation_g2_subsystems = []
-        self._correlation_g4_subsystems = []
-        self._average_kappa = None
-        self._kappa_dev = None
-        self._average_angle = None
-        self._angle_matrix = []
-        self._density = None
-        self._relative_g2 = None
-        self._subdivision_centers = []
-        self._relative_g4 = None
-        self._closest_rod_matrix = []
-        self._relative_g2_subsystems = []
-        self._relative_g4_subsystems = []
-        self._direction_matrix = []
-        self._clusters = []
-        self._cluster_checked_dict = {}
-        self._rods_dict = {}
-        self._clusters_max_distance = None
-        self._clusters_max_angle_diff = None
-        self._divisions = None
-        self._subdivision_centers = []
-        if not self._fixed_center_radius:
-            self._radius = None
-            self._center_x = None
-            self._center_y = None
-            self._zone_coords = []
-
     def fill_dicts(self):
         """
             Fill dictionaries.
@@ -361,7 +330,6 @@ class SystemState(object):
         self.compute_center_and_radius()
         return self._zone_coords
 
-
     def check_rods(self):
         """
             Check if rods are correct.
@@ -377,8 +345,7 @@ class SystemState(object):
                                 level=methods.settings.low_comp_level))
         self._rods = queue.Queue(valid_rods)
         final_length = len(self._rods)
-        self.reset()
-
+        self._reset()
 
     def divide_in_circles(self, divisions):
         """
@@ -386,7 +353,7 @@ class SystemState(object):
             "divisions" rows and columns.
         """
         if divisions != self._divisions:
-            self.reset()
+            self._reset()
             self._divisions = divisions
             # Defining zone and distance between points.
             subsystem_rad = float(self.radius)/divisions
@@ -431,7 +398,6 @@ class SystemState(object):
                 print len(output), len(output[index_y])
                 raise IndexError
         return output
-
 
     def _subsystems(self, possible_x_values, possible_y_values, rad, diff,
                             divisions):
@@ -506,13 +472,12 @@ class SystemState(object):
         x_val, y_val, z_val = self.plottable_density_matrix(divisions=divisions)
         output_queue.put([index, x_val, y_val, z_val])
 
-
     def _create_subgroups_matrix(self, divisions):
         """
             Put subsystems in a matrix form.
         """
         if divisions != self._divisions:
-            self.reset()
+            self._reset()
         if not len(self._subdivision_centers):
             self.divide_in_circles(divisions)
             act_sub = self._actual_subdivision
@@ -619,7 +584,6 @@ class SystemState(object):
         """
         x_val, y_val, z_val = self.correlation_g2_plot_matrix(divisions)
         output_queue.put([index, x_val, y_val, z_val])
-
 
     def correlation_g4_plot_matrix(self, divisions):
         """
@@ -1092,10 +1056,6 @@ class SystemState(object):
 
 
 
-
-
-
-
 class SubsystemState(SystemState):
     """
         Group of rods. Used to put all rods that are in a zone or
@@ -1178,9 +1138,8 @@ class SubsystemState(SystemState):
                 self._gaussian_exp[rod_.identifier] = proportion
                 rods.append(methods.compress(rod_,
                                 level=methods.settings.low_comp_level))
-        self.reset()
+        self._reset()
         self._rods = queue.Queue(rods)
-
 
 
 def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
@@ -1244,9 +1203,6 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
     print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
     return names, states
 
-
-
-
 def create_rods_process(kappas, real_kappas, allowed_kappa_error,
                         radius_correction_ratio, names,
                         index, states_queue):
@@ -1255,8 +1211,8 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
     """
     name = names[index]
     file_ = open(name, 'r')
-    
-    state = SystemState(kappas=kappas, real_kappas=real_kappas, 
+
+    state = SystemState(kappas=kappas, real_kappas=real_kappas,
                         allowed_kappa_error=allowed_kappa_error,
                         radius_correction_ratio=radius_correction_ratio,
                         id_string=name, zone_coords=settings.zone_coords)
