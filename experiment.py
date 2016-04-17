@@ -337,7 +337,7 @@ class Experiment(object):
         time_left = None
         times = []
         print " "
-        while finished < num_processes:
+        while finished_ < num_processes:
             counter += 1
             finished_ += 1
             previous_time = methods.print_progress(finished_, num_processes,
