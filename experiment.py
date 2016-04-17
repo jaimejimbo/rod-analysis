@@ -1928,6 +1928,7 @@ class Experiment(object):
         """
             Returns average covered area proportion.
         """
+        print "Computing covered area proportion..."
         props = []
         processes = []
         output_queue = mp.Queue()
@@ -1939,8 +1940,17 @@ class Experiment(object):
         num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
         finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        results = []
+        print " "
         while finished < num_processes:
+            counter += 1
             finished += 1
+            previous_time = methods.print_progress(finished, num_processes,
+                                counter, times, time_left, previous_time)
             if not len(running):
                 break
             output = output_queue.get()
@@ -1951,6 +1961,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
+        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
         avg = float(sum(props))/len(props)
         std_dev_step1 = [(value-avg)**2 for value in props]
         std_dev_step2 = float(sum(std_dev_step1))/(len(std_dev_step1)-1)
@@ -1964,7 +1975,6 @@ class Experiment(object):
         state = self.get(index)
         prop = state.covered_area_proportion()
         output_queue.put([index, prop])
-        return
 
     @property
     def average_number_of_rods(self):
