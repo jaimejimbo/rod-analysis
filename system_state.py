@@ -275,8 +275,7 @@ class SystemState(object):
                 msg = "center_and_radius can't be computed before adding rods"
                 raise ValueError(msg)
             try:
-                not_defined = not len(self._zone_coords)
-                not_defined = not_defined and not self._fixed_center_radius
+                not_defined = not (len(self._zone_coords) or self._fixed_center_radius)
             except AttributeError:
                 not_defined = True
             if not_defined and not self._is_subsystem:
@@ -891,100 +890,6 @@ class SystemState(object):
             dictionary[pair[0].identifier] = pair[1]
         closest_rod_matrix = None
         return dictionary
-
-    @property
-    def relative_g2(self):
-        """
-            sqrt(<cos(2*angle)>^2+<sin(2*angle)>^2)
-        Now angle is the relative between rods.
-        N^2
-        """
-        if self._relative_g2 is None:
-            if not self.number_of_rods:
-                self._relative_g2 = 0
-            else:
-                cos_av = 0
-                for rod1 in self:
-                    for rod2 in self:
-                        if rod1 != rod2:
-                            distance = methods.distance_between_points(rod1.center, rod2.center)
-                            correction = methods.gaussian(distance)
-                            angle = math.radians(rod1.angle_between_rods(rod2))
-                            cos_av += abs(math.cos(angle))/self.number_of_rods*(self.number_of_rods-1)
-                self._relative_g2 = cos_av
-        return self._relative_g2
-
-    @property
-    def relative_g4(self):
-        """
-            sqrt(<cos(4*angle)>^2+<sin(4*angle)>^2)
-        Now angle is the relative between rods.
-        N^2
-        """
-        if self._relative_g4 is None:
-            if not self.number_of_rods:
-                self._relative_g4 = 0
-            else:
-                cos_av = 0
-                for rod1 in self:
-                    for rod2 in self:
-                        if rod1 != rod2:
-                            angle = math.radians(rod1.angle_between_rods(rod2))
-                            cos_av += abs(2*math.cos(angle))/self.number_of_rods*(self.number_of_rods-1)
-                cos_av /= self.number_of_rods*(self.number_of_rods-1)
-                self._relative_g4 = cos_av
-        return self._relative_g4
-
-    def _compute_relative_g2_g4_mat(self, divisions):
-        """
-            Computes correlation_g2 and correlation_g4 matrices for subgroups.
-        """
-        len_correlation_g2 = len(self._relative_g2_subsystems)
-        len_correlation_g4 = len(self._relative_g4_subsystems)
-        if  len_correlation_g2 == 0 or len_correlation_g4 == 0:
-            subsystems = self._actual_subdivision
-            for subsystem_ in subsystems:
-                subsystem = methods.decompress(subsystem_, level=settings.low_comp_level)
-                correlation_g2 = [subsystem.center[0], subsystem.center[1]]
-                correlation_g4 = [subsystem.center[0], subsystem.center[1]]
-                correlation_g2.append(subsystem.relative_g2)
-                correlation_g4.append(subsystem.relative_g4)
-                self._relative_g2_subsystems.append(correlation_g2)
-                self._relative_g4_subsystems.append(correlation_g4)
-            subsystems = None
-
-    def relative_g2_plot_matrix(self, divisions):
-        """
-            Returns values for plotting correlation_g2 matrix.
-        """
-        self._compute_relative_g2_g4_mat(divisions)
-        x_values = []
-        y_values = []
-        z_values = []
-        subsystems = self._relative_g2_subsystems
-        for subsystem_ in subsystems:
-            subsystem = methods.decompress(subsystem_, level=settings.low_comp_level)
-            x_values.append(subsystem[0])
-            y_values.append(subsystem[1])
-            z_values.append(subsystem[2])
-        subsystems = None
-        return x_values, y_values, z_values
-
-    def relative_g4_plot_matrix(self, divisions):
-        """
-            Returns values for plotting correlation_g2 matrix.
-        """
-        self._compute_relative_g2_g4_mat(divisions)
-        x_values = []
-        y_values = []
-        z_values = []
-        subsystems = self._relative_g4_subsystems
-        for subsystem_ in subsystems:
-            subsystem = methods.decompress(subsystem_, level=settings.low_comp_level)
-            x_values.append(subsystem[0])
-            y_values.append(subsystem[1])
-            z_values.append(subsystem[2])
-        return x_values, y_values, z_values
 
     @property
     def average_angle_using_matrix(self):
