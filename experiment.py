@@ -2033,7 +2033,7 @@ class Experiment(object):
         """
         Process
         """
-        state = self[index]
+        state = self.get(index)
         avg = state.average_kappa
         dev = state.kappa_dev
         output_queue.put([avg, dev])
