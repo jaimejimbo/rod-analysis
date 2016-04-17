@@ -1295,8 +1295,6 @@ class Experiment(object):
         finished = 0
         while finished < num_processes:
             finished += 1
-            if not len(running):
-                break
             output = output_queue.get()
             index = output[0]
             array = output[1]
@@ -1399,8 +1397,6 @@ class Experiment(object):
         finished = 0
         while finished < num_processes:
             finished += 1
-            if not len(running):
-                break
             output = output_queue.get()
             index = output[0]
             vector_matrix = output[1]
@@ -1581,8 +1577,6 @@ class Experiment(object):
         finished = 0
         while finished < num_processes:
             finished += 1
-            if not len(running):
-                break
             output = output_queue.get()
             index = output[0]
             area = output[1]
@@ -1813,8 +1807,6 @@ class Experiment(object):
                 finished += 1
                 previous_time = methods.print_progress(finished, num_processes,
                                     counter, times, time_left, previous_time)
-                if not len(running):
-                    break
                 output = output_queue.get()
                 index = output[0]
                 burst = output[1]
@@ -1858,8 +1850,6 @@ class Experiment(object):
         finished = 0
         while finished < num_processes:
             finished += 1
-            if not len(running):
-                break
             output = output_queue.get()
             index = output[0]
             average_speed = output[1]
@@ -1953,8 +1943,6 @@ class Experiment(object):
             finished += 1
             previous_time = methods.print_progress(finished, num_processes,
                                 counter, times, time_left, previous_time)
-            if not len(running):
-                break
             output = output_queue.get()
             index = output[0]
             prop = output[1]
@@ -2020,8 +2008,6 @@ class Experiment(object):
                 finished += 1
                 previous_time = methods.print_progress(finished, num_processes,
                                     counter, times, time_left, previous_time)
-                if not len(running):
-                    break
                 [avg, dev] = output_queue.get()
                 kappas.append(avg)
                 kappas_dev.append(dev)
