@@ -2025,6 +2025,10 @@ class Experiment(object):
                 [avg, dev] = output_queue.get()
                 kappas.append(avg)
                 kappas_dev.append(dev)
+                if len(processes_left):
+                    new_process = processes_left.pop(0)
+                    time.sleep(settings.waiting_time)
+                    new_process.start()
             print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
             self._average_kappa = sum(kappas)*1.0/len(kappas)
             self._kappa_dev = sum(kappas_dev)*1.0/len(kappas_dev)
