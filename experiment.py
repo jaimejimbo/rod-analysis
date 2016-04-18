@@ -1149,37 +1149,38 @@ class Experiment(object):
         """
         Creates a dictionary with image ids referenced with indices.
         """
-        print "Creating dictionary dict[index] = image_id"
-        processes = []
-        self._image_ids_done = True
-        output_queue = mp.Queue()
-        self._image_id_by_index = {}
-        for index in range(len(self)):
-            process = mp.Process(target=self._get_image_ids_process, args=(index, output_queue))
-            processes.append(process)
-        num_processes = len(processes)
-        running, processes_left = methods.run_processes(processes)
-        finished = 0
-        previous_time = datetime.datetime.now()
-        counter = 0
-        time_left = None
-        times = []
-        print ""
-        while finished < num_processes:
-            counter += 1
-            finished += 1
-            previous_time = methods.print_progress(finished, num_processes, counter,
-                                        times, time_left, previous_time)
-            try:
-                [index, output] = output_queue.get()
-            except:
-                print finished, num_processes, len(processes_left), len(running), len(output_queue)
-                break
-            self._image_id_by_index[index] = output
-            if len(processes_left):
-                new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
-                new_process.start()
+        if not len(self._image_id_by_index):
+            print "Creating dictionary dict[index] = image_id"
+            processes = []
+            self._image_ids_done = True
+            output_queue = mp.Queue()
+            self._image_id_by_index = {}
+            for index in range(len(self)):
+                process = mp.Process(target=self._get_image_ids_process, args=(index, output_queue))
+                processes.append(process)
+            num_processes = len(processes)
+            running, processes_left = methods.run_processes(processes)
+            finished = 0
+            previous_time = datetime.datetime.now()
+            counter = 0
+            time_left = None
+            times = []
+            print ""
+            while finished < num_processes:
+                counter += 1
+                finished += 1
+                previous_time = methods.print_progress(finished, num_processes, counter,
+                                            times, time_left, previous_time)
+                try:
+                    [index, output] = output_queue.get()
+                except:
+                    print finished, num_processes, len(processes_left), len(running), len(output_queue)
+                    break
+                self._image_id_by_index[index] = output
+                if len(processes_left):
+                    new_process = processes_left.pop(0)
+                    time.sleep(settings.waiting_time)
+                    new_process.start()
 
     def _get_image_ids_process(self, index, output_queue):
         """

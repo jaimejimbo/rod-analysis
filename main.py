@@ -194,7 +194,7 @@ if True:
             # experiment_.set_coef(coef)
             msg = str(experiment_.average_kappa) + "\t|\t" + str(experiment_.average_kappa_dev)
             rad = experiment_.average_system_rad
-            print msg
+            #print msg
             length = experiment_.average_rod_length
             width = experiment_.average_rod_width
             cov_area, cov_area_dev = experiment_.average_covered_area_proportion
