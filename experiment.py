@@ -1496,7 +1496,7 @@ class Experiment(object):
         """
         Wrapper
         """
-        bursts_groups = self.bursts_groups
+        bursts_groups = copy.deepcopy(self.bursts_groups)
         end = False
         z_vals_avg = []
         index = 0
