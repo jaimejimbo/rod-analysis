@@ -30,8 +30,8 @@ for(img_num=4118; img_num<=4119; img_num++){
 	min[1]=0;
 	max[1]=255;
 	filter[1]="pass";
-	min[2]=0;
-	max[2]=250;
+	min[2]=220;
+	max[2]=254;
 	filter[2]="pass";
 	for (i=0;i<3;i++){
 	  selectWindow(""+i);

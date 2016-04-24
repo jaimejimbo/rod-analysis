@@ -2079,18 +2079,53 @@ class Experiment(object):
         plt.scatter(x_vals, y_vals, color='r')
         plt.show()
 
+
     def plot_number_of_rods_over_time(self):
         """
         Plot number of rods over time.
         """
-        times = [time for time in range(len(self))]
+        print "Creating graph... "
+        images = [image for image in range(len(self))]
         number_of_rods = []
-        for system in self:
-            number_of_rods.append(system.number_of_rods)
+        output_queue = mp.Queue()
+        processes = []
+        for index in range(len(self)):
+            process = mp.Process(target=self._plot_number_of_rods_process,
+                                 args=(index, output_queue))
+            processes.append(process)
+            number_of_rods.append(None)
+        num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
+        finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
+        while finished < num_processes:
+            counter += 1
+            finished += 1
+            previous_time = methods.print_progress(finished, num_processes,
+                                counter, times, time_left, previous_time)
+            [index, num_rods] = output_queue.get()
+            number_of_rods[index] = num_rods
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                #time.sleep(settings.waiting_time)
+                new_process.start()
+        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
         figure = plt.figure()
-        plt.plot(times, number_of_rods)
+        plt.plot(images, number_of_rods)
         name = "num_rods_time_K" + str(self.kappas) + ".png"
         plt.savefig(name)
+
+    def _plot_number_of_rods_process(self, index, output_queue):
+        """
+        Process
+        """
+        state = self.get(index)
+        num_rods = state.number_of_rods
+        output_queue.put([index, num_rods])
 
 
 

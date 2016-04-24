@@ -1128,9 +1128,10 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
             new_rod = rod.Rod(parameters, real_kappa=real_kappas)
             state.put_rod(new_rod)
         except ValueError:
-            print "line 1225"
-            print names[index]
-            print file_
+            pass
+            #print "line 1225"
+            #print names[index]
+            #print file_
     file_.close()
     file_ = None
     if not state:
