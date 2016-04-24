@@ -797,7 +797,7 @@ class SystemState(object):
         try:
             return float(sum(lengths))/len(lengths)
         except ZeroDivisionError:
-            print "No clusters detected."
+            print "No clusters detected."   
 
     def cluster_lengths(self, max_distance=None,
                             max_angle_diff=None, min_size=3):
@@ -1117,6 +1117,99 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
     name = names[index]
     file_ = open(name, 'r')
 
+    state = SystemState(kappas=kappas, real_kappas=real_kappas,
+                        allowed_kappa_error=allowed_kappa_error,
+                        radius_correction_ratio=radius_correction_ratio,
+                        id_string=name, zone_coords=settings.zone_coords)
+    data = methods.import_data(file_)
+    for dataline in data:
+        try:
+            parameters = tuple(dataline)
+            new_rod = rod.Rod(parameters, real_kappa=real_kappas)
+            state.put_rod(new_rod)
+        except ValueError:
+            pass
+            #print "line 1225"
+            #print names[index]
+            #print file_
+    file_.close()
+    file_ = None
+    if not state:
+        states_queue.put([index, None])
+        return
+    state.compute_center_and_radius()
+    state.check_rods()
+    state = methods.compress(state, level=settings.medium_comp_level)
+    states_queue.put([index, state])
+
+def create_rods_with_length(folder="./", length=10, real_length=10, length_error=.3,
+                radius_correction_ratio=0.1):
+    """
+    Create rods using rod length instead of kappa.
+    """
+    print "Importing data..."
+    names = methods.get_file_names(folder=folder)
+    num_of_files = len(names)
+    if not num_of_files:
+        print "No files to import."
+        raise ValueError
+    states = [None for dummy_ in range(num_of_files)]
+    processes = []
+    states_queue = mp.Queue()
+    for index in range(num_of_files):
+        process = mp.Process(target=create_rods_with_length_process,
+                            args=(length, real_length, length_error,
+                            radius_correction_ratio, names,
+                            index, states_queue))
+        processes.append(process)
+    num_processes = len(processes)
+    running, processes_left = methods.run_processes(processes)
+    finished_ = 0
+    previous_time = datetime.datetime.now()
+    counter = 0
+    time_left = None
+    times = []
+    print " "
+    empty_states = []
+    while finished_ < num_processes:
+        counter += 1
+        finished_ += 1
+        previous_time = methods.print_progress(finished_, num_processes,
+                                counter, times, time_left, previous_time)
+        [index, state] = states_queue.get()
+        if state is not None:
+            states[index] = state
+        else:
+            empty_states.append(index)
+        if len(processes_left):
+            new_process = processes_left.pop(0)
+            time.sleep(settings.waiting_time)
+            new_process.start()
+    for process in processes:
+        if process.is_alive():
+            process.terminate()
+    for empty_state in empty_states:
+        diff = 1
+        while True:
+            new_state = empty_state - diff
+            if states[new_state] is not None:
+                break
+            diff += 1
+        new_state = methods.decompress(states[new_state],
+                        level=methods.settings.medium_comp_level).clone
+        states[empty_state] = methods.compress(new_state,
+                                level=methods.settings.medium_comp_level)
+    print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+    return names, states
+
+def create_rods_with_length_process(length, real_length, length_error,
+                            radius_correction_ratio, names,
+                            index, states_queue):
+    """
+    Process of method.
+    """
+    name = names[index]
+    file_ = open(name, 'r')
     state = SystemState(kappas=kappas, real_kappas=real_kappas,
                         allowed_kappa_error=allowed_kappa_error,
                         radius_correction_ratio=radius_correction_ratio,
