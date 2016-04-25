@@ -185,6 +185,9 @@ if True:
             print "\n\n\n"
 
         def run_prop(kappa, real_kappa, error):
+            """
+                Gets proportions of long/shorts rods.
+            """
             msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
             names, rod_groups = system_state.create_rods(kappas=kappa, real_kappas=real_kappa,
                                                     allowed_kappa_error=error)
@@ -200,13 +203,30 @@ if True:
             cov_area, cov_area_dev = experiment_.average_covered_area_proportion
             num_rods, num_rods_dev = experiment_.average_number_of_rods
             return cov_area, cov_area_dev, int(num_rods), int(num_rods_dev), rad, msg
-        
+
+        def run_prop_length(length, length_error, real_kappa):
+            """
+                Gets proportions of long/shorts rods.
+            """
+            msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
+            names, rod_groups = system_state.create_rods_with_length(length=length, length_error=length_error,
+                                                    real_kappas=real_kappa)
+            experiment_ = experiment.Experiment(system_states_name_list=names, kappas=real_kappa,
+                                                system_states_list=rod_groups,
+                                                dates=dates, diff_t=5/3.0)
+            rad = experiment_.average_system_rad
+            length = experiment_.average_rod_length
+            width = experiment_.average_rod_width
+            cov_area, cov_area_dev = experiment_.average_covered_area_proportion
+            num_rods, num_rods_dev = experiment_.average_number_of_rods
+            return cov_area, cov_area_dev, int(num_rods), int(num_rods_dev), rad, msg
+            
 
         if run_props:
             print "Computing experiment statistics..."
             log = open("props.log",'w')
-            prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop(15, 12, 3)
-            prop_short, prop_short_dev, shorts, shorts_dev, rad2, msg2 = run_prop(7.8, 6, 2)
+            prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop_length(157, 10, 12)
+            prop_short, prop_short_dev, shorts, shorts_dev, rad2, msg2 = run_prop_length(80, 10, 6)
             print "kappa\t\t\tdeviation"
             print msg1
             print msg2

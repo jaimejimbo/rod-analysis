@@ -77,6 +77,7 @@ class SystemState(object):
         self._coef = 1
         self._fixed = True
         self._area = None
+        self._length, self._length_error = None, None
         if not self._fixed_center_radius:
             self._zone_cords = None
             self._center_x = None
@@ -345,6 +346,25 @@ class SystemState(object):
         self._rods = queue.Queue(valid_rods)
         final_length = len(self._rods)
         self._reset()
+
+    def check_rods_with_length(self, length, length_error):
+        """
+            Check if rods has requiered length and if it is in the circle.
+        """
+        self._length, self._length_error = length, length_error
+        valid_rods = []
+        initial_length = len(self._rods)
+        for rod_ in self:
+            valid = rod_.is_valid_rod_length(length,
+                        length_error, self._real_kappas,
+                        self.zone_coords)
+            if valid:
+                valid_rods.append(methods.compress(rod_,
+                                level=methods.settings.low_comp_level))
+        self._rods = queue.Queue(valid_rods)
+        final_length = len(self._rods)
+        self._reset()
+        
 
     def divide_in_circles(self, divisions):
         """
@@ -1129,9 +1149,6 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
             state.put_rod(new_rod)
         except ValueError:
             pass
-            #print "line 1225"
-            #print names[index]
-            #print file_
     file_.close()
     file_ = None
     if not state:
@@ -1142,7 +1159,7 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
     state = methods.compress(state, level=settings.medium_comp_level)
     states_queue.put([index, state])
 
-def create_rods_with_length(folder="./", length=10, real_length=10, length_error=.3,
+def create_rods_with_length(folder="./", length=10, length_error=.3, real_kappas=10,
                 radius_correction_ratio=0.1):
     """
     Create rods using rod length instead of kappa.
@@ -1158,7 +1175,7 @@ def create_rods_with_length(folder="./", length=10, real_length=10, length_error
     states_queue = mp.Queue()
     for index in range(num_of_files):
         process = mp.Process(target=create_rods_with_length_process,
-                            args=(length, real_length, length_error,
+                            args=(length, length_error, real_kappas,
                             radius_correction_ratio, names,
                             index, states_queue))
         processes.append(process)
@@ -1202,7 +1219,7 @@ def create_rods_with_length(folder="./", length=10, real_length=10, length_error
     print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
     return names, states
 
-def create_rods_with_length_process(length, real_length, length_error,
+def create_rods_with_length_process(length, length_error, real_kappa,
                             radius_correction_ratio, names,
                             index, states_queue):
     """
@@ -1210,28 +1227,25 @@ def create_rods_with_length_process(length, real_length, length_error,
     """
     name = names[index]
     file_ = open(name, 'r')
-    state = SystemState(kappas=kappas, real_kappas=real_kappas,
-                        allowed_kappa_error=allowed_kappa_error,
+    state = SystemState(kappas=real_kappa, real_kappas=real_kappa,
+                        allowed_kappa_error=0,
                         radius_correction_ratio=radius_correction_ratio,
                         id_string=name, zone_coords=settings.zone_coords)
     data = methods.import_data(file_)
     for dataline in data:
         try:
             parameters = tuple(dataline)
-            new_rod = rod.Rod(parameters, real_kappa=real_kappas)
+            new_rod = rod.Rod(parameters, real_kappa=real_kappa)
             state.put_rod(new_rod)
         except ValueError:
             pass
-            #print "line 1225"
-            #print names[index]
-            #print file_
     file_.close()
     file_ = None
     if not state:
         states_queue.put([index, None])
         return
     state.compute_center_and_radius()
-    state.check_rods()
+    state.check_rods_with_length(length, length_error)
     state = methods.compress(state, level=settings.medium_comp_level)
     states_queue.put([index, state])
 
