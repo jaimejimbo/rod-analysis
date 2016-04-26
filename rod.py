@@ -207,6 +207,7 @@ class Rod(object):
         if cond:
             self._kappa = real_kappa
             self._feret_min = self._feret/float(real_kappa)
+            self._feret = length
         return cond
 
     def vector_to_rod(self, rod):
