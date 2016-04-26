@@ -65,9 +65,9 @@ bugs:
 - 1CPU en "computing bursts groups"                     (DONE)
 - Uso de memoria excesiva (Temperaturas)                (WIP)
 - Parece que al calcular densidades usa 
-    1 CPU menos                                         (not started)
+    1 CPU menos                                         (DONE)
 - Creating dictionaries (burst groups)
-    usa solo 1 CPU                                      (regression)
+    usa solo 1 CPU                                      (DONE)
 
 
 usar kappa real                                         (DONE)
@@ -78,6 +78,6 @@ poner area de clusters en log
 mirar error reg lineal para 3 rafagas y 10 rafagas.     (DONE)
 
 Intentar agrupar código para facilitar lectura
-    y arreglo                                           (not started)
-    - salida progreso                                   (not started)
-    - llamadas multiproceso                             (not started)
+    y arreglo                                           (in progress)
+    - salida progreso                                   (in progress)
+    - llamadas multiproceso                             (in progress)
