@@ -29,7 +29,7 @@ run_imagej = 0
 run_props = 1
 run_graphs = 0
 run_check_dim = 0
-get_image_dates = 0
+get_image_dates = 1
 to_file = 1
 plot = 0
 only_density = 0
@@ -225,8 +225,8 @@ if True:
         if run_props:
             print "Computing experiment statistics..."
             log = open("props.log",'w')
-            prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop_length(157, 10, 12)
-            prop_short, prop_short_dev, shorts, shorts_dev, rad2, msg2 = run_prop_length(80, 10, 6)
+            prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop(15,12,4.9)#_length(157, 10, 12)
+            prop_short, prop_short_dev, shorts, shorts_dev, rad2, msg2 = run_prop(7.5,6,2.5)#_length(80, 10, 6)
             print "kappa\t\t\tdeviation"
             print msg1
             print msg2

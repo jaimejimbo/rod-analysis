@@ -4,7 +4,7 @@
 import math, queue, matrix, copy
 import multiprocessing as mp
 import methods, rod, settings
-import cPickle, zlib, datetime, time
+import cPickle, zlib, datetime, time, inspect
 
 CURSOR_UP_ONE = '\x1b[1A'
 ERASE_LINE = '\x1b[2K'
@@ -1073,7 +1073,7 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
     Create one rod for each rod_data and for each file
     returns [RodGroup1, RodGroup2, ...]
     """
-    print "Importing data..."
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Importing data"
     names = methods.get_file_names(folder=folder)
     num_of_files = len(names)
     if not num_of_files:
@@ -1164,7 +1164,7 @@ def create_rods_with_length(folder="./", length=10, length_error=.3, real_kappas
     """
     Create rods using rod length instead of kappa.
     """
-    print "Importing data..."
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Importing data"
     names = methods.get_file_names(folder=folder)
     num_of_files = len(names)
     if not num_of_files:

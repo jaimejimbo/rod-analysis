@@ -30,8 +30,8 @@ for(img_num=4118; img_num<=4119; img_num++){
 	min[1]=0;
 	max[1]=255;
 	filter[1]="pass";
-	min[2]=220;
-	max[2]=254;
+	min[2]=0;
+	max[2]=220;
 	filter[2]="pass";
 	for (i=0;i<3;i++){
 	  selectWindow(""+i);
@@ -49,7 +49,7 @@ for(img_num=4118; img_num<=4119; img_num++){
 	close();
 	selectWindow("Result of Result of 0");
 	rename(a);
-    makeOval(695, 110, 1650, 1650);
+    	makeOval(564, 111, 1614, 1623);
 	run("Make Inverse");
 	run("Fill", "slice");
 	run("Invert");

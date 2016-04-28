@@ -12,6 +12,7 @@ import scipy.optimize as optimization
 import datetime
 import settings, time
 from sys import getsizeof
+import inspect
 
 CURSOR_UP_ONE = '\x1b[1A'
 ERASE_LINE = '\x1b[2K'
@@ -19,6 +20,8 @@ if settings.special_chars:
     WHITE_BLOCK = u'\u25A0'
 else:
     WHITE_BLOCK = 'X'
+
+DEBUG = True
 
 class Experiment(object):
     """
@@ -74,6 +77,8 @@ class Experiment(object):
         """
             Resets all variables, so they must be computed again.
         """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "reset"
+        self._bursts_computed = False
         self._evolution_dictionaries = []
         self._conflictive_final_rods = []
         self._relative_dictionaries = []
@@ -153,7 +158,7 @@ class Experiment(object):
         """
             Changes coef for dividing in circles.
         """
-        print "Setting coefficient..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Setting coeficient"
         states = []
         output_queue = mp.Queue()
         processes = []
@@ -258,7 +263,7 @@ class Experiment(object):
         """
             Looks for rods that have only one possible predecessor.
         """
-        print "Filling dicts..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Filling dictionaries (rod evolution)"
         (self._max_distance, self._max_angle_diff,
         self._limit, self._amount_of_rods) = (max_distance, max_angle_diff,
                                                 limit, amount_of_rods)
@@ -635,7 +640,7 @@ class Experiment(object):
         self.compute_dictionaries(max_distance, max_angle_diff,
                                 limit, amount_of_rods)
         if not len(self._speeds):
-            print "Computing speeds..."
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing speeds"
             speeds_queue = mp.Queue()
             angular_speeds_queue = mp.Queue()
             processes = []
@@ -746,7 +751,7 @@ class Experiment(object):
                                subsys21_dic, subsys22_dic...])
                 subsys1_dic = {rod_id: (speed, angular_speed)}
         """
-        print "Computing local speeds..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing local speeds"
         output_queue = mp.Queue()
         processes = []
         for index in range(len(self._evolution_dictionaries)-1):
@@ -803,7 +808,7 @@ class Experiment(object):
         Compute local average speeds.
         """
         if not len(self._local_average_quadratic_speeds):
-            print "Computing local average speeds..."
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing local average speeds"
             output_queue = mp.Queue()
             processes = []
             local_speeds = self.local_speeds(max_distance, max_angle_diff,
@@ -930,7 +935,7 @@ class Experiment(object):
         Divides all systems in circles.
         """
         if divisions != self._divisions and not self._done:
-            print("Dividing systems in circles...")
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Dividing systems in circles"
             self._done = True
             self._divisions = divisions
             processes = []
@@ -979,7 +984,8 @@ class Experiment(object):
         """
         Creates a video of density's evolution.
         """
-        print("Creating densities video...")
+        
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating densities video"
         frames = len(self)
         function_name = 'plottable_density_matrix'
         kappas = self.kappas
@@ -1007,7 +1013,8 @@ class Experiment(object):
         """
         Creates a video of correlation g2 evolution.
         """
-        print("Creating g2 video...")
+        
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating g2 video"
         frames = len(self)
         function_name = 'correlation_g2_plot_matrix'
         kappas = self.kappas
@@ -1022,7 +1029,8 @@ class Experiment(object):
         """
         Creates a video of correlation g4 evolution.
         """
-        print("Creating g4 video...")
+        
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating g4 video"
         frames = len(self)
         function_name = 'correlation_g4_plot_matrix'
         kappas = self.kappas
@@ -1037,7 +1045,8 @@ class Experiment(object):
         """
         Creates a video of average angle evolution.
         """
-        print("Creating average angle video...")
+        
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating average angle video"
         frames = len(self)
         function_name = 'plottable_average_angle_matrix'
         kappas = methods.decompress(self._states[0], level=settings.medium_comp_level).kappas
@@ -1059,8 +1068,10 @@ class Experiment(object):
         """
         Generic animator
         """
-        print "Plotting..."
-        groups = copy.deepcopy(self.bursts_groups)
+        
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting"
+        groups = self.bursts_groups
+        groups = copy.deepcopy(groups)
         bursts_ = len(groups)
         x_val, y_val, z_vals_avg, z_max, z_min = self.get_z_vals(groups, bursts_, function_name, divisions)
         frames = len(z_vals_avg)
@@ -1099,7 +1110,7 @@ class Experiment(object):
         x_val = []
         y_val = []
         match2 = re.match(r'.*?g[2|4].*', function_name)
-        print "Getting values\n"
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Getting values\n"
         if match2:
             z_max = 1
             z_min = -1
@@ -1150,7 +1161,7 @@ class Experiment(object):
         Creates a dictionary with image ids referenced with indices.
         """
         if not len(self._image_id_by_index):
-            print "Creating dictionary dict[index] = image_id"
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating dictionary dict[index] = image_id"
             processes = []
             self._image_ids_done = True
             output_queue = mp.Queue()
@@ -1252,7 +1263,7 @@ class Experiment(object):
         """
             Creates a video of cluster length histogram.
         """
-        print "Creating cluster histogram animation..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating cluster histogram animation"
         kappa = self.kappas
         prop = self.average_covered_area_proportion[0]
         name = "cluster_hist_K"+str(int(kappa))+"prop"+str(round(100*prop,1))+"%.mp4"
@@ -1393,7 +1404,7 @@ class Experiment(object):
         """
         Creates a video of temperature evolution.
         """
-        print "Creating temperature video..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating temperature video"
         x_vals, y_vals, z_vals = self.plottable_local_average_quadratic_speeds(
                                         max_distance, max_angle_diff, limit,
                                         amount_of_rods, divisions)
@@ -1403,7 +1414,7 @@ class Experiment(object):
         end = False
         z_vals_avg = []
         number_of_bursts *= 5
-        print "Computing averages..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[0][3])+"]: " + "Computing averages"
         while not end:
             groups = []
             average = None
@@ -1610,7 +1621,7 @@ class Experiment(object):
             Returns coeficient of order param evolution.
         """
         if self._popt is None or self._std_dev is None:
-            print "Computing order evolution parameter..."
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing order evolution parameter"
             cluster_areas = self.cluster_areas(number_of_bursts=number_of_bursts,
                                        max_distance=max_distance,
                                        max_angle_diff=max_angle_diff,
@@ -1633,8 +1644,12 @@ class Experiment(object):
                     log_times.pop()
             top = 0
             bot = 0
-            x_m = float(sum(log_times))/len(log_times)
-            y_m = float(sum(log_areas))/len(log_areas)
+            try:
+                x_m = float(sum(log_times))/len(log_times)
+                y_m = float(sum(log_areas))/len(log_areas)
+            except ZeroDivisionError:
+                print "["+str(inspect.stack()[0][3])+"]: Not enough data"
+                return
             for index in range(len(log_areas)):
                 top += (log_times[index]-x_m)*(log_areas[index]-y_m)
                 bot += (log_times[index]-x_m)**2
@@ -1647,7 +1662,7 @@ class Experiment(object):
         """
             Plots cluster areas evolution.
         """
-        print "Computing cluster areas..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing cluster areas"
         areas = self.cluster_areas(number_of_bursts=number_of_bursts,
                                    max_distance=max_distance,
                                    max_angle_diff=max_angle_diff,
@@ -1755,8 +1770,9 @@ class Experiment(object):
         """
         Returns a list of groups of indices that are in a row.
         """
-        if not len(self._bursts_groups):
-            print "Obtaining bursts groups..."
+        if not self._bursts_computed:
+            self._bursts_computed = True
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "bursts_groups"
             groups = []
             group = []
             output_queue = mp.Queue()
@@ -1801,13 +1817,14 @@ class Experiment(object):
                     group = []
             self._bursts_groups = groups
             print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        assert len(self._bursts_groups), "Fail"
         return self._bursts_groups
 
     def plot_average_temperature(self, max_distance, max_angle_diff, limit):
         """
             Average temperature over time.
         """
-        print "Computing average temperature..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing average temperature"
 
         self._compute_speeds(max_distance, max_angle_diff,
                         limit, None)
@@ -1867,7 +1884,7 @@ class Experiment(object):
         """
             Computes maximum percentage of rods lost in analysis.
         """
-        print "Computing lost rods percentaje..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing lost rods percentaje"
         number_of_rods = []
         for index in range(len(self)):
             state = methods.decompress(self._states[index],
@@ -1896,7 +1913,7 @@ class Experiment(object):
         """
             Returns average covered area proportion.
         """
-        print "Computing covered area proportion..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing covered area proportion"
         props = []
         processes = []
         output_queue = mp.Queue()
@@ -1947,7 +1964,7 @@ class Experiment(object):
         Computes experiment averages.
         """
         if not self._average_kappa:
-            print "Computing experiment averages..."
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing experiment averages"
             kappas = []
             kappas_dev = []
             avg_rads = []
@@ -2084,7 +2101,7 @@ class Experiment(object):
         """
         Plot number of rods over time.
         """
-        print "Creating graph... "
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating graph... "
         images = [image for image in range(len(self))]
         number_of_rods = []
         output_queue = mp.Queue()
