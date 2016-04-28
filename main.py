@@ -294,6 +294,7 @@ if True:
         print "Assertion error({0})".format(error)
         os.system("pkill -f main.py")
 #print hp.heap()
-print "Type exit() to exit."
+#print "Type exit() to exit."
 def exit():
     os.system("pkill -f main.py")
+exit()

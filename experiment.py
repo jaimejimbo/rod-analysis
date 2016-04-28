@@ -1415,7 +1415,7 @@ class Experiment(object):
         end = False
         z_vals_avg = []
         number_of_bursts *= 5
-        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[0][3])+"]: " + "Computing averages"
+        print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + "Computing averages"
         while not end:
             groups = []
             average = None
