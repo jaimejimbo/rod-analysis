@@ -20,18 +20,18 @@ if not waiting_time:
 #None uses all cpus      
 cpus = None
 # 1 or True, 0 or False
-create_videos = 0
-clusters = 1
+create_videos = 1
+clusters = 0
 avg_temp = 1
 order_param_exp = 1
 lost_percentage = 1
 run_imagej = 0
 run_props = 1
-run_graphs = 0
+run_graphs = 1
 run_check_dim = 0
-get_image_dates = 1
+get_image_dates = 0
 to_file = 1
-plot = 0
+plot = 1
 only_density = 0
 # variables
 coef = 5
@@ -40,7 +40,8 @@ divisions = 50
 sigma_coef = None
 changing_props = 0
 discard_exceptions = 0
-special_chars = 0
+special_chars = 1
+ignore_temperature = 1
 import re
 
 
@@ -115,6 +116,8 @@ settings.write("special_chars = {0}".format(special_chars))
 settings.write("\n")
 settings.write("waiting_time_process = {0}".format(waiting_time_process))
 settings.write("\n")
+settings.write("ignore_temperature = {0}".format(ignore_temperature))
+settings.write("\n")
 rad = zone_coords[2]
 if sigma_coef:
     gaussian_sigma = sigma_coef*float(rad)/divisions
@@ -151,6 +154,7 @@ if True:
 
 
         def run_default(kappa, real_kappa, error):
+            print "\n\n\n"
             name = str(int(real_kappa)) + "_default.log"
             log = open(name, 'w')
             msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
@@ -182,7 +186,6 @@ if True:
             except NameError:
                 pass
             log.close()
-            print "\n\n\n"
 
         def run_prop(kappa, real_kappa, error):
             """

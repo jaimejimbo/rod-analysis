@@ -1223,6 +1223,7 @@ class Experiment(object):
         if not only_density:
             self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
             self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
+        if not settings.ignore_temperature:
             self.create_temperature_video(divisions, folder, fps, max_distance,
                                    max_angle_diff, limit, amount_of_rods,
                                    number_of_bursts)
@@ -1460,10 +1461,9 @@ class Experiment(object):
         except ValueError:
             print(z_vals_avg)
             raise ValueError
+        print z_val
         z_max = max(z_maxs)
         z_min = min(z_mins)
-        z_maxs = None
-        z_mins = None
         units = "Temperature [pixels^2/seg^2]"
         rad = self.radius
         if settings.plot:
