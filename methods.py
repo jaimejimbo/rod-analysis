@@ -9,6 +9,7 @@ import settings
 import numpy
 from matplotlib import animation
 import datetime
+import inspect
 
 
 CURSOR_UP_ONE = '\x1b[1A'
@@ -851,13 +852,14 @@ def print_progress(done, total, counter, times, time_left, previous_time):
     """
     Print progress of stack of tasks.
     """
+    msg = "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]: "
     left = total-done
     now = datetime.datetime.now()
     seconds_passed = (now-previous_time).total_seconds()
     times.append(seconds_passed)
     progress = int(done*100/total)
     previous_time = now
-    string = "Progress: %d%%  " % (progress)
+    string = msg + " %d%%  " % (progress)
     perten = progress/10.0
     string += "["
     prog = int(perten*4)

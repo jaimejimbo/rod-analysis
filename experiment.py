@@ -808,6 +808,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
+        print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
 
     def _compute_local_speeds_process(self, index, output_queue, divisions):
         """
@@ -1263,7 +1264,7 @@ class Experiment(object):
         Creates a video per property of the system that shows evolution.
         """
         self.divide_systems_in_circles(divisions)
-        #self.create_density_video(divisions, folder, fps, number_of_bursts)
+        self.create_density_video(divisions, folder, fps, number_of_bursts)
         if not only_density:
             self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
             self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
@@ -1453,8 +1454,6 @@ class Experiment(object):
                                         amount_of_rods, divisions)
         x_vals = x_vals[0]
         y_vals = y_vals[0]
-        if not z_vals[0][0]:
-            print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + "Null value here (line 1417)"
         bursts_groups = copy.deepcopy(self.bursts_groups)
         end = False
         z_vals_avg = []
@@ -1504,7 +1503,6 @@ class Experiment(object):
         except ValueError:
             print(z_vals_avg)
             raise ValueError
-        print z_val
         z_max = max(z_maxs)
         z_min = min(z_mins)
         units = "Temperature [pixels^2/seg^2]"
