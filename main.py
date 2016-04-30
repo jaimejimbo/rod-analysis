@@ -26,13 +26,13 @@ avg_temp = 1
 order_param_exp = 1
 lost_percentage = 1
 run_imagej = 0
-run_props = 1
+run_props = 0
 run_graphs = 1
 run_check_dim = 0
 get_image_dates = 0
 to_file = 1
-plot = 1
-only_density = 0
+plot = 0
+only_density = 1
 # variables
 coef = 5
 divisions = 50
@@ -41,7 +41,7 @@ sigma_coef = None
 changing_props = 0
 discard_exceptions = 0
 special_chars = 1
-ignore_temperature = 1
+ignore_temperature = 0
 import re
 
 
@@ -167,10 +167,10 @@ if True:
                                                 dates=dates, diff_t=5/3.0)
             experiment_.set_coef(coef)
             if create_videos:
-                experiment_.create_videos(divisions=divisions, fps=10, max_distance=10, max_angle_diff=5,
+                experiment_.create_videos(divisions=divisions, fps=10, max_distance=300, max_angle_diff=60,
                                          number_of_bursts=1, only_density=only_density)
             if clusters:
-                experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=100,
+                experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=150,
                         max_angle_diff=10, min_size=20)
             if avg_temp:
                 experiment_.plot_average_temperature(100, 10, 5)
@@ -186,6 +186,44 @@ if True:
             except NameError:
                 pass
             log.close()
+
+        def run_default_length(length, length_error, real_kappa):
+            """
+                Gets proportions of long/shorts rods.
+            """
+            print "\n\n\n"
+            name = str(int(real_kappa)) + "_default.log"
+            log = open(name, 'w')
+            msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
+            print msg
+            names, rod_groups = system_state.create_rods_with_length(length=length, length_error=length_error,
+                                                    real_kappas=real_kappa)
+            experiment_ = experiment.Experiment(system_states_name_list=names, kappas=real_kappa,
+                                                system_states_list=rod_groups,
+                                                dates=dates, diff_t=5/3.0)
+            log.write(str(msg+"\n"))
+            experiment_.set_coef(coef)
+            if create_videos:
+                experiment_.create_videos(divisions=divisions, fps=10, max_distance=150, max_angle_diff=45,
+                                         number_of_bursts=1, only_density=only_density)
+            if clusters:
+                experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=150,
+                        max_angle_diff=10, min_size=20)
+            if avg_temp:
+                experiment_.plot_average_temperature(100, 10, 5)
+            if lost_percentage:
+                percentage, std_dev = experiment_.lost_rods_percentage
+                msg = "Rods lost: "+str(percentage)+"%\t"+" Standard deviation: "+str(std_dev)
+                log.write(str(msg+"\n"))
+            try:
+                names = None
+                experiment_ = None
+                rod_groups = None
+                gc.collect()
+            except NameError:
+                pass
+            log.close()
+
 
         def run_prop(kappa, real_kappa, error):
             """
@@ -217,6 +255,7 @@ if True:
             experiment_ = experiment.Experiment(system_states_name_list=names, kappas=real_kappa,
                                                 system_states_list=rod_groups,
                                                 dates=dates, diff_t=5/3.0)
+            msg = str(experiment_.average_kappa) + "\t|\t" + str(experiment_.average_kappa_dev)
             rad = experiment_.average_system_rad
             length = experiment_.average_rod_length
             width = experiment_.average_rod_width
@@ -228,8 +267,8 @@ if True:
         if run_props:
             print "Computing experiment statistics..."
             log = open("props.log",'w')
-            prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop(15,12,4.9)#_length(157, 10, 12)
-            prop_short, prop_short_dev, shorts, shorts_dev, rad2, msg2 = run_prop(7.5,6,2.5)#_length(80, 10, 6)
+            prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop_length(160, 30, 12)
+            prop_short, prop_short_dev, shorts, shorts_dev, rad2, msg2 = run_prop_length(80, 30, 6)
             print "kappa\t\t\tdeviation"
             print msg1
             print msg2
@@ -274,8 +313,8 @@ if True:
                 except:
                     pass
             else:
-                run_default(15, 12, 3)
-                run_default(7.8, 6, 2)
+                run_default_length(160, 30, 12)
+                run_default_length(80, 30, 6)
 
         if run_check_dim:
             names, rod_groups = system_state.create_rods(kappas=10, real_kappas=12,
