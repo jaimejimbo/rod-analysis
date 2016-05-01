@@ -21,18 +21,18 @@ if not waiting_time:
 cpus = None
 # 1 or True, 0 or False
 create_videos = 1
-clusters = 0
+clusters = 1
 avg_temp = 1
 order_param_exp = 1
 lost_percentage = 1
 run_imagej = 0
-run_props = 1
+run_props = 0
 run_graphs = 1
 run_check_dim = 1
 get_image_dates = 0
 to_file = 1
 plot = 1
-only_density = 1
+only_density = 0
 # variables
 coef = 5
 divisions = 50

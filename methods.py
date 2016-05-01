@@ -298,7 +298,7 @@ def import_files(folder="./", regular_expression=r'rods_[0-9]*'):
     if not re.match(r"\.?/?[a-zA-Z0-9\.]/*", folder):
         print "You must provide a folder like: \"./\" or \"/home/user/\""
         raise ValueError
-    names = binary_order(get_file_names(folder=folder, regular_expression=regular_expression), get_number_from_string)
+    names = get_file_names(folder=folder, regular_expression=regular_expression)
     files = []
     for name in names:
         files.append(open(name, 'r'))
@@ -316,6 +316,7 @@ def get_file_names(folder="./", regular_expression=r'^rods_[0-9]{4}$'):
     for _file in files:
         if reg1.match(_file) and not extension.match(_file):
             names.append(_file)
+    names = binary_order(names, get_number_from_string)
     return names
 
 
@@ -458,22 +459,19 @@ def are_in_burst(date1, date2):
     """
     date1 = date1.split(' ')
     date2 = date2.split(' ')
-    if date1[0] != date2[0]:
-        return False
+    days1 = date1[0].split(':')
+    days2 = date1[0].split(':')
+    days1 = [int(date_part) for date_part in days1]
+    days2 = [int(date_part) for date_part in days2]
     time1 = date1[1].split(':')
     time2 = date2[1].split(':')
     time1 = [int(time_part) for time_part in time1]
     time2 = [int(time_part) for time_part in time2]
-    for index in [2, 1]:
-        part = time1[index]
-        if int(part) >= 59:
-            part = part-60
-            time1[index-1] += 1
-    if time2[2] != time1[2]+1 and time2[2] != time1[2]:
-        return False
-    if time2[1] != time1[1]:
-        return False
-    return True
+    time1 = days1[0]*365*30*24*3600+days1[1]*30*24*3600+days1[2]*24*3600+time1[0]*3600+time1[1]*60+time1[2]
+    time2 = days2[0]*365*30*24*3600+days2[1]*30*24*3600+days2[2]*24*3600+time2[0]*3600+time2[1]*60+time2[2]
+    if abs(time1-time2)<=2:
+        return True
+    return False
 
 def are_in_burst_queue(index, date1, date2, output_queue):
     """

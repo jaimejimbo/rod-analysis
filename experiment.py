@@ -1146,6 +1146,7 @@ class Experiment(object):
         """
             Get z values for function.
         """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Getting function values: [" + str(function_name) +"]"
         finished_ = 0
         previous_time = datetime.datetime.now()
         times = []
@@ -1156,7 +1157,7 @@ class Experiment(object):
         x_val = []
         y_val = []
         match2 = re.match(r'.*?g[2|4].*', function_name)
-        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Getting values\n"
+        print ""
         if match2:
             z_max = 1
             z_min = -1
@@ -1207,7 +1208,7 @@ class Experiment(object):
         Creates a dictionary with image ids referenced with indices.
         """
         if not len(self._image_id_by_index):
-            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating dictionary dict[index] = image_id"
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating dictionary image index -> image id"
             processes = []
             self._image_ids_done = True
             output_queue = mp.Queue()
@@ -1228,11 +1229,7 @@ class Experiment(object):
                 finished += 1
                 previous_time = methods.print_progress(finished, num_processes, counter,
                                             times, time_left, previous_time)
-                try:
-                    [index, output] = output_queue.get()
-                except:
-                    print finished, num_processes, len(processes_left), len(running), len(output_queue)
-                    break
+                [index, output] = output_queue.get()
                 self._image_id_by_index[index] = output
                 if len(processes_left):
                     new_process = processes_left.pop(0)
