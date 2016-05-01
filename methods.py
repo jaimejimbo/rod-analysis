@@ -763,6 +763,7 @@ def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, 
     """
     Creates animation from data.
     """
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating animation"
     fig = plt.figure()
     frames = len(z_vals_avg)
     def animate(dummy_frame):
@@ -779,6 +780,7 @@ def import_and_plot(source, radius=None, level=9):
     """
     Imports data from a compressed file and plots it.
     """
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting " + str(source)
     src = open(source, 'r')
     name = source[:-5]
     values = decompress(src.read(), level=level)
@@ -805,7 +807,7 @@ def plot_all_data_files(radius=None, level=9, folder="./"):
     """
     Import all .data files and plot its data.
     """
-    print "Ploting saved data..."
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting data from files"
     regular_expression = re.compile(r'.*\.data')
     dens_re = re.compile(r'.*dens.*\.data')
     g2_g4_re = re.compile(r'.*g[2-4].*\.data')
@@ -828,6 +830,7 @@ def reset_dates_ids(folder="./", start=0):
     """
     When imgs goes over id limit, they restart in start(default 0), so 
     """
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Resetting dates ids"
     src = folder + "dates.txt"
     input_ = open(src, 'r')
     output_file = folder + "dates_reordered.txt"

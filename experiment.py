@@ -593,8 +593,8 @@ class Experiment(object):
         while finished < num_processes:
             counter += 1
             finished += 1
-            #previous_time = methods.print_progress(finished, num_processes,
-            #                        counter, times, time_left, previous_time)
+            previous_time = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
             evol_dict = output[1]
@@ -1176,7 +1176,7 @@ class Experiment(object):
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
             finished__ = 0
-            z_vals = []
+            results = []
             while finished__ < num_processes:
                 finished__ += 1
                 output = output_queue.get()
@@ -1238,6 +1238,7 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
                     new_process.start()
+            print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
 
     def _get_image_ids_process(self, index, output_queue):
         """
@@ -1285,24 +1286,58 @@ class Experiment(object):
                                         max_angle_diff, limit,
                                         amount_of_rods, divisions)
         x_vals, y_vals, z_vals = [], [], []
+        output_queue = mp.Queue()
+        processes = []
+        output_queue = mp.Queue()
         for index in range(len(self)-1):
-            state = self.get(index)
-            subgroups = state.subgroups_matrix(divisions)
-            x_val, y_val, z_val = [], [], []
-            for row_index in range(len(subgroups)):
-                for col_index in range(len(subgroups[row_index])):
-                    subgroup = subgroups[row_index][col_index]
-                    quad_speed = methods.decompress(quad_speeds[index], level=settings.medium_comp_level)[row_index][col_index]
-                    center = subgroup.center
-                    center_x = center[0]
-                    center_y = center[1]
-                    x_val.append(center_x)
-                    y_val.append(center_y)
-                    z_val.append(quad_speed)
-            x_vals.append(x_val)
-            y_vals.append(y_val)
-            z_vals.append(z_val)
+            process = mp.Process(target=self.plottable_local_average_quadratic_speeds_process,
+                                 args=(index, quad_speeds, max_distance, max_angle_diff, limit,
+                                        amount_of_rods, divisions, output_queue))
+            processes.append(process)
+        num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
+        finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
+        while finished < num_processes:
+            counter += 1
+            finished += 1
+            previous_time = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
+            output = output_queue.get()
+            x_vals.append(output[0])
+            y_vals.append(output[1])
+            z_vals.append(output[2])
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
+                new_process.start()
+        print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
         return x_vals, y_vals, z_vals
+
+    def plottable_local_average_quadratic_speeds_process(self, index, quad_speeds,
+                                        max_distance, max_angle_diff, limit,
+                                        amount_of_rods, divisions, output_queue):
+        """
+        Process
+        """
+        state = self.get(index)
+        subgroups = state.subgroups_matrix(divisions)
+        x_val, y_val, z_val = [], [], []
+        for row_index in range(len(subgroups)):
+            for col_index in range(len(subgroups[row_index])):
+                subgroup = subgroups[row_index][col_index]
+                quad_speed = methods.decompress(quad_speeds[index], level=settings.medium_comp_level)[row_index][col_index]
+                center = subgroup.center
+                center_x = center[0]
+                center_y = center[1]
+                x_val.append(center_x)
+                y_val.append(center_y)
+                z_val.append(quad_speed)
+        output_queue.put([x_val, y_val, z_val])
 
     def create_cluster_histogram_video(self, max_distance=None,
                                     max_angle_diff=None, fps=15):
@@ -1323,11 +1358,19 @@ class Experiment(object):
                                        output_queue))
             processes.append(process)
             arrays.append(None)
-        running, processes_left = methods.run_processes(processes)
         num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
         finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
         while finished < num_processes:
+            counter += 1
             finished += 1
+            previous_time = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
             array = output[1]
@@ -1424,11 +1467,19 @@ class Experiment(object):
                                      speeds_, output_queue))
             processes.append(process)
             vector_matrices.append(None)
-        running, processes_left = methods.run_processes(processes)
         num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
         finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
         while finished < num_processes:
+            counter += 1
             finished += 1
+            previous_time = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
             vector_matrix = output[1]
@@ -1603,6 +1654,7 @@ class Experiment(object):
         running, processes_left = methods.run_processes(processes)
         num_processes = len(processes)
         finished = 0
+        print ""
         while finished < num_processes:
             finished += 1
             output = output_queue.get()
@@ -1685,10 +1737,10 @@ class Experiment(object):
             top = 0
             bot = 0
             try:
-                x_m = float(sum(log_times))/len(log_times)
+                x_m = float(sum(log_times))/len(log_times)  
                 y_m = float(sum(log_areas))/len(log_areas)
             except ZeroDivisionError:
-                print "["+str(inspect.stack()[0][3])+"]: Not enough data"
+                print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: Not enough data"
                 return
             for index in range(len(log_areas)):
                 top += (log_times[index]-x_m)*(log_areas[index]-y_m)
@@ -1834,6 +1886,7 @@ class Experiment(object):
             time_left = None
             times = []
             results = []
+            print ""
             while finished < num_processes:
                 counter += 1
                 finished += 1
@@ -1881,8 +1934,17 @@ class Experiment(object):
         num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
         finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        results = []
+        print ""
         while finished < num_processes:
+            counter += 1
             finished += 1
+            previous_time = methods.print_progress(finished, num_processes,
+                                counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
             average_speed = output[1]
@@ -1891,6 +1953,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
+        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
         if not settings.to_file:
             plt.figure()
             plt.plot(indices, average_speeds)
