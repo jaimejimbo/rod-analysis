@@ -684,8 +684,6 @@ class Experiment(object):
                                         counter, times, time_left, previous_time)
                 index_speeds, speeds = speeds_queue.get()
                 index_angular_speeds, angular_speeds = angular_speeds_queue.get()
-                if not speeds:
-                    print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + "Null value line 670\n"
                 self._speeds[index_speeds] = speeds
                 self._angular_speeds[index_angular_speeds] = angular_speeds
                 if len(processes_left):
@@ -709,8 +707,6 @@ class Experiment(object):
                 error &= (not bool(values[0]))
                 speed = float(values[0])/self._diff_t
                 angular_speed = float(values[1])/self._diff_t
-                if not speed:
-                     print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: NULL speed"
                 speeds[initial_rod_id] = speed
                 angular_speeds[initial_rod_id] = angular_speed
             except TypeError:
