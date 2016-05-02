@@ -313,8 +313,8 @@ if True:
                 except:
                     pass
             else:
-                run_default_length(160, 30, 12)
-                run_default_length(80, 30, 6)
+                run_default(15, 12, 3)#run_default_length(160, 30, 12)
+                run_default(7.8, 6, 2)#run_default_length(80, 30, 6)
 
         if run_check_dim:
             names, rod_groups = system_state.create_rods(kappas=10, real_kappas=12,

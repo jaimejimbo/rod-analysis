@@ -42,6 +42,7 @@ class SystemState(object):
             self._fixed_center_radius = True
         except IndexError:
             self._fixed_center_radius = False
+        self._coef = None
         self._reset()
 
     def _reset(self):
@@ -74,7 +75,6 @@ class SystemState(object):
         self._clusters_max_distance = None
         self._clusters_max_angle_diff = None
         self._divisions = None
-        self._coef = 1
         self._fixed = True
         self._area = None
         self._length, self._length_error = None, None
@@ -375,11 +375,10 @@ class SystemState(object):
             self._reset()
             self._divisions = divisions
             # Defining zone and distance between points.
-            subsystem_rad = float(self.radius)/divisions
             start_x = self.center[0]-self.radius
             end_x = self.center[0]+self.radius
             start_y = self.center[1]-self.radius
-            diff = abs(start_x-end_x)/divisions
+            diff = abs(start_x-end_x)/float(divisions)
             # Getting all possible x and y values.
             possible_x_values = [start_x + (times)*diff
                                  for times in range(divisions)]
@@ -389,7 +388,6 @@ class SystemState(object):
             subsystems = self._subsystems(possible_x_values, possible_y_values,
                                           rad, diff, divisions)
             self._actual_subdivision = subsystems
-        return
 
     def _separate_rods_by_coords(self, rods_list, possible_x_values,
                                     possible_y_values, rad, diff,
@@ -445,8 +443,7 @@ class SystemState(object):
                 subsystems.append(methods.compress(subsystem, level=settings.low_comp_level))
         return subsystems
 
-    def _compute_density_matrix(self, divisions, normalized=False,
-                               divided_by_area=False):
+    def _compute_density_matrix(self, divisions, normalized=False):
         """
             Computes density matrix of the system.
         """
@@ -456,8 +453,6 @@ class SystemState(object):
         for subsystem_ in subdivision:
             subsystem = methods.decompress(subsystem_, level=settings.low_comp_level)
             dens = subsystem.density
-            if divided_by_area:
-                dens /= subsystem.area
             if normalized:
                 dens /= self.number_of_rods
             subdensity = [subsystem.center[0], subsystem.center[1]]
@@ -472,7 +467,7 @@ class SystemState(object):
             Returns 3 arrays: one for x, another for y and the last for values.
         """
         if len(self._density_matrix) == 0:
-            self._compute_density_matrix(divisions=divisions)
+            self._compute_density_matrix(divisions)
         x_values = []
         y_values = []
         z_values = []
@@ -1040,7 +1035,7 @@ class SubsystemState(SystemState):
         if not density or not self.area:
             self._density = 0
         else:
-            self._density = float(density)/self.area
+            self._density = min([float(density)/self.area, 1])
 
     @property
     def density(self):
