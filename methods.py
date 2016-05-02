@@ -8,10 +8,20 @@ import cPickle, zlib
 import settings
 import numpy
 from matplotlib import animation
+import datetime
+import inspect
+
+
+CURSOR_UP_ONE = '\x1b[1A'
+ERASE_LINE = '\x1b[2K'
+if settings.special_chars:
+    WHITE_BLOCK = u'\u25A0'
+else:
+    WHITE_BLOCK = 'X'
 
 using_cl = False
 _writer = animation.writers['ffmpeg']
-writer = _writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+writer = _writer(fps=15, metadata=dict(artist='Jaime Perez Aparicio'), bitrate=1800)
 WRITER = writer
 try:
     import pyopencl as cl
@@ -83,7 +93,6 @@ def effective_area(small_rad, small_position_rad, main_rad):
     # circle completely included in the bigger one
     if small_rad+small_position_rad <= main_rad:
         return math.pi*small_rad**2
-    # assert small_position_rad <= main_rad, "Circle is outside the bigger one"
     min_dist = compute_min_dist(small_rad, small_position_rad, main_rad)
     if min_dist >= small_rad:
         return math.pi*small_rad**2
@@ -307,7 +316,8 @@ def get_file_names(folder="./", regular_expression=r'^rods_[0-9]{4}$'):
     for _file in files:
         if reg1.match(_file) and not extension.match(_file):
             names.append(_file)
-    return binary_order(names, get_number_from_string)
+    names = binary_order(names, get_number_from_string)
+    return names
 
 
 
@@ -449,22 +459,19 @@ def are_in_burst(date1, date2):
     """
     date1 = date1.split(' ')
     date2 = date2.split(' ')
-    if date1[0] != date2[0]:
-        return False
+    days1 = date1[0].split(':')
+    days2 = date1[0].split(':')
+    days1 = [int(date_part) for date_part in days1]
+    days2 = [int(date_part) for date_part in days2]
     time1 = date1[1].split(':')
     time2 = date2[1].split(':')
     time1 = [int(time_part) for time_part in time1]
     time2 = [int(time_part) for time_part in time2]
-    for index in [2, 1]:
-        part = time1[index]
-        if int(part) >= 59:
-            part = part-60
-            time1[index-1] += 1
-    if time2[2] != time1[2]+1 and time2[2] != time1[2]:
-        return False
-    if time2[1] != time1[1]:
-        return False
-    return True
+    time1 = days1[0]*365*30*24*3600+days1[1]*30*24*3600+days1[2]*24*3600+time1[0]*3600+time1[1]*60+time1[2]
+    time2 = days2[0]*365*30*24*3600+days2[1]*30*24*3600+days2[2]*24*3600+time2[0]*3600+time2[1]*60+time2[2]
+    if abs(time1-time2)<=2:
+        return True
+    return False
 
 def are_in_burst_queue(index, date1, date2, output_queue):
     """
@@ -649,6 +656,15 @@ def gaussian(distance, sigma=settings.sigma):
     value = math.exp((-distance**2)/(2.0*sigma**2))
     return norm*value
 
+def norm_gaussian(distance, rad, sigma=settings.sigma):
+    """
+    Returns gaussian prob for distance (normalized to circle).
+    """
+    if not sigma:
+        return 1
+    norm = math.erf(rad/(math.sqrt(2)*sigma))
+    return gaussian(distance, sigma=sigma)*1.0/norm
+
 def compute_distances(array1, array2):
     """
     Wrapper
@@ -713,7 +729,7 @@ def needed_rods(wanted_long_prop, wanted_area_prop, area, long_area, short_area,
     return needed_longs, needed_shorts
 
 import matplotlib.pyplot as plt
-        
+
 def animate_scatter(x_val, y_val, z_vals,
                         divisions, name, z_max, z_min, units, radius):
     """
@@ -733,7 +749,6 @@ def animate_scatter(x_val, y_val, z_vals,
     y_max = max(y_val)+rad*1.1
     plt.xlim((x_min, x_max))
     plt.ylim((y_min, y_max))
-    #plt.suptitle(name)
     plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
                 vmin=z_min, vmax=z_max)
     plt.gca().invert_yaxis()
@@ -746,6 +761,7 @@ def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, 
     """
     Creates animation from data.
     """
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating animation"
     fig = plt.figure()
     frames = len(z_vals_avg)
     def animate(dummy_frame):
@@ -762,10 +778,16 @@ def import_and_plot(source, radius=None, level=9):
     """
     Imports data from a compressed file and plots it.
     """
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting " + str(source)
     src = open(source, 'r')
-    [x_val, y_val, z_vals_avg, divisions, z_max, z_min, units] = decompress(src.read(),level=level)
+    name = source[:-5]
+    values = decompress(src.read(), level=level)
+    x_val, y_val, z_vals_avg = values[0], values[1], values[2]
+    divisions = values[3]
+    z_max, z_min = values[4], values[5]
+    units = values[6]
     src.close()
-    create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, source)
+    create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name)
 
 
 def needed_rods(wanted_long_prop, wanted_area_prop, area, long_area, short_area, longs, shorts):
@@ -777,4 +799,84 @@ def needed_rods(wanted_long_prop, wanted_area_prop, area, long_area, short_area,
     needed_longs = int(wanted_long_prop*wanted_area_prop*area/long_rod_area)
     needed_shorts = int(needed_longs*long_rod_area*(1-wanted_long_prop)/(wanted_long_prop*short_rod_area))
     return needed_longs, needed_shorts
+
+
+def plot_all_data_files(radius=None, level=9, folder="./"):
+    """
+    Import all .data files and plot its data.
+    """
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting data from files"
+    regular_expression = re.compile(r'.*\.data')
+    dens_re = re.compile(r'.*dens.*\.data')
+    g2_g4_re = re.compile(r'.*g[2-4].*\.data')
+    temp_re = re.compile(r'.*temp.*\.data')
+    cluster_re = re.compile(r'.*cluster.*\.data')
+    files = get_file_names(folder=folder, regular_expression=regular_expression)
+    for file_ in files:
+        if dens_re.match(file_):
+            print "Ploting "+file_
+            import_and_plot(file_)
+        elif g2_g4_re.match(file_):
+            print "Ploting "+file_
+            import_and_plot(file_)
+        else:
+            print "Ignoring "+file_+". Method not implemented yet."
+
+
+
+def reset_dates_ids(folder="./", start=0):
+    """
+    When imgs goes over id limit, they restart in start(default 0), so 
+    """
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Resetting dates ids"
+    src = folder + "dates.txt"
+    input_ = open(src, 'r')
+    output_file = folder + "dates_reordered.txt"
+    output_ = open(output_file, 'w')
+    id_ = start
+    for line in input_:
+        date = line.split("\t")[1]
+        line = ""
+        if id_<10:
+            line += "000"
+        elif id_<100:
+            line += "00"
+        elif id_<1000:
+            line += "0"
+        line += str(id_) + "\t" + str(date)
+        output_.write(line)
+        id_ += 1
+    output_.close()
+    input_.close()
+
+def print_progress(done, total, counter, times, time_left, previous_time):
+    """
+    Print progress of stack of tasks.
+    """
+    msg = "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]: "
+    left = total-done
+    now = datetime.datetime.now()
+    seconds_passed = (now-previous_time).total_seconds()
+    times.append(seconds_passed)
+    progress = int(done*100/total)
+    previous_time = now
+    string = msg + " %d%%  " % (progress)
+    perten = progress/10.0
+    string += "["
+    prog = int(perten*4)
+    string += WHITE_BLOCK*prog
+    string += " "*(40-prog)
+    string += "]"
+    if counter >= 3:
+        counter = 0
+        avg_time = sum(times)*1.0/len(times)
+        time_left = int(left*avg_time/60)
+    if not time_left is None:
+        if time_left:
+            string += "    " + str(time_left) + " minutes"
+        else:
+            string += "    " + str(int(left*avg_time)) + " seconds"
+    print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+    print string
+    return previous_time
 

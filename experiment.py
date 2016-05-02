@@ -12,10 +12,16 @@ import scipy.optimize as optimization
 import datetime
 import settings, time
 from sys import getsizeof
-
+import inspect
 
 CURSOR_UP_ONE = '\x1b[1A'
 ERASE_LINE = '\x1b[2K'
+if settings.special_chars:
+    WHITE_BLOCK = u'\u25A0'
+else:
+    WHITE_BLOCK = 'X'
+
+DEBUG = True
 
 class Experiment(object):
     """
@@ -62,8 +68,17 @@ class Experiment(object):
             msg = "Time evolution needs dates file.\n"
             msg = "To create one run export_image_dates().\n"
             raise ValueError(msg)
-
         self._diff_t = diff_t
+        self._dates = dates
+        self._kappas = kappas
+        self._reset()
+
+    def _reset(self):
+        """
+            Resets all variables, so they must be computed again.
+        """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "reset"
+        self._bursts_computed = False
         self._evolution_dictionaries = []
         self._conflictive_final_rods = []
         self._relative_dictionaries = []
@@ -84,7 +99,6 @@ class Experiment(object):
         self._image_id_by_index = {}
         self._densities_array = []
         self._quad_speeds_array = []
-        self._dates = dates
         self._speeds_matrices = []
         self._cluster_areas = []
         self._bursts_groups = []
@@ -94,11 +108,17 @@ class Experiment(object):
         self._indices = None
         self._done = False
         self._total_cluster_areas = None
-        self._kappas = kappas
         self._popt = None
         self._std_dev = None
-        #self._inversed = False
         self._covered_area_prop = None
+        self._image_ids_done = False
+        self._average_kappa = None
+        self._kappa_dev = None
+        self._average_rad = None
+        self._average_rod_length = None
+        self._average_rod_width = None
+        self._number_of_rods = None
+        self._number_of_rods_dev = None
 
     def __len__(self):
         """
@@ -112,39 +132,6 @@ class Experiment(object):
         """
         for state in self._states:
             yield methods.decompress(state, level=settings.medium_comp_level)
-
-
-    @property
-    def average_system_rad(self):
-        """
-            It returns average system rad
-        """
-        rads = []
-        for state in self:
-            rads.append(state.radius)
-        return float(sum(rads))/len(rads)
-
-    @property
-    def average_rod_length(self):
-        """
-            It returns average rod length.
-        """
-        lengths = []
-        for state in self:
-            lengths.append(state.average_rod_length)
-        return float(sum(lengths))/len(lengths)
-        
-
-    @property
-    def average_rod_width(self):
-        """
-            It returns average rod width.
-        """
-        widths = []
-        for state in self:
-            widths.append(state.average_rod_width)
-        return float(sum(widths))/len(widths)
-        
 
     def __getitem__(self, state_num):
         """
@@ -167,12 +154,11 @@ class Experiment(object):
         state = methods.decompress(state, level=settings.medium_comp_level)
         return state
 
-
     def set_coef(self, value):
         """
             Changes coef for dividing in circles.
         """
-        print "Setting coefficient..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Setting coeficient"
         states = []
         output_queue = mp.Queue()
         processes = []
@@ -189,38 +175,11 @@ class Experiment(object):
         time_left = None
         times = []
         print " "
-        while True:
+        while finished_ < num_processes:
             counter += 1
-            now = datetime.datetime.now()
-            seconds_passed = (now-previous_time).total_seconds()
-            times.append(seconds_passed)
-            progress = int(finished_*100/num_processes)
-            previous_time = now
-            string = "Progress: %d%%  " % (progress)
-            perten = progress/10.0
-            string += "["
-            prog = int(perten*4)
-            string += "#"*prog
-            string += "-"*(40-prog)
-            string += "]"
-            if counter >= 3:
-                counter = 0
-                avg_time = sum(times)*1.0/len(times)
-                time_left = int(len(processes_left)*avg_time/60)
-            if not time_left is None:
-                if time_left:
-                    string += "    " + str(time_left) + " minutes"
-                else:
-                    string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-            if not finished_ >= num_processes:
-                pass #string += "\r"
-            else:
-                string += "\n"
-            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
-            print(string)
-            #sys.stdout.write(string)
-            #sys.stdout.flush()
             finished_ += 1
+            previous_time = methods.print_progress(finished_, num_processes, counter,
+                                                   times, time_left, previous_time)
             output_row = output_queue.get()
             index = output_row[0]
             compressed_state = output_row[1]
@@ -229,13 +188,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-            if finished_ >= num_processes:
-                break
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
         print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
-        return
 
     def set_coef_process(self, index, output_queue, value):
         """
@@ -247,47 +200,12 @@ class Experiment(object):
                     level=methods.settings.medium_comp_level)
         output_queue.put([index, output])
 
-    def _reset(self):
-        """
-            Resets all variables, so they must be computed again.
-        """
-        self._evolution_dictionaries = []
-        self._conflictive_final_rods = []
-        self._relative_dictionaries = []
-        self._unjoined_initial_rods = []
-        self._unjoined_final_rods = []
-        self._speeds_vectors = []
-        self._final_rods = []
-        self._initial_rods = []
-        self._speeds = []
-        self._angular_speeds = []
-        self._max_distance = None
-        self._max_angle_diff = None
-        self._limit = None
-        self._amount_of_rods = None
-        self._local_speeds = []
-        self._local_average_quadratic_speeds = []
-        self._local_average_quadratic_angular_speeds = []
-        self._densities_array = []
-        self._quad_speeds_array = []
-        self._speeds_matrices = []
-        self._cluster_areas = []
-        self._divisions = None
-        self._min_density = None
-        self._popt = None
-        self._std_dev = None
-        self._max_density = None
-        self._indices = None
-        self._covered_area_prop = None
-        self._total_cluster_areas = None
-        self._image_id_by_index = {}
-
-
     def _create_dict_keys(self):
         """
             Create evolucion dictionaries keys.
         Each key is a rod's id.
         """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating dict keys"
         for dummy_index in range(len(self)):
             self._evolution_dictionaries.append(methods.compress({}, level=settings.medium_comp_level))
             self._relative_dictionaries.append(methods.compress({}, level=settings.medium_comp_level))
@@ -302,54 +220,56 @@ class Experiment(object):
             processes.append(process)
         num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
-        finished = 0
-        while True:
-            finished += 1
-            [index, evol_dict, rel_dict, final_rods] = output_queue.get()
+        finished_ = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
+        while finished_ < num_processes:
+            counter += 1
+            finished_ += 1
+            previous_time = methods.print_progress(finished_, num_processes,
+                                    counter, times, time_left, previous_time)
+            [index, evol_dict, rel_dict, initial_rods] = output_queue.get()
             self._evolution_dictionaries[index] = evol_dict
             self._relative_dictionaries[index] = rel_dict
-            if final_rods is None:
-                pass
-            else:
-                self._final_rods[index] = final_rods
+            self._initial_rods[index] = initial_rods
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-            if finished >= num_processes:
-                break
+        for index in range(len(self)-1):
+            self._final_rods[index] = self._initial_rods[index+1]
+        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+
 
     def _create_dicts_keys_process(self, index, output_queue):
         """
         Process
         """
-        state = methods.decompress(self._states[index],
-                                level=methods.settings.medium_comp_level)
+        state = self.get(index)
         if not state:
             msg = "State is not defined."
             raise TypeError(msg)
         evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
         relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
+        initial_rods = set([])
         for rod_ in state:
-            self._initial_rods[index] |= set([rod_.identifier])
+            initial_rods |= set([rod_.identifier])
             rod_id = rod_.identifier
             evol_dict[rod_id] = set([])
             relative_dict[rod_id] = {}
         evol_dict = methods.compress(evol_dict, level=settings.medium_comp_level)
         rel_dict = methods.compress(relative_dict, level=settings.medium_comp_level)
-        try:
-            final_rods = self._initial_rods[index+1].copy()#methods.compress(self._initial_rods[index+1].copy(), level=settings.medium_comp_level)
-        except:
-            final_rods = None
-        output_queue.put([index, evol_dict, rel_dict, final_rods])
-
+        output_queue.put([index, evol_dict, rel_dict, initial_rods])
 
     def _fill_dicts(self, max_distance, max_angle_diff,
-                    limit=5, amount_of_rods=None):
+                    limit=20, amount_of_rods=None):
         """
             Looks for rods that have only one possible predecessor.
         """
-        print "Filling dicts..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Filling dictionaries (rod evolution)"
         (self._max_distance, self._max_angle_diff,
         self._limit, self._amount_of_rods) = (max_distance, max_angle_diff,
                                                 limit, amount_of_rods)
@@ -367,38 +287,11 @@ class Experiment(object):
         time_left = None
         times = []
         print " "
-        while True:
+        while finished_ < num_processes:
             counter += 1
-            now = datetime.datetime.now()
-            seconds_passed = (now-previous_time).total_seconds()
-            times.append(seconds_passed)
-            progress = int(finished_*100/num_processes)
-            previous_time = now
-            string = "Progress: %d%%  " % (progress)
-            perten = progress/10.0
-            string += "["
-            prog = int(perten*4)
-            string += "#"*prog
-            string += "-"*(40-prog)
-            string += "]"
-            if counter >= 3:
-                counter = 0
-                avg_time = sum(times)*1.0/len(times)
-                time_left = int(len(processes_left)*avg_time/60)
-            if not time_left is None:
-                if time_left:
-                    string += "    " + str(time_left) + " minutes"
-                else:
-                    string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-            if not finished_ >= num_processes:
-                pass #string += "\r"
-            else:
-                string += "\n"
-            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
-            print(string)
-            #sys.stdout.write(string)
-            #sys.stdout.flush()
             finished_ += 1
+            previous_time = methods.print_progress(finished_, num_processes,
+                                    counter, times, time_left, previous_time)
             output_row = output_queue.get()
             index = output_row[0]
             self._evolution_dictionaries[index] = output_row[1]
@@ -407,64 +300,22 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-            if finished_ >= num_processes:
-                break
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
         print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
-
-
-    def _fill_dicts_process(self, index, max_distance, max_angle_diff,
-                            output_queue, amount_of_rods=None):
-        """
-            Allows to create a process and use all cores.
-        """
-        initial_state = methods.decompress(self._states[index], level=settings.medium_comp_level)
-        final_state = methods.decompress(self._states[index+1], level=settings.medium_comp_level)
-        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
-        relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
-        for initial_rod in initial_state:
-            initial_id = initial_rod.identifier
-            if not amount_of_rods:
-                available_final_rods = final_state._get_rods_range(0,
-                                        final_state.number_of_rods)
-            else:
-                start_id = initial_id-amount_of_rods/2
-                end_id = initial_id+amount_of_rods/2
-                available_final_rods = final_state._get_rods_range(start_id,
-                                                                    end_id)
-            for final_rod in available_final_rods:
-                final_id = final_rod.identifier
-                distance = initial_rod.distance_to_rod(final_rod)
-                angle = initial_rod.angle_between_rods(final_rod)
-                angle = min([angle, 180-angle])
-                speed = float(distance)/self._diff_t
-                if distance <= max_distance and angle <= max_angle_diff:
-                    evol_dict[initial_id] |= set([final_id])
-                    relative_dict[initial_id][final_id] = (distance,
-                                                        angle, speed)
-        for initial_id in list(relative_dict.keys()):
-            if len(relative_dict[initial_id]) == 1:
-                relative_dict[initial_id] = list(relative_dict[initial_id].values())[0]
-        output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
-
 
     def _fill_dicts_process_limited(self, index, max_distance,
                                 max_angle_diff, output_queue,
-                                limit=5, amount_of_rods=None):
+                                limit=20, amount_of_rods=None):
         """
             Allows to create a process and use all cores.
         It limits possible final rods amount.
         """
-        initial_state = methods.decompress(self._states[index], level=settings.medium_comp_level)
-        final_state = methods.decompress(self._states[index+1], level=settings.medium_comp_level)
-        # XXX Esta saltando el assert XXX
+        initial_state = self.get(index)
+        final_state = self.get(index+1)
         assert type(initial_state) != type("string"), "initial state can't be a string."
         evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
         relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
+        error = True
         for initial_rod in initial_state:
-            #initial rod esta comprimido
             initial_id = initial_rod.identifier
             if not amount_of_rods:
                 available_final_rods = list(final_state)
@@ -477,35 +328,29 @@ class Experiment(object):
             initial_kappa = initial_rod.kappa
             kappa_error = initial_state.kappa_error/2
             for final_rod in available_final_rods:
-                if final_rod:
-                    final_kappa = final_rod.kappa
-                    cond1 = initial_kappa-kappa_error > final_kappa
-                    cond2 = initial_kappa+kappa_error < final_kappa
-                    if cond1 or cond2:
+                final_id = final_rod.identifier
+                distance = initial_rod.distance_to_rod(final_rod)
+                angle = initial_rod.angle_between_rods(final_rod)
+                angle = abs(min([angle, 180-angle]))
+                speed = float(distance)/self._diff_t
+                if distance <= max_distance and angle <= max_angle_diff:
+                    speeds.append([speed, final_id])
+                    speeds.sort()
+                    if len(speeds) > limit:
+                        dummy, rod_id = speeds.pop(-1)
+                    else:
+                        dummy, rod_id = speeds[-1]
+                        evol_dict[initial_id] |= set([final_id])
+                        relative_dict[initial_id][final_id] = (distance, angle)
                         continue
-                    final_id = final_rod.identifier
-                    distance = initial_rod.distance_to_rod(final_rod)
-                    angle = initial_rod.angle_between_rods(final_rod)
-                    angle = min([angle, 180-angle])
-                    speed = float(distance)/self._diff_t
-                    if distance <= max_distance and angle <= max_angle_diff:
-                        speeds.append([speed, final_id])
-                        speeds.sort()
-                        if len(speeds) > limit:
-                            dummy, rod_id = speeds.pop(-1)
-                        else:
-                            dummy, rod_id = speeds[-1]
-                            evol_dict[initial_id] |= set([final_id])
-                            relative_dict[initial_id][final_id] = (distance, angle)
-                            continue
-                        if rod_id != final_id:
-                            evol_dict[initial_id] |= set([final_id])
-                            relative_dict[initial_id][final_id] = (distance, angle)
-                            evol_dict[initial_id] -= set([rod_id])
-                            del relative_dict[initial_id][rod_id]
-        for initial_id in list(relative_dict.keys()):
+                    if rod_id != final_id:
+                        evol_dict[initial_id] |= set([final_id])
+                        relative_dict[initial_id][final_id] = (distance, angle)
+                        evol_dict[initial_id] -= set([rod_id])
+                        del relative_dict[initial_id][rod_id]
+        for initial_id in relative_dict.keys():
             if len(relative_dict[initial_id]) == 1:
-                relative_dict[initial_id] = list(relative_dict[initial_id].values())[0]
+                relative_dict[initial_id] = relative_dict[initial_id].values()[0]
         output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
 
     def _remove_final_rod(self, index, initial_rod_id, final_rod_id):
@@ -513,7 +358,7 @@ class Experiment(object):
             Remove final rod from the rest of rods' evolutions.
         """
         evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
-        system_end = self._states[index+1]
+        system_end = self.get(index+1)
         final_rod = system_end[list(final_rod_id)[0]]
         changed = False
         conflicts = set([])
@@ -532,15 +377,16 @@ class Experiment(object):
                 changed = True
         return changed, evol_dict, conflicts
 
-
     def _leave_only_closer(self, max_distance=50):
         """
             Leaves only the closer rod of possible evolutions.
         It will repeat final rods!
         """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Leaving closer rod"
         output_queue = mp.Queue()
         selected_queue = mp.Queue()
         processes = []
+        max_distance = 200
         for index in range(len(self._evolution_dictionaries)):
             processes.append(mp.Process(target=self._leave_only_closer_process,
                                         args=(index, output_queue,
@@ -548,8 +394,16 @@ class Experiment(object):
         num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
         finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
         while finished < num_processes:
+            counter += 1
             finished += 1
+            previous_time = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
             output = output_queue.get()
             selected = selected_queue.get()
             index = output[0]
@@ -563,10 +417,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
-
+        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
 
     def _leave_only_closer_process(self, index, output_queue,
                                 selected_queue, max_distance):
@@ -578,54 +429,46 @@ class Experiment(object):
         relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
         for initial_rod_id in list(evol_dict.keys()):
             final_rod_id, distance, angle_diff = self._closer_rod(index,
-                                          initial_rod_id, selected,
-                                            max_distance)
+                                          initial_rod_id, selected, evol_dict,
+                                          relative_dict, max_distance)
             evol_dict[initial_rod_id] = final_rod_id
-            relative_dict[initial_rod_id] = None
-            if distance:
-                relative_dict[initial_rod_id] = (distance, angle_diff)
+            relative_dict[initial_rod_id] = (distance, angle_diff)
             selected |= set([final_rod_id])
         output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
         selected_queue.put([index, selected])
 
-
-    def _closer_rod(self, index, initial_rod_id, selected, max_distance=50):
+    def _closer_rod(self, index, initial_rod_id, selected, evol_dict, relative_dict_, max_distance=50):
         """
             If there are multiple choices,
         this erase all but the closest.
         """
-        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
         final_rods = evol_dict[initial_rod_id]
-        relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)[initial_rod_id]
+        relative_dict = relative_dict_[initial_rod_id]
         min_distance = max_distance
-        final_rod = None
-        final_rod_list = list(final_rods)
-        if len(final_rod_list) == 1:
-            final_rod = final_rod_list[0]
-            distance = relative_dict[0]
+        final_rod = -1
+        final_rods_list = list(final_rods)
+        if len(final_rods_list) == 1:
+            final_rod = final_rods_list[0]
+            min_distance = relative_dict[0]
             angle_diff = relative_dict[1]
-        elif len(final_rod_list) == 0:
+        elif len(final_rods_list) == 0:
             return None, None, None
         else:
-            for final_rod_id in final_rods:
-                relative_values = relative_dict[final_rod_id]
-                distance = relative_values[0]
-                cond1 = (distance < min_distance)
-                cond2 = (final_rod_id not in selected)
-                if cond1 and cond2:
+            while True:
+                try:
+                    final_rod_id = final_rods_list.pop(0)
+                except IndexError:
+                    return None, None, None
+                if final_rod_id not in selected:
                     final_rod = final_rod_id
-                    min_distance = distance
-            if final_rod:
-                angle_diff = relative_dict[final_rod][1]
-            else:
-                final_rod = None
-                min_distance = None
-                angle_diff = None
+                    rel = relative_dict[final_rod_id]
+                    min_distance = rel[0]
+                    angle_diff = rel[1]
+                    break
         return final_rod, min_distance, angle_diff
 
-
     def compute_dictionaries(self, max_distance=100, max_angle_diff=90,
-                            limit=5, amount_of_rods=200):
+                            limit=10, amount_of_rods=None):
         """
                 List of evolution dictionaries.
         Each dictionary has the form:
@@ -641,31 +484,11 @@ class Experiment(object):
             self._reset()
         if not len(self._evolution_dictionaries):
             self._create_dict_keys()
-            # type(self._evolution_dictionaries)    #list
-            # type(self._evolution_dictionaries[0]) #str
-            # type(self._relative_dictionaries)     #list
-            # type(self._relative_dictionaries[0])  #str
             self._fill_dicts(max_distance, max_angle_diff, limit=limit,
                                 amount_of_rods=amount_of_rods)
-            # type(self._evolution_dictionaries)    #list
-            # type(self._evolution_dictionaries[0]) #str
-            # type(self._relative_dictionaries)     #list
-            # type(self._relative_dictionaries[0])  #str
             self._leave_only_closer(max_distance=max_distance)
-            # type(self._evolution_dictionaries)    #list
-            # type(self._evolution_dictionaries[0]) #str
-            # type(self._relative_dictionaries)     #list
-            # type(self._relative_dictionaries[0])  #str
             self._join_rods_left(max_distance=max_distance)
-            # type(self._evolution_dictionaries)    #list
-            # type(self._evolution_dictionaries[0]) #str
-            # type(self._relative_dictionaries)     #list
-            # type(self._relative_dictionaries[0])  #str
-            self._get_vectors()
-            # type(self._evolution_dictionaries)    #list
-            # type(self._evolution_dictionaries[0]) #str
-            # type(self._relative_dictionaries)     #list
-            # type(self._relative_dictionaries[0])  #str
+            #self._get_vectors()
 
     def vectors_dictionaries(self, max_distance=100, max_angle_diff=90,
                             limit=5, amount_of_rods=200):
@@ -709,9 +532,6 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
 
     def _get_vectors_process(self, index, output_queue):
         """
@@ -719,10 +539,8 @@ class Experiment(object):
         """
         speeds_vectors = {}
         evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
-        initial_state = methods.decompress(self._states[index],
-                                level=methods.settings.medium_comp_level)
-        final_state = methods.decompress(self._states[index+1],
-                                level=methods.settings.medium_comp_level)
+        initial_state = self.get(index)
+        final_state = self.get(index+1)
         keys = list(evol_dict.keys())
         if not keys[0]:
             return
@@ -735,7 +553,6 @@ class Experiment(object):
                     vector = initial_rod.vector_to_rod(final_rod)
                     speeds_vectors[initial_rod_id] = vector
         output_queue.put([index, methods.compress(speeds_vectors, level=settings.medium_comp_level)])
-
 
     def evolution_dictionaries(self, max_distance=100, max_angle_diff=90,
                                 limit=5, amount_of_rods=200):
@@ -753,12 +570,12 @@ class Experiment(object):
                                   amount_of_rods=amount_of_rods)
         return self._evolution_dictionaries
 
-
     def _join_rods_left(self, max_distance=50):
         """
         After using methods listed before, some rods are unjoined.
         This joins closest rods.
         """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Joining lonely rods"
         output_queue = mp.Queue()
         processes = []
         for index in range(len(self._evolution_dictionaries)-1):
@@ -766,10 +583,18 @@ class Experiment(object):
                                  args=(index, output_queue, max_distance))
             processes.append(process)
         num_processes = len(processes)
-        finished = 0
         running, processes_left = methods.run_processes(processes)
+        finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
         while finished < num_processes:
+            counter += 1
             finished += 1
+            previous_time = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
             evol_dict = output[1]
@@ -780,9 +605,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
+        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
 
 
     def _join_rods_left_process(self, index, output_queue, max_distance=50):
@@ -790,12 +613,15 @@ class Experiment(object):
         Process for method.
         """
         evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
-        initial_rods = set([])
         relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
+        initial_rods = set([])
+        for initial_rod_id in evol_dict.keys():
+            if evol_dict[initial_rod_id] is None:
+                initial_rods |= set([initial_rod_id])
         self._initial_rods[index] = initial_rods
         final_rods = self._final_rods[index]
-        initial_state = self._states[index]
-        final_state = self._states[index+1]
+        initial_state = self.get(index)
+        final_state = self.get(index+1)
         for final_rod_id in final_rods:
             min_distance = max_distance
             selected_rod = None
@@ -814,12 +640,11 @@ class Experiment(object):
                 angle_diff = final_rod.angle_between_rods(selected_rod)
                 angle_diff = min([angle_diff, 180-angle_diff])
             except AttributeError:
-                min_distance = -13731
-                angle_diff = -1
+                min_distance = None
+                angle_diff = None
             relative_dict[selected_rod_id] = (min_distance, angle_diff)
             initial_rods -= set([selected_rod_id])
         output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
-
 
     def _compute_speeds(self, max_distance, max_angle_diff, limit, amount_of_rods):
         """
@@ -833,7 +658,7 @@ class Experiment(object):
         self.compute_dictionaries(max_distance, max_angle_diff,
                                 limit, amount_of_rods)
         if not len(self._speeds):
-            print "Computing speeds..."
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing speeds"
             speeds_queue = mp.Queue()
             angular_speeds_queue = mp.Queue()
             processes = []
@@ -852,37 +677,11 @@ class Experiment(object):
             time_left = None
             times = []
             print " "
-            while True:
+            while finished < num_processes:
                 counter += 1
-                now = datetime.datetime.now()
-                seconds_passed = (now-previous_time).total_seconds()
-                times.append(seconds_passed)
-                progress = int(finished*100/num_processes)
-                previous_time = now
-                string = "\rProgress: %d%%  " % (progress)
-                perten = progress/10.0
-                string += "["
-                string += "#"*int(perten*4)
-                string += "-"*int((10-perten)*4)
-                string += "]"
-                if counter >= 3:
-                    counter = 0
-                    avg_time = sum(times)*1.0/len(times)
-                    time_left = int(len(processes_left)*avg_time/60)
-                if not time_left is None:
-                    if time_left:
-                        string += "    " + str(time_left) + " minutes"
-                    else:
-                        string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-                if not finished >= num_processes:
-                    pass#string += "\r"
-                else:
-                    string += "\n"
-                print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
-                print(string)
-                #sys.stdout.write(string)
-                #sys.stdout.flush()
                 finished += 1
+                previous_time = methods.print_progress(finished, num_processes,
+                                        counter, times, time_left, previous_time)
                 index_speeds, speeds = speeds_queue.get()
                 index_angular_speeds, angular_speeds = angular_speeds_queue.get()
                 self._speeds[index_speeds] = speeds
@@ -891,13 +690,7 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
                     new_process.start()
-                if finished >= num_processes:
-                    break
             print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
-
 
     def _compute_speeds_process(self, index, speeds_queue,
                                 angular_speeds_queue):
@@ -907,18 +700,23 @@ class Experiment(object):
         rel_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
         speeds = {}
         angular_speeds = {}
+        error = True
         for initial_rod_id in list(rel_dict.keys()):
             values = rel_dict[initial_rod_id]
             try:
+                error &= (not bool(values[0]))
                 speed = float(values[0])/self._diff_t
                 angular_speed = float(values[1])/self._diff_t
                 speeds[initial_rod_id] = speed
                 angular_speeds[initial_rod_id] = angular_speed
             except TypeError:
                 pass
+        if error:
+            speeds_queue.put([index, None])
+            angular_speeds_queue.put([index, None])
+            return
         speeds_queue.put([index, methods.compress(speeds, level=settings.medium_comp_level)])
         angular_speeds_queue.put([index, methods.compress(angular_speeds, level=settings.medium_comp_level)])
-
 
     def speeds(self, max_distance=100, max_angle_diff=90, limit=5,
                      amount_of_rods=200):
@@ -928,7 +726,6 @@ class Experiment(object):
         """
         self._compute_speeds(max_distance, max_angle_diff, limit, amount_of_rods)
         return [self._speeds, self._angular_speeds]
-
 
     def average_quadratic_speed(self, max_distance=100, max_angle_diff=90,
                                 limit=5, amount_of_rods=200):
@@ -945,7 +742,6 @@ class Experiment(object):
                 output[index] += speed**2/num_of_rods
         return output
 
-
     def average_quadratic_angular_speed(self, max_distance=100, max_angle_diff=90,
                                         limit=5, amount_of_rods=200):
         """
@@ -960,7 +756,6 @@ class Experiment(object):
                 output[index] += angular_speed**2/num_of_rods
         return output
 
-
     def local_speeds(self, max_distance=100, max_angle_diff=90, limit=5,
                             amount_of_rods=200, divisions=5):
         """
@@ -971,7 +766,6 @@ class Experiment(object):
             self._compute_local_speeds(divisions)
         return self._local_speeds
 
-
     def _compute_local_speeds(self, divisions):
         """
         Creates an array of matrices. Each matrix's entry is a dictionariy such
@@ -981,7 +775,7 @@ class Experiment(object):
                                subsys21_dic, subsys22_dic...])
                 subsys1_dic = {rod_id: (speed, angular_speed)}
         """
-        print "Computing local speeds..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing local speeds"
         output_queue = mp.Queue()
         processes = []
         for index in range(len(self._evolution_dictionaries)-1):
@@ -992,11 +786,16 @@ class Experiment(object):
         num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
         finished = 0
+        previous_time = datetime.datetime.now()
         counter = 0
         time_left = None
         times = []
-        while True:
+        print " "
+        while finished < num_processes:
+            counter += 1
             finished += 1
+            previous_time = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
             speeds_matrix = output[1]
@@ -1005,19 +804,13 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-            if finished >= num_processes:
-                break
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
-
+        print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
 
     def _compute_local_speeds_process(self, index, output_queue, divisions):
         """
         Process
         """
-        state = methods.decompress(self._states[index],
-                                level=methods.settings.medium_comp_level)
+        state = self.get(index)
         subgroups_matrix = state.subgroups_matrix(divisions)
         speeds_matrix = []
         speeds = methods.decompress(self._speeds[index], level=settings.medium_comp_level)
@@ -1038,14 +831,13 @@ class Experiment(object):
             speeds_matrix.append(speeds_row)
         output_queue.put([index, methods.compress(speeds_matrix, level=settings.medium_comp_level)])
 
-
     def _compute_local_average_speeds(self, max_distance=100, max_angle_diff=90,
                                      limit=5, amount_of_rods=200, divisions=5):
         """
         Compute local average speeds.
         """
         if not len(self._local_average_quadratic_speeds):
-            print "Computing local average speeds..."
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing local average speeds"
             output_queue = mp.Queue()
             processes = []
             local_speeds = self.local_speeds(max_distance, max_angle_diff,
@@ -1059,8 +851,16 @@ class Experiment(object):
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
             finished = 0
+            previous_time = datetime.datetime.now()
+            counter = 0
+            time_left = None
+            times = []
+            print " "
             while finished < num_processes:
+                counter += 1
                 finished += 1
+                previous_time = methods.print_progress(finished, num_processes,
+                                        counter, times, time_left, previous_time)
                 output = output_queue.get()
                 index = output[0]
                 self._local_average_quadratic_speeds[index] = output[1]
@@ -1069,9 +869,7 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
                     new_process.start()
-            for process in processes:
-                if process.is_alive():
-                    process.terminate()
+            print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
 
     def local_average_quadratic_speed(self, max_distance=100, max_angle_diff=90,
                                         limit=5, amount_of_rods=200, divisions=5):
@@ -1123,10 +921,16 @@ class Experiment(object):
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
             finished = 0
-            densities = []
-            quad_speeds = []
+            previous_time = datetime.datetime.now()
+            counter = 0
+            time_left = None
+            times = []
+            print " "
             while finished < num_processes:
+                counter += 1
                 finished += 1
+                previous_time = methods.print_progress(finished, num_processes,
+                                        counter, times, time_left, previous_time)
                 output = output_queue.get()
                 densities.append(output[0])
                 quad_speeds.append(output[1])
@@ -1135,13 +939,10 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
                     new_process.start()
-            for process in processes:
-                if process.is_alive():
-                    process.terminate()
             self._densities_array = densities
             self._quad_speeds_array = quad_speeds
+            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
         return [self._densities_array, self._quad_speeds_array]
-
 
     def _density_and_quad_speed_process(self, index, output_queue,
                                     quad_speeds_array, ang_speeds_array, divisions):
@@ -1179,7 +980,7 @@ class Experiment(object):
         Divides all systems in circles.
         """
         if divisions != self._divisions and not self._done:
-            print("Dividing systems in circles...")
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Dividing systems in circles"
             self._done = True
             self._divisions = divisions
             processes = []
@@ -1198,65 +999,26 @@ class Experiment(object):
             time_left = None
             times = []
             print " "
-            while True:
+            while finished < num_processes:
                 counter += 1
-                now = datetime.datetime.now()
-                seconds_passed = (now-previous_time).total_seconds()
-                times.append(seconds_passed)
-                progress = int(finished*100/num_processes)
-                previous_time = now
-                string = "Progress: %d%%  " % (progress)
-                perten = progress/10.0
-                string += "["
-                string += "#"*int(perten*4)
-                string += "-"*int((10-perten)*4)
-                string += "]"
-                if counter >= 3:
-                    counter = 0
-                    avg_time = sum(times)*1.0/len(times)
-                    time_left = int(len(processes_left)*avg_time/60)
-                if not time_left is None:
-                    if time_left:
-                        string += "    " + str(time_left) + " minutes"
-                    else:
-                        string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-                if not finished >= num_processes:
-                    pass#string += "\r"
-                else:
-                    string += "\n"
-                #print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
-                print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
-                print string
-                #print getsizeof(self._states)
-                #sys.stdout.write(string)
-                #sys.stdout.flush()
+                finished += 1
+                previous_time = methods.print_progress(finished, num_processes,
+                                        counter, times, time_left, previous_time)
                 output = output_queue.get()
                 index = output[0]
                 state = output[1]
                 self._states[index] = state
-                finished += 1
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
-                    try:
-                        new_process.start()
-                    except OSError:
-                        os.system("cat /proc/meminfo | grep -i free")
-                        raise OSError("Out of memory")
-                if finished >= num_processes:
-                    break
+                    new_process.start()
             print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
-            for process in processes:
-                if process.is_alive():
-                    process.terminate()
-
 
     def divide_system_in_circles_process(self, divisions, index, output_queue):
         """
             Process
         """
-        state = methods.decompress(self._states[index],
-                                methods.settings.medium_comp_level)
+        state = self.get(index)
         state.divide_in_circles(divisions)
         state = methods.compress(state, level=methods.settings.medium_comp_level)
         output_queue.put([index, state])
@@ -1266,7 +1028,8 @@ class Experiment(object):
         """
         Creates a video of density's evolution.
         """
-        print("Creating densities video...")
+        
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating densities video"
         frames = len(self)
         function_name = 'plottable_density_matrix'
         kappas = self.kappas
@@ -1284,8 +1047,7 @@ class Experiment(object):
         Kappas of systems.
         """
         if not self._kappas:
-            state = methods.decompress(self._states[0],
-                                level=methods.settings.medium_comp_level)
+            state = self.get(0)
             self._kappas = state.kappas
         return self._kappas
 
@@ -1294,7 +1056,8 @@ class Experiment(object):
         """
         Creates a video of correlation g2 evolution.
         """
-        print("Creating g2 video...")
+        
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating g2 video"
         frames = len(self)
         function_name = 'correlation_g2_plot_matrix'
         kappas = self.kappas
@@ -1309,7 +1072,8 @@ class Experiment(object):
         """
         Creates a video of correlation g4 evolution.
         """
-        print("Creating g4 video...")
+        
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating g4 video"
         frames = len(self)
         function_name = 'correlation_g4_plot_matrix'
         kappas = self.kappas
@@ -1324,16 +1088,16 @@ class Experiment(object):
         """
         Creates a video of average angle evolution.
         """
-        print("Creating average angle video...")
+        
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating average angle video"
         frames = len(self)
         function_name = 'plottable_average_angle_matrix'
-        kappas = methods.decompress(self._states[0], level=settings.medium_comp_level).kappas
+        kappas = self.get(0).kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+"prop"+str(round(100*prop,1))+'%.mp4'
         units = "Average angle [grad]"
         self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
-
 
     @property
     def radius(self):
@@ -1347,13 +1111,13 @@ class Experiment(object):
         """
         Generic animator
         """
-        print "Plotting..."
+        
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting"
         groups = self.bursts_groups
+        groups = copy.deepcopy(groups)
         bursts_ = len(groups)
-        print " "
         x_val, y_val, z_vals_avg, z_max, z_min = self.get_z_vals(groups, bursts_, function_name, divisions)
         frames = len(z_vals_avg)
-        #match1 = re.match(r'.*?density.*', function_name)
         if settings.plot:
             methods.create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, self.radius)
         if settings.to_file:
@@ -1368,61 +1132,42 @@ class Experiment(object):
         """
         Process
         """
-        state = methods.decompress(self._states[index],
-                level=settings.medium_comp_level)
+        state = self.get(index)
         function = getattr(state, function_name)
         values = function(divisions)
         output_queue.put([index, values[0], values[1], values[2], methods.compress(state,
                 level=settings.medium_comp_level)])
 
-
     def get_z_vals(self, groups, bursts_, function_name, divisions):
         """
             Get z values for function.
         """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Getting function values: [" + str(function_name) +"]"
         finished_ = 0
         previous_time = datetime.datetime.now()
         times = []
         time_left = None
-        counter = 0    
+        counter = 0
         z_vals = []
         z_vals_avg = []
         x_val = []
         y_val = []
+        match1 = re.match(r'.*?denisity.*', function_name)
         match2 = re.match(r'.*?g[2|4].*', function_name)
+        print ""
         if match2:
             z_max = 1
             z_min = -1
+        elif match1:
+            z_max = 1
+            z_min = 0
         else:
             z_maxs = []
             z_mins = []
         for group in groups:
             finished_ += 1
-            left = bursts_-finished_
             counter += 1
-            now = datetime.datetime.now()
-            seconds_passed = (now-previous_time).total_seconds()
-            times.append(seconds_passed)
-            progress = int(finished_*100/bursts_)
-            previous_time = now
-            string = "Progress: %d%%  " % (progress)
-            perten = progress/10.0
-            string += "["
-            prog = int(perten*4)
-            string += "#"*prog
-            string += "-"*(40-prog)
-            string += "]"
-            if counter >= 3:
-                counter = 0
-                avg_time = sum(times)*1.0/len(times)
-                time_left = int(left*avg_time/60)
-            if not time_left is None:
-                if time_left:
-                    string += "    " + str(time_left) + " minutes"
-                else:
-                    string += "    " + str(int(len(self.bursts_groups)*avg_time)) + " seconds"
-            print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
-            print string
+            methods.print_progress(finished_, bursts_, counter, times, time_left, previous_time)
             output_queue = mp.Queue()
             processes = []
             for index in group:
@@ -1431,9 +1176,10 @@ class Experiment(object):
                 processes.append(process)
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
-            finished = 0
-            while finished < num_processes:
-                finished += 1
+            finished__ = 0
+            results = []
+            while finished__ < num_processes:
+                finished__ += 1
                 output = output_queue.get()
                 index = output[0]
                 x_val = output[1]
@@ -1441,7 +1187,7 @@ class Experiment(object):
                 z_val = output[3]
                 assert type(output[4]) == type("string"), "El estado tiene que ir comprimido"
                 self._states[index] = output[4]
-                if not match2:
+                if not match2 and not match1:
                     z_maxs.append(max(z_val))
                     z_mins.append(min(z_val))
                 z_vals.append(z_val)
@@ -1451,14 +1197,8 @@ class Experiment(object):
                     new_process.start()
             z_vals_avg.append(methods.compress(methods.array_average(z_vals),
                                            level=settings.medium_comp_level))
-            for process in processes:
-                if process.is_alive():
-                    process.terminate()
         print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
-        #if match1:
-        #    z_max = 1
-        #    z_min = 0
-        if not match2:
+        if not match2 and not match1:
             z_max = max(z_maxs)
             z_min = min(z_mins)
         return x_val, y_val, z_vals_avg, z_max, z_min
@@ -1467,59 +1207,69 @@ class Experiment(object):
         """
         Creates a dictionary with image ids referenced with indices.
         """
-        print "Creating dictionary dict[index] = image_id"
-        processes = []
-        output_queue = mp.Queue()
-        self._image_id_by_index = {}
-        for index in range(len(self)):
-            process = mp.Process(target=self._get_image_ids_process, args=(index, output_queue))
-            processes.append(process)
-        num_processes = len(processes)
-        running, processes_left = methods.run_processes(processes)
-        finished = 0
-        print ""
-        while finished < num_processes:
-            finished += 1
-            [index, output] = output_queue.get()
-            self._image_id_by_index[index] = output
-            if len(processes_left):
-                new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
-                new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
-        
+        if not len(self._image_id_by_index):
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating dictionary image index -> image id"
+            processes = []
+            self._image_ids_done = True
+            output_queue = mp.Queue()
+            self._image_id_by_index = {}
+            for index in range(len(self)):
+                process = mp.Process(target=self._get_image_ids_process, args=(index, output_queue))
+                processes.append(process)
+            num_processes = len(processes)
+            running, processes_left = methods.run_processes(processes)
+            finished = 0
+            previous_time = datetime.datetime.now()
+            counter = 0
+            time_left = None
+            times = []
+            print ""
+            while finished < num_processes:
+                counter += 1
+                finished += 1
+                previous_time = methods.print_progress(finished, num_processes, counter,
+                                            times, time_left, previous_time)
+                [index, output] = output_queue.get()
+                self._image_id_by_index[index] = output
+                if len(processes_left):
+                    new_process = processes_left.pop(0)
+                    time.sleep(settings.waiting_time)
+                    new_process.start()
+            print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+
     def _get_image_ids_process(self, index, output_queue):
         """
         Process
         """
-        state = methods.decompress(self._states[index],
-                                level=methods.settings.medium_comp_level)
+        state = self.get(index)
         output = methods.get_number_from_string(state.id_string)
+        state = None
         output_queue.put([index, output])
 
     def _get_image_id(self, index):
         """
         Returns consecutive system images' ids.
         """
-        if not len(self._image_id_by_index.keys()):
+        if not self._image_ids_done:
             self._get_image_ids()
+            self._image_ids_done = True
         return self._image_id_by_index[index]
 
     def create_videos(self, divisions=5, folder="./", fps=1,
                             max_distance=100, max_angle_diff=90, limit=5,
-                            amount_of_rods=200, number_of_bursts=1):
+                            amount_of_rods=200, number_of_bursts=1, only_density=False):
         """
         Creates a video per property of the system that shows evolution.
         """
         self.divide_systems_in_circles(divisions)
         self.create_density_video(divisions, folder, fps, number_of_bursts)
-        self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
-        self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
-        self.create_temperature_video(divisions, folder, fps, max_distance,
-                               max_angle_diff, limit, amount_of_rods,
-                               number_of_bursts)
+        if not only_density:
+            self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
+            self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
+        if not settings.ignore_temperature:
+            self.create_temperature_video(divisions, folder, fps, max_distance,
+                                   max_angle_diff, limit, amount_of_rods,
+                                   number_of_bursts)
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,
@@ -1528,48 +1278,70 @@ class Experiment(object):
         """
         Returns plotable data.
         """
-        ###################################
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating plottable matrix"
         quad_speeds = self.local_average_quadratic_speed(max_distance,
                                         max_angle_diff, limit,
                                         amount_of_rods, divisions)
-        #quad_ang_speeds = self.local_average_quadratic_angular_speed(max_distance,
-        #                                max_angle_diff, limit,
-        #                                amount_of_rods, divisions)
         x_vals, y_vals, z_vals = [], [], []
+        output_queue = mp.Queue()
+        processes = []
+        output_queue = mp.Queue()
         for index in range(len(self)-1):
-            state = methods.decompress(self._states[index],
-                                        level=methods.settings.medium_comp_level)
-            subgroups = state.subgroups_matrix(divisions)
-            x_val, y_val, z_val = [], [], []
-            for row_index in range(len(subgroups)):
-                for col_index in range(len(subgroups[row_index])):
-                    subgroup = subgroups[row_index][col_index]
-                    quad_speed = methods.decompress(quad_speeds[index], level=settings.medium_comp_level)[row_index][col_index]
-                    #assert len(quad_speeds) > index, "1228"
-                    #for index2 in range(len(quad_speeds)):
-                    #    assert len(quad_speeds[index2]) > row_index, "1230"
-                    #    for index3 in range(len(quad_speeds[index2])):
-                    #        assert len(quad_speeds[index2][index3]) > col_index, "1232"
-                    #ang_speed = quad_ang_speeds[index][row_index][col_index]
-                    center = subgroup.center
-                    center_x = center[0]
-                    center_y = center[1]
-                    #total_speed = quad_speed + ang_speed
-                    x_val.append(center_x)
-                    y_val.append(center_y)
-                    #z_val.append(total_speed)
-                    z_val.append(quad_speed)
-            x_vals.append(x_val)
-            y_vals.append(y_val)
-            z_vals.append(z_val)
+            process = mp.Process(target=self.plottable_local_average_quadratic_speeds_process,
+                                 args=(index, quad_speeds, max_distance, max_angle_diff, limit,
+                                        amount_of_rods, divisions, output_queue))
+            processes.append(process)
+        num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
+        finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
+        while finished < num_processes:
+            counter += 1
+            finished += 1
+            previous_time = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
+            output = output_queue.get()
+            x_vals.append(output[0])
+            y_vals.append(output[1])
+            z_vals.append(output[2])
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
+                new_process.start()
+        print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
         return x_vals, y_vals, z_vals
+
+    def plottable_local_average_quadratic_speeds_process(self, index, quad_speeds,
+                                        max_distance, max_angle_diff, limit,
+                                        amount_of_rods, divisions, output_queue):
+        """
+        Process
+        """
+        state = self.get(index)
+        subgroups = state.subgroups_matrix(divisions)
+        x_val, y_val, z_val = [], [], []
+        for row_index in range(len(subgroups)):
+            for col_index in range(len(subgroups[row_index])):
+                subgroup = subgroups[row_index][col_index]
+                quad_speed = methods.decompress(quad_speeds[index], level=settings.medium_comp_level)[row_index][col_index]
+                center = subgroup.center
+                center_x = center[0]
+                center_y = center[1]
+                x_val.append(center_x)
+                y_val.append(center_y)
+                z_val.append(quad_speed)
+        output_queue.put([x_val, y_val, z_val])
 
     def create_cluster_histogram_video(self, max_distance=None,
                                     max_angle_diff=None, fps=15):
         """
             Creates a video of cluster length histogram.
         """
-        print "Creating cluster histogram animation..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating cluster histogram animation"
         kappa = self.kappas
         prop = self.average_covered_area_proportion[0]
         name = "cluster_hist_K"+str(int(kappa))+"prop"+str(round(100*prop,1))+"%.mp4"
@@ -1583,13 +1355,19 @@ class Experiment(object):
                                        output_queue))
             processes.append(process)
             arrays.append(None)
-        running, processes_left = methods.run_processes(processes)
         num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
         finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
         while finished < num_processes:
+            counter += 1
             finished += 1
-            if not len(running):
-                break
+            previous_time = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
             array = output[1]
@@ -1598,9 +1376,6 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
         def animate(dummy_frame):
             """
             Animation function.
@@ -1633,8 +1408,7 @@ class Experiment(object):
         """
         Process
         """
-        state = methods.decompress(self._states[index],
-                                level=methods.settings.medium_comp_level)
+        state = self.get(index)
         array = state.cluster_lengths(max_distance=max_distance,
                                             max_angle_diff=max_angle_diff,
                                             min_size=1)
@@ -1662,7 +1436,7 @@ class Experiment(object):
             """
             Animation function.
             """
-            self._speeds_vectors_video_wrapper(vectors_matrices)    #BUG
+            self._speeds_vectors_video_wrapper(vectors_matrices)    #XXX BUG
         frames = len(self)
         anim = animation.FuncAnimation(fig, animate, frames=frames)
         anim.save(name, writer=methods.WRITER, fps=fps)
@@ -1672,7 +1446,6 @@ class Experiment(object):
             Wrapper
         """
         pass
-
 
     def average_speeds_vectors(self, divisions, max_distance, max_angle_diff):
         """
@@ -1691,13 +1464,19 @@ class Experiment(object):
                                      speeds_, output_queue))
             processes.append(process)
             vector_matrices.append(None)
-        running, processes_left = methods.run_processes(processes)
         num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
         finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
         while finished < num_processes:
+            counter += 1
             finished += 1
-            if not len(running):
-                break
+            previous_time = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
             vector_matrix = output[1]
@@ -1706,15 +1485,10 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
         vectors = []
         for index in range(speeds_num):
-            state = methods.decompress(self._states[index],
-                                level=methods.settings.medium_comp_level)
+            state = self.get(index)
             vector_matrix = vector_matrices[index]
-
 
     def create_temperature_video(self, divisions, folder, fps,
                             max_distance, max_angle_diff,
@@ -1722,7 +1496,7 @@ class Experiment(object):
         """
         Creates a video of temperature evolution.
         """
-        print "Creating temperature video..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating temperature video"
         x_vals, y_vals, z_vals = self.plottable_local_average_quadratic_speeds(
                                         max_distance, max_angle_diff, limit,
                                         amount_of_rods, divisions)
@@ -1732,7 +1506,7 @@ class Experiment(object):
         end = False
         z_vals_avg = []
         number_of_bursts *= 5
-        print "Computing averages..."
+        print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + "Computing averages"
         while not end:
             groups = []
             average = None
@@ -1762,9 +1536,8 @@ class Experiment(object):
                 average = _z_vals
             z_vals_avg.append(methods.compress(average, level=settings.medium_comp_level))
         if not settings.to_file:
-            fig = plt.figure()  
-        state = methods.decompress(self._states[0],
-                                level=settings.medium_comp_level)
+            fig = plt.figure()
+        state = self.get(0)
         kappas = state.kappas
         state = None
         name = str(folder)+"Temperature"+str(kappas)+".mp4"
@@ -1780,8 +1553,6 @@ class Experiment(object):
             raise ValueError
         z_max = max(z_maxs)
         z_min = min(z_mins)
-        z_maxs = None
-        z_mins = None
         units = "Temperature [pixels^2/seg^2]"
         rad = self.radius
         if settings.plot:
@@ -1792,7 +1563,6 @@ class Experiment(object):
             data = methods.compress([x_vals, y_vals, z_vals_avg, divisions, z_max, z_min, units, name, self.radius], level=9)
             output_file.write(data)
             output_file.close()
-
 
     def _temperature_video_wrapper(self, x_val, y_val, z_vals,
                                 divisions, name, z_max, z_min):
@@ -1813,9 +1583,8 @@ class Experiment(object):
         y_max = max(y_val)+rad*1.1
         plt.xlim((x_min, x_max))
         plt.ylim((y_min, y_max))
-        #plt.suptitle(name)
         plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
-                    vmax=z_max, vmin=z_min) #ValueError: Color array must be two-dimensional
+                    vmax=z_max, vmin=z_min)
         plt.gca().invert_yaxis()
         cb = plt.colorbar()
         plt.xlabel("x [pixels]")
@@ -1862,7 +1631,6 @@ class Experiment(object):
                     average = sum(not_none_vals)/float(len(not_none_vals))
                 except ZeroDivisionError:
                     average = 0
-                    ############    Check this.
             z_vals_avg.append(average)
         return z_vals_avg, indices
 
@@ -1883,10 +1651,9 @@ class Experiment(object):
         running, processes_left = methods.run_processes(processes)
         num_processes = len(processes)
         finished = 0
+        print ""
         while finished < num_processes:
             finished += 1
-            if not len(running):
-                break
             output = output_queue.get()
             index = output[0]
             area = output[1]
@@ -1895,19 +1662,14 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
         return areas
-
 
     def _get_cluster_areas_process(self, index, max_distance,
                     max_angle_diff, output_queue, min_size):
         """
         Process
         """
-        state = methods.decompress(self._states[index],
-                                level=methods.settings.medium_comp_level)
+        state = self.get(index)
         area = state.total_area_of_clusters(max_distance=max_distance,
                             max_angle_diff=max_angle_diff, min_size=min_size)
         output_queue.put([index, area])
@@ -1948,7 +1710,7 @@ class Experiment(object):
             Returns coeficient of order param evolution.
         """
         if self._popt is None or self._std_dev is None:
-            print "Computing order evolution parameter..."
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing order evolution parameter"
             cluster_areas = self.cluster_areas(number_of_bursts=number_of_bursts,
                                        max_distance=max_distance,
                                        max_angle_diff=max_angle_diff,
@@ -1969,34 +1731,27 @@ class Experiment(object):
                     log_times.append(math.log(times[index]))
                 except ValueError:
                     log_times.pop()
-            #log_areas = numpy.array(log_areas)
-            #log_times = numpy.array(log_times)
-            #x_0 = numpy.array([0, 0, 0, 0])
-            #function = lambda value, coef1, coef2: coef1 + coef2*value
-            #popt, pcov = optimization.curve_fit(function, log_times, log_areas)
-            #m, b = popt[1], popt[0]
-            #m, b = np.polyfit(log_times, log_areas, 1)
-            #std_dev = numpy.sqrt(numpy.diag(pcov))
-            #self._popt = popt
-            #self._std_dev = std_dev
             top = 0
             bot = 0
-            x_m = float(sum(log_times))/len(log_times)
-            y_m = float(sum(log_areas))/len(log_areas)
+            try:
+                x_m = float(sum(log_times))/len(log_times)  
+                y_m = float(sum(log_areas))/len(log_areas)
+            except ZeroDivisionError:
+                print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: Not enough data"
+                return
             for index in range(len(log_areas)):
                 top += (log_times[index]-x_m)*(log_areas[index]-y_m)
                 bot += (log_times[index]-x_m)**2
             m = float(top)/bot
             b = y_m - m*x_m
-        return m, b     #self._popt[0], self._popt[1], self._std_dev
-
+        return m, b
 
     def plot_cluster_areas(self, number_of_bursts=1, max_distance=None,
                     max_angle_diff=None, min_size=10):
         """
             Plots cluster areas evolution.
         """
-        print "Computing cluster areas..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing cluster areas"
         areas = self.cluster_areas(number_of_bursts=number_of_bursts,
                                    max_distance=max_distance,
                                    max_angle_diff=max_angle_diff,
@@ -2013,24 +1768,26 @@ class Experiment(object):
                 proportion = float(area)/total_area
             except ZeroDivisionError:
                 proportion = 0
-                continue #norm_areas.append(proportion)
+                continue
             times.append(self._times[index])
             norm_areas.append(proportion)
         if not settings.to_file:
             fig = plt.figure()
             plt.xlabel("time[seconds]")
             plt.ylabel("cluster area proportion")
-        # There's a bug here, so I use fortran obtained values. 
-        #m, b = self.get_order_evolution_coeficient(number_of_bursts=number_of_bursts,
-        #                                    max_distance=max_distance,
-        #                                    max_angle_diff=max_angle_diff,
-        #                                    min_size=min_size)
-        m = 0.309291
-        b = -3.669453
-        line = [(math.e**b)*(time**m) for time in times]
-        print m, "  ", b
-        print math.e**b
-        print math.e**(-b)
+        m, b = self.get_order_evolution_coeficient(number_of_bursts=number_of_bursts,
+                                            max_distance=max_distance,
+                                            max_angle_diff=max_angle_diff,
+                                            min_size=min_size)
+        line = []
+        for time in times:
+            if time != 0:
+                line.append((math.e**b)*(time**m))
+        name = "coef_K"+str(self.kappas)+".log"
+        output = open(name, 'w')
+        text = "Coeficient: "+str(m)+"\nIndep: "+str(b) +"\n"
+        output.write(text)
+        output.close()
         if not settings.to_file:
             plt.plot(times, line)
         else:
@@ -2057,7 +1814,6 @@ class Experiment(object):
         clust.close()
         if not settings.to_file:
             try:
-                #plt.plot(times, norm_areas)
                 plt.scatter(times, norm_areas)
             except ValueError:
                 print(len(times), len(norm_areas))
@@ -2103,16 +1859,14 @@ class Experiment(object):
         """
         Returns a list of groups of indices that are in a row.
         """
-        if not len(self._bursts_groups):
-            print "Obtaining bursts groups..."
+        if not self._bursts_computed:
+            self._bursts_computed = True
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "bursts_groups"
             groups = []
             group = []
             output_queue = mp.Queue()
-            #print "[DEBUG]:\tTime before entering loop (2010) and when exiting (2025)"
-            #print datetime.datetime.now()
             processes = []
             initial_id = self._get_image_id(0)
-            ### It seems that a lot of time is wasted here (1CPU) XXX CHECK XXX
             for index in range(len(self._state_numbers)-1):
                 final_id = self._get_image_id(index+1)
                 date1 = self._dates[initial_id]
@@ -2124,45 +1878,17 @@ class Experiment(object):
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
             finished = 0
-            #print datetime.datetime.now()
-            #print ""
             previous_time = datetime.datetime.now()
             counter = 0
             time_left = None
             times = []
             results = []
-            while True:
+            print ""
+            while finished < num_processes:
                 counter += 1
-                now = datetime.datetime.now()
-                seconds_passed = (now-previous_time).total_seconds()
-                times.append(seconds_passed)
-                progress = int(finished*100/num_processes)
-                previous_time = now
-                string = "Progress: %d%%  " % (progress)
-                perten = progress/10.0
-                string += "["
-                prog = int(perten*4)
-                string += "#"*prog
-                string += "-"*(40-prog)
-                string += "]"
-                if counter >= 3:
-                    counter = 0
-                    avg_time = sum(times)*1.0/len(times)
-                    time_left = int(len(processes_left)*avg_time/60)
-                if not time_left is None:
-                    if time_left:
-                        string += "    " + str(time_left) + " minutes"
-                    else:
-                        string += "    " + str(int(len(processes_left)*avg_time)) + " seconds"
-                if not finished >= num_processes:
-                    pass #string += "\r"
-                else:
-                    break
-                print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
-                print(string)
                 finished += 1
-                if not len(running):
-                    break
+                previous_time = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
                 output = output_queue.get()
                 index = output[0]
                 burst = output[1]
@@ -2170,9 +1896,6 @@ class Experiment(object):
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     new_process.start()
-            for process in processes:
-                if process.is_alive():
-                    process.terminate()
             for result in results:
                 index = result[0]
                 burst = result[1]
@@ -2184,13 +1907,14 @@ class Experiment(object):
                     group = []
             self._bursts_groups = groups
             print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        assert len(self._bursts_groups), "Fail"
         return self._bursts_groups
 
     def plot_average_temperature(self, max_distance, max_angle_diff, limit):
         """
             Average temperature over time.
         """
-        print "Computing average temperature..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing average temperature"
 
         self._compute_speeds(max_distance, max_angle_diff,
                         limit, None)
@@ -2207,10 +1931,17 @@ class Experiment(object):
         num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
         finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        results = []
+        print ""
         while finished < num_processes:
+            counter += 1
             finished += 1
-            if not len(running):
-                break
+            previous_time = methods.print_progress(finished, num_processes,
+                                counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
             average_speed = output[1]
@@ -2219,9 +1950,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
+        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
         if not settings.to_file:
             plt.figure()
             plt.plot(indices, average_speeds)
@@ -2255,11 +1984,10 @@ class Experiment(object):
         """
             Computes maximum percentage of rods lost in analysis.
         """
-        print "Computing lost rods percentaje..."
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing lost rods percentaje"
         number_of_rods = []
         for index in range(len(self)):
-            state = methods.decompress(self._states[index],
-                                level=methods.settings.medium_comp_level)
+            state = self.get(index)
             number = state.number_of_rods
             number_of_rods.append(number)
         supposed_total_number = max(number_of_rods)
@@ -2284,6 +2012,7 @@ class Experiment(object):
         """
             Returns average covered area proportion.
         """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing covered area proportion"
         props = []
         processes = []
         output_queue = mp.Queue()
@@ -2295,19 +2024,26 @@ class Experiment(object):
         num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
         finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        results = []
+        print " "
         while finished < num_processes:
+            counter += 1
             finished += 1
-            if not len(running):
-                break
+            previous_time = methods.print_progress(finished, num_processes,
+                                counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
             prop = output[1]
             props[index] = prop
-            #print index, prop
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
+        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
         avg = float(sum(props))/len(props)
         std_dev_step1 = [(value-avg)**2 for value in props]
         std_dev_step2 = float(sum(std_dev_step1))/(len(std_dev_step1)-1)
@@ -2321,42 +2057,125 @@ class Experiment(object):
         state = self.get(index)
         prop = state.covered_area_proportion()
         output_queue.put([index, prop])
-        return
+
+    def _compute_averages(self):
+        """
+        Computes experiment averages.
+        """
+        if not self._average_kappa:
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing experiment averages"
+            kappas = []
+            kappas_dev = []
+            avg_rads = []
+            avg_rod_lengths = []
+            avg_rod_widths = []
+            number_of_rods_ = []
+            processes = []
+            output_queue = mp.Queue()
+            for index in range(len(self)):
+                process = mp.Process(target=self._compute_averages_process,
+                                     args=(index, output_queue))
+                processes.append(process)
+            num_processes = len(processes)
+            running, processes_left = methods.run_processes(processes)
+            finished = 0
+            previous_time = datetime.datetime.now()
+            counter = 0
+            time_left = None
+            times = []
+            results = []
+            print " "
+            while finished < num_processes:
+                counter += 1
+                finished += 1
+                previous_time = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
+                [avg_kappa, kappa_dev, avg_rad,
+                 avg_rod_length, avg_rod_width,
+                 number_of_rods] = output_queue.get()
+                kappas.append(avg_kappa)
+                kappas_dev.append(kappa_dev)
+                avg_rads.append(avg_rad)
+                avg_rod_lengths.append(avg_rod_length)
+                avg_rod_widths.append(avg_rod_width)
+                number_of_rods_.append(number_of_rods)
+                if len(processes_left):
+                    new_process = processes_left.pop(0)
+                    time.sleep(settings.waiting_time)
+                    new_process.start()
+            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+            self._average_kappa = sum(kappas)*1.0/len(kappas)
+            self._kappa_dev = sum(kappas_dev)*1.0/len(kappas_dev)
+            self._average_rad = sum(avg_rads)*1.0/len(avg_rads)
+            self._average_rod_length = sum(avg_rod_lengths)*1.0/len(avg_rod_lengths)
+            self._average_rod_width = sum(avg_rod_widths)*1.0/len(avg_rod_widths)
+            self._number_of_rods = sum(number_of_rods_)/float(len(number_of_rods_))
+            std_dev_step1 = [(value-self._number_of_rods)**2 for value in number_of_rods_]
+            std_dev_step2 = float(sum(std_dev_step1))/(len(std_dev_step1)-1)
+            deviation = math.sqrt(std_dev_step2)
+            self._number_of_rods_dev = deviation
         
+    def _compute_averages_process(self, index, output_queue):
+        """
+        Process
+        """
+        state = self.get(index)
+        avg_kappa = state.average_kappa
+        kappa_dev = state.kappa_dev
+        rad = state.radius
+        rod_length = state.average_rod_length
+        rod_width = state.average_rod_width
+        number_of_rods = state.number_of_rods
+        output_queue.put([avg_kappa, kappa_dev, rad, rod_length, rod_width, number_of_rods])
 
     @property
     def average_number_of_rods(self):
         """
             Returns average number of rods of all states.
         """
-        number_of_rods = []
-        for state in self:
-            number_of_rods.append(state.number_of_rods)
-        avg = sum(number_of_rods)/float(len(number_of_rods))
-        std_dev_step1 = [(value-avg)**2 for value in number_of_rods]
-        std_dev_step2 = float(sum(std_dev_step1))/(len(std_dev_step1)-1)
-        dev = math.sqrt(std_dev_step2)
-        return avg, dev 
+        self._compute_averages()
+        return self._number_of_rods, self._number_of_rods_dev
 
     @property
     def average_kappa(self):
         """
             Returns average kappa of all states.
         """
-        kappas = []
-        for state in self:
-            kappas.append(state.average_kappa)
-        return float(sum(kappas))/len(kappas)
+        self._compute_averages()
+        return self._average_kappa
 
     @property
     def average_kappa_dev(self):
         """
             Returns average kappa deviation of all states.
         """
-        devs = []
-        for state in self:
-            devs.append(state.kappa_dev)
-        return float(sum(devs))/len(devs)
+        self._compute_averages()
+        return self._kappa_dev
+
+
+    @property
+    def average_system_rad(self):
+        """
+            It returns average system rad
+        """
+        self._compute_averages()
+        return self._average_rad
+
+    @property
+    def average_rod_length(self):
+        """
+            It returns average rod length.
+        """
+        self._compute_averages()
+        return self._average_rod_length
+
+    @property
+    def average_rod_width(self):
+        """
+            It returns average rod width.
+        """
+        self._compute_averages()
+        return self._average_rod_width
 
     def plot_rods(self, index):
         """
@@ -2375,7 +2194,56 @@ class Experiment(object):
         plt.plot([center_x, center_x],[center_y, center_y-rad])
         plt.scatter(x_vals, y_vals, color='r')
         plt.show()
-        
+
+
+    def plot_number_of_rods_over_time(self):
+        """
+        Plot number of rods over time.
+        """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating graph... "
+        images = [image for image in range(len(self))]
+        number_of_rods = []
+        output_queue = mp.Queue()
+        processes = []
+        for index in range(len(self)):
+            process = mp.Process(target=self._plot_number_of_rods_process,
+                                 args=(index, output_queue))
+            processes.append(process)
+            number_of_rods.append(None)
+        num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
+        finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
+        while finished < num_processes:
+            counter += 1
+            finished += 1
+            previous_time = methods.print_progress(finished, num_processes,
+                                counter, times, time_left, previous_time)
+            [index, num_rods] = output_queue.get()
+            number_of_rods[index] = num_rods
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                #time.sleep(settings.waiting_time)
+                new_process.start()
+        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        figure = plt.figure()
+        plt.plot(images, number_of_rods)
+        name = "num_rods_time_K" + str(self.kappas) + ".png"
+        plt.savefig(name)
+
+    def _plot_number_of_rods_process(self, index, output_queue):
+        """
+        Process
+        """
+        state = self.get(index)
+        num_rods = state.number_of_rods
+        output_queue.put([index, num_rods])
+
+
 
 def compute_local_average_speeds_process(index, output_queue, local_speeds, divisions):
     """
@@ -2395,14 +2263,12 @@ def compute_local_average_speeds_process(index, output_queue, local_speeds, divi
             subsys_quad_avg_speed = 0
             subsys_quad_avg_ang_speed = 0
             num_rods = len(subsys_dict)
-            # print subsys_dict #es una lista de diccionarios.
-            # print subsys_dict.values()
             for speeds in subsys_dict.values():
-                subsys_quad_avg_speed += float(speeds[0]**2)/num_rods       #speeds (int)
+                subsys_quad_avg_speed += float(speeds[0]**2)/num_rods
                 subsys_quad_avg_ang_speed += float(speeds[1]**2)/num_rods
             speeds_matrix[row][col] = subsys_quad_avg_speed
             angular_speeds_matrix[row][col] = subsys_quad_avg_ang_speed
-    output_queue.put([index, methods.compress(speeds_matrix, level=settings.medium_comp_level), 
+    output_queue.put([index, methods.compress(speeds_matrix, level=settings.medium_comp_level),
                     methods.compress(angular_speeds_matrix, level=settings.medium_comp_level)])
 
 def average_speeds_vectors_video_process(divisions, index, compressed_state,

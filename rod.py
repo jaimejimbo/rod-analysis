@@ -193,6 +193,23 @@ class Rod(object):
                                                            allowed_kappa_error)
         return is_in_main and has_valid_proportions
 
+    def is_valid_rod_length(self, length,
+                        length_error, real_kappa,
+                        zone_coords):
+        """
+            Check if rod's length is correct and if it's in the circle.
+        """
+        center = (zone_coords[0], zone_coords[1])
+        is_in_main = self.is_in_circle(center, zone_coords[2])
+        rod_length = self.feret
+        valid_length = ((length-length_error) <= rod_length <= (length+length_error))
+        cond = valid_length and is_in_main
+        if cond:
+            self._kappa = real_kappa
+            self._feret_min = self._feret/float(real_kappa)
+            self._feret = length
+        return cond
+
     def vector_to_rod(self, rod):
         """
         Returns a vector that joins 2 rods.
