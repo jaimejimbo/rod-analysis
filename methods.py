@@ -867,10 +867,19 @@ def print_progress(done, total, counter, times, time_left, previous_time):
     string += WHITE_BLOCK*prog
     string += " "*(40-prog)
     string += "]"
-    if counter >= 3:
+    if counter >= 50:
         counter = 0
-        avg_time = sum(times)*1.0/len(times)
+    try:
+        subtimes = []
+        if counter == 0:
+            subtimes = times
+        else:
+            subtimes = times[:-counter]
+        avg_time = sum(subtimes)*1.0/(len(times)-counter)
         time_left = int(left*avg_time/60)
+    except ZeroDivisionError:
+        avg_time = None
+        time_left = None
     if not time_left is None:
         if time_left:
             string += "    " + str(time_left) + " minutes"
@@ -878,5 +887,5 @@ def print_progress(done, total, counter, times, time_left, previous_time):
             string += "    " + str(int(left*avg_time)) + " seconds"
     print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
     print string
-    return previous_time
+    return previous_time, counter, time_left
 

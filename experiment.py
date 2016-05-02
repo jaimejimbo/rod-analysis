@@ -178,7 +178,7 @@ class Experiment(object):
         while finished_ < num_processes:
             counter += 1
             finished_ += 1
-            previous_time = methods.print_progress(finished_, num_processes, counter,
+            previous_time, counter = methods.print_progress(finished_, num_processes, counter,
                                                    times, time_left, previous_time)
             output_row = output_queue.get()
             index = output_row[0]
@@ -229,7 +229,7 @@ class Experiment(object):
         while finished_ < num_processes:
             counter += 1
             finished_ += 1
-            previous_time = methods.print_progress(finished_, num_processes,
+            previous_time, counter = methods.print_progress(finished_, num_processes,
                                     counter, times, time_left, previous_time)
             [index, evol_dict, rel_dict, initial_rods] = output_queue.get()
             self._evolution_dictionaries[index] = evol_dict
@@ -290,7 +290,7 @@ class Experiment(object):
         while finished_ < num_processes:
             counter += 1
             finished_ += 1
-            previous_time = methods.print_progress(finished_, num_processes,
+            previous_time, counter = methods.print_progress(finished_, num_processes,
                                     counter, times, time_left, previous_time)
             output_row = output_queue.get()
             index = output_row[0]
@@ -402,7 +402,7 @@ class Experiment(object):
         while finished < num_processes:
             counter += 1
             finished += 1
-            previous_time = methods.print_progress(finished, num_processes,
+            previous_time, counter = methods.print_progress(finished, num_processes,
                                     counter, times, time_left, previous_time)
             output = output_queue.get()
             selected = selected_queue.get()
@@ -593,7 +593,7 @@ class Experiment(object):
         while finished < num_processes:
             counter += 1
             finished += 1
-            previous_time = methods.print_progress(finished, num_processes,
+            previous_time, counter = methods.print_progress(finished, num_processes,
                                     counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
@@ -680,7 +680,7 @@ class Experiment(object):
             while finished < num_processes:
                 counter += 1
                 finished += 1
-                previous_time = methods.print_progress(finished, num_processes,
+                previous_time, counter = methods.print_progress(finished, num_processes,
                                         counter, times, time_left, previous_time)
                 index_speeds, speeds = speeds_queue.get()
                 index_angular_speeds, angular_speeds = angular_speeds_queue.get()
@@ -794,7 +794,7 @@ class Experiment(object):
         while finished < num_processes:
             counter += 1
             finished += 1
-            previous_time = methods.print_progress(finished, num_processes,
+            previous_time, counter = methods.print_progress(finished, num_processes,
                                     counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
@@ -859,7 +859,7 @@ class Experiment(object):
             while finished < num_processes:
                 counter += 1
                 finished += 1
-                previous_time = methods.print_progress(finished, num_processes,
+                previous_time, counter = methods.print_progress(finished, num_processes,
                                         counter, times, time_left, previous_time)
                 output = output_queue.get()
                 index = output[0]
@@ -929,7 +929,7 @@ class Experiment(object):
             while finished < num_processes:
                 counter += 1
                 finished += 1
-                previous_time = methods.print_progress(finished, num_processes,
+                previous_time, counter = methods.print_progress(finished, num_processes,
                                         counter, times, time_left, previous_time)
                 output = output_queue.get()
                 densities.append(output[0])
@@ -1002,7 +1002,7 @@ class Experiment(object):
             while finished < num_processes:
                 counter += 1
                 finished += 1
-                previous_time = methods.print_progress(finished, num_processes,
+                previous_time, counter = methods.print_progress(finished, num_processes,
                                         counter, times, time_left, previous_time)
                 output = output_queue.get()
                 index = output[0]
@@ -1227,7 +1227,7 @@ class Experiment(object):
             while finished < num_processes:
                 counter += 1
                 finished += 1
-                previous_time = methods.print_progress(finished, num_processes, counter,
+                previous_time, counter = methods.print_progress(finished, num_processes, counter,
                                             times, time_left, previous_time)
                 [index, output] = output_queue.get()
                 self._image_id_by_index[index] = output
@@ -1302,7 +1302,7 @@ class Experiment(object):
         while finished < num_processes:
             counter += 1
             finished += 1
-            previous_time = methods.print_progress(finished, num_processes,
+            previous_time, counter = methods.print_progress(finished, num_processes,
                                     counter, times, time_left, previous_time)
             output = output_queue.get()
             x_vals.append(output[0])
@@ -1366,7 +1366,7 @@ class Experiment(object):
         while finished < num_processes:
             counter += 1
             finished += 1
-            previous_time = methods.print_progress(finished, num_processes,
+            previous_time, counter = methods.print_progress(finished, num_processes,
                                     counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
@@ -1475,7 +1475,7 @@ class Experiment(object):
         while finished < num_processes:
             counter += 1
             finished += 1
-            previous_time = methods.print_progress(finished, num_processes,
+            previous_time, counter = methods.print_progress(finished, num_processes,
                                     counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
@@ -1887,7 +1887,7 @@ class Experiment(object):
             while finished < num_processes:
                 counter += 1
                 finished += 1
-                previous_time = methods.print_progress(finished, num_processes,
+                previous_time, counter = methods.print_progress(finished, num_processes,
                                     counter, times, time_left, previous_time)
                 output = output_queue.get()
                 index = output[0]
@@ -1940,7 +1940,7 @@ class Experiment(object):
         while finished < num_processes:
             counter += 1
             finished += 1
-            previous_time = methods.print_progress(finished, num_processes,
+            previous_time, counter = methods.print_progress(finished, num_processes,
                                 counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
@@ -2033,7 +2033,7 @@ class Experiment(object):
         while finished < num_processes:
             counter += 1
             finished += 1
-            previous_time = methods.print_progress(finished, num_processes,
+            previous_time, counter = methods.print_progress(finished, num_processes,
                                 counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
@@ -2088,7 +2088,7 @@ class Experiment(object):
             while finished < num_processes:
                 counter += 1
                 finished += 1
-                previous_time = methods.print_progress(finished, num_processes,
+                previous_time, counter = methods.print_progress(finished, num_processes,
                                     counter, times, time_left, previous_time)
                 [avg_kappa, kappa_dev, avg_rad,
                  avg_rod_length, avg_rod_width,
@@ -2221,7 +2221,7 @@ class Experiment(object):
         while finished < num_processes:
             counter += 1
             finished += 1
-            previous_time = methods.print_progress(finished, num_processes,
+            previous_time, counter = methods.print_progress(finished, num_processes,
                                 counter, times, time_left, previous_time)
             [index, num_rods] = output_queue.get()
             number_of_rods[index] = num_rods
