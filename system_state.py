@@ -34,6 +34,7 @@ class SystemState(object):
         self._radius_correction_ratio = radius_correction_ratio
         self._id_string = id_string
         self._gaussian_exp = {}
+        self._real_radius = 70.0
         try:
             self._radius = zone_coords[2]
             self._center_x = zone_coords[0]
@@ -303,7 +304,7 @@ class SystemState(object):
             Area of the subsystem.
         """
         if not self._area:
-            self._area = math.pi*self.radius**2
+            self._area = math.pi*self._real_radius**2
         return self._area
 
     @property
@@ -385,8 +386,9 @@ class SystemState(object):
             possible_y_values = [start_y + (times)*diff
                                  for times in range(divisions)]
             rad = diff*math.sqrt(2)*self._coef/2.0
+            real_rad = self._real_radius*math.sqrt(2)*self._coef*1.0/divisions
             subsystems = self._subsystems(possible_x_values, possible_y_values,
-                                          rad, diff, divisions)
+                                          rad, diff, divisions, real_rad)
             self._actual_subdivision = subsystems
 
     def _separate_rods_by_coords(self, rods_list, possible_x_values,
@@ -417,7 +419,7 @@ class SystemState(object):
         return output
 
     def _subsystems(self, possible_x_values, possible_y_values, rad, diff,
-                            divisions):
+                            divisions, real_rad):
         """
             Creates subsystems
         """
@@ -438,7 +440,7 @@ class SystemState(object):
             if distance < self.radius:
                 subsystem = SubsystemState(center, rad, self.zone_coords,
                                            self._rods, self._kappas, self._real_kappas,
-                                           self._allowed_kappa_error)
+                                           self._allowed_kappa_error, real_rad)
                 subsystem.check_rods()
                 subsystems.append(methods.compress(subsystem, level=settings.low_comp_level))
         return subsystems
@@ -982,7 +984,7 @@ class SubsystemState(SystemState):
     have something in common.
     """
 
-    def __init__(self, center, rad, zone_coords, rods, kappas, real_kappas, allowed_kappa_error):
+    def __init__(self, center, rad, zone_coords, rods, kappas, real_kappas, allowed_kappa_error, real_rad):
         """
             Initialization
         """
@@ -993,6 +995,8 @@ class SubsystemState(SystemState):
         self._is_subsystem = True
         self._center = center
         self._radius = rad
+        self._real_radius = real_rad
+        self._scale = real_rad*1.0/rad
         self._main_center = (zone_coords[0], zone_coords[1])
         self._main_rad = zone_coords[2]
         self._position_rad = methods.distance_between_points(self._main_center,
@@ -1032,6 +1036,7 @@ class SubsystemState(SystemState):
         density = 0
         for rod_ in self:
             density += rod_.feret*rod_.min_feret*self._gaussian_exp[rod_.identifier]
+        # print [rod_ for rod_ in self]
         if not density or not self.area:
             self._density = 0
         else:
@@ -1140,7 +1145,7 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
     for dataline in data:
         try:
             parameters = tuple(dataline)
-            new_rod = rod.Rod(parameters, real_kappa=real_kappas)
+            new_rod = rod.Rod(parameters, kappa=real_kappas, real_length=real_kappas)
             state.put_rod(new_rod)
         except ValueError:
             pass
@@ -1230,7 +1235,7 @@ def create_rods_with_length_process(length, length_error, real_kappa,
     for dataline in data:
         try:
             parameters = tuple(dataline)
-            new_rod = rod.Rod(parameters, real_kappa=real_kappa)
+            new_rod = rod.Rod(parameters, kappa=real_kappa, real_length=real_kappa)
             state.put_rod(new_rod)
         except ValueError:
             pass

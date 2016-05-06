@@ -23,13 +23,17 @@ using_cl = False
 _writer = animation.writers['ffmpeg']
 writer = _writer(fps=15, metadata=dict(artist='Jaime Perez Aparicio'), bitrate=1800)
 WRITER = writer
+
 try:
     import pyopencl as cl
-    ctx = cl.create_some_context()
-    queue_cl = cl.CommandQueue(ctx)
+    platform = cl.get_platforms()
+    my_gpu_devices = platform[0].get_devices(device_type=cl.device_type.CPU)
+    ctx = cl.Context(devices=my_gpu_devices)
     using_cl = True
 except:
     using_cl = False
+
+using_cl = False
 
 def change_compression_coef(new_coef):
     """

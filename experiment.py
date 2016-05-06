@@ -1147,8 +1147,8 @@ class Experiment(object):
         z_vals_avg = []
         x_val = []
         y_val = []
-        match1 = re.match(r'.*?denisity.*', function_name)
-        match2 = re.match(r'.*?g[2|4].*', function_name)
+        match1 = re.match(r'.*plottable_denisity.*', function_name)
+        match2 = re.match(r'.*g[2|4].*', function_name)
         print ""
         if match2:
             z_max = 1

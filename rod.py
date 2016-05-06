@@ -8,7 +8,7 @@ class Rod(object):
     Rod object.
     """
 
-    def __init__(self, args_tuple, real_kappa=None):
+    def __init__(self, args_tuple, kappa=None, real_length=None):
         """
         Initialization of rod
         """
@@ -33,14 +33,17 @@ class Rod(object):
         self._hash = 0
         self._direction_matrix = matrix.zeros(2, 2)
         self._kappa = float(feret)/float(minferet)
-        self._real_kappa = real_kappa
+        self._real_kappa = kappa
+        self._real_length = real_length
+        #self._feret = float(real_length)
+        #self._min_feret = real_length/self._kappa
 
     @property
     def area(self):
         """
         Returns area covered by rod.
         """
-        return self._feret**2/float(self._real_kappa)
+        return self._feret**2/float(self._kappa)
 
     @property
     def feret(self):
@@ -140,18 +143,18 @@ class Rod(object):
         return self._kappa
 
     @property
-    def real_kappa(self):
+    def kappa(self):
         """
         Real L/D of rod. 
         """
-        return self._real_kappa
+        return self._kappa
 
-    @real_kappa.setter
-    def real_kappa(self, value):
+    @kappa.setter
+    def kappa(self, value):
         """
         L/D of rod.
         """
-        self._real_kappa = value
+        self._kappa = value
 
     @property
     def angle(self):
@@ -191,10 +194,15 @@ class Rod(object):
         is_in_main = self.is_in_circle(center, zone_coords[2])
         has_valid_proportions = self.has_valid_proportions(kappas,
                                                            allowed_kappa_error)
-        return is_in_main and has_valid_proportions
+        output = is_in_main and has_valid_proportions
+        if output:
+            self._kappa = self._real_kappa
+            self._feret = self._real_length
+            self._min_feret = self._feret*1.0/self._kappa
+        return output
 
     def is_valid_rod_length(self, length,
-                        length_error, real_kappa,
+                        length_error, kappa,
                         zone_coords):
         """
             Check if rod's length is correct and if it's in the circle.
@@ -205,9 +213,9 @@ class Rod(object):
         valid_length = ((length-length_error) <= rod_length <= (length+length_error))
         cond = valid_length and is_in_main
         if cond:
-            self._kappa = real_kappa
-            self._feret_min = self._feret/float(real_kappa)
-            self._feret = length
+            self._kappa = kappa
+            self._feret_min = self._feret/float(kappa)
+            self._feret = self._real_length
         return cond
 
     def vector_to_rod(self, rod):

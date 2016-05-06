@@ -26,7 +26,7 @@ avg_temp = 1
 order_param_exp = 1
 lost_percentage = 1
 run_imagej = 0
-run_props = 0
+run_props = 1
 run_graphs = 1
 run_check_dim = 1
 get_image_dates = 0
@@ -38,7 +38,7 @@ coef = 5
 divisions = 50
 #sigma = sigma_coef * subsystem_rad
 sigma_coef = None
-changing_props = 0
+changing_props = 1
 discard_exceptions = 0
 special_chars = 1
 ignore_temperature = 0
@@ -285,19 +285,25 @@ if True:
             #print area
             msg = "Total area proportion: "+str(round(100*total_prop, 2))+"% "+str(round(100*total_prop_err, 2))+"%\n"
             msg += "Long proportion (area): "+str(round(100*float(prop_long)/total_prop, 2))+"% "+str(round(100*prop_long_dev/total_prop, 2))+ "%\n"
+            msg += "Long proportion (number): "+ str(round(longs*100.0/(longs+shorts), 2))+"%\n"
             msg += "Number of long rods: "+str(longs)+"\t"+str(longs_dev)+"\n"
             msg += "Number of short rods: "+str(shorts)+"\t"+str(shorts_dev)+"\n"
             msg += "Total number of rods: "+str(longs+shorts)+"\n"
             log.write(msg)
+            print msg
             if changing_props:
-                waprop = input("Wanted area proportion: ")
+                # waprop = input("Wanted area proportion: ")
                 wlprop = input("Wanted longs proportion: ")
-                Nl = int(wlprop*waprop*area/rod_areal)
-                Ns = int(Nl*rod_areal*(1-wlprop)/(wlprop*rod_areas))
+                # Nl = int(wlprop*waprop*area/rod_areal)
+                # Ns = int(Nl*rod_areal*(1-wlprop)/(wlprop*rod_areas))
+                diff_l = int(((wlprop-1)*longs+wlprop*shorts)*1.0/(1+wlprop))
+                diff_s = -2*diff_l
+                Nl = diff_l + longs
+                Ns = diff_s + shorts
                 print "Needed long rods: ", Nl
-                print "Difference: ", Nl-longs
+                print "Difference: ", diff_l
                 print "Needed short rods: ", Ns
-                print "Difference: ", Ns-shorts
+                print "Difference: ", diff_s
             log.close()
             
         
