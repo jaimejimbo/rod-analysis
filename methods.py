@@ -893,3 +893,13 @@ def print_progress(done, total, counter, times, time_left, previous_time):
     print string
     return previous_time, counter, time_left
 
+def rods_differences(shorts, longs, wlprop):
+    """
+    Computes how many rods must be included.
+    """
+    diff_l = int(((wlprop-1)*longs+wlprop*shorts)*1.0/(1+wlprop))
+    diff_s = -2*diff_l
+    Nl = diff_l + longs
+    Ns = diff_s + shorts
+    return diff_l, diff_s, Nl, Ns
+

@@ -296,10 +296,7 @@ if True:
                 wlprop = input("Wanted longs proportion: ")
                 # Nl = int(wlprop*waprop*area/rod_areal)
                 # Ns = int(Nl*rod_areal*(1-wlprop)/(wlprop*rod_areas))
-                diff_l = int(((wlprop-1)*longs+wlprop*shorts)*1.0/(1+wlprop))
-                diff_s = -2*diff_l
-                Nl = diff_l + longs
-                Ns = diff_s + shorts
+                diff_l, diff_s, Nl, Ns = methods.rods_differences(shorts, longs, wlprop)
                 print "Needed long rods: ", Nl
                 print "Difference: ", diff_l
                 print "Needed short rods: ", Ns

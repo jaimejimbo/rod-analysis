@@ -1154,6 +1154,7 @@ class Experiment(object):
             z_max = 1
             z_min = -1
         elif match1:
+            print "Density"
             z_max = 1
             z_min = 0
         else:
@@ -1187,7 +1188,7 @@ class Experiment(object):
                 z_val = output[3]
                 assert type(output[4]) == type("string"), "El estado tiene que ir comprimido"
                 self._states[index] = output[4]
-                if not match2 and not match1:
+                if not (match2 or match1):
                     z_maxs.append(max(z_val))
                     z_mins.append(min(z_val))
                 z_vals.append(z_val)
@@ -1198,7 +1199,7 @@ class Experiment(object):
             z_vals_avg.append(methods.compress(methods.array_average(z_vals),
                                            level=settings.medium_comp_level))
         print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
-        if not match2 and not match1:
+        if not (match2 or match1):
             z_max = max(z_maxs)
             z_min = min(z_mins)
         return x_val, y_val, z_vals_avg, z_max, z_min
