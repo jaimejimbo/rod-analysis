@@ -1035,7 +1035,7 @@ class SubsystemState(SystemState):
         """
         density = 0
         for rod_ in self:
-            density += rod_.feret*rod_.min_feret*self._gaussian_exp[rod_.identifier]
+            density += rod_.area*self._gaussian_exp[rod_.identifier]
         # print [rod_ for rod_ in self]
         if not density or not self.area:
             self._density = 0

@@ -27,7 +27,7 @@ order_param_exp = 1
 lost_percentage = 1
 run_imagej = 0
 run_props = 1
-run_graphs = 1
+run_graphs = 0
 run_check_dim = 1
 get_image_dates = 0
 to_file = 1
@@ -267,8 +267,8 @@ if True:
         if run_props:
             print "Computing experiment statistics..."
             log = open("props.log",'w')
-            prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop_length(160, 30, 12)
-            prop_short, prop_short_dev, shorts, shorts_dev, rad2, msg2 = run_prop_length(80, 30, 6)
+            prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop(15,12,3)#_length(160, 40, 12)
+            prop_short, prop_short_dev, shorts, shorts_dev, rad2, msg2 = run_prop(9,6,2)#_length(80, 30, 6)
             print "kappa\t\t\tdeviation"
             print msg1
             print msg2
@@ -296,7 +296,10 @@ if True:
                 wlprop = input("Wanted longs proportion: ")
                 # Nl = int(wlprop*waprop*area/rod_areal)
                 # Ns = int(Nl*rod_areal*(1-wlprop)/(wlprop*rod_areas))
-                diff_l, diff_s, Nl, Ns = methods.rods_differences(shorts, longs, wlprop)
+                diff_l = int(((wlprop-1)*longs+wlprop*shorts)*1.0/(1+wlprop))
+                diff_s = -2*diff_l
+                Nl = diff_l + longs
+                Ns = diff_s + shorts
                 print "Needed long rods: ", Nl
                 print "Difference: ", diff_l
                 print "Needed short rods: ", Ns

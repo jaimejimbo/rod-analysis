@@ -43,7 +43,7 @@ class Rod(object):
         """
         Returns area covered by rod.
         """
-        return self._feret**2/float(self._kappa)
+        return self._real_length**2/float(self._kappa)
 
     @property
     def feret(self):
@@ -168,8 +168,9 @@ class Rod(object):
         Checks if rod is in the circle defined by the given center and
         the given rad.
         """
-        return methods.is_in_circle(self.x_mid, self.y_mid,
-                            center[0], center[1], rad)
+        return True
+        #return methods.is_in_circle(self.x_mid, self.y_mid,
+        #                    center[0], center[1], rad)
 
     def has_valid_proportions(self, kappas, allowed_error):
         """
