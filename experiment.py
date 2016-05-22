@@ -200,6 +200,62 @@ class Experiment(object):
                     level=methods.settings.medium_comp_level)
         output_queue.put([index, output])
 
+    def set_coords(self, zone_coords):
+        """
+            Changes coef for dividing in circles.
+        """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Setting coords"
+        states = []
+        output_queue = mp.Queue()
+        processes = []
+        for index in range(len(self)):
+            process = mp.Process(target=self.set_coords_process,
+                                 args=(index, output_queue, zone_coords))
+            processes.append(process)
+            states.append(None)
+        num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
+        finished_ = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
+        while finished_ < num_processes:
+            counter += 1
+            finished_ += 1
+            previous_time, counter, time_left = methods.print_progress(finished_, num_processes, counter,
+                                                   times, time_left, previous_time)
+            output_row = output_queue.get()
+            index = output_row[0]
+            compressed_state = output_row[1]
+            self._states[index] = compressed_state
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
+                new_process.start()
+        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+
+    def set_coords_process(self, index, output_queue, zone_coords):
+        """
+            Process.
+        """
+        state = self.get(index)
+        state.set_coords(zone_coords)
+        output = methods.compress(state,
+                    level=methods.settings.medium_comp_level)
+        output_queue.put([index, output])
+
+    def homogenize_coords(self):
+        """
+            Homogenizes coords
+        """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Homogenizing coords for grid plot"
+        state = self.get(0)
+        zone_coords = state.zone_coords
+        self.set_coords(zone_coords)
+        
+
     def _create_dict_keys(self):
         """
             Create evolucion dictionaries keys.
@@ -2243,6 +2299,7 @@ class Experiment(object):
         state = self.get(index)
         num_rods = state.number_of_rods
         output_queue.put([index, num_rods])
+
 
 
 

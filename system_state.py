@@ -274,13 +274,13 @@ class SystemState(object):
         if not self._fixed_center_radius:
             # There must be rods to make statistics.
             if not self.number_of_rods:
-                msg = "center_and_radius can't be computed before adding rods"
+                msg = "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "center_and_radius can't be computed before adding rods"
                 raise ValueError(msg)
             try:
-                not_defined = not (len(self._zone_coords) or self._fixed_center_radius)
+                not_defined = len(self._zone_coords)
             except AttributeError:
                 not_defined = True
-            if not_defined and not self._is_subsystem:
+            if not_defined:
                 x_values = []
                 y_values = []
                 for rod_ in self:
@@ -290,8 +290,8 @@ class SystemState(object):
                 center_x = sum(x_values)*1.0/self.number_of_rods
                 center_y = sum(y_values)*1.0/self.number_of_rods
                 # radius is the average of maximum distances /2.
-                radius = (max(x_values)-min(x_values)+max(y_values)-min(y_values))
-                radius *= (1-self._radius_correction_ratio)/4.0
+                radius = (max(x_values)-min(x_values)+max(y_values)-min(y_values))/4.0
+                # radius *= (1-self._radius_correction_ratio)/4.0
                 self._center_x = center_x
                 self._center_y = center_y
                 self._radius = radius
@@ -971,6 +971,12 @@ class SystemState(object):
             y_values.append(y_val)
         return x_values, y_values
 
+    def set_coords(self, zone_coords):
+        """
+        Changes zone_coords
+        """
+        self._zone_coords = zone_coords
+
 
 
 
@@ -995,7 +1001,7 @@ class SubsystemState(SystemState):
         self._is_subsystem = True
         self._center = center
         self._radius = rad
-        self._real_radius = real_rad
+        self._real_radius = real_rad + real_kappas
         self._scale = real_rad*1.0/rad
         self._main_center = (zone_coords[0], zone_coords[1])
         self._main_rad = zone_coords[2]
@@ -1065,6 +1071,12 @@ class SubsystemState(SystemState):
                                 level=methods.settings.low_comp_level))
         self._reset()
         self._rods = queue.Queue(rods)
+
+    def compute_center_and_radius(self):
+        """
+        Overrides
+        """
+        pass
 
 
 def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,

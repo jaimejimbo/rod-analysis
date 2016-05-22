@@ -91,8 +91,9 @@ def set_coords_in_imagej(zone_coords_):
 
 #zone_coords = []
 #set_coords_in_imagej()
-zone_coords = get_coords_from_imagej()
-zone_coords = [zone_coords[1], zone_coords[0], zone_coords[2]]
+#zone_coords = get_coords_from_imagej()
+#zone_coords = [zone_coords[1], zone_coords[0], zone_coords[2]]
+zone_coords = None
 #print zone_coords
 #raw_input("")
 settings = open("settings.py", "w")
@@ -118,11 +119,15 @@ settings.write("waiting_time_process = {0}".format(waiting_time_process))
 settings.write("\n")
 settings.write("ignore_temperature = {0}".format(ignore_temperature))
 settings.write("\n")
-rad = zone_coords[2]
-if sigma_coef:
-    gaussian_sigma = sigma_coef*float(rad)/divisions
-else:
+try:
+    rad = zone_coords[2]
+    if sigma_coef:
+        gaussian_sigma = sigma_coef*float(rad)/divisions
+    else:
+        gaussian_sigma = None
+except:
     gaussian_sigma = None
+    rad = None
 settings.write("sigma = {0}".format(gaussian_sigma))
 settings.write("\n")
 settings.close()

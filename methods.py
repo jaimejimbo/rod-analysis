@@ -853,7 +853,7 @@ def reset_dates_ids(folder="./", start=0):
     output_.close()
     input_.close()
 
-def print_progress(done, total, counter, times, time_left, previous_time):
+def print_progress(done, total, counter, times, time_left, previous_time, counter_refresh=10):
     """
     Print progress of stack of tasks.
     """
@@ -871,7 +871,7 @@ def print_progress(done, total, counter, times, time_left, previous_time):
     string += WHITE_BLOCK*prog
     string += " "*(40-prog)
     string += "]"
-    if counter >= 50:
+    if counter >= counter_refresh:
         counter = 0
     try:
         subtimes = []
