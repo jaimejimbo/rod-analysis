@@ -42,6 +42,7 @@ changing_props = 1
 discard_exceptions = 0
 special_chars = 1
 ignore_temperature = 0
+counter_refresh = 5
 import re
 
 
@@ -118,6 +119,8 @@ settings.write("\n")
 settings.write("waiting_time_process = {0}".format(waiting_time_process))
 settings.write("\n")
 settings.write("ignore_temperature = {0}".format(ignore_temperature))
+settings.write("\n")
+settings.write("counter_refresh = {0}".format(counter_refresh))
 settings.write("\n")
 try:
     rad = zone_coords[2]

@@ -853,7 +853,7 @@ def reset_dates_ids(folder="./", start=0):
     output_.close()
     input_.close()
 
-def print_progress(done, total, counter, times, time_left, previous_time, counter_refresh=10):
+def print_progress(done, total, counter, times, time_left, previous_time, counter_refresh=settings.counter_refresh):
     """
     Print progress of stack of tasks.
     """
