@@ -1384,6 +1384,8 @@ class Experiment(object):
             for col_index in range(len(subgroups[row_index])):
                 subgroup = subgroups[row_index][col_index]
                 quad_speed = methods.decompress(quad_speeds[index], level=settings.medium_comp_level)[row_index][col_index]
+                if quad_speed is None:
+                    quad_speed = 0
                 center = subgroup.center
                 center_x = center[0]
                 center_y = center[1]
