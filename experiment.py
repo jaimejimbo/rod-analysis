@@ -484,27 +484,23 @@ class Experiment(object):
         selected = set([])
         evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
         relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
-        inverted_dict = {}
+        inverted_rel_dict = {}
+        inverted_evol_dict = {}
         for initial_rod_id in list(evol_dict.keys()):
             for final_rod_id in evol_dict[initial_rod_id]:
-                inverted_dict[final_rod_id] = set([])
+                inverted_evol_dict[final_rod_id] = set([])
+                inverted_rel_dict[final_rod_id] = {}
         for initial_rod_id in list(evol_dict.keys()):
             for final_rod_id in evol_dict[initial_rod_id]:
-                inverted_dict[final_rod_id] |= set([initial_rod_id])
-        for final_rod_id in list(inverted_dict.keys()):
+                inverted_evol_dict[final_rod_id] |= set([initial_rod_id])
+                inverted_rel_dict[final_rod_id][initial_rod_id] = relative_dict[initial_rod_id][final_rod_id]
+        for final_rod_id in list(inverted_evol_dict.keys()):
             initial_rod_id, distance, angle_diff, vector = self._closer_rod(index,
-                                          final_rod_id, selected, inverted_dict,
-                                          relative_dict, max_distance)
+                                          final_rod_id, selected, inverted_evol_dict,
+                                          inverted_rel_dict, max_distance)
             evol_dict[initial_rod_id] = final_rod_id
             relative_dict[initial_rod_id] = (distance, angle_diff, vector)
             selected |= set([initial_rod_id])
-        """for initial_rod_id in list(evol_dict.keys()):
-            final_rod_id, distance, angle_diff, vector = self._closer_rod(index,
-                                          initial_rod_id, selected, evol_dict,
-                                          relative_dict, max_distance)
-            evol_dict[initial_rod_id] = final_rod_id
-            relative_dict[initial_rod_id] = (distance, angle_diff)
-            selected |= set([final_rod_id])"""
         output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
         selected_queue.put([index, selected])
 
@@ -514,17 +510,23 @@ class Experiment(object):
         this erase all but the closest.
         """
         initial_rods = evol_dict[final_rod]
+        #print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + str(initial_rods)
+        #Hasta aqui todo parece ir bien
         min_distance = max_distance
         vector = None
-        initial_rod = -1
         initial_rods_list = list(initial_rods)
         prev_initial_rod = None
         if len(initial_rods_list) == 1:
-            initial_rod = initial_rods_list[0]
-            relative_dict__ = relative_dict_[initial_rod]
-            relative_dict = relative_dict__[final_rod]
+            prev_initial_rod = initial_rods_list[0]
+            relative_dict = relative_dict_[prev_initial_rod]
+            print relative_dict
+            try:
+                relative_dict = relative_dict.values()
+            except AttributeError:
+                pass
             min_distance = relative_dict[0]
             angle_diff = relative_dict[1]
+            vector = relative_dict[2]
         elif len(initial_rods_list) == 0:
             return None, None, None, None
         else:
