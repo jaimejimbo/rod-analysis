@@ -510,24 +510,18 @@ class Experiment(object):
         this erase all but the closest.
         """
         initial_rods = evol_dict[final_rod]
-        #print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + str(initial_rods)
-        #Hasta aqui todo parece ir bien
         min_distance = max_distance
         vector = None
         initial_rods_list = list(initial_rods)
         prev_initial_rod = None
-        if len(initial_rods_list) == 1:
+        length = len(initial_rods_list)
+        if length == 1:
             prev_initial_rod = initial_rods_list[0]
-            relative_dict = relative_dict_[prev_initial_rod]
-            print relative_dict
-            try:
-                relative_dict = relative_dict.values()
-            except AttributeError:
-                pass
+            relative_dict = relative_dict_[final_rod]
             min_distance = relative_dict[0]
-            angle_diff = relative_dict[1]
+            angle_diff = relative_dict[1] #IndexError: list index out of range XXX
             vector = relative_dict[2]
-        elif len(initial_rods_list) == 0:
+        elif not length:
             return None, None, None, None
         else:
             while True:
@@ -536,8 +530,8 @@ class Experiment(object):
                 except IndexError:
                     return None, None, None, None
                 if initial_rod not in selected:
-                    relative_dict = relative_dict_[initial_rod] 
-                    rel = relative_dict[final_rod]
+                    relative_dict = relative_dict_[final_rod] 
+                    rel = relative_dict[initial_rod]
                     distance = rel[0]
                     if distance < min_distance:
                         min_distance = distance
