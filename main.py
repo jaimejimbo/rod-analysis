@@ -42,7 +42,7 @@ changing_props = 0
 discard_exceptions = 0
 special_chars = 1
 ignore_temperature = 0
-counter_refresh = 5
+counter_refresh = 10
 import re
 
 

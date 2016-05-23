@@ -218,22 +218,21 @@ class Rod(object):
             self._feret = self._real_length
         return cond
 
-    def vector_to_rod(self, rod):
+    def vector_to_rod(self, rod, scale=1):
         """
         Returns a vector that joins 2 rods.
         Start in self.
         """
-        diff_x = rod.x_mid-self.x_mid
-        diff_y = rod.y_mid-self.y_mid
+        scale = float(scale)
+        diff_x = (rod.x_mid-self.x_mid)*scale
+        diff_y = (rod.y_mid-self.y_mid)*scale
         return (diff_x, diff_y)
 
-    def distance_to_rod(self, rod):
+    def distance_to_rod(self, rod, scale=1):
         """
         Returns the distance to another rod.
         """
-        diff_x = abs(self.x_mid-rod.x_mid)
-        diff_y = abs(self.y_mid-rod.y_mid)
-        return math.sqrt(diff_x**2+diff_y**2)
+        return methods.vector_module(self.vector_to_rod(rod, scale=scale))
 
     def angle_between_rods(self, rod):
         """

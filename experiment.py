@@ -385,7 +385,8 @@ class Experiment(object):
             kappa_error = initial_state.kappa_error/2
             for final_rod in available_final_rods:
                 final_id = final_rod.identifier
-                distance = initial_rod.distance_to_rod(final_rod)
+                distance = initial_rod.distance_to_rod(final_rod, scale=initial_state.scale)
+                vector = initial_rod.vector_to_rod(final_rod, scale=initial_state.scale)
                 angle = initial_rod.angle_between_rods(final_rod)
                 angle = abs(min([angle, 180-angle]))
                 speed = float(distance)/self._diff_t
@@ -397,11 +398,11 @@ class Experiment(object):
                     else:
                         dummy, rod_id = speeds[-1]
                         evol_dict[initial_id] |= set([final_id])
-                        relative_dict[initial_id][final_id] = (distance, angle)
+                        relative_dict[initial_id][final_id] = (distance, angle, vector)
                         continue
                     if rod_id != final_id:
                         evol_dict[initial_id] |= set([final_id])
-                        relative_dict[initial_id][final_id] = (distance, angle)
+                        relative_dict[initial_id][final_id] = (distance, angle, vector)
                         evol_dict[initial_id] -= set([rod_id])
                         del relative_dict[initial_id][rod_id]
         for initial_id in relative_dict.keys():
@@ -483,45 +484,65 @@ class Experiment(object):
         selected = set([])
         evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
         relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
+        inverted_dict = {}
         for initial_rod_id in list(evol_dict.keys()):
-            final_rod_id, distance, angle_diff = self._closer_rod(index,
+            for final_rod_id in evol_dict[initial_rod_id]:
+                inverted_dict[final_rod_id] = set([])
+        for initial_rod_id in list(evol_dict.keys()):
+            for final_rod_id in evol_dict[initial_rod_id]:
+                inverted_dict[final_rod_id] |= set([initial_rod_id])
+        for final_rod_id in list(inverted_dict.keys()):
+            initial_rod_id, distance, angle_diff, vector = self._closer_rod(index,
+                                          final_rod_id, selected, inverted_dict,
+                                          relative_dict, max_distance)
+            evol_dict[initial_rod_id] = final_rod_id
+            relative_dict[initial_rod_id] = (distance, angle_diff, vector)
+            selected |= set([initial_rod_id])
+        """for initial_rod_id in list(evol_dict.keys()):
+            final_rod_id, distance, angle_diff, vector = self._closer_rod(index,
                                           initial_rod_id, selected, evol_dict,
                                           relative_dict, max_distance)
             evol_dict[initial_rod_id] = final_rod_id
             relative_dict[initial_rod_id] = (distance, angle_diff)
-            selected |= set([final_rod_id])
+            selected |= set([final_rod_id])"""
         output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
         selected_queue.put([index, selected])
 
-    def _closer_rod(self, index, initial_rod_id, selected, evol_dict, relative_dict_, max_distance=50):
+    def _closer_rod(self, index, final_rod, selected, evol_dict, relative_dict_, max_distance=50):
         """
             If there are multiple choices,
         this erase all but the closest.
         """
-        final_rods = evol_dict[initial_rod_id]
-        relative_dict = relative_dict_[initial_rod_id]
+        initial_rods = evol_dict[final_rod]
         min_distance = max_distance
-        final_rod = -1
-        final_rods_list = list(final_rods)
-        if len(final_rods_list) == 1:
-            final_rod = final_rods_list[0]
+        vector = None
+        initial_rod = -1
+        initial_rods_list = list(initial_rods)
+        prev_initial_rod = None
+        if len(initial_rods_list) == 1:
+            initial_rod = initial_rods_list[0]
+            relative_dict__ = relative_dict_[initial_rod]
+            relative_dict = relative_dict__[final_rod]
             min_distance = relative_dict[0]
             angle_diff = relative_dict[1]
-        elif len(final_rods_list) == 0:
-            return None, None, None
+        elif len(initial_rods_list) == 0:
+            return None, None, None, None
         else:
             while True:
                 try:
-                    final_rod_id = final_rods_list.pop(0)
+                    initial_rod = initial_rods_list.pop(0)
                 except IndexError:
-                    return None, None, None
-                if final_rod_id not in selected:
-                    final_rod = final_rod_id
-                    rel = relative_dict[final_rod_id]
-                    min_distance = rel[0]
-                    angle_diff = rel[1]
-                    break
-        return final_rod, min_distance, angle_diff
+                    return None, None, None, None
+                if initial_rod not in selected:
+                    relative_dict = relative_dict_[initial_rod] 
+                    rel = relative_dict[final_rod]
+                    distance = rel[0]
+                    if distance < min_distance:
+                        min_distance = distance
+                        angle_diff = rel[1]
+                        vector = rel[2]
+                        prev_initial_rod = initial_rod
+        return prev_initial_rod, min_distance, angle_diff, vector
 
     def compute_dictionaries(self, max_distance=100, max_angle_diff=90,
                             limit=10, amount_of_rods=None):
@@ -533,6 +554,7 @@ class Experiment(object):
              ...
              initial_rod_idN: set([final_rod_idN1,final_rod_idN2,...])}
         """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Getting evolution dictionaries"
         tuple1 = (max_distance, max_angle_diff, limit, amount_of_rods)
         tuple2 = (self._max_distance, self._max_angle_diff,
                     self._limit, self._amount_of_rods)
@@ -543,72 +565,13 @@ class Experiment(object):
             self._fill_dicts(max_distance, max_angle_diff, limit=limit,
                                 amount_of_rods=amount_of_rods)
             self._leave_only_closer(max_distance=max_distance)
+            evol_dict = methods.decompress(self._evolution_dictionaries[0], level=settings.medium_comp_level)
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: Evolution dict: " + str(evol_dict)
+            raw_input("Pausa")
             self._join_rods_left(max_distance=max_distance)
-            #self._get_vectors()
-
-    def vectors_dictionaries(self, max_distance=100, max_angle_diff=90,
-                            limit=5, amount_of_rods=200):
-        """
-        Returns a dictionary {initial_rod: vector_to_final_rod}
-        """
-        self.compute_dictionaries(max_distance=max_distance,
-                                  max_angle_diff=max_angle_diff,
-                                  limit=5, amount_of_rods=200)
-        return self._speeds_vectors
-
-    @property
-    def speeds_vectors(self):
-        """
-         Rods' speed vectors.
-        """
-        if not len(self._speeds_vectors):
-            self._get_vectors()
-        return self._speeds_vectors
-
-    def _get_vectors(self):
-        """
-        Creates a dictionary {initial_rod: vector_to_final_rod}
-        """
-        output_queue = mp.Queue()
-        processes = []
-        for index in range(len(self._evolution_dictionaries)-1):
-            processes.append(mp.Process(target=self._get_vectors_process,
-                                        args=(index, output_queue)))
-            self._speeds_vectors.append(0)
-        num_processes = len(processes)
-        running, processes_left = methods.run_processes(processes)
-        finished = 0
-        while finished < num_processes:
-            finished += 1
-            output = output_queue.get()
-            index = output[0]
-            speeds_vectors = output[1]
-            self._speeds_vectors[index] = speeds_vectors
-            if len(processes_left):
-                new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
-                new_process.start()
-
-    def _get_vectors_process(self, index, output_queue):
-        """
-        Process.
-        """
-        speeds_vectors = {}
-        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
-        initial_state = self.get(index)
-        final_state = self.get(index+1)
-        keys = list(evol_dict.keys())
-        if not keys[0]:
-            return
-        for initial_rod_id in keys:
-            if initial_rod_id:
-                final_rod_id = evol_dict[initial_rod_id]
-                if final_rod_id:
-                    initial_rod = initial_state[initial_rod_id]
-                    final_rod = final_state[final_rod_id]
-                    vector = initial_rod.vector_to_rod(final_rod)
-                    speeds_vectors[initial_rod_id] = vector
-        output_queue.put([index, methods.compress(speeds_vectors, level=settings.medium_comp_level)])
+            evol_dict = methods.decompress(self._evolution_dictionaries[0], level=settings.medium_comp_level)
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: Evolution dict: " + str(evol_dict)
+            raw_input("Pausa")
 
     def evolution_dictionaries(self, max_distance=100, max_angle_diff=90,
                                 limit=5, amount_of_rods=200):
@@ -685,7 +648,7 @@ class Experiment(object):
             final_rod = final_state[final_rod_id]
             for initial_rod_id in initial_rods:
                 initial_rod = initial_state[initial_rod_id]
-                distance = final_rod.distance_to_rod(initial_rod)
+                distance = final_rod.distance_to_rod(initial_rod, scale=initial_state.scale)
                 if distance < min_distance:
                     min_distance = distance
                     selected_rod_id = initial_rod_id
@@ -981,6 +944,8 @@ class Experiment(object):
             counter = 0
             time_left = None
             times = []
+            densities = []
+            quad_speeds = []
             print " "
             while finished < num_processes:
                 counter += 1
@@ -1318,8 +1283,9 @@ class Experiment(object):
         Creates a video per property of the system that shows evolution.
         """
         self.divide_systems_in_circles(divisions)
-        self.create_density_video(divisions, folder, fps, number_of_bursts)
-        if not only_density:
+        #XXX ####
+        #self.create_density_video(divisions, folder, fps, number_of_bursts)
+        if False:#not only_density:
             self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
             self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
         if not settings.ignore_temperature:
@@ -1364,6 +1330,7 @@ class Experiment(object):
             x_vals.append(output[0])
             y_vals.append(output[1])
             z_vals.append(output[2])
+            raw_input("Press to continue")
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
@@ -1474,79 +1441,6 @@ class Experiment(object):
             array[index2] *= index2
         output_queue.put([index, array])
         return
-
-    def create_speeds_vectors_video(self, divisions, folder, fps, max_distance,
-                                 max_angle_diff, limit, amount_of_rods,
-                                 number_of_bursts):
-        """
-            Creates a video of average speed vectors over subsystem.
-        """
-        vectors_matrices = self.average_speeds_vectors(
-                                            divisions, max_distance,
-                                            max_angle_diff)
-        fig = plt.figure()
-        kappa = self.kappas
-        name = str(folder) + "speeds_vectors_K" + str(kappa)
-        bursts_groups = copy.deepcopy(self.bursts_groups)
-        end = False
-        vectors_matrices_avg = []
-        def animate(dummy_frame):
-            """
-            Animation function.
-            """
-            self._speeds_vectors_video_wrapper(vectors_matrices)    #XXX BUG
-        frames = len(self)
-        anim = animation.FuncAnimation(fig, animate, frames=frames)
-        anim.save(name, writer=methods.WRITER, fps=fps)
-
-    def _speeds_vectors_video_wrapper(self, vectors_matrix):
-        """
-            Wrapper
-        """
-        pass
-
-    def average_speeds_vectors(self, divisions, max_distance, max_angle_diff):
-        """
-            Computes average speeds vectors
-        """
-        output_queue = mp.Queue()
-        speeds = self.speeds_vectors
-        processes = []
-        vector_matrices = []
-        speeds_num = len(self)-1
-        for index in range(speeds_num):
-            speeds_ = speeds[index]
-            compressed_state = self._states[index]
-            process = mp.Process(target=average_speeds_vectors_video_process,
-                                 args=(divisions, index, compressed_state,
-                                     speeds_, output_queue))
-            processes.append(process)
-            vector_matrices.append(None)
-        num_processes = len(processes)
-        running, processes_left = methods.run_processes(processes)
-        finished = 0
-        previous_time = datetime.datetime.now()
-        counter = 0
-        time_left = None
-        times = []
-        print " "
-        while finished < num_processes:
-            counter += 1
-            finished += 1
-            previous_time, counter, time_left = methods.print_progress(finished, num_processes,
-                                    counter, times, time_left, previous_time)
-            output = output_queue.get()
-            index = output[0]
-            vector_matrix = output[1]
-            vector_matrices[index] = vector_matrix
-            if len(processes_left):
-                new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
-                new_process.start()
-        vectors = []
-        for index in range(speeds_num):
-            state = self.get(index)
-            vector_matrix = vector_matrices[index]
 
     def create_temperature_video(self, divisions, folder, fps,
                             max_distance, max_angle_diff,

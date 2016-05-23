@@ -618,7 +618,10 @@ def vector_module(vector):
     """
        Returns array's module. 
     """
-    return math.sqrt(vector[0]**2+vector[1]**2)
+    output = 0
+    for value in vector:
+        output += value**2
+    return math.sqrt(output)
 
 def vector_angle(vector):
     """

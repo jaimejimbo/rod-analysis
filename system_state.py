@@ -85,6 +85,12 @@ class SystemState(object):
             self._center_y = None
             self._radius = None
 
+    @property
+    def scale(self):
+        """
+        Gets system scale (real_rad / rad)
+        """
+        return self._real_radius*1.0/self._radius
 
     def set_kappa(self, value):
         """
