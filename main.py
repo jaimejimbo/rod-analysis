@@ -26,8 +26,8 @@ avg_temp = 1
 order_param_exp = 1
 lost_percentage = 1
 run_imagej = 0
-run_props = 1
-run_graphs = 0
+run_props = 0
+run_graphs = 1
 run_check_dim = 1
 get_image_dates = 0
 to_file = 1
@@ -38,7 +38,7 @@ coef = 5
 divisions = 50
 #sigma = sigma_coef * subsystem_rad
 sigma_coef = None
-changing_props = 1
+changing_props = 0
 discard_exceptions = 0
 special_chars = 1
 ignore_temperature = 0
@@ -92,9 +92,8 @@ def set_coords_in_imagej(zone_coords_):
 
 #zone_coords = []
 #set_coords_in_imagej()
-#zone_coords = get_coords_from_imagej()
-#zone_coords = [zone_coords[1], zone_coords[0], zone_coords[2]]
-zone_coords = None
+zone_coords = get_coords_from_imagej()
+zone_coords = [zone_coords[1], zone_coords[0], zone_coords[2]]
 #print zone_coords
 #raw_input("")
 settings = open("settings.py", "w")
@@ -275,8 +274,8 @@ if True:
         if run_props:
             print "Computing experiment statistics..."
             log = open("props.log",'w')
-            prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop(15,12,3)#_length(160, 40, 12)
-            prop_short, prop_short_dev, shorts, shorts_dev, rad2, msg2 = run_prop(9,6,2)#_length(80, 30, 6)
+            prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop_length(145, 10, 12)
+            prop_short, prop_short_dev, shorts, shorts_dev, rad2, msg2 = run_prop_length(70, 10, 6)
             print "kappa\t\t\tdeviation"
             print msg1
             print msg2

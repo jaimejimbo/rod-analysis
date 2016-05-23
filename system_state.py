@@ -1001,7 +1001,7 @@ class SubsystemState(SystemState):
         self._is_subsystem = True
         self._center = center
         self._radius = rad
-        self._real_radius = real_rad + real_kappas
+        self._real_radius = real_rad# + real_kappas
         self._scale = real_rad*1.0/rad
         self._main_center = (zone_coords[0], zone_coords[1])
         self._main_rad = zone_coords[2]
@@ -1009,6 +1009,9 @@ class SubsystemState(SystemState):
                                             self._center)
         self._area = methods.effective_area(self._radius,
                                     self._position_rad, self._main_rad)
+        self._real_area = methods.effective_area(self._real_radius, 
+                                                 self._position_rad*self._scale,
+                                                 self._main_rad*self._scale)
         self._gaussian_exp = {}
 
     def remove_all_rods(self):
@@ -1035,6 +1038,13 @@ class SubsystemState(SystemState):
             self.compute_center_and_radius()
         return self._radius
 
+    @property
+    def real_area(self):
+        """
+        Area in mm of subsystem.
+        """
+        return self._real_area
+
     def _update_density(self):
         """
             Computes density of the group.
@@ -1042,11 +1052,10 @@ class SubsystemState(SystemState):
         density = 0
         for rod_ in self:
             density += rod_.area*self._gaussian_exp[rod_.identifier]
-        # print [rod_ for rod_ in self]
         if not density or not self.area:
             self._density = 0
         else:
-            self._density = min([float(density)/self.area, 1])
+            self._density = float(density)/self.real_area
 
     @property
     def density(self):

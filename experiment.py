@@ -1090,7 +1090,7 @@ class Experiment(object):
         function_name = 'plottable_density_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
-        name = str(folder)+str(function_name)+"_K"+str(kappas)+"prop"+str(round(100*prop,1))+'%.mp4'
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
         units = "Normalized occupied area [S.U.]"
         z_max, z_min = self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
@@ -1118,7 +1118,7 @@ class Experiment(object):
         function_name = 'correlation_g2_plot_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
-        name = str(folder)+str(function_name)+"_K"+str(kappas)+"prop"+str(round(100*prop,1))+'%.mp4'
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
         units = "g2 [S.U.]"
         self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
@@ -1134,7 +1134,7 @@ class Experiment(object):
         function_name = 'correlation_g4_plot_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
-        name = str(folder)+str(function_name)+"_K"+str(kappas)+"prop"+str(round(100*prop,1))+'%.mp4'
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
         units = "g4 [S.U.]"
         self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
@@ -1150,7 +1150,7 @@ class Experiment(object):
         function_name = 'plottable_average_angle_matrix'
         kappas = self.get(0).kappas
         prop = self.average_covered_area_proportion[0]
-        name = str(folder)+str(function_name)+"_K"+str(kappas)+"prop"+str(round(100*prop,1))+'%.mp4'
+        name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
         units = "Average angle [grad]"
         self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
@@ -1203,14 +1203,13 @@ class Experiment(object):
         z_vals_avg = []
         x_val = []
         y_val = []
-        match1 = re.match(r'.*plottable_denisity.*', function_name)
+        match1 = re.match(r'.*plottable_density.*', function_name)
         match2 = re.match(r'.*g[2|4].*', function_name)
         print ""
         if match2:
             z_max = 1
             z_min = -1
         elif match1:
-            print "Density"
             z_max = 1
             z_min = 0
         else:
@@ -1695,7 +1694,8 @@ class Experiment(object):
                     max_angle_diff=None, min_size=3):
         """
         Compute cluster areas for all states.
-        """
+        """        
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Getting cluster areas"
         output_queue = mp.Queue()
         processes = []
         areas = []
@@ -1705,12 +1705,19 @@ class Experiment(object):
                                     max_angle_diff, output_queue, min_size))
             processes.append(process)
             areas.append(None)
-        running, processes_left = methods.run_processes(processes)
         num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
         finished = 0
-        print ""
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
         while finished < num_processes:
+            counter += 1
             finished += 1
+            previous_time, counter, time_left = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
             output = output_queue.get()
             index = output[0]
             area = output[1]
@@ -1719,6 +1726,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
+        print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
         return areas
 
     def _get_cluster_areas_process(self, index, max_distance,
