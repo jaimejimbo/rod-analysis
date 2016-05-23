@@ -43,7 +43,7 @@ class Rod(object):
         """
         Returns area covered by rod.
         """
-        return float(self._kappa)
+        return float(self._real_length**2)/self._real_kappa
 
     @property
     def feret(self):
