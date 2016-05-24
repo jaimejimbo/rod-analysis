@@ -85,6 +85,7 @@ class Experiment(object):
         self._unjoined_initial_rods = []
         self._unjoined_final_rods = []
         self._final_rods = []
+        self._vector_speeds = []
         self._initial_rods = []
         self._speeds_vectors = []
         self._speeds = []
@@ -498,25 +499,27 @@ class Experiment(object):
             initial_rod_id, distance, angle_diff, vector = self._closer_rod(index,
                                           final_rod_id, selected, inverted_evol_dict,
                                           inverted_rel_dict, max_distance)
-            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + str((initial_rod_id, final_rod_id))
-            evol_dict[initial_rod_id] = final_rod_id
-            relative_dict[initial_rod_id] = (distance, angle_diff, vector)
-            selected |= set([initial_rod_id])
+            if not(initial_rod_id is None):
+                evol_dict[initial_rod_id] = final_rod_id
+                relative_dict[initial_rod_id] = (distance, angle_diff, vector)
+                selected |= set([initial_rod_id])
+        for initial_rod_id in list(evol_dict.keys()):
+            if type(evol_dict[initial_rod_id]) == type(set([])):
+                evol_dict[initial_rod_id] = None
         output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
         selected_queue.put([index, selected])
 
-    def _closer_rod(self, index, final_rod, selected, evol_dict, relative_dict_, max_distance=50):
+    def _closer_rod(self, index, final_rod, selected, evol_dict, relative_dict_, max_distance=150):
         """
             If there are multiple choices,
         this erase all but the closest.
         """
         initial_rods = evol_dict[final_rod]
-        min_distance = max_distance
+        min_distance = 1e100
         vector = None
         initial_rods_list = list(initial_rods)
         prev_initial_rod = None
         length = len(initial_rods_list)
-        print length
         if length == 0:
             return None, None, None, None
         if length == 1:
@@ -531,11 +534,13 @@ class Experiment(object):
             vector = relative_dict[0][2]
         else:
             while True:
-                print initial_rods_list, selected
                 try:
                     initial_rod = initial_rods_list.pop(0)
                 except IndexError:
-                    return None, None, None, None
+                    if prev_initial_rod is not None:
+                        break
+                    else:
+                        return None, None, None, None
                 if initial_rod not in selected:
                     relative_dict = relative_dict_[final_rod] 
                     rel = relative_dict[initial_rod]
@@ -568,13 +573,7 @@ class Experiment(object):
             self._fill_dicts(max_distance, max_angle_diff, limit=limit,
                                 amount_of_rods=amount_of_rods)
             self._leave_only_closer(max_distance=max_distance)
-            evol_dict = methods.decompress(self._evolution_dictionaries[0], level=settings.medium_comp_level)
-            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: Evolution dict: " + str(evol_dict)
-            raw_input("Pausa")
             self._join_rods_left(max_distance=max_distance)
-            evol_dict = methods.decompress(self._evolution_dictionaries[0], level=settings.medium_comp_level)
-            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: Evolution dict: " + str(evol_dict)
-            raw_input("Pausa")
 
     def evolution_dictionaries(self, max_distance=100, max_angle_diff=90,
                                 limit=5, amount_of_rods=200):
@@ -630,7 +629,7 @@ class Experiment(object):
         print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
 
 
-    def _join_rods_left_process(self, index, output_queue, max_distance=50):
+    def _join_rods_left_process(self, index, output_queue, max_distance=150):
         """
         Process for method.
         """
@@ -656,15 +655,13 @@ class Experiment(object):
                     min_distance = distance
                     selected_rod_id = initial_rod_id
                     selected_rod = initial_rod
+            if selected_rod is None:
+                continue
             evol_dict[selected_rod_id] = final_rod_id
-            angle_diff = None
-            try:
-                angle_diff = final_rod.angle_between_rods(selected_rod)
-                angle_diff = min([angle_diff, 180-angle_diff])
-            except AttributeError:
-                min_distance = None
-                angle_diff = None
-            relative_dict[selected_rod_id] = (min_distance, angle_diff)
+            angle_diff = final_rod.angle_between_rods(selected_rod)
+            angle_diff = min([angle_diff, 180-angle_diff])
+            vector = selected_rod.vector_to_rod(final_rod)
+            relative_dict[selected_rod_id] = (min_distance, angle_diff, vector)
             initial_rods -= set([selected_rod_id])
         output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
 
@@ -683,13 +680,15 @@ class Experiment(object):
             print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing speeds"
             speeds_queue = mp.Queue()
             angular_speeds_queue = mp.Queue()
+            vector_speeds_queue = mp.Queue()
             processes = []
             for index in range(len(self._evolution_dictionaries)-1):
                 process = mp.Process(target=self._compute_speeds_process,
                                      args=(index, speeds_queue,
-                                            angular_speeds_queue))
+                                            angular_speeds_queue, vector_speeds_queue))
                 self._speeds.append(None)
                 self._angular_speeds.append(None)
+                self._vector_speeds.append(None)
                 processes.append(process)
             num_processes = len(processes)
             running, processes_left = methods.run_processes(processes)
@@ -706,8 +705,10 @@ class Experiment(object):
                                         counter, times, time_left, previous_time)
                 index_speeds, speeds = speeds_queue.get()
                 index_angular_speeds, angular_speeds = angular_speeds_queue.get()
+                index_vector, vector_speeds = vector_speeds_queue.get()
                 self._speeds[index_speeds] = speeds
                 self._angular_speeds[index_angular_speeds] = angular_speeds
+                self._vector_speeds[index_vector] = vector_speeds
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
@@ -715,30 +716,34 @@ class Experiment(object):
             print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
 
     def _compute_speeds_process(self, index, speeds_queue,
-                                angular_speeds_queue):
+                                angular_speeds_queue, vector_speeds_queue):
         """
         Returns an array of speeds.
         """
         rel_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
         speeds = {}
         angular_speeds = {}
+        vector_speeds = {}
         error = True
         for initial_rod_id in list(rel_dict.keys()):
             values = rel_dict[initial_rod_id]
             try:
-                error &= (not bool(values[0]))
-                speed = float(values[0])/self._diff_t
-                angular_speed = float(values[1])/self._diff_t
+                #error &= (not bool(values[0]))
+                speed = float(values[0])*1.0/self._diff_t
+                angular_speed = float(values[1])*1.0/self._diff_t
+                vector_speed = (values[2][0]*1.0/self._diff_t, values[2][1]*1.0/self._diff_t)
                 speeds[initial_rod_id] = speed
                 angular_speeds[initial_rod_id] = angular_speed
+                vector_speeds[initial_rod_id] = vector_speed
             except TypeError:
                 pass
-        if error:
-            speeds_queue.put([index, None])
-            angular_speeds_queue.put([index, None])
-            return
+        #if error:
+        #    speeds_queue.put([index, None])
+        #    angular_speeds_queue.put([index, None])
+        #    return
         speeds_queue.put([index, methods.compress(speeds, level=settings.medium_comp_level)])
         angular_speeds_queue.put([index, methods.compress(angular_speeds, level=settings.medium_comp_level)])
+        vector_speeds_queue.put([index, methods.compress(vector_speeds, level=settings.medium_comp_level)])
 
     def speeds(self, max_distance=100, max_angle_diff=90, limit=5,
                      amount_of_rods=200):
@@ -830,25 +835,35 @@ class Experiment(object):
 
     def _compute_local_speeds_process(self, index, output_queue, divisions):
         """
-        Process
+        Process ###
         """
         state = self.get(index)
         subgroups_matrix = state.subgroups_matrix(divisions)
         speeds_matrix = []
         speeds = methods.decompress(self._speeds[index], level=settings.medium_comp_level)
         angular_speeds = methods.decompress(self._angular_speeds[index], level=settings.medium_comp_level)
+        vector_speeds = methods.decompress(self._vector_speeds[index], level=settings.medium_comp_level)
         for row in subgroups_matrix:
             speeds_row = []
             for subsystem in row:
                 subsystem_dict = {}
+                total_vector_speed = [0, 0]
                 for rod in subsystem:
                     rod_id = rod.identifier
                     try:
-                        speed = speeds[rod_id]
-                        angular_speed = angular_speeds[rod_id]
-                        subsystem_dict[rod_id] = (speed, angular_speed)
+                        vector_speed = vector_speeds[rod_id]
                     except KeyError:
-                        pass
+                        continue
+                    total_vector_speed[0] += vector_speed[0]
+                    total_vector_speed[1] += vector_speed[1]
+                for rod in subsystem:
+                    rod_id = rod.identifier
+                    relative_vector_speed = list(vector_speeds[rod_id])
+                    relative_vector_speed[0] -= total_vector_speed[0]
+                    relative_vector_speed[1] -= total_vector_speed[1]
+                    speed = methods.vector_module(relative_vector_speed)
+                    angular_speed = angular_speeds[rod_id]
+                    subsystem_dict[rod_id] = (speed, angular_speed, tuple(relative_vector_speed), tuple(total_vector_speed))
                 speeds_row.append(subsystem_dict)
             speeds_matrix.append(speeds_row)
         output_queue.put([index, methods.compress(speeds_matrix, level=settings.medium_comp_level)])
@@ -1333,7 +1348,6 @@ class Experiment(object):
             x_vals.append(output[0])
             y_vals.append(output[1])
             z_vals.append(output[2])
-            raw_input("Press to continue")
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
@@ -1504,7 +1518,7 @@ class Experiment(object):
                 z_maxs.append(max(z_val))
                 z_mins.append(min(z_val))
         except ValueError:
-            print(z_vals_avg)
+            #print(z_vals_avg)
             raise ValueError
         z_max = max(z_maxs)
         z_min = min(z_mins)
