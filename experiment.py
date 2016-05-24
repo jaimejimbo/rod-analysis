@@ -498,6 +498,7 @@ class Experiment(object):
             initial_rod_id, distance, angle_diff, vector = self._closer_rod(index,
                                           final_rod_id, selected, inverted_evol_dict,
                                           inverted_rel_dict, max_distance)
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + str((initial_rod_id, final_rod_id))
             evol_dict[initial_rod_id] = final_rod_id
             relative_dict[initial_rod_id] = (distance, angle_diff, vector)
             selected |= set([initial_rod_id])
@@ -515,16 +516,22 @@ class Experiment(object):
         initial_rods_list = list(initial_rods)
         prev_initial_rod = None
         length = len(initial_rods_list)
+        print length
+        if length == 0:
+            return None, None, None, None
         if length == 1:
             prev_initial_rod = initial_rods_list[0]
             relative_dict = relative_dict_[final_rod]
-            min_distance = relative_dict[0]
-            angle_diff = relative_dict[1] #IndexError: list index out of range XXX
-            vector = relative_dict[2]
-        elif not length:
-            return None, None, None, None
+            try:
+                relative_dict = relative_dict.values()
+            except AttributeError:
+                pass
+            min_distance = relative_dict[0][0]
+            angle_diff = relative_dict[0][1]
+            vector = relative_dict[0][2]
         else:
             while True:
+                print initial_rods_list, selected
                 try:
                     initial_rod = initial_rods_list.pop(0)
                 except IndexError:
