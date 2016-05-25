@@ -515,7 +515,7 @@ class Experiment(object):
         this erase all but the closest.
         """
         initial_rods = evol_dict[final_rod]
-        min_distance = 1e100
+        min_distance = max_distance
         vector = None
         initial_rods_list = list(initial_rods)
         prev_initial_rod = None
