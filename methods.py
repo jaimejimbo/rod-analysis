@@ -14,6 +14,7 @@ import inspect
 
 CURSOR_UP_ONE = '\x1b[1A'
 ERASE_LINE = '\x1b[2K'
+CLEAR_LAST = CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
 if settings.special_chars:
     WHITE_BLOCK = u'\u25A0'
 else:
@@ -892,7 +893,7 @@ def print_progress(done, total, counter, times, time_left, previous_time, counte
             string += "    " + str(time_left) + " minutes"
         else:
             string += "    " + str(int(left*avg_time)) + " seconds"
-    print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+    print CLEAR_LAST
     print string
     return previous_time, counter, time_left
 

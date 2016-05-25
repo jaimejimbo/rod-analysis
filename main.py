@@ -171,10 +171,10 @@ if True:
                                                     allowed_kappa_error=error)
             experiment_ = experiment.Experiment(system_states_name_list=names, kappas=real_kappa,
                                                 system_states_list=rod_groups,
-                                                dates=dates, diff_t=5/3.0)
+                                                dates=dates, diff_t=3/5.0)
             experiment_.set_coef(coef)
             if create_videos:
-                experiment_.create_videos(divisions=divisions, fps=10, max_distance=300, max_angle_diff=60,
+                experiment_.create_videos(divisions=divisions, fps=10, max_distance=30, max_angle_diff=60,
                                          number_of_bursts=1, only_density=only_density)
             if clusters:
                 experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=150,
@@ -212,7 +212,7 @@ if True:
             experiment_.set_coef(coef)
             if create_videos:
                 experiment_.create_videos(divisions=divisions, fps=10, max_distance=150, max_angle_diff=45,
-                                         number_of_bursts=1, only_density=only_density)
+                                         number_of_bursts=1, only_density=only_density, limit=20)
             if clusters:
                 experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=150,
                         max_angle_diff=10, min_size=20)

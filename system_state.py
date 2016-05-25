@@ -88,7 +88,7 @@ class SystemState(object):
     @property
     def scale(self):
         """
-        Gets system scale (real_rad / rad)
+        Gets system scale (real_rad(mm) / rad)
         """
         return self._real_radius*1.0/self._radius
 

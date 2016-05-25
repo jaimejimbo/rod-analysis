@@ -417,6 +417,7 @@ class Experiment(object):
             Remove final rod from the rest of rods' evolutions.
         """
         evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
+        #rel_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
         system_end = self.get(index+1)
         final_rod = system_end[list(final_rod_id)[0]]
         changed = False
@@ -504,11 +505,6 @@ class Experiment(object):
                 evol_dict[initial_rod_id] = final_rod_id
                 relative_dict[initial_rod_id] = (distance, angle_diff, vector)
                 selected |= set([initial_rod_id])
-        for initial_rod_id in list(evol_dict.keys()):
-            if type(evol_dict[initial_rod_id]) == type(set([])):
-                evol_dict[initial_rod_id] = None
-            if type(evol_dict[initial_rod_id]) == type({}):
-                evol_dict[initial_rod_id] = None
         output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
         selected_queue.put([index, selected])
 
@@ -557,9 +553,9 @@ class Experiment(object):
 
     def _debug_1(self, limit):
         """
-
+        Check distances that rods moved.
         """
-        for index in range(len(self._relative_dictionaries)):
+        for index in range(len(self._relative_dictionaries)-1):
             relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
             for subdict in relative_dict.values():
                 msg = None
@@ -568,10 +564,41 @@ class Experiment(object):
                         if value[0] > limit:
                             msg = "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Value over limits: value->" + str(value[0]) + " limit->" + str(limit)
                 except:
-                    if subdict[0] > limit:
-                        msg = "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Value over limits: value->" + str(value[0]) + " limit->" + str(limit)
+                    try:
+                        if subdict[0] > limit:
+                            msg = "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Value over limits: value->" + str(value[0]) + " limit->" + str(limit)
+                    except TypeError:
+                        pass
                 if not (msg is None):
                     raw_input(msg)
+
+    def _debug_2(self):
+        """
+        Check relative_dicts
+        """
+        tuples = 0
+        not_tuples = 0
+        dicts = 0
+        total = 0
+        nones = 0
+        for index in range(len(self._relative_dictionaries)-1):
+            relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
+            evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
+            for initial_rod_id in relative_dict.keys():
+                subdict = relative_dict[initial_rod_id]
+                evoldict = evol_dict[initial_rod_id]
+                total += 1
+                is_dict = (type(subdict) == type({}))
+                is_none = (subdict is None)
+                dicts += int(is_dict)
+                is_tuple = (type(subdict) == type((0,)))
+                not_tuples += int(not is_tuple)
+                tuples += int(is_tuple)
+                nones += int(is_none)
+                if ((not is_tuple) and (not is_dict) and (not is_none)):
+                    print type(subdict)
+                    raise ValueError
+        return tuples, not_tuples, dicts, nones, total
 
     def compute_dictionaries(self, max_distance=30, max_angle_diff=90,
                             limit=30, amount_of_rods=None):
@@ -594,7 +621,72 @@ class Experiment(object):
             self._fill_dicts(max_distance, max_angle_diff, limit=limit,
                                 amount_of_rods=amount_of_rods)
             self._leave_only_closer(max_distance=max_distance)
+            self._clean_unmatched_rods()
             self._join_rods_left(max_distance=max_distance)
+
+    def _clean_unmatched_rods(self):
+        """
+        Clean unmatched rods
+        """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Cleaning unmatched rods"
+        output_queue = mp.Queue()
+        processes = []
+        for index in range(len(self._evolution_dictionaries)-1):
+            process = mp.Process(target=self._clean_unmatched_rods_process,
+                                 args=(index, output_queue))
+            processes.append(process)
+        num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
+        finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
+        while finished < num_processes:
+            counter += 1
+            finished += 1
+            previous_time, counter, time_left = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
+            output = output_queue.get()
+            index = output[0]
+            evol_dict = output[1]
+            relative_dict = output[2]
+            self._evolution_dictionaries[index] = evol_dict
+            self._relative_dictionaries[index] = relative_dict
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
+                new_process.start()
+        print CLEAR_LAST
+        
+
+    def _clean_unmatched_rods_process(self, index, output_queue):
+        """
+        Process
+        """
+        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
+        relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
+        initial_rods_1 = set([])
+        initial_rods_2 = set([])
+        for initial_rod_id in list(evol_dict.keys()):
+            initial_rods_1 |= set([initial_rod_id])
+            final_rod_id = evol_dict[initial_rod_id]
+            if not (type(final_rod_id) == type(2)):
+                evol_dict[initial_rod_id] = None
+                relative_dict[initial_rod_id] = None
+            else:
+                assert (type(relative_dict[initial_rod_id]) == type((1,))), "Rods emparejados no limpian bien velocidades"
+        for initial_rod_id in list(evol_dict.keys()):
+            initial_rods_2 |= set([initial_rod_id])
+            if evol_dict[initial_rod_id] == set([]):
+                evol_dict[initial_rod_id] = None
+                relative_dict[initial_rod_id] = None
+            if type(relative_dict[initial_rod_id]) != type((1,)):
+                relative_dict[initial_rod_id] = None
+        assert len(initial_rods_1) == len(initial_rods_2), "Rods perdidos\n\n"
+        output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
+        
 
     def evolution_dictionaries(self, max_distance=100, max_angle_diff=90,
                                 limit=5, amount_of_rods=200):
@@ -699,6 +791,7 @@ class Experiment(object):
                                 limit, amount_of_rods)
         if not len(self._speeds):
             print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing speeds"
+            self._debug_1(max_distance)
             speeds_queue = mp.Queue()
             angular_speeds_queue = mp.Queue()
             vector_speeds_queue = mp.Queue()
@@ -742,6 +835,7 @@ class Experiment(object):
         Returns an array of speeds.
         """
         rel_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
+        scale = self.get(index).scale
         speeds = {}
         angular_speeds = {}
         vector_speeds = {}
@@ -752,7 +846,6 @@ class Experiment(object):
             except:
                 values = rel_dict[initial_rod_id]
             try:
-                #error &= (not bool(values[0]))
                 speed = float(values[0])*1.0/self._diff_t
                 angular_speed = float(values[1])*1.0/self._diff_t
                 vector_speed = (values[2][0]*1.0/self._diff_t, values[2][1]*1.0/self._diff_t)
@@ -761,15 +854,6 @@ class Experiment(object):
                 vector_speeds[initial_rod_id] = vector_speed
             except TypeError:
                 pass
-            except Exception as inst:
-                print type(inst)
-                print inst.args
-                print inst
-                print "\n"
-        #if error:
-        #    speeds_queue.put([index, None])
-        #    angular_speeds_queue.put([index, None])
-        #    return
         speeds_queue.put([index, methods.compress(speeds, level=settings.medium_comp_level)])
         angular_speeds_queue.put([index, methods.compress(angular_speeds, level=settings.medium_comp_level)])
         vector_speeds_queue.put([index, methods.compress(vector_speeds, level=settings.medium_comp_level)])
@@ -819,6 +903,7 @@ class Experiment(object):
         """
         self._compute_speeds(max_distance, max_angle_diff, limit, amount_of_rods)
         if len(self._local_speeds) == 0:
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Speeds not computed yet: computing"
             self._compute_local_speeds(divisions)
         return self._local_speeds
 
@@ -876,23 +961,27 @@ class Experiment(object):
             speeds_row = []
             for subsystem in row:
                 subsystem_dict = {}
-                total_vector_speed = [0, 0]
+                average_vector_speed = [0, 0]
                 for rod in subsystem:
                     rod_id = rod.identifier
                     try:
                         vector_speed = vector_speeds[rod_id]
                     except KeyError:
                         continue
-                    total_vector_speed[0] += vector_speed[0]
-                    total_vector_speed[1] += vector_speed[1]
+                    average_vector_speed[0] += vector_speed[0]/len(subsystem)
+                    average_vector_speed[1] += vector_speed[1]/len(subsystem)
                 for rod in subsystem:
                     rod_id = rod.identifier
-                    relative_vector_speed = list(vector_speeds[rod_id])
-                    relative_vector_speed[0] -= total_vector_speed[0]
-                    relative_vector_speed[1] -= total_vector_speed[1]
+                    try:
+                        vector_speed = vector_speeds[rod_id]
+                    except KeyError:
+                        continue
+                    relative_vector_speed = list(vector_speed)
+                    relative_vector_speed[0] -= average_vector_speed[0]
+                    relative_vector_speed[1] -= average_vector_speed[1]
                     speed = methods.vector_module(relative_vector_speed)
                     angular_speed = angular_speeds[rod_id]
-                    subsystem_dict[rod_id] = (speed, angular_speed, tuple(relative_vector_speed), tuple(total_vector_speed))
+                    subsystem_dict[rod_id] = (speed, angular_speed, tuple(relative_vector_speed), tuple(average_vector_speed))
                 speeds_row.append(subsystem_dict)
             speeds_matrix.append(speeds_row)
         output_queue.put([index, methods.compress(speeds_matrix, level=settings.medium_comp_level)])
@@ -905,7 +994,7 @@ class Experiment(object):
         if not len(self._local_average_quadratic_speeds):
             print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing local average speeds (previous)"
             output_queue = mp.Queue()
-            processes = []
+            processes = [] #XXX
             local_speeds = self.local_speeds(max_distance, max_angle_diff,
                                             limit, amount_of_rods, divisions)
             for index in range(len(self._evolution_dictionaries)-1):
@@ -1355,7 +1444,7 @@ class Experiment(object):
         output_queue = mp.Queue()
         processes = []
         output_queue = mp.Queue()
-        for index in range(len(self)-1):
+        for index in range(len(quad_speeds)):
             process = mp.Process(target=self.plottable_local_average_quadratic_speeds_process,
                                  args=(index, quad_speeds, max_distance, max_angle_diff, limit,
                                         amount_of_rods, divisions, output_queue))
@@ -1393,11 +1482,14 @@ class Experiment(object):
         state = self.get(index)
         subgroups = state.subgroups_matrix(divisions)
         x_val, y_val, z_val = [], [], []
+        counter = 0
         for row_index in range(len(subgroups)):
             for col_index in range(len(subgroups[row_index])):
+                quad_speeds_ = methods.decompress(quad_speeds[index], level=settings.medium_comp_level)
                 subgroup = subgroups[row_index][col_index]
-                quad_speed = methods.decompress(quad_speeds[index], level=settings.medium_comp_level)[row_index][col_index]
+                quad_speed = quad_speeds_[row_index][col_index]
                 if quad_speed is None:
+                    counter += 1
                     quad_speed = 0
                 center = subgroup.center
                 center_x = center[0]
@@ -1503,7 +1595,6 @@ class Experiment(object):
         bursts_groups = copy.deepcopy(self.bursts_groups)
         end = False
         z_vals_avg = []
-        number_of_bursts *= 5
         print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + "Computing averages"
         while not end:
             groups = []
@@ -2263,10 +2354,14 @@ def compute_local_average_speeds_process(index, output_queue, local_speeds, divi
     speeds_matrix = []
     angular_speeds_matrix = []
     local_speeds_ = methods.decompress(local_speeds[index], level=settings.medium_comp_level)
-    speeds_matrix = [[None for dummy_1 in range(divisions)] for dummy_2 in range(divisions)]
-    angular_speeds_matrix = [[None for dummy_1 in range(divisions)] for dummy_2 in range(divisions)]
+    speeds_matrix = []
+    angular_speeds_matrix = []
     for row in range(len(local_speeds_)):
-        for col in range(len(local_speeds_[0])):
+        speeds_matrix.append([])
+        angular_speeds_matrix.append([])
+        for col in range(len(local_speeds_[row])):
+            speeds_matrix[row].append([])
+            angular_speeds_matrix[row].append([])
             subsys_dict = local_speeds_[row][col]
             subsys_quad_avg_speed = 0
             subsys_quad_avg_ang_speed = 0
