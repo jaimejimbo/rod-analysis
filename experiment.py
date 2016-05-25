@@ -16,6 +16,7 @@ import inspect
 
 CURSOR_UP_ONE = '\x1b[1A'
 ERASE_LINE = '\x1b[2K'
+CLEAR_LAST = CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
 if settings.special_chars:
     WHITE_BLOCK = u'\u25A0'
 else:
@@ -28,7 +29,7 @@ class Experiment(object):
         Has a list of system states, one for each t.
     """
     def __init__(self, system_states_name_list=None, kappas=None,
-                system_states_list=None, diff_t=1, dates=None):
+                system_states_list=None, diff_t=3.0/5, dates=None):
         """
             Creation of experiment object.
         """
@@ -189,7 +190,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        print CLEAR_LAST
 
     def set_coef_process(self, index, output_queue, value):
         """
@@ -235,7 +236,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        print CLEAR_LAST
 
     def set_coords_process(self, index, output_queue, zone_coords):
         """
@@ -255,7 +256,7 @@ class Experiment(object):
         state = self.get(0)
         zone_coords = state.zone_coords
         self.set_coords(zone_coords)
-        
+
 
     def _create_dict_keys(self):
         """
@@ -298,7 +299,7 @@ class Experiment(object):
                 new_process.start()
         for index in range(len(self)-1):
             self._final_rods[index] = self._initial_rods[index+1]
-        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        print CLEAR_LAST
 
 
     def _create_dicts_keys_process(self, index, output_queue):
@@ -357,7 +358,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        print CLEAR_LAST
 
     def _fill_dicts_process_limited(self, index, max_distance,
                                 max_angle_diff, output_queue,
@@ -391,7 +392,7 @@ class Experiment(object):
                 angle = initial_rod.angle_between_rods(final_rod)
                 angle = abs(min([angle, 180-angle]))
                 speed = float(distance)/self._diff_t
-                if distance <= max_distance and angle <= max_angle_diff:
+                if (distance <= max_distance and angle <= max_angle_diff):
                     speeds.append([speed, final_id])
                     speeds.sort()
                     if len(speeds) > limit:
@@ -475,7 +476,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        print CLEAR_LAST
 
     def _leave_only_closer_process(self, index, output_queue,
                                 selected_queue, max_distance):
@@ -505,6 +506,8 @@ class Experiment(object):
                 selected |= set([initial_rod_id])
         for initial_rod_id in list(evol_dict.keys()):
             if type(evol_dict[initial_rod_id]) == type(set([])):
+                evol_dict[initial_rod_id] = None
+            if type(evol_dict[initial_rod_id]) == type({}):
                 evol_dict[initial_rod_id] = None
         output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
         selected_queue.put([index, selected])
@@ -542,7 +545,7 @@ class Experiment(object):
                     else:
                         return None, None, None, None
                 if initial_rod not in selected:
-                    relative_dict = relative_dict_[final_rod] 
+                    relative_dict = relative_dict_[final_rod]
                     rel = relative_dict[initial_rod]
                     distance = rel[0]
                     if distance < min_distance:
@@ -552,8 +555,26 @@ class Experiment(object):
                         prev_initial_rod = initial_rod
         return prev_initial_rod, min_distance, angle_diff, vector
 
-    def compute_dictionaries(self, max_distance=100, max_angle_diff=90,
-                            limit=10, amount_of_rods=None):
+    def _debug_1(self, limit):
+        """
+
+        """
+        for index in range(len(self._relative_dictionaries)):
+            relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
+            for subdict in relative_dict.values():
+                msg = None
+                try:
+                    for value in subdict.values():
+                        if value[0] > limit:
+                            msg = "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Value over limits: value->" + str(value[0]) + " limit->" + str(limit)
+                except:
+                    if subdict[0] > limit:
+                        msg = "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Value over limits: value->" + str(value[0]) + " limit->" + str(limit)
+                if not (msg is None):
+                    raw_input(msg)
+
+    def compute_dictionaries(self, max_distance=30, max_angle_diff=90,
+                            limit=30, amount_of_rods=None):
         """
                 List of evolution dictionaries.
         Each dictionary has the form:
@@ -626,7 +647,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        print CLEAR_LAST
 
 
     def _join_rods_left_process(self, index, output_queue, max_distance=150):
@@ -713,7 +734,7 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
                     new_process.start()
-            print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+            print CLEAR_LAST
 
     def _compute_speeds_process(self, index, speeds_queue,
                                 angular_speeds_queue, vector_speeds_queue):
@@ -726,7 +747,10 @@ class Experiment(object):
         vector_speeds = {}
         error = True
         for initial_rod_id in list(rel_dict.keys()):
-            values = rel_dict[initial_rod_id]
+            try:
+                values = rel_dict[initial_rod_id].values()
+            except:
+                values = rel_dict[initial_rod_id]
             try:
                 #error &= (not bool(values[0]))
                 speed = float(values[0])*1.0/self._diff_t
@@ -737,6 +761,11 @@ class Experiment(object):
                 vector_speeds[initial_rod_id] = vector_speed
             except TypeError:
                 pass
+            except Exception as inst:
+                print type(inst)
+                print inst.args
+                print inst
+                print "\n"
         #if error:
         #    speeds_queue.put([index, None])
         #    angular_speeds_queue.put([index, None])
@@ -745,7 +774,7 @@ class Experiment(object):
         angular_speeds_queue.put([index, methods.compress(angular_speeds, level=settings.medium_comp_level)])
         vector_speeds_queue.put([index, methods.compress(vector_speeds, level=settings.medium_comp_level)])
 
-    def speeds(self, max_distance=100, max_angle_diff=90, limit=5,
+    def speeds(self, max_distance=30, max_angle_diff=90, limit=5,
                      amount_of_rods=200):
         """
         Returns [speeds, angular_speeds] where both outputs are array with one
@@ -754,7 +783,7 @@ class Experiment(object):
         self._compute_speeds(max_distance, max_angle_diff, limit, amount_of_rods)
         return [self._speeds, self._angular_speeds]
 
-    def average_quadratic_speed(self, max_distance=100, max_angle_diff=90,
+    def average_quadratic_speed(self, max_distance=30, max_angle_diff=90,
                                 limit=5, amount_of_rods=200):
         """
         Returns average quadratic speeds
@@ -769,7 +798,7 @@ class Experiment(object):
                 output[index] += speed**2/num_of_rods
         return output
 
-    def average_quadratic_angular_speed(self, max_distance=100, max_angle_diff=90,
+    def average_quadratic_angular_speed(self, max_distance=30, max_angle_diff=90,
                                         limit=5, amount_of_rods=200):
         """
         Returns average quadratic angular speed
@@ -831,7 +860,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+        print CLEAR_LAST
 
     def _compute_local_speeds_process(self, index, output_queue, divisions):
         """
@@ -874,7 +903,7 @@ class Experiment(object):
         Compute local average speeds.
         """
         if not len(self._local_average_quadratic_speeds):
-            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing local average speeds"
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing local average speeds (previous)"
             output_queue = mp.Queue()
             processes = []
             local_speeds = self.local_speeds(max_distance, max_angle_diff,
@@ -892,7 +921,7 @@ class Experiment(object):
             counter = 0
             time_left = None
             times = []
-            print " "
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing local average speeds\n"
             while finished < num_processes:
                 counter += 1
                 finished += 1
@@ -906,7 +935,7 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
                     new_process.start()
-            print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+            print CLEAR_LAST
 
     def local_average_quadratic_speed(self, max_distance=100, max_angle_diff=90,
                                         limit=5, amount_of_rods=200, divisions=5):
@@ -980,7 +1009,7 @@ class Experiment(object):
                     new_process.start()
             self._densities_array = densities
             self._quad_speeds_array = quad_speeds
-            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+            print CLEAR_LAST
         return [self._densities_array, self._quad_speeds_array]
 
     def _density_and_quad_speed_process(self, index, output_queue,
@@ -1051,7 +1080,7 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
                     new_process.start()
-            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+            print CLEAR_LAST
 
     def divide_system_in_circles_process(self, divisions, index, output_queue):
         """
@@ -1067,7 +1096,7 @@ class Experiment(object):
         """
         Creates a video of density's evolution.
         """
-        
+
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating densities video"
         frames = len(self)
         function_name = 'plottable_density_matrix'
@@ -1095,7 +1124,7 @@ class Experiment(object):
         """
         Creates a video of correlation g2 evolution.
         """
-        
+
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating g2 video"
         frames = len(self)
         function_name = 'correlation_g2_plot_matrix'
@@ -1111,7 +1140,7 @@ class Experiment(object):
         """
         Creates a video of correlation g4 evolution.
         """
-        
+
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating g4 video"
         frames = len(self)
         function_name = 'correlation_g4_plot_matrix'
@@ -1127,7 +1156,7 @@ class Experiment(object):
         """
         Creates a video of average angle evolution.
         """
-        
+
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating average angle video"
         frames = len(self)
         function_name = 'plottable_average_angle_matrix'
@@ -1150,7 +1179,7 @@ class Experiment(object):
         """
         Generic animator
         """
-        
+
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting"
         groups = self.bursts_groups
         groups = copy.deepcopy(groups)
@@ -1236,7 +1265,7 @@ class Experiment(object):
                     new_process.start()
             z_vals_avg.append(methods.compress(methods.array_average(z_vals),
                                            level=settings.medium_comp_level))
-        print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+        print CLEAR_LAST
         if not (match2 or match1):
             z_max = max(z_maxs)
             z_min = min(z_mins)
@@ -1274,7 +1303,7 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
                     new_process.start()
-            print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+            print CLEAR_LAST
 
     def _get_image_ids_process(self, index, output_queue):
         """
@@ -1318,7 +1347,7 @@ class Experiment(object):
         """
         Returns plotable data.
         """
-        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating plottable matrix"
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Pre-creation"
         quad_speeds = self.local_average_quadratic_speed(max_distance,
                                         max_angle_diff, limit,
                                         amount_of_rods, divisions)
@@ -1338,7 +1367,7 @@ class Experiment(object):
         counter = 0
         time_left = None
         times = []
-        print " "
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating matrix\n"
         while finished < num_processes:
             counter += 1
             finished += 1
@@ -1352,7 +1381,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+        print CLEAR_LAST
         return x_vals, y_vals, z_vals
 
     def plottable_local_average_quadratic_speeds_process(self, index, quad_speeds,
@@ -1607,7 +1636,7 @@ class Experiment(object):
                     max_angle_diff=None, min_size=3):
         """
         Compute cluster areas for all states.
-        """        
+        """
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Getting cluster areas"
         output_queue = mp.Queue()
         processes = []
@@ -1639,7 +1668,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+        print CLEAR_LAST
         return areas
 
     def _get_cluster_areas_process(self, index, max_distance,
@@ -1712,7 +1741,7 @@ class Experiment(object):
             top = 0
             bot = 0
             try:
-                x_m = float(sum(log_times))/len(log_times)  
+                x_m = float(sum(log_times))/len(log_times)
                 y_m = float(sum(log_areas))/len(log_areas)
             except ZeroDivisionError:
                 print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: Not enough data"
@@ -1884,7 +1913,7 @@ class Experiment(object):
                     groups.append(group)
                     group = []
             self._bursts_groups = groups
-            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+            print CLEAR_LAST
         assert len(self._bursts_groups), "Fail"
         return self._bursts_groups
 
@@ -1928,7 +1957,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        print CLEAR_LAST
         if not settings.to_file:
             plt.figure()
             plt.plot(indices, average_speeds)
@@ -2021,7 +2050,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 time.sleep(settings.waiting_time)
                 new_process.start()
-        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        print CLEAR_LAST
         avg = float(sum(props))/len(props)
         std_dev_step1 = [(value-avg)**2 for value in props]
         std_dev_step2 = float(sum(std_dev_step1))/(len(std_dev_step1)-1)
@@ -2081,7 +2110,7 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
                     new_process.start()
-            print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+            print CLEAR_LAST
             self._average_kappa = sum(kappas)*1.0/len(kappas)
             self._kappa_dev = sum(kappas_dev)*1.0/len(kappas_dev)
             self._average_rad = sum(avg_rads)*1.0/len(avg_rads)
@@ -2092,7 +2121,7 @@ class Experiment(object):
             std_dev_step2 = float(sum(std_dev_step1))/(len(std_dev_step1)-1)
             deviation = math.sqrt(std_dev_step2)
             self._number_of_rods_dev = deviation
-        
+
     def _compute_averages_process(self, index, output_queue):
         """
         Process
@@ -2207,7 +2236,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 #time.sleep(settings.waiting_time)
                 new_process.start()
-        print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
+        print CLEAR_LAST
         figure = plt.figure()
         plt.plot(images, number_of_rods)
         name = "num_rods_time_K" + str(self.kappas) + ".png"
