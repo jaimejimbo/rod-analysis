@@ -1641,7 +1641,7 @@ class Experiment(object):
             raise ValueError
         z_max = max(z_maxs)
         z_min = min(z_mins)
-        units = "Temperature [pixels^2/seg^2]"
+        units = "Temperature [mm^2/seg^2]"
         rad = self.radius
         if settings.plot:
             methods.create_scatter_animation(x_vals, y_vals, z_vals_avg, divisions, z_max, z_min, units, name, radius=rad)
