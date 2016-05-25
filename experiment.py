@@ -835,7 +835,6 @@ class Experiment(object):
         Returns an array of speeds.
         """
         rel_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
-        scale = self.get(index).scale
         speeds = {}
         angular_speeds = {}
         vector_speeds = {}
