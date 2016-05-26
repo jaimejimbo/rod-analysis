@@ -1,6 +1,6 @@
 BUGS:
     - Valores muy altos para la temperatura                     (DONE)
-    - Parece que fallan los clusters                            (WIP)
+    - Parece que fallan los clusters                            (DONE)
 
 Cosas nuevas:
     - Longitud circunferencia que rodea a los clusters          ()

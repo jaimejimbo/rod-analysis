@@ -9,5 +9,5 @@ waiting_time = 0
 special_chars = 1
 waiting_time_process = 0
 ignore_temperature = 0
-counter_refresh = 10
+counter_refresh = 20
 sigma = None

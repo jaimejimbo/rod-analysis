@@ -20,15 +20,16 @@ if not waiting_time:
 #None uses all cpus      
 cpus = None
 # 1 or True, 0 or False
-create_videos = 0
+create_videos = 1
 clusters = 1
-avg_temp = 0
-order_param_exp = 0
+clusters_hist = 0
+avg_temp = 1
+order_param_exp = 1
 lost_percentage = 1
 run_imagej = 0
-run_props = 0
+run_props = 1
 run_graphs = 1
-run_check_dim = 0   
+run_check_dim = 1   
 get_image_dates = 0
 to_file = 1
 plot = 1
@@ -42,7 +43,7 @@ changing_props = 0
 discard_exceptions = 0
 special_chars = 1
 ignore_temperature = 0
-counter_refresh = 10
+counter_refresh = 20
 import re
 
 
@@ -179,6 +180,9 @@ if True:
             if clusters:
                 experiment_.plot_cluster_areas(number_of_bursts=1, max_distance=150,
                         max_angle_diff=10, min_size=20)
+            if clusters_hist:
+                experiment_.create_cluster_histogram_video(max_distance=150,
+                                    max_angle_diff=10, fps=15)
             if avg_temp:
                 experiment_.plot_average_temperature(100, 10, 5)
             if lost_percentage:
@@ -216,6 +220,9 @@ if True:
             if clusters:
                 experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=1.5,
                         max_angle_diff=0, min_size=5)
+            if clusters_hist:
+                experiment_.create_cluster_histogram_video(max_distance=150,
+                                    max_angle_diff=10, fps=15)
             if avg_temp:
                 experiment_.plot_average_temperature(100, 10, 5)
             if lost_percentage:
@@ -238,7 +245,7 @@ if True:
             """
             msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
             names, rod_groups = system_state.create_rods(kappas=kappa, real_kappas=real_kappa,
-                                                    allowed_kappa_error=error)
+                                                    allowed_kappa_error=error, file_range=[0,5])
             experiment_ = experiment.Experiment(system_states_name_list=names, kappas=real_kappa,
                                                 system_states_list=rod_groups,
                                                 dates=dates, diff_t=5/3.0)
@@ -258,7 +265,7 @@ if True:
             """
             msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
             names, rod_groups = system_state.create_rods_with_length(length=length, length_error=length_error,
-                                                    real_kappas=real_kappa)
+                                                    real_kappas=real_kappa, file_range=[0,5])
             experiment_ = experiment.Experiment(system_states_name_list=names, kappas=real_kappa,
                                                 system_states_list=rod_groups,
                                                 dates=dates, diff_t=5/3.0)
@@ -326,8 +333,8 @@ if True:
                 except:
                     pass
             else:
-                run_default(15, 12, 3)#run_default_length(160, 30, 12)
-                run_default(7.8, 6, 2)#run_default_length(80, 30, 6)
+                run_default_length(145, 10, 12)#(15, 12, 3)#run_default_length(160, 30, 12)
+                run_default_length(70, 10, 6)#(7.8, 6, 2)#run_default_length(80, 30, 6)
 
         if run_check_dim:
             names, rod_groups = system_state.create_rods(kappas=10, real_kappas=12,

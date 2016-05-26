@@ -1095,13 +1095,18 @@ class SubsystemState(SystemState):
 
 
 def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
-                radius_correction_ratio=0.1):
+                radius_correction_ratio=0.1, file_range=[]):
     """
     Create one rod for each rod_data and for each file
     returns [RodGroup1, RodGroup2, ...]
     """
     print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Importing data"
     names = methods.get_file_names(folder=folder)
+    if len(file_range) != 0:
+        try:
+            names = names[file_range[0]:file_range[1]]
+        except:
+            pass
     num_of_files = len(names)
     if not num_of_files:
         print "No files to import."
@@ -1187,12 +1192,17 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
     states_queue.put([index, state])
 
 def create_rods_with_length(folder="./", length=10, length_error=.3, real_kappas=10,
-                radius_correction_ratio=0.1):
+                radius_correction_ratio=0.1, file_range=[]):
     """
     Create rods using rod length instead of kappa.
     """
     print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Importing data"
     names = methods.get_file_names(folder=folder)
+    if len(file_range) != 0:
+        try:
+            names = names[file_range[0]:file_range[1]]
+        except:
+            pass
     num_of_files = len(names)
     if not num_of_files:
         print "No files to import."
