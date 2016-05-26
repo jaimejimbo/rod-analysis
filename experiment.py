@@ -1820,14 +1820,11 @@ class Experiment(object):
             log_areas = []
             log_times = []
             for index in range(len(cluster_areas)):
-                try:
-                    log_areas.append(math.log(cluster_areas[index]))
-                except ValueError:
-                    continue
-                try:
-                    log_times.append(math.log(times[index]))
-                except ValueError:
-                    log_times.pop()
+                area = cluster_areas[index]
+                time = times[index]
+                if time != 0 and area != 0:
+                    log_areas.append(math.log(area))
+                    log_times.append(math.log(time))
             top = 0
             bot = 0
             try:
@@ -1859,16 +1856,18 @@ class Experiment(object):
         self._compute_times(number_of_bursts=number_of_bursts)
         times = []
         for index in range(len(areas)):
-            area = areas[index]
-            total_area = total_areas[index]
-            try:
-                proportion = float(area)/total_area
-            except ZeroDivisionError:
-                proportion = 0
-                continue
-            times.append(self._times[index])
-            norm_areas.append(proportion)
-        if not settings.to_file:
+            time = self._times[index]
+            if time>0:
+                area = areas[index]
+                total_area = total_areas[index]
+                try:
+                    proportion = float(area)/total_area
+                except ZeroDivisionError:
+                    proportion = 0
+                    continue
+                times.append(time)
+                norm_areas.append(proportion)
+        if settings.plot:
             fig = plt.figure()
             plt.xlabel("time[seconds]")
             plt.ylabel("cluster area proportion")
@@ -1877,17 +1876,20 @@ class Experiment(object):
                                             max_angle_diff=max_angle_diff,
                                             min_size=min_size)
         line = []
+        times_ = []
         for time in times:
             if time != 0:
                 line.append((math.e**b)*(time**m))
+                times_.append(time)
+        times = times_
         name = "coef_K"+str(self.kappas)+".log"
         output = open(name, 'w')
         text = "Coeficient: "+str(m)+"\nIndep: "+str(b) +"\n"
         output.write(text)
         output.close()
-        if not settings.to_file:
+        if settings.plot:
             plt.plot(times, line)
-        else:
+        if settings.to_file:
 		    output_file_name = "linear_approx_K"+str(self.kappas)+".data"
 		    output_file = open(output_file_name, 'w')
 		    data = methods.compress([times, line], level=9)
@@ -1909,7 +1911,7 @@ class Experiment(object):
             except:
                 pass
         clust.close()
-        if not settings.to_file:
+        if settings.plot:
             try:
                 plt.scatter(times, norm_areas)
             except ValueError:
@@ -1922,7 +1924,7 @@ class Experiment(object):
             plt.yscale('log')
             file_name = "cluster_areas_K" + str(self.kappas) + ".png"
             plt.savefig(file_name)
-        else:
+        if settings.to_file:
 	        output_file_name = "cluster_areas_K"+str(self.kappas)+".data"
 	        output_file = open(output_file_name, 'w')
 	        data = methods.compress([times, norm_areas], level=9)

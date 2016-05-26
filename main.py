@@ -20,15 +20,15 @@ if not waiting_time:
 #None uses all cpus      
 cpus = None
 # 1 or True, 0 or False
-create_videos = 1
+create_videos = 0
 clusters = 1
-avg_temp = 1
-order_param_exp = 1
+avg_temp = 0
+order_param_exp = 0
 lost_percentage = 1
 run_imagej = 0
 run_props = 0
 run_graphs = 1
-run_check_dim = 1
+run_check_dim = 0   
 get_image_dates = 0
 to_file = 1
 plot = 1
@@ -177,7 +177,7 @@ if True:
                 experiment_.create_videos(divisions=divisions, fps=10, max_distance=30, max_angle_diff=60,
                                          number_of_bursts=1, only_density=only_density)
             if clusters:
-                experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=150,
+                experiment_.plot_cluster_areas(number_of_bursts=1, max_distance=150,
                         max_angle_diff=10, min_size=20)
             if avg_temp:
                 experiment_.plot_average_temperature(100, 10, 5)
@@ -214,8 +214,8 @@ if True:
                 experiment_.create_videos(divisions=divisions, fps=10, max_distance=150, max_angle_diff=45,
                                          number_of_bursts=1, only_density=only_density, limit=20)
             if clusters:
-                experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=150,
-                        max_angle_diff=10, min_size=20)
+                experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=12,
+                        max_angle_diff=10, min_size=4)
             if avg_temp:
                 experiment_.plot_average_temperature(100, 10, 5)
             if lost_percentage:
@@ -347,6 +347,6 @@ if True:
         os.system("pkill -f main.py")
 #print hp.heap()
 #print "Type exit() to exit."
-def exit():
-    os.system("pkill -f main.py")
-exit()
+#def exit():
+#    os.system("pkill -f main.py")
+#exit()

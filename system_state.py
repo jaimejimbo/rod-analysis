@@ -737,6 +737,50 @@ class SystemState(object):
                     selected_rod = rod2
         return selected_rod
 
+    def clusters(self, max_distance=None, max_angle_diff=None, min_size=3):
+        """
+            Returns clusters with min_size number of rods or more.
+        """
+        clusters = self._get_clusters(max_distance=max_distance,
+                                  max_angle_diff=max_angle_diff)
+        output = []
+        for cluster in clusters:
+            if len(cluster) >= min_size:
+                output.append(cluster)
+        return output
+
+    def _get_clusters(self, max_distance=None, max_angle_diff=None):
+        """
+            Gets the cluster for rod.
+        Recursive method.
+        Angles in grad.
+        """
+        self.fill_dicts()
+        if len(self._clusters) and not max_distance and not max_angle_diff:
+            return self._clusters
+        if not max_distance or not max_angle_diff:
+            msg = "cluster method without args only valid "
+            msg += "when previously computed."
+            raise ValueError(msg)
+        cond2 = (self._clusters_max_distance != max_distance)
+        cond2 &= (self._clusters_max_angle_diff != max_angle_diff)
+        if not len(self._clusters) or cond2:
+            self._clusters_max_distance = max_distance
+            self._clusters_max_angle_diff = max_angle_diff
+            clusters = []
+            list_of_rods = [rod_ for rod_ in self]
+            rods_left = set(list_of_rods)
+            for rod_ in self:
+                if self._cluster_checked_dict[rod_.identifier]:
+                    continue
+                rods_left -= set([rod_])
+                cluster = self._get_cluster_members(rod_,
+                                max_distance, max_angle_diff)
+                if len(cluster):
+                    clusters.append(cluster)
+            self._clusters = clusters
+        return clusters
+
     def _get_cluster_members(self, reference_rod,
                                     max_distance, max_angle_diff):
         """
@@ -744,7 +788,7 @@ class SystemState(object):
         some conditions.
         Angles in grad.
         """
-        rods = set([reference_rod])
+        rods = set([reference_rod.identifier])
         if self._cluster_checked_dict[reference_rod.identifier]:
             return set([])
         self._cluster_checked_dict[reference_rod.identifier] = True
@@ -764,50 +808,6 @@ class SystemState(object):
                                                max_distance, max_angle_diff)
                 rods |= subrods
         return rods
-
-    def _get_clusters(self, max_distance=None, max_angle_diff=None):
-        """
-            Gets the cluster for rod.
-        Recursive method.
-        Angles in grad.
-        """
-        self.fill_dicts()
-        if len(self._clusters) and not max_distance and not max_angle_diff:
-            return self._clusters
-        if not max_distance or not max_angle_diff:
-            msg = "cluster method without args only valid "
-            msg += "when previously computed."
-            raise ValueError(msg)
-        cond2 = (self._clusters_max_distance != max_distance)
-        cond2 = cond2 and (self._clusters_max_angle_diff != max_angle_diff)
-        if not len(self._clusters) or cond2:
-            self._clusters_max_distance = max_distance
-            self._clusters_max_angle_diff = max_angle_diff
-            clusters = []
-            list_of_rods = [rod_ for rod_ in self]
-            rods_left = set(list_of_rods)
-            for rod_ in self:
-                if self._cluster_checked_dict[rod_.identifier]:
-                    continue
-                rods_left -= set([rod_])
-                cluster = self._get_cluster_members(rod_,
-                                max_distance, max_angle_diff)
-                if len(cluster):
-                    clusters.append(cluster)
-            self._clusters = clusters
-        return clusters
-
-    def clusters(self, max_distance=None, max_angle_diff=None, min_size=3):
-        """
-            Returns clusters with min_size number of rods or more.
-        """
-        clusters = self._get_clusters(max_distance=max_distance,
-                                  max_angle_diff=max_angle_diff)
-        output = []
-        for cluster in clusters:
-            if len(cluster) >= min_size:
-                output.append(cluster)
-        return output
 
     def average_cluster_rod_num(self, max_distance=None,
                                 max_angle_diff=None, min_size=3):
