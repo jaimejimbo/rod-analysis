@@ -1,7 +1,7 @@
 BUGS:
     - Valores muy altos para la temperatura                     (DONE)
-    - Parece que fallan los clusters                            ()
+    - Parece que fallan los clusters                            (WIP)
 
 Cosas nuevas:
     - Longitud circunferencia que rodea a los clusters          ()
-    - Campo de vectores de velociadades de grupo                ()
+    - Campo de vectores de velocidades de grupo                ()

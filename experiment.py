@@ -8,6 +8,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy
 import numpy as np
+from scipy import stats
 import scipy.optimize as optimization
 import datetime
 import settings, time
@@ -993,7 +994,7 @@ class Experiment(object):
         if not len(self._local_average_quadratic_speeds):
             print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing local average speeds (previous)"
             output_queue = mp.Queue()
-            processes = [] #XXX
+            processes = []
             local_speeds = self.local_speeds(max_distance, max_angle_diff,
                                             limit, amount_of_rods, divisions)
             for index in range(len(self._evolution_dictionaries)-1):
@@ -1812,6 +1813,7 @@ class Experiment(object):
                                        max_distance=max_distance,
                                        max_angle_diff=max_angle_diff,
                                        min_size=min_size)
+            total_areas = self._total_cluster_areas
             indices = self._indices
             self._compute_times(number_of_bursts)
             times = self._times
@@ -1820,25 +1822,17 @@ class Experiment(object):
             log_areas = []
             log_times = []
             for index in range(len(cluster_areas)):
-                area = cluster_areas[index]
+                area = cluster_areas[index]*1.0/total_areas[index]
                 time = times[index]
                 if time != 0 and area != 0:
                     log_areas.append(math.log(area))
                     log_times.append(math.log(time))
-            top = 0
-            bot = 0
-            try:
-                x_m = float(sum(log_times))/len(log_times)
-                y_m = float(sum(log_areas))/len(log_areas)
-            except ZeroDivisionError:
-                print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: Not enough data"
-                return
-            for index in range(len(log_areas)):
-                top += (log_times[index]-x_m)*(log_areas[index]-y_m)
-                bot += (log_times[index]-x_m)**2
-            m = float(top)/bot
-            b = y_m - m*x_m
-        return m, b
+            log_areas = numpy.array(log_areas)
+            log_times = numpy.array(log_times)
+            slope, intercept, r_value, p_value, std_err = stats.linregress(log_times, log_areas)
+            exponent = slope
+            indep = math.e**intercept
+        return exponent, indep
 
     def plot_cluster_areas(self, number_of_bursts=1, max_distance=None,
                     max_angle_diff=None, min_size=10):
@@ -1871,7 +1865,7 @@ class Experiment(object):
             fig = plt.figure()
             plt.xlabel("time[seconds]")
             plt.ylabel("cluster area proportion")
-        m, b = self.get_order_evolution_coeficient(number_of_bursts=number_of_bursts,
+        exponent, indep = self.get_order_evolution_coeficient(number_of_bursts=number_of_bursts,
                                             max_distance=max_distance,
                                             max_angle_diff=max_angle_diff,
                                             min_size=min_size)
@@ -1879,16 +1873,20 @@ class Experiment(object):
         times_ = []
         for time in times:
             if time != 0:
-                line.append((math.e**b)*(time**m))
+                value = indep*(time**exponent)
+                if value>1:
+                    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Valor excesivo: " + str(value) + " time: " + str(time) + " indep: " + str(indep) + " exponent: " + str(exponent)
+                line.append(value)
                 times_.append(time)
         times = times_
         name = "coef_K"+str(self.kappas)+".log"
         output = open(name, 'w')
-        text = "Coeficient: "+str(m)+"\nIndep: "+str(b) +"\n"
+        text = "Exponent: "+str(exponent)+"\nindep: "+str(indep) +"\n"
         output.write(text)
         output.close()
         if settings.plot:
-            plt.plot(times, line)
+            label = "Exponente: "+str(exponent)
+            plt.plot(times, line, label=label)
         if settings.to_file:
 		    output_file_name = "linear_approx_K"+str(self.kappas)+".data"
 		    output_file = open(output_file_name, 'w')
@@ -1913,15 +1911,15 @@ class Experiment(object):
         clust.close()
         if settings.plot:
             try:
-                plt.scatter(times, norm_areas)
+                plt.scatter(times, norm_areas, label="Area clusters")
             except ValueError:
                 print(len(times), len(norm_areas))
                 print(times, norm_areas)
                 raise ValueError
             plt.grid(b=True, which='major', color='b', linestyle='-')
             plt.grid(b=True, which='minor', color='b', linestyle='--')
-            plt.xscale('log')
-            plt.yscale('log')
+            #plt.xscale('log')
+            #plt.yscale('log')
             file_name = "cluster_areas_K" + str(self.kappas) + ".png"
             plt.savefig(file_name)
         if settings.to_file:
