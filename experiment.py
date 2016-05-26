@@ -911,10 +911,10 @@ class Experiment(object):
         """
         Creates an array of matrices. Each matrix's entry is a dictionariy such
         as {rod_id: (speed, angular_speed)}
-        [index1_loc, index2_loc...]
-            index1 = compress([subsys11_dic, subsys12_dic...,
+        [system1_speeds, system2_speeds...]
+            system1_speeds = compress([subsys11_dic, subsys12_dic...,
                                subsys21_dic, subsys22_dic...])
-                subsys1_dic = {rod_id: (speed, angular_speed)}
+                subsys1_dic = {rod_id: (speed, angular_speed, tuple(relative_vector_speed), tuple(average_vector_speed))}
         """
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing local speeds"
         output_queue = mp.Queue()
@@ -1418,7 +1418,7 @@ class Experiment(object):
         """
         Creates a video per property of the system that shows evolution.
         """
-        self.divide_systems_in_circles(divisions)
+        """self.divide_systems_in_circles(divisions)
         self.create_density_video(divisions, folder, fps, number_of_bursts)
         if not only_density:
             self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
@@ -1426,7 +1426,10 @@ class Experiment(object):
         if not settings.ignore_temperature:
             self.create_temperature_video(divisions, folder, fps, max_distance,
                                    max_angle_diff, limit, amount_of_rods,
-                                   number_of_bursts)
+                                   number_of_bursts)"""
+        self.create_vector_map_video(divisions, folder, fps,
+                            max_distance, max_angle_diff,
+                            limit, amount_of_rods, number_of_bursts)
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,
@@ -1482,9 +1485,9 @@ class Experiment(object):
         subgroups = state.subgroups_matrix(divisions)
         x_val, y_val, z_val = [], [], []
         counter = 0
+        quad_speeds_ = methods.decompress(quad_speeds[index], level=settings.medium_comp_level)
         for row_index in range(len(subgroups)):
             for col_index in range(len(subgroups[row_index])):
-                quad_speeds_ = methods.decompress(quad_speeds[index], level=settings.medium_comp_level)
                 subgroup = subgroups[row_index][col_index]
                 quad_speed = quad_speeds_[row_index][col_index]
                 if quad_speed is None:
@@ -1578,6 +1581,143 @@ class Experiment(object):
             array[index2] *= index2
         output_queue.put([index, array])
         return
+
+    def create_vector_map_video(self, divisions, folder, fps,
+                            max_distance, max_angle_diff,
+                            limit, amount_of_rods, number_of_bursts):
+        """
+        Create a video of velocity vector map.
+        """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating vector map"
+        x_vals, y_vals, u_vals, v_vals = self.plottable_vectors(
+                                        max_distance, max_angle_diff, limit,
+                                        amount_of_rods, divisions)
+        x_vals = x_vals[0]
+        y_vals = y_vals[0]
+        bursts_groups = copy.deepcopy(self.bursts_groups)
+        end = False
+        u_vals_avg = []
+        v_vals_avg = []
+        print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + "Computing averages"
+        while not end:
+            groups = []
+            _u_vals_avg = []
+            _v_vals_avg = []
+            _u_vals = []
+            _v_vals = []
+            for dummy_time in range(number_of_bursts):
+                try:
+                    group = bursts_groups.pop(0)
+                    groups.append(group)
+                except IndexError:
+                    end = True
+            if not len(groups):
+                break
+            for group in groups:
+                for dummy_time in range(len(group)):
+                    _u_vals_avg.append(u_vals.pop(0))
+                    _v_vals_avg.append(v_vals.pop(0))
+            try:
+                _u_vals_avg = methods.array_average(_u_vals)
+            except IndexError:
+                _u_vals_avg = _u_vals
+            try:
+                _v_vals_avg = methods.array_average(_v_vals)
+            except IndexError:
+                _v_vals_avg = _v_vals
+            u_vals_avg.append(_u_vals_avg)
+            v_vals_avg.append(_v_vals_avg)
+        if not settings.to_file:
+            fig = plt.figure()
+        state = self.get(0)
+        kappas = state.kappas
+        state = None
+        name = str(folder)+"vector_map_"+str(kappas)+".mp4"
+        units = "velocidad [mm^2/seg^2]"
+        rad = self.radius
+        if settings.plot:
+            methods.create_vector_map(x_vals, y_vals, u_vals_avg, v_vals_avg, units, name, radius=rad)
+        if settings.to_file:
+            output_file_name = name + ".data"
+            output_file = open(output_file_name, 'w')
+            data = methods.compress([x_vals, y_vals, u_vals_avg, v_vals_avg, units, name, self.radius], level=9)
+            output_file.write(data)
+            output_file.close()
+        
+
+    def plottable_vectors(self, max_distance, max_angle_diff, limit,
+                                        amount_of_rods, divisions):
+        """
+        Returns plottable vector map.
+        """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Pre-creation"
+        local_speeds = self.local_speeds(max_distance, max_angle_diff,
+                                            limit, amount_of_rods, divisions)
+        x_vals, y_vals, u_vals, v_vals = [], [], [], []
+        output_queue = mp.Queue()
+        processes = []
+        for index in range(len(local_speeds)):
+            process = mp.Process(target=self.plottable_vectors_process,
+                                 args=(index, local_speeds[index], max_distance, max_angle_diff, limit,
+                                        amount_of_rods, divisions, output_queue))
+            processes.append(process)
+        num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
+        finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating matrix\n"
+        while finished < num_processes:
+            counter += 1
+            finished += 1
+            previous_time, counter, time_left = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
+            output = output_queue.get()
+            x_vals.append(output[0])
+            y_vals.append(output[1])
+            u_vals.append(output[2])
+            v_vals.append(output[3])
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                time.sleep(settings.waiting_time)
+                new_process.start()
+        print CLEAR_LAST
+        return x_vals, y_vals, u_vals, v_vals
+
+    def plottable_vectors_process(self, index, local_speeds,
+                                        max_distance, max_angle_diff, limit,
+                                        amount_of_rods, divisions, output_queue):
+        """
+        Process
+        """
+        state = self.get(index)
+        subgroups = state.subgroups_matrix(divisions)
+        x_val, y_val, u_val, v_val = [], [], [], []
+        local_speeds_ = methods.decompress(local_speeds, level=settings.medium_comp_level)
+        for row_index in range(len(subgroups)):
+            for col_index in range(len(subgroups[row_index])):
+                local_speeds__ = local_speeds_[row_index][col_index]
+                subgroup = subgroups[row_index][col_index]
+                subdict = local_speeds_[row_index][col_index]
+                speeds = subdict.values()
+                if len(speeds):
+                    speed = speeds[0]
+                else:
+                    center = subgroup.center
+                    x_val.append(center[0])
+                    y_val.append(center[1])
+                    u_val.append(center[0])
+                    v_val.append(center[1])
+                    continue
+                vector = speed[3]
+                center = subgroup.center
+                x_val.append(center[0])
+                y_val.append(center[1])
+                u_val.append(vector[0])
+                v_val.append(vector[1])
+        output_queue.put([x_val, y_val, u_val, v_val])
 
     def create_temperature_video(self, divisions, folder, fps,
                             max_distance, max_angle_diff,
@@ -2008,7 +2148,6 @@ class Experiment(object):
                     group = []
             self._bursts_groups = groups
             print CLEAR_LAST
-        assert len(self._bursts_groups), "Fail"
         return self._bursts_groups
 
     def plot_average_temperature(self, max_distance, max_angle_diff, limit):

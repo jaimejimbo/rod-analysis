@@ -782,6 +782,44 @@ def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, 
     anim.save(name, writer=WRITER, fps=fps)
 
  
+def animate_vector_map(x_val, y_val, u_vals, v_vals, units, name, radius):
+    """
+    Specific animator.
+    """
+    u_val = u_vals.pop(0)
+    u_val = v_vals.pop(0)
+    plt.cla()
+    plt.clf()
+    rad = radius/3.0
+    size = (rad/4)**2
+    x_min = min(x_val)-rad*1.1
+    x_max = max(x_val)+rad*1.1
+    y_min = min(y_val)-rad*1.1
+    y_max = max(y_val)+rad*1.1
+    plt.xlim((x_min, x_max))
+    plt.ylim((y_min, y_max))
+    plt.quiver(x_val, y_val, u_val, v_vals)
+    plt.gca().invert_yaxis()
+    plt.xlabel("x [pixels]")
+    plt.ylabel("y [pixels]")
+    cb.set_label(units)
+
+def create_vector_map(x_vals, y_vals, u_vals, v_vals, units, name, radius=800, fps=15):
+    """
+    Creates animation from data.
+    """
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating vector animation"
+    fig = plt.figure()
+    frames = len(u_vals)
+    def animate(dummy_frame):
+        """
+        Wrapper.
+        """
+        animate_vector_map(x_vals, y_vals, u_vals, v_vals, units, name, radius)
+    anim = animation.FuncAnimation(fig, animate, frames=frames)
+    anim.save(name, writer=WRITER, fps=fps)
+
+ 
 def import_and_plot(source, radius=None, level=9):
     """
     Imports data from a compressed file and plots it.
