@@ -1886,7 +1886,7 @@ class Experiment(object):
         output.close()
         if settings.plot:
             label = "Exponente: "+str(exponent)
-            plt.plot(times, line, label=label)
+            line_plt = plt.plot(times, line, label=label)
         if settings.to_file:
 		    output_file_name = "linear_approx_K"+str(self.kappas)+".data"
 		    output_file = open(output_file_name, 'w')
@@ -1911,7 +1911,12 @@ class Experiment(object):
         clust.close()
         if settings.plot:
             try:
-                plt.scatter(times, norm_areas, label="Area clusters")
+                data_plt = plt.scatter(times, norm_areas, label="Area clusters")
+                plt.legend()
+                kappa = int(self.average_kappa)
+                title = "K"+str(kappa)
+                plt.ylim((0, 1.2))
+                plt.suptitle(title)
             except ValueError:
                 print(len(times), len(norm_areas))
                 print(times, norm_areas)
