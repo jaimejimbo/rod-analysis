@@ -1418,7 +1418,7 @@ class Experiment(object):
         """
         Creates a video per property of the system that shows evolution.
         """
-        """self.divide_systems_in_circles(divisions)
+        self.divide_systems_in_circles(divisions)
         self.create_density_video(divisions, folder, fps, number_of_bursts)
         if not only_density:
             self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
@@ -1426,7 +1426,7 @@ class Experiment(object):
         if not settings.ignore_temperature:
             self.create_temperature_video(divisions, folder, fps, max_distance,
                                    max_angle_diff, limit, amount_of_rods,
-                                   number_of_bursts)"""
+                                   number_of_bursts)
         self.create_vector_map_video(divisions, folder, fps,
                             max_distance, max_angle_diff,
                             limit, amount_of_rods, number_of_bursts)
