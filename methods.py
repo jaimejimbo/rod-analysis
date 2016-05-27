@@ -615,6 +615,17 @@ def array_x_scalar_cl(array, value):
     cl.enqueue_copy(queue_cl, output, dest_buf)
     return list(output)
 
+def vector_distance(vector1, vector2):
+    """
+        Returns distance between vectors
+    """
+    diff = []
+    assert len(vector1)==len(vector2), "Use vectors of same dimension"
+    for index in range(len(vector1)):
+        diffi = vector1[index]-vector2[index]
+        diff.append(diffi)
+    return vector_module(diff)
+
 def vector_module(vector):
     """
        Returns array's module. 
@@ -802,7 +813,7 @@ def animate_vector_map(x_val, y_val, u_vals, v_vals, units, name, radius):
     plt.xlim((x_min, x_max))
     plt.ylim((y_min, y_max))
     try:
-        plt.quiver(x_val, y_val, u_val, v_val, label=units)
+        plt.quiver(x_val, y_val, u_val, v_val, label=units, pivot="mid", units="inches")
     except TypeError:
         print (x_val, y_val, u_val, v_val)
     plt.gca().invert_yaxis()

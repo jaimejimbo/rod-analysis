@@ -949,7 +949,7 @@ class Experiment(object):
 
     def _compute_local_speeds_process(self, index, output_queue, divisions):
         """
-        Process ###
+        Process
         """
         state = self.get(index)
         subgroups_matrix = state.subgroups_matrix(divisions)
@@ -1711,8 +1711,8 @@ class Experiment(object):
                     center = subgroup.center
                     x_val.append(center[0])
                     y_val.append(center[1])
-                    u_val.append(center[0])
-                    v_val.append(center[1])
+                    u_val.append(0)
+                    v_val.append(0)
                     continue
                 vector = speed[3]
                 center = subgroup.center
