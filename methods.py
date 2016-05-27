@@ -787,8 +787,8 @@ def animate_vector_map(x_val, y_val, u_vals, v_vals, units, name, radius):
     Specific animator.
     """
     try:
-        u_val = u_vals.pop(0)
-        v_val = v_vals.pop(0)
+        u_val = decompress(u_vals.pop(0), level=settings.medium_comp_level)
+        v_val = decompress(v_vals.pop(0), level=settings.medium_comp_level)
     except IndexError:
         return
     plt.cla()
@@ -808,7 +808,7 @@ def animate_vector_map(x_val, y_val, u_vals, v_vals, units, name, radius):
     plt.gca().invert_yaxis()
     plt.xlabel("x [pixels]")
     plt.ylabel("y [pixels]")
-    plt.legend()
+    #plt.legend()
 
 def create_vector_map(x_vals, y_vals, u_vals, v_vals, units, name, radius=800, fps=15):
     """

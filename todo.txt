@@ -3,5 +3,5 @@ BUGS:
     - Parece que fallan los clusters                            (DONE)
 
 Cosas nuevas:
-    - Longitud circunferencia que rodea a los clusters          ()
-    - Campo de vectores de velocidades de grupo                ()
+    - Longitud circunferencia que rodea a los clusters          (NS)
+    - Campo de vectores de velocidades de grupo                 (WIP)

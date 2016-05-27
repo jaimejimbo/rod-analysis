@@ -1598,6 +1598,7 @@ class Experiment(object):
         end = False
         u_vals_avg = []
         v_vals_avg = []
+        number_of_bursts *= 5
         print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + "Computing averages"
         while not end:
             groups = []
@@ -1627,8 +1628,8 @@ class Experiment(object):
                 _v_vals_avg = _v_vals
             if _u_vals_avg is None or _v_vals_avg is None:
                 print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + str(_u_vals_avg) + "  " + str(_v_vals_avg)
-            u_vals_avg.append(_u_vals_avg)
-            v_vals_avg.append(_v_vals_avg)
+            u_vals_avg.append(methods.compress(_u_vals_avg, level=settings.medium_comp_level))
+            v_vals_avg.append(methods.compress(_v_vals_avg, level=settings.medium_comp_level))
         if not settings.to_file:
             fig = plt.figure()
         state = self.get(0)
@@ -1736,6 +1737,7 @@ class Experiment(object):
         bursts_groups = copy.deepcopy(self.bursts_groups)
         end = False
         z_vals_avg = []
+        number_of_bursts *= 5
         print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + "Computing averages"
         while not end:
             groups = []
