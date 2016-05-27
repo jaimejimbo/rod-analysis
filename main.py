@@ -16,7 +16,7 @@ if not waiting_time:
     waiting_time = 0    
 waiting_time_proccess = 0
 if not waiting_time:
-    waiting_time_process = 0  
+    waiting_time_process = 0
 #None uses all cpus      
 cpus = None
 # 1 or True, 0 or False
@@ -282,12 +282,12 @@ if True:
             print "Computing experiment statistics..."
             log = open("props.log",'w')
             prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop_length(145, 10, 12)
-            prop_short, prop_short_dev, shorts, shorts_dev, rad2, msg2 = run_prop_length(70, 10, 6)
+            prop_short, prop_short_dev, shorts, shorts_dev, rad2, msq2 = run_prop_length(70, 10, 6)
             print "kappa\t\t\tdeviation"
             print msg1
-            print msg2
+            print msq2
             log.write(str(msg1+"\n"))
-            log.write(str(msg2+"\n"))
+            log.write(str(msq2+"\n"))
             areal = rad1**2*math.pi
             areas = rad2**2*math.pi
             rod_areal = float(areal*prop_long)/longs

@@ -1208,35 +1208,35 @@ class Experiment(object):
             self._kappas = state.kappas
         return self._kappas
 
-    def create_relative_g2_video(self, divisions, folder, fps,
+    def create_relative_q2_video(self, divisions, folder, fps,
                                  number_of_bursts):
         """
-        Creates a video of correlation g2 evolution.
+        Creates a video of correlation q2 evolution.
         """
 
-        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating g2 video"
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating q2 video"
         frames = len(self)
-        function_name = 'correlation_g2_plot_matrix'
+        function_name = 'correlation_q2_plot_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
-        units = "g2 [S.U.]"
+        units = "q2 [S.U.]"
         self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
 
-    def create_relative_g4_video(self, divisions, folder, fps,
+    def create_relative_q4_video(self, divisions, folder, fps,
                                  number_of_bursts):
         """
-        Creates a video of correlation g4 evolution.
+        Creates a video of correlation q4 evolution.
         """
 
-        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating g4 video"
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating q4 video"
         frames = len(self)
-        function_name = 'correlation_g4_plot_matrix'
+        function_name = 'correlation_q4_plot_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
-        units = "g4 [S.U.]"
+        units = "q4 [S.U.]"
         self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts)
 
@@ -1421,8 +1421,8 @@ class Experiment(object):
         self.divide_systems_in_circles(divisions)
         self.create_density_video(divisions, folder, fps, number_of_bursts)
         if not only_density:
-            self.create_relative_g2_video(divisions, folder, fps, number_of_bursts)
-            self.create_relative_g4_video(divisions, folder, fps, number_of_bursts)
+            self.create_relative_q2_video(divisions, folder, fps, number_of_bursts)
+            self.create_relative_q4_video(divisions, folder, fps, number_of_bursts)
         if not settings.ignore_temperature:
             self.create_temperature_video(divisions, folder, fps, max_distance,
                                    max_angle_diff, limit, amount_of_rods,

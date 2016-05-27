@@ -55,19 +55,19 @@ class SystemState(object):
         self._actual_subdivision = []
         self._subdivision_centers = []
         self._density_matrix = []
-        self._correlation_g2 = None
-        self._correlation_g4 = None
-        self._correlation_g2_subsystems = []
-        self._correlation_g4_subsystems = []
-        self._relative_g2_subsystems = []
-        self._relative_g4_subsystems = []
+        self._correlation_q2 = None
+        self._correlation_q4 = None
+        self._correlation_q2_subsystems = []
+        self._correlation_q4_subsystems = []
+        self._relative_q2_subsystems = []
+        self._relative_q4_subsystems = []
         self._average_kappa = None
         self._kappa_dev = None
         self._average_angle = None
         self._angle_matrix = []
         self._density = None
-        self._relative_g2 = None
-        self._relative_g4 = None
+        self._relative_q2 = None
+        self._relative_q4 = None
         self._closest_rod_matrix = []
         self._direction_matrix = []
         self._rods_dict = {}
@@ -527,14 +527,14 @@ class SystemState(object):
         return methods.decompress(self._subdivision_centers,
                                 level=methods.settings.low_comp_level)
 
-    def _compute_g2_and_g4(self):
+    def _compute_q2_and_q4(self):
         """
-            Computes correlation_g2 and correlation_g4 values
+            Computes correlation_q2 and correlation_q4 values
         """
         num = self.number_of_rods
         if num in [0,1,2] or not self.area:
-            self._correlation_g2 = -10
-            self._correlation_g4 = -10
+            self._correlation_q2 = -10
+            self._correlation_q4 = -10
             return
         cos2_av, cos4_av = 0, 0
         for rod1 in self:
@@ -543,92 +543,92 @@ class SystemState(object):
                     angle = math.radians(rod1.angle_between_rods(rod2))
                     cos2_av += math.cos(2*angle)/(num*(num-1))
                     cos4_av += math.cos(4*angle)/(num*(num-1))
-        self._correlation_g2 = cos2_av
-        self._correlation_g4 = cos4_av
+        self._correlation_q2 = cos2_av
+        self._correlation_q4 = cos4_av
 
     @property
-    def correlation_g2(self):
+    def correlation_q2(self):
         """
             sqrt(<cos(2*angle)>^2+<sin(2*angle)>^2)
         """
-        if not self._correlation_g2:
-            self._compute_g2_and_g4()
-        return self._correlation_g2
+        if not self._correlation_q2:
+            self._compute_q2_and_q4()
+        return self._correlation_q2
 
     @property
-    def correlation_g4(self):
+    def correlation_q4(self):
         """
             sqrt(<cos(4*angle)>^2+<sin(4*angle)>^2)
         """
-        if not self._correlation_g4:
-            self._compute_g2_and_g4()
-        return self._correlation_g4
+        if not self._correlation_q4:
+            self._compute_q2_and_q4()
+        return self._correlation_q4
 
-    def _compute_g2_g4_matrices(self, divisions):
+    def _compute_q2_q4_matrices(self, divisions):
         """
-            Computes correlation_g2 and correlation_g4 matrices for subgroups.
+            Computes correlation_q2 and correlation_q4 matrices for subgroups.
         """
         self.divide_in_circles(divisions)
-        if self._correlation_g2 is None or self._correlation_g4 is None:
+        if self._correlation_q2 is None or self._correlation_q4 is None:
             subdivision = self._actual_subdivision
             for subsystem_ in subdivision:
                 subsystem = methods.decompress(subsystem_,
                                 level=methods.settings.low_comp_level)
-                correlation_g2 = [subsystem.center[0], subsystem.center[1]]
-                correlation_g4 = [subsystem.center[0], subsystem.center[1]]
-                correlation_g2.append(subsystem.correlation_g2)
-                correlation_g4.append(subsystem.correlation_g4)
-                self._correlation_g2_subsystems.append(methods.compress(correlation_g2, level=settings.low_comp_level))
-                self._correlation_g4_subsystems.append(methods.compress(correlation_g4, level=settings.low_comp_level))
-            self._correlation_g2_subsystems = self._correlation_g2_subsystems
-            self._correlation_g4_subsystems = self._correlation_g4_subsystems
+                correlation_q2 = [subsystem.center[0], subsystem.center[1]]
+                correlation_q4 = [subsystem.center[0], subsystem.center[1]]
+                correlation_q2.append(subsystem.correlation_q2)
+                correlation_q4.append(subsystem.correlation_q4)
+                self._correlation_q2_subsystems.append(methods.compress(correlation_q2, level=settings.low_comp_level))
+                self._correlation_q4_subsystems.append(methods.compress(correlation_q4, level=settings.low_comp_level))
+            self._correlation_q2_subsystems = self._correlation_q2_subsystems
+            self._correlation_q4_subsystems = self._correlation_q4_subsystems
 
-    def correlation_g2_plot_matrix(self, divisions):
+    def correlation_q2_plot_matrix(self, divisions):
         """
-            Returns values for plotting correlation_g2 matrix.
+            Returns values for plotting correlation_q2 matrix.
         """
-        self._compute_g2_g4_matrices(divisions)
+        self._compute_q2_q4_matrices(divisions)
         x_values = []
         y_values = []
         z_values = []
-        g2_subsystems = self._correlation_g2_subsystems
-        for subsystem_ in g2_subsystems:
+        q2_subsystems = self._correlation_q2_subsystems
+        for subsystem_ in q2_subsystems:
             subsystem = methods.decompress(subsystem_, level=settings.low_comp_level)
             x_values.append(subsystem[0])
             y_values.append(subsystem[1])
             z_values.append(subsystem[2])
-        g2_subsystems = None
+        q2_subsystems = None
         return x_values, y_values, z_values
 
-    def correlation_g2_plot_matrix_queue(self, divisions, index, output_queue):
+    def correlation_q2_plot_matrix_queue(self, divisions, index, output_queue):
         """
             Multiprocessing friendly function.
         """
-        x_val, y_val, z_val = self.correlation_g2_plot_matrix(divisions)
+        x_val, y_val, z_val = self.correlation_q2_plot_matrix(divisions)
         output_queue.put([index, x_val, y_val, z_val])
 
-    def correlation_g4_plot_matrix(self, divisions):
+    def correlation_q4_plot_matrix(self, divisions):
         """
-            Returns values for plotting correlation_g2 matrix.
+            Returns values for plotting correlation_q2 matrix.
         """
-        self._compute_g2_g4_matrices(divisions)
+        self._compute_q2_q4_matrices(divisions)
         x_values = []
         y_values = []
         z_values = []
-        g4_subsystems = self._correlation_g4_subsystems
-        for subsystem_ in g4_subsystems:
+        q4_subsystems = self._correlation_q4_subsystems
+        for subsystem_ in q4_subsystems:
             subsystem = methods.decompress(subsystem_, level=settings.low_comp_level)
             x_values.append(subsystem[0])
             y_values.append(subsystem[1])
             z_values.append(subsystem[2])
-        g4_subsystems = None
+        q4_subsystems = None
         return x_values, y_values, z_values
 
-    def correlation_g4_plot_matrix_queue(self, divisions, index, output_queue):
+    def correlation_q4_plot_matrix_queue(self, divisions, index, output_queue):
         """
             Multiprocessing friendly function.
         """
-        x_val, y_val, z_val = self.correlation_g4_plot_matrix(divisions)
+        x_val, y_val, z_val = self.correlation_q4_plot_matrix(divisions)
         output_queue.put([index, x_val, y_val, z_val])
 
     @property
@@ -662,7 +662,7 @@ class SystemState(object):
             Returns average angle of the system (if exists).
         """
         if not self._average_angle:
-            if self.correlation_g2 > 0.5 and self.correlation_g4 < 0.3:
+            if self.correlation_q2 > 0.5 and self.correlation_q4 < 0.3:
                 angle = 0
                 for rod_ in list(self._rods):
                     angle2 = rod_.angle
