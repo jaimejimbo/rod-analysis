@@ -35,7 +35,7 @@ to_file = 1
 plot = 1
 only_density = 0
 # variables
-coef = 3
+coef = 5
 divisions = 50
 #sigma = sigma_coef * subsystem_rad
 sigma_coef = None
