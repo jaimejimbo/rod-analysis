@@ -786,8 +786,11 @@ def animate_vector_map(x_val, y_val, u_vals, v_vals, units, name, radius):
     """
     Specific animator.
     """
-    u_val = u_vals.pop(0)
-    u_val = v_vals.pop(0)
+    try:
+        u_val = u_vals.pop(0)
+        v_val = v_vals.pop(0)
+    except IndexError:
+        return
     plt.cla()
     plt.clf()
     rad = radius/3.0
@@ -798,11 +801,14 @@ def animate_vector_map(x_val, y_val, u_vals, v_vals, units, name, radius):
     y_max = max(y_val)+rad*1.1
     plt.xlim((x_min, x_max))
     plt.ylim((y_min, y_max))
-    plt.quiver(x_val, y_val, u_val, v_vals)
+    try:
+        plt.quiver(x_val, y_val, u_val, v_val, label=units)
+    except TypeError:
+        print (x_val, y_val, u_val, v_val)
     plt.gca().invert_yaxis()
     plt.xlabel("x [pixels]")
     plt.ylabel("y [pixels]")
-    cb.set_label(units)
+    plt.legend()
 
 def create_vector_map(x_vals, y_vals, u_vals, v_vals, units, name, radius=800, fps=15):
     """

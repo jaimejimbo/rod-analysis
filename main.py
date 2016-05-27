@@ -219,7 +219,7 @@ if True:
                                          number_of_bursts=1, only_density=only_density, limit=20)
             if clusters:
                 experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=1.5,
-                        max_angle_diff=0, min_size=5)
+                        max_angle_diff=1, min_size=5)
             if clusters_hist:
                 experiment_.create_cluster_histogram_video(max_distance=150,
                                     max_angle_diff=10, fps=15)

@@ -1615,8 +1615,8 @@ class Experiment(object):
                 break
             for group in groups:
                 for dummy_time in range(len(group)):
-                    _u_vals_avg.append(u_vals.pop(0))
-                    _v_vals_avg.append(v_vals.pop(0))
+                    _u_vals.append(u_vals.pop(0))
+                    _v_vals.append(v_vals.pop(0))
             try:
                 _u_vals_avg = methods.array_average(_u_vals)
             except IndexError:
@@ -1625,6 +1625,8 @@ class Experiment(object):
                 _v_vals_avg = methods.array_average(_v_vals)
             except IndexError:
                 _v_vals_avg = _v_vals
+            if _u_vals_avg is None or _v_vals_avg is None:
+                print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + str(_u_vals_avg) + "  " + str(_v_vals_avg)
             u_vals_avg.append(_u_vals_avg)
             v_vals_avg.append(_v_vals_avg)
         if not settings.to_file:
@@ -1918,9 +1920,9 @@ class Experiment(object):
         Returns an array where each value is total cluster area in
         that moment.
         """
-        if max_distance and max_angle_diff:
+        if not(max_distance is None) and not(max_angle_diff is None):
             self._reset()
-        elif not max_distance and not max_angle_diff:
+        elif (max_distance is None) and (max_angle_diff is None):
             pass
         else:
             msg = "Both or none to be defined: max_distance, max_angle_diff"
