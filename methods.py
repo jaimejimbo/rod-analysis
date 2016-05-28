@@ -556,7 +556,11 @@ def array_average(array_of_arrays):
                 msg = "Arrays are not of same length."
                 raise ValueError(msg)
             for index in range(len(array)):
-                output[index] += float(array[index])/number_of_arrays
+                if array[index] is None:
+                    output[index] = None
+                    break
+                else:
+                    output[index] += float(array[index])/number_of_arrays
         return output
     else:
         number_of_arrays = len(array_of_arrays)
@@ -771,7 +775,9 @@ def animate_scatter(x_val, y_val, z_vals,
     plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
                 vmin=z_min, vmax=z_max)
     plt.gca().invert_yaxis()
-    cb = plt.colorbar()
+    step = int((z_max-z_min)*10.0)/100.0
+    ticks = [int((z_min + index*step)*10.0)/10.0 for index in range(10+1)]
+    cb = plt.colorbar(ticks=ticks)
     plt.xlabel("x [pixels]")
     plt.ylabel("y [pixels]")
     cb.set_label(units)
@@ -871,7 +877,7 @@ def plot_all_data_files(radius=None, level=9, folder="./"):
     print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting data from files"
     regular_expression = re.compile(r'.*\.data')
     dens_re = re.compile(r'.*dens.*\.data')
-    g2_g4_re = re.compile(r'.*g[2-4].*\.data')
+    q2_q4_re = re.compile(r'.*q[2-4].*\.data')
     temp_re = re.compile(r'.*temp.*\.data')
     cluster_re = re.compile(r'.*cluster.*\.data')
     files = get_file_names(folder=folder, regular_expression=regular_expression)
@@ -879,7 +885,7 @@ def plot_all_data_files(radius=None, level=9, folder="./"):
         if dens_re.match(file_):
             print "Ploting "+file_
             import_and_plot(file_)
-        elif g2_g4_re.match(file_):
+        elif q2_q4_re.match(file_):
             print "Ploting "+file_
             import_and_plot(file_)
         else:

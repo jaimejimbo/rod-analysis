@@ -533,8 +533,8 @@ class SystemState(object):
         """
         num = self.number_of_rods
         if num in [0,1,2] or not self.area:
-            self._correlation_q2 = -10
-            self._correlation_q4 = -10
+            self._correlation_q2 = -1000 #None
+            self._correlation_q4 = -1000 #None
             return
         cos2_av, cos4_av = 0, 0
         for rod1 in self:
@@ -594,9 +594,10 @@ class SystemState(object):
         q2_subsystems = self._correlation_q2_subsystems
         for subsystem_ in q2_subsystems:
             subsystem = methods.decompress(subsystem_, level=settings.low_comp_level)
-            x_values.append(subsystem[0])
-            y_values.append(subsystem[1])
-            z_values.append(subsystem[2])
+            [x_val, y_val, z_val] = subsystem
+            x_values.append(x_val)
+            y_values.append(y_val)
+            z_values.append(z_val)
         q2_subsystems = None
         return x_values, y_values, z_values
 
@@ -618,9 +619,10 @@ class SystemState(object):
         q4_subsystems = self._correlation_q4_subsystems
         for subsystem_ in q4_subsystems:
             subsystem = methods.decompress(subsystem_, level=settings.low_comp_level)
-            x_values.append(subsystem[0])
-            y_values.append(subsystem[1])
-            z_values.append(subsystem[2])
+            [x_val, y_val, z_val] = subsystem
+            x_values.append(x_val)
+            y_values.append(y_val)
+            z_values.append(z_val)
         q4_subsystems = None
         return x_values, y_values, z_values
 

@@ -677,7 +677,8 @@ class Experiment(object):
                 evol_dict[initial_rod_id] = None
                 relative_dict[initial_rod_id] = None
             else:
-                assert (type(relative_dict[initial_rod_id]) == type((1,))), "Rods emparejados no limpian bien velocidades"
+                msg = "Rods emparejados no limpian bien velocidades: " + str(type(relative_dict[initial_rod_id])) + " should be a tuple. \n\n"
+                assert (type(relative_dict[initial_rod_id]) == type((1,))), msg
         for initial_rod_id in list(evol_dict.keys()):
             initial_rods_2 |= set([initial_rod_id])
             if evol_dict[initial_rod_id] == set([]):
@@ -685,7 +686,7 @@ class Experiment(object):
                 relative_dict[initial_rod_id] = None
             if type(relative_dict[initial_rod_id]) != type((1,)):
                 relative_dict[initial_rod_id] = None
-        assert len(initial_rods_1) == len(initial_rods_2), "Rods perdidos\n\n"
+        assert len(initial_rods_1) == len(initial_rods_2), "Lost rods\n\n"
         output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
         
 
@@ -1305,11 +1306,13 @@ class Experiment(object):
         x_val = []
         y_val = []
         match1 = re.match(r'.*plottable_density.*', function_name)
-        match2 = re.match(r'.*g[2|4].*', function_name)
+        match2 = re.match(r'.*q[2|4].*', function_name)
+        match3 = re.match(r'.*vector.*', function_name)
+        match4 = re.match(r'.*temperature.*', function_name)
         print ""
         if match2:
             z_max = 1
-            z_min = -1
+            z_min = -2
         elif match1:
             z_max = 1
             z_min = 0
@@ -1344,16 +1347,19 @@ class Experiment(object):
                 z_val = output[3]
                 assert type(output[4]) == type("string"), "El estado tiene que ir comprimido"
                 self._states[index] = output[4]
-                if not (match2 or match1):
-                    z_maxs.append(max(z_val))
-                    z_mins.append(min(z_val))
                 z_vals.append(z_val)
                 if len(processes_left):
                     new_process = processes_left.pop(0)
                     time.sleep(settings.waiting_time)
                     new_process.start()
-            z_vals_avg.append(methods.compress(methods.array_average(z_vals),
-                                           level=settings.medium_comp_level))
+                z_val_avg = methods.array_average(z_vals)
+                if not (match2 or match1):
+                    z_maxs.append(max(z_val_avg))
+                    z_mins.append(min(z_val_avg))
+            z_vals_avg.append(methods.compress(z_val_avg, level=settings.medium_comp_level))
+            if match3 or match4:
+                for dummy_time in range(10):
+                    z_vals_avg.append(methods.compress(z_val_avg, level=settings.medium_comp_level))
         print CLEAR_LAST
         if not (match2 or match1):
             z_max = max(z_maxs)
@@ -1414,7 +1420,7 @@ class Experiment(object):
 
     def create_videos(self, divisions=5, folder="./", fps=1,
                             max_distance=100, max_angle_diff=90, limit=5,
-                            amount_of_rods=200, number_of_bursts=1, only_density=False):
+                            amount_of_rods=200, number_of_bursts=1, only_density=False, fps_temps=1):
         """
         Creates a video per property of the system that shows evolution.
         """
@@ -1424,10 +1430,10 @@ class Experiment(object):
             self.create_relative_q2_video(divisions, folder, fps, number_of_bursts)
             self.create_relative_q4_video(divisions, folder, fps, number_of_bursts)
         if not settings.ignore_temperature:
-            self.create_temperature_video(divisions, folder, fps, max_distance,
+            self.create_temperature_video(divisions, folder, fps_temps, max_distance,
                                    max_angle_diff, limit, amount_of_rods,
                                    number_of_bursts)
-        self.create_vector_map_video(divisions, folder, fps,
+        self.create_vector_map_video(divisions, folder, fps_temps,
                             max_distance, max_angle_diff,
                             limit, amount_of_rods, number_of_bursts)
 
@@ -1598,7 +1604,7 @@ class Experiment(object):
         end = False
         u_vals_avg = []
         v_vals_avg = []
-        number_of_bursts *= 5
+        number_of_bursts *= 10
         print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + "Computing averages"
         while not end:
             groups = []
@@ -1628,8 +1634,9 @@ class Experiment(object):
                 _v_vals_avg = _v_vals
             if _u_vals_avg is None or _v_vals_avg is None:
                 print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + str(_u_vals_avg) + "  " + str(_v_vals_avg)
-            u_vals_avg.append(methods.compress(_u_vals_avg, level=settings.medium_comp_level))
-            v_vals_avg.append(methods.compress(_v_vals_avg, level=settings.medium_comp_level))
+            for index in range(10):
+                u_vals_avg.append(methods.compress(_u_vals_avg, level=settings.medium_comp_level))
+                v_vals_avg.append(methods.compress(_v_vals_avg, level=settings.medium_comp_level))
         if not settings.to_file:
             fig = plt.figure()
         state = self.get(0)
@@ -1639,7 +1646,7 @@ class Experiment(object):
         units = "velocidad [mm^2/seg^2]"
         rad = self.radius
         if settings.plot:
-            methods.create_vector_map(x_vals, y_vals, u_vals_avg, v_vals_avg, units, name, radius=rad)
+            methods.create_vector_map(x_vals, y_vals, u_vals_avg, v_vals_avg, units, name, radius=rad, fps=fps)
         if settings.to_file:
             output_file_name = name + ".data"
             output_file = open(output_file_name, 'w')
@@ -1737,6 +1744,8 @@ class Experiment(object):
         bursts_groups = copy.deepcopy(self.bursts_groups)
         end = False
         z_vals_avg = []
+        z_maxs = []
+        z_mins = []
         number_of_bursts *= 5
         print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + "Computing averages"
         while not end:
@@ -1766,6 +1775,8 @@ class Experiment(object):
                 average = methods.array_average(_z_vals)
             except IndexError:
                 average = _z_vals
+            z_maxs.append(max(average))
+            z_mins.append(min(average))
             z_vals_avg.append(methods.compress(average, level=settings.medium_comp_level))
         if not settings.to_file:
             fig = plt.figure()
@@ -1773,22 +1784,12 @@ class Experiment(object):
         kappas = state.kappas
         state = None
         name = str(folder)+"Temperature"+str(kappas)+".mp4"
-        z_maxs = []
-        z_mins = []
-        try:
-            for z_val_ in z_vals_avg:
-                z_val = methods.decompress(z_val_, level=settings.medium_comp_level)
-                z_maxs.append(max(z_val))
-                z_mins.append(min(z_val))
-        except ValueError:
-            #print(z_vals_avg)
-            raise ValueError
         z_max = max(z_maxs)
         z_min = min(z_mins)
         units = "Temperature [mm^2/seg^2]"
         rad = self.radius
         if settings.plot:
-            methods.create_scatter_animation(x_vals, y_vals, z_vals_avg, divisions, z_max, z_min, units, name, radius=rad)
+            methods.create_scatter_animation(x_vals, y_vals, z_vals_avg, divisions, z_max, z_min, units, name, radius=rad, fps=fps)
         if settings.to_file:
             output_file_name = name + ".data"
             output_file = open(output_file_name, 'w')
