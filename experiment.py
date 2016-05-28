@@ -1420,7 +1420,7 @@ class Experiment(object):
 
     def create_videos(self, divisions=5, folder="./", fps=1,
                             max_distance=100, max_angle_diff=90, limit=5,
-                            amount_of_rods=200, number_of_bursts=1, only_density=False, fps_temps=1):
+                            amount_of_rods=200, number_of_bursts=1, only_density=False, fps_temps=1, coef=30):
         """
         Creates a video per property of the system that shows evolution.
         """
@@ -1430,12 +1430,12 @@ class Experiment(object):
             self.create_relative_q2_video(divisions, folder, fps, number_of_bursts)
             self.create_relative_q4_video(divisions, folder, fps, number_of_bursts)
         if not settings.ignore_temperature:
-            self.create_temperature_video(divisions, folder, fps_temps, max_distance,
+            self.(divisions, folder, fps_temps, max_distance,
                                    max_angle_diff, limit, amount_of_rods,
-                                   number_of_bursts)
+                                   number_of_bursts, coef)
         self.create_vector_map_video(divisions, folder, fps_temps,
                             max_distance, max_angle_diff,
-                            limit, amount_of_rods, number_of_bursts)
+                            limit, amount_of_rods, number_of_bursts, coef)
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,
@@ -1590,7 +1590,7 @@ class Experiment(object):
 
     def create_vector_map_video(self, divisions, folder, fps,
                             max_distance, max_angle_diff,
-                            limit, amount_of_rods, number_of_bursts):
+                            limit, amount_of_rods, number_of_bursts, coef):
         """
         Create a video of velocity vector map.
         """
@@ -1604,7 +1604,7 @@ class Experiment(object):
         end = False
         u_vals_avg = []
         v_vals_avg = []
-        number_of_bursts *= 10
+        number_of_bursts *= coef
         print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + "Computing averages"
         while not end:
             groups = []
@@ -1634,7 +1634,7 @@ class Experiment(object):
                 _v_vals_avg = _v_vals
             if _u_vals_avg is None or _v_vals_avg is None:
                 print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + str(_u_vals_avg) + "  " + str(_v_vals_avg)
-            for index in range(10):
+            for index in range(coef):
                 u_vals_avg.append(methods.compress(_u_vals_avg, level=settings.medium_comp_level))
                 v_vals_avg.append(methods.compress(_v_vals_avg, level=settings.medium_comp_level))
         if not settings.to_file:
@@ -1731,7 +1731,7 @@ class Experiment(object):
 
     def create_temperature_video(self, divisions, folder, fps,
                             max_distance, max_angle_diff,
-                            limit, amount_of_rods, number_of_bursts):
+                            limit, amount_of_rods, number_of_bursts, coef):
         """
         Creates a video of temperature evolution.
         """
@@ -1746,7 +1746,7 @@ class Experiment(object):
         z_vals_avg = []
         z_maxs = []
         z_mins = []
-        number_of_bursts *= 5
+        number_of_bursts *= coef
         print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + "Computing averages"
         while not end:
             groups = []
@@ -1777,7 +1777,8 @@ class Experiment(object):
                 average = _z_vals
             z_maxs.append(max(average))
             z_mins.append(min(average))
-            z_vals_avg.append(methods.compress(average, level=settings.medium_comp_level))
+            for dummy_time in range(coef):
+                z_vals_avg.append(methods.compress(average, level=settings.medium_comp_level))
         if not settings.to_file:
             fig = plt.figure()
         state = self.get(0)
