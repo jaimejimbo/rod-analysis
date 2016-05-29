@@ -44,7 +44,7 @@ discard_exceptions = 0
 special_chars = 1
 ignore_temperature = 0
 counter_refresh = 20
-plot_rods = 1
+plot_rods = True
 import re
 
 
@@ -346,7 +346,7 @@ if True:
             center_x, center_y, rad = zone_coords[0], zone_coords[1], zone_coords[2]
             x_lims = (center_x-rad, center_x+rad)
             y_lims = (center_y-rad, center_y+rad)
-            methods.rods_animation([rods_12, rods_6], ['r', 'b'], x_lims, y_lims, name="rods.mp4", fps=1)
+            methods.rods_animation([rods_12, rods_6], ['b', 'y'], x_lims, y_lims, zone_coords, name="rods.mp4", fps=1)
 
         if run_check_dim:
             names, rod_groups = system_state.create_rods(kappas=10, real_kappas=12,

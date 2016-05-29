@@ -968,7 +968,7 @@ def rods_differences(shorts, longs, wlprop):
     Ns = diff_s + shorts
     return diff_l, diff_s, Nl, Ns
 
-def rods_animation(rods, colours, x_lim, y_lim, name="rods.mp4", fps=1):
+def rods_animation(rods, colours, x_lim, y_lim, zone_coords, name="rods.mp4", fps=1):
     """
     Plot rods with colours
     """
@@ -986,11 +986,11 @@ def rods_animation(rods, colours, x_lim, y_lim, name="rods.mp4", fps=1):
             rods_ = [rods_12_, rods_6_]
         except IndexError:
             return
-        animate_rods(rods_, colours, x_lim, y_lim)
+        animate_rods(rods_, colours, x_lim, y_lim, zone_coords)
     anim = animation.FuncAnimation(fig, animate, frames=frames)
     anim.save(name, writer=WRITER, fps=fps)
         
-def animate_rods(rods, colours, x_lim, y_lim):
+def animate_rods(rods, colours, x_lim, y_lim, zone_coords):
     """
     Specific animator.
     """
@@ -999,11 +999,15 @@ def animate_rods(rods, colours, x_lim, y_lim):
     plt.clf()
     plt.xlim(x_lim)
     plt.ylim(y_lim)
+    circle1 = plt.Circle((zone_coords[0], zone_coords[1]), zone_coords[2]+4, color='black')    
+    circle2 = plt.Circle((zone_coords[0], zone_coords[1]), zone_coords[2], color='white')
+    plt.gca().add_artist(circle1)
+    plt.gca().add_artist(circle2)
     # rods_12 = [x_0_list, y_0_list, x_f_list, y_f_list]
     for index in range(len(rods_12)):
-        plt.plot([rods_12[0], rods_12[2]], [rods_12[1], rods_12[3]], c=colours[0])#, linewidth=2.0)
+        plt.plot([rods_12[0], rods_12[2]], [rods_12[1], rods_12[3]], c=colours[0], linewidth=0.7)
     for index in range(len(rods_6)):
-        plt.plot([rods_6[0], rods_6[2]], [rods_6[1], rods_6[3]], c=colours[1])#, linewidth=2.0)
+        plt.plot([rods_6[0], rods_6[2]], [rods_6[1], rods_6[3]], c=colours[1], linewidth=0.7)
     plt.gca().invert_yaxis()
     #plt.gca().invert_xaxis()
     plt.xlabel("x [pixels]")

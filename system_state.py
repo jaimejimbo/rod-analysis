@@ -999,7 +999,7 @@ class SystemState(object):
             x_mid = rod_.x_mid
             y_mid = rod_.y_mid
             angle = rod_.angle
-            length = rod_.real_length/scale
+            length = rod_.feret
             angle = math.radians(angle)
             x_0_list.append(x_mid - length*math.cos(angle)/2.0)
             x_f_list.append(x_mid + length*math.cos(angle)/2.0)

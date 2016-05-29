@@ -197,7 +197,7 @@ class Rod(object):
         output = is_in_main and has_valid_proportions
         if output:
             self._kappa = self._real_kappa
-            self._feret = self._real_length
+            #self._feret = self._real_length
             self._min_feret = self._feret*1.0/self._kappa
         return output
 
@@ -214,8 +214,8 @@ class Rod(object):
         cond = valid_length and is_in_main
         if cond:
             self._kappa = kappa
+            #self._feret = self._real_length
             self._feret_min = self._feret/float(kappa)
-            self._feret = self._real_length
         return cond
 
     def vector_to_rod(self, rod, scale=1):
