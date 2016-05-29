@@ -22,14 +22,14 @@ cpus = None
 # 1 or True, 0 or False
 create_videos = 1
 clusters = 1
-clusters_hist = 0
+clusters_hist = 1
 avg_temp = 1
 order_param_exp = 1
-lost_percentage = 1
+lost_percentage = 0
 run_imagej = 0
-run_props = 0
+run_props = 1
 run_graphs = 1
-run_check_dim = 1   
+run_check_dim = 0
 get_image_dates = 0
 to_file = 1
 plot = 1
@@ -44,6 +44,7 @@ discard_exceptions = 0
 special_chars = 1
 ignore_temperature = 0
 counter_refresh = 20
+plot_rods = 1
 import re
 
 
@@ -189,6 +190,8 @@ if True:
                 percentage, std_dev = experiment_.lost_rods_percentage
                 msg = "Rods lost: "+str(percentage)+"%\t"+" Standard deviation: "+str(std_dev)
                 log.write(str(msg+"\n"))
+            if plot_rods:
+                plottable_rods = experiment_.plottable_rods
             try:
                 names = None
                 experiment_ = None
@@ -197,6 +200,7 @@ if True:
             except NameError:
                 pass
             log.close()
+            return plottable_rods
 
         def run_default_length(length, length_error, real_kappa):
             """
@@ -229,6 +233,8 @@ if True:
                 percentage, std_dev = experiment_.lost_rods_percentage
                 msg = "Rods lost: "+str(percentage)+"%\t"+" Standard deviation: "+str(std_dev)
                 log.write(str(msg+"\n"))
+            if plot_rods:
+                plottable_rods = experiment_.plottable_rods
             try:
                 names = None
                 experiment_ = None
@@ -237,6 +243,7 @@ if True:
             except NameError:
                 pass
             log.close()
+            return plottable_rods
 
 
         def run_prop(kappa, real_kappa, error):
@@ -323,18 +330,23 @@ if True:
         
         if run_graphs:
             print "Creating graphs..."
+            rods_6, rods_12 = None, None
             if discard_exceptions:
                 try:
-                    run_default(15, 12, 3)
+                    rods_12 = run_default(15, 12, 3)
                 except:
                     pass
                 try:
-                    run_default(7.8, 6, 2)
+                    rods_6 = run_default(7.8, 6, 2)
                 except:
                     pass
             else:
-                run_default_length(145, 10, 12)#(15, 12, 3)#run_default_length(160, 30, 12)
-                run_default_length(70, 10, 6)#(7.8, 6, 2)#run_default_length(80, 30, 6)
+                rods_12 = run_default_length(145, 10, 12)#(15, 12, 3)#run_default_length(160, 30, 12)
+                rods_6 = run_default_length(70, 10, 6)#(7.8, 6, 2)#run_default_length(80, 30, 6)
+            center_x, center_y, rad = zone_coords[0], zone_coords[1], zone_coords[2]
+            x_lims = (center_x-rad, center_x+rad)
+            y_lims = (center_y-rad, center_y+rad)
+            methods.rods_animation([rods_12, rods_6], ['r', 'b'], x_lims, y_lims, name="rods.mp4", fps=1)
 
         if run_check_dim:
             names, rod_groups = system_state.create_rods(kappas=10, real_kappas=12,

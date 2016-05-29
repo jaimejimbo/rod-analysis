@@ -985,8 +985,28 @@ class SystemState(object):
         """
         self._zone_coords = zone_coords
 
-
-
+    @property
+    def plottable_rods(self):
+        """
+        Returns a list of plotable rods
+        """
+        x_0_list = []
+        y_0_list = []
+        x_f_list = []
+        y_f_list = []
+        scale = self.scale
+        for rod_ in self:
+            x_mid = rod_.x_mid
+            y_mid = rod_.y_mid
+            angle = rod_.angle
+            length = rod_.real_length/scale
+            angle = math.radians(angle)
+            x_0_list.append(x_mid - length*math.cos(angle)/2.0)
+            x_f_list.append(x_mid + length*math.cos(angle)/2.0)
+            y_0_list.append(y_mid - length*math.sin(angle)/2.0)
+            y_f_list.append(y_mid + length*math.sin(angle)/2.0)
+        return methods.compress([x_0_list, y_0_list, x_f_list, y_f_list], level=None)
+        
 
 
 

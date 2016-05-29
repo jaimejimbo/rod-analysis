@@ -1430,7 +1430,7 @@ class Experiment(object):
             self.create_relative_q2_video(divisions, folder, fps, number_of_bursts)
             self.create_relative_q4_video(divisions, folder, fps, number_of_bursts)
         if not settings.ignore_temperature:
-            self.(divisions, folder, fps_temps, max_distance,
+            self.create_temperature_video(divisions, folder, fps_temps, max_distance,
                                    max_angle_diff, limit, amount_of_rods,
                                    number_of_bursts, coef)
         self.create_vector_map_video(divisions, folder, fps_temps,
@@ -2488,6 +2488,54 @@ class Experiment(object):
         state = self.get(index)
         num_rods = state.number_of_rods
         output_queue.put([index, num_rods])
+
+    @property
+    def plottable_rods(self):
+        """
+        Returns plottable rods of each system.
+        """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Compressing data "
+        plottable_rods_ = []
+        output_queue = mp.Queue()
+        processes = []
+        for index in range(len(self)):
+            process = mp.Process(target=self._plottable_rods_process,
+                                 args=(index, output_queue))
+            processes.append(process)
+            plottable_rods_.append(None)
+        num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
+        finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
+        while finished < num_processes:
+            counter += 1
+            finished += 1
+            previous_time, counter, time_left = methods.print_progress(finished, num_processes,
+                                counter, times, time_left, previous_time)
+            [index, plottable_rods__] = output_queue.get()
+            plottable_rods_[index] = plottable_rods__
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                #time.sleep(settings.waiting_time)
+                new_process.start()
+        print CLEAR_LAST
+        return plottable_rods_
+
+    def _plottable_rods_process(self, index, output):
+        """
+        Mp wrapper
+        """
+        state = self.get(index)
+        plottable_rods_ = state.plottable_rods
+        output.put([index, plottable_rods_])
+
+
+
+
 
 
 

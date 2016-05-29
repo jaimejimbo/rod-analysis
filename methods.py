@@ -649,7 +649,7 @@ def vector_angle(vector):
         angle = math.pi
     return angle
 
-def compress(obj, level=settings.low_comp_level):
+def compress(obj, level=settings.medium_comp_level):
     """
     Compress data of an object.
     """
@@ -659,7 +659,7 @@ def compress(obj, level=settings.low_comp_level):
     compressed = zlib.compress(dumps, level)
     return compressed
 
-def decompress(obj, level=settings.low_comp_level):
+def decompress(obj, level=settings.medium_comp_level):
     """
     Decompress an object.
     """
@@ -967,4 +967,61 @@ def rods_differences(shorts, longs, wlprop):
     Nl = diff_l + longs
     Ns = diff_s + shorts
     return diff_l, diff_s, Nl, Ns
+
+def rods_animation(rods, colours, x_lim, y_lim, name="rods.mp4", fps=1):
+    """
+    Plot rods with colours
+    """
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating rods animation"
+    fig = plt.figure()
+    frames = len(rods[0])
+    rods_12, rods_6 = rods[0], rods[1]
+    def animate(dummy_frame):
+        """
+        Wrapper.
+        """
+        try:
+            rods_12_ = rods_12.pop(0)
+            rods_6_  = rods_6.pop(0)
+            rods_ = [rods_12_, rods_6_]
+        except IndexError:
+            return
+        animate_rods(rods_, colours, x_lim, y_lim)
+    anim = animation.FuncAnimation(fig, animate, frames=frames)
+    anim.save(name, writer=WRITER, fps=fps)
+        
+def animate_rods(rods, colours, x_lim, y_lim):
+    """
+    Specific animator.
+    """
+    rods_12, rods_6 = decompress(rods[0], level=None), decompress(rods[1], level=None)
+    plt.cla()
+    plt.clf()
+    plt.xlim(x_lim)
+    plt.ylim(y_lim)
+    # rods_12 = [x_0_list, y_0_list, x_f_list, y_f_list]
+    for index in range(len(rods_12)):
+        plt.plot([rods_12[0], rods_12[2]], [rods_12[1], rods_12[3]], c=colours[0])#, linewidth=2.0)
+    for index in range(len(rods_6)):
+        plt.plot([rods_6[0], rods_6[2]], [rods_6[1], rods_6[3]], c=colours[1])#, linewidth=2.0)
+    plt.gca().invert_yaxis()
+    #plt.gca().invert_xaxis()
+    plt.xlabel("x [pixels]")
+    plt.ylabel("y [pixels]")
+
+def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius=800, fps=15):
+    """
+    Creates animation from data.
+    """
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating animation"
+    fig = plt.figure()
+    frames = len(z_vals_avg)
+    def animate(dummy_frame):
+        """
+        Wrapper.
+        """
+        animate_scatter(x_val, y_val, z_vals_avg,
+                            divisions, name, z_max, z_min, units, radius)
+    anim = animation.FuncAnimation(fig, animate, frames=frames)
+    anim.save(name, writer=WRITER, fps=fps)
 

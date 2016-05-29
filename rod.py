@@ -257,3 +257,10 @@ class Rod(object):
             self._direction_matrix[0][1] = e_x*e_y
         return self._direction_matrix
 
+    @property
+    def real_length(self):
+        """
+        Length of rod (pixels)
+        """
+        return self._real_length
+
