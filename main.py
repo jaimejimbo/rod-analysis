@@ -7,9 +7,10 @@ Main script.
 Settings
 """
 #0-9 or None to disable
-low_comp_level = None
-medium_comp_level = 0
-strong_comp_level = None
+LZO = 1
+ZLIB = 0
+default_comp = LZO
+default_comp_level = 1
 #Reduces cpu usage (0 for disable)
 waiting_time = 0
 if not waiting_time:
@@ -99,11 +100,7 @@ zone_coords = [zone_coords[1], zone_coords[0], zone_coords[2]]
 #print zone_coords
 #raw_input("")
 settings = open("settings.py", "w")
-settings.write("low_comp_level = {0}".format(low_comp_level))
-settings.write("\n")
-settings.write("medium_comp_level = {0}".format(medium_comp_level))
-settings.write("\n")
-settings.write("strong_comp_level = {0}".format(strong_comp_level))
+settings.write("default_comp_level = {0}".format(default_comp_level))
 settings.write("\n")
 settings.write("cpus = {0}".format(cpus))
 settings.write("\n")
@@ -122,6 +119,8 @@ settings.write("\n")
 settings.write("ignore_temperature = {0}".format(ignore_temperature))
 settings.write("\n")
 settings.write("counter_refresh = {0}".format(counter_refresh))
+settings.write("\n")
+settings.write("default_comp = {0}".format(default_comp))
 settings.write("\n")
 try:
     rad = zone_coords[2]

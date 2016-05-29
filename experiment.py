@@ -42,7 +42,7 @@ class Experiment(object):
         elif re.match(r'.*list.*', type_):
             type_2 = str(type(system_states_list[0]))
             if re.match(r'.*SystemState.*', type_2):
-                self._states = [methods.compress(state, level=settings.medium_comp_level) for state in system_states_list]
+                self._states = [methods.compress(state) for state in system_states_list]
             elif re.match(r'.*str.*', type_2):
                 self._states = system_states_list
             else:
@@ -65,7 +65,7 @@ class Experiment(object):
             number = self._state_numbers[index]
             state = self._states[index]
             self._states_dict[number] = methods.compress(state,
-                level=settings.medium_comp_level)
+                level=settings.default_comp_level)
         if not dates:
             msg = "Time evolution needs dates file.\n"
             msg = "To create one run export_image_dates().\n"
@@ -134,7 +134,7 @@ class Experiment(object):
             Magic method for looping.
         """
         for state in self._states:
-            yield methods.decompress(state, level=settings.medium_comp_level)
+            yield methods.decompress(state)
 
     def __getitem__(self, state_num):
         """
@@ -154,7 +154,7 @@ class Experiment(object):
             Getter with index
         """
         state = self._states[index]
-        state = methods.decompress(state, level=settings.medium_comp_level)
+        state = methods.decompress(state)
         return state
 
     def set_coef(self, value):
@@ -200,7 +200,7 @@ class Experiment(object):
         state = self.get(index)
         state.coef = value
         output = methods.compress(state,
-                    level=methods.settings.medium_comp_level)
+                    level=methods.settings.default_comp_level)
         output_queue.put([index, output])
 
     def set_coords(self, zone_coords):
@@ -246,7 +246,7 @@ class Experiment(object):
         state = self.get(index)
         state.set_coords(zone_coords)
         output = methods.compress(state,
-                    level=methods.settings.medium_comp_level)
+                    level=methods.settings.default_comp_level)
         output_queue.put([index, output])
 
     def homogenize_coords(self):
@@ -266,8 +266,8 @@ class Experiment(object):
         """
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating dict keys"
         for dummy_index in range(len(self)):
-            self._evolution_dictionaries.append(methods.compress({}, level=settings.medium_comp_level))
-            self._relative_dictionaries.append(methods.compress({}, level=settings.medium_comp_level))
+            self._evolution_dictionaries.append(methods.compress({}))
+            self._relative_dictionaries.append(methods.compress({}))
             self._conflictive_final_rods.append(set([]))
             self._final_rods.append(set([]))
             self._initial_rods.append(set([]))
@@ -311,16 +311,16 @@ class Experiment(object):
         if not state:
             msg = "State is not defined."
             raise TypeError(msg)
-        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
-        relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
+        evol_dict = methods.decompress(self._evolution_dictionaries[index])
+        relative_dict = methods.decompress(self._relative_dictionaries[index])
         initial_rods = set([])
         for rod_ in state:
             initial_rods |= set([rod_.identifier])
             rod_id = rod_.identifier
             evol_dict[rod_id] = set([])
             relative_dict[rod_id] = {}
-        evol_dict = methods.compress(evol_dict, level=settings.medium_comp_level)
-        rel_dict = methods.compress(relative_dict, level=settings.medium_comp_level)
+        evol_dict = methods.compress(evol_dict)
+        rel_dict = methods.compress(relative_dict)
         output_queue.put([index, evol_dict, rel_dict, initial_rods])
 
     def _fill_dicts(self, max_distance, max_angle_diff,
@@ -371,8 +371,8 @@ class Experiment(object):
         initial_state = self.get(index)
         final_state = self.get(index+1)
         assert type(initial_state) != type("string"), "initial state can't be a string."
-        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
-        relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
+        evol_dict = methods.decompress(self._evolution_dictionaries[index])
+        relative_dict = methods.decompress(self._relative_dictionaries[index])
         error = True
         for initial_rod in initial_state:
             initial_id = initial_rod.identifier
@@ -411,14 +411,14 @@ class Experiment(object):
         for initial_id in relative_dict.keys():
             if len(relative_dict[initial_id]) == 1:
                 relative_dict[initial_id] = relative_dict[initial_id].values()[0]
-        output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
+        output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict)])
 
     def _remove_final_rod(self, index, initial_rod_id, final_rod_id):
         """
             Remove final rod from the rest of rods' evolutions.
         """
-        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
-        #rel_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
+        evol_dict = methods.decompress(self._evolution_dictionaries[index])
+        #rel_dict = methods.decompress(self._relative_dictionaries[index])
         system_end = self.get(index+1)
         final_rod = system_end[list(final_rod_id)[0]]
         changed = False
@@ -486,8 +486,8 @@ class Experiment(object):
         Process.
         """
         selected = set([])
-        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
-        relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
+        evol_dict = methods.decompress(self._evolution_dictionaries[index])
+        relative_dict = methods.decompress(self._relative_dictionaries[index])
         inverted_rel_dict = {}
         inverted_evol_dict = {}
         for initial_rod_id in list(evol_dict.keys()):
@@ -506,7 +506,7 @@ class Experiment(object):
                 evol_dict[initial_rod_id] = final_rod_id
                 relative_dict[initial_rod_id] = (distance, angle_diff, vector)
                 selected |= set([initial_rod_id])
-        output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
+        output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict)])
         selected_queue.put([index, selected])
 
     def _closer_rod(self, index, final_rod, selected, evol_dict, relative_dict_, max_distance=150):
@@ -557,7 +557,7 @@ class Experiment(object):
         Check distances that rods moved.
         """
         for index in range(len(self._relative_dictionaries)-1):
-            relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
+            relative_dict = methods.decompress(self._relative_dictionaries[index])
             for subdict in relative_dict.values():
                 msg = None
                 try:
@@ -583,8 +583,8 @@ class Experiment(object):
         total = 0
         nones = 0
         for index in range(len(self._relative_dictionaries)-1):
-            relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
-            evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
+            relative_dict = methods.decompress(self._relative_dictionaries[index])
+            evol_dict = methods.decompress(self._evolution_dictionaries[index])
             for initial_rod_id in relative_dict.keys():
                 subdict = relative_dict[initial_rod_id]
                 evoldict = evol_dict[initial_rod_id]
@@ -666,8 +666,8 @@ class Experiment(object):
         """
         Process
         """
-        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
-        relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
+        evol_dict = methods.decompress(self._evolution_dictionaries[index])
+        relative_dict = methods.decompress(self._relative_dictionaries[index])
         initial_rods_1 = set([])
         initial_rods_2 = set([])
         for initial_rod_id in list(evol_dict.keys()):
@@ -687,7 +687,7 @@ class Experiment(object):
             if type(relative_dict[initial_rod_id]) != type((1,)):
                 relative_dict[initial_rod_id] = None
         assert len(initial_rods_1) == len(initial_rods_2), "Lost rods\n\n"
-        output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
+        output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict)])
         
 
     def evolution_dictionaries(self, max_distance=100, max_angle_diff=90,
@@ -748,8 +748,8 @@ class Experiment(object):
         """
         Process for method.
         """
-        evol_dict = methods.decompress(self._evolution_dictionaries[index], level=settings.medium_comp_level)
-        relative_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
+        evol_dict = methods.decompress(self._evolution_dictionaries[index])
+        relative_dict = methods.decompress(self._relative_dictionaries[index])
         initial_rods = set([])
         for initial_rod_id in evol_dict.keys():
             if evol_dict[initial_rod_id] is None:
@@ -778,7 +778,7 @@ class Experiment(object):
             vector = selected_rod.vector_to_rod(final_rod)
             relative_dict[selected_rod_id] = (min_distance, angle_diff, vector)
             initial_rods -= set([selected_rod_id])
-        output_queue.put([index, methods.compress(evol_dict, level=settings.medium_comp_level), methods.compress(relative_dict, level=settings.medium_comp_level)])
+        output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict)])
 
     def _compute_speeds(self, max_distance, max_angle_diff, limit, amount_of_rods):
         """
@@ -836,7 +836,7 @@ class Experiment(object):
         """
         Returns an array of speeds.
         """
-        rel_dict = methods.decompress(self._relative_dictionaries[index], level=settings.medium_comp_level)
+        rel_dict = methods.decompress(self._relative_dictionaries[index])
         speeds = {}
         angular_speeds = {}
         vector_speeds = {}
@@ -855,9 +855,9 @@ class Experiment(object):
                 vector_speeds[initial_rod_id] = vector_speed
             except TypeError:
                 pass
-        speeds_queue.put([index, methods.compress(speeds, level=settings.medium_comp_level)])
-        angular_speeds_queue.put([index, methods.compress(angular_speeds, level=settings.medium_comp_level)])
-        vector_speeds_queue.put([index, methods.compress(vector_speeds, level=settings.medium_comp_level)])
+        speeds_queue.put([index, methods.compress(speeds)])
+        angular_speeds_queue.put([index, methods.compress(angular_speeds)])
+        vector_speeds_queue.put([index, methods.compress(vector_speeds)])
 
     def speeds(self, max_distance=30, max_angle_diff=90, limit=5,
                      amount_of_rods=200):
@@ -876,7 +876,7 @@ class Experiment(object):
         self._compute_speeds(max_distance, max_angle_diff, limit, amount_of_rods)
         output = []
         for index in range(len(self._speeds)):
-            speeds = methods.decompress(self._speeds[index], level=settings.medium_comp_level)
+            speeds = methods.decompress(self._speeds[index])
             num_of_rods = len(speeds)
             output.append(0)
             for speed in list(speeds.values()):
@@ -955,9 +955,9 @@ class Experiment(object):
         state = self.get(index)
         subgroups_matrix = state.subgroups_matrix(divisions)
         speeds_matrix = []
-        speeds = methods.decompress(self._speeds[index], level=settings.medium_comp_level)
-        angular_speeds = methods.decompress(self._angular_speeds[index], level=settings.medium_comp_level)
-        vector_speeds = methods.decompress(self._vector_speeds[index], level=settings.medium_comp_level)
+        speeds = methods.decompress(self._speeds[index])
+        angular_speeds = methods.decompress(self._angular_speeds[index])
+        vector_speeds = methods.decompress(self._vector_speeds[index])
         for row in subgroups_matrix:
             speeds_row = []
             for subsystem in row:
@@ -985,7 +985,7 @@ class Experiment(object):
                     subsystem_dict[rod_id] = (speed, angular_speed, tuple(relative_vector_speed), tuple(average_vector_speed))
                 speeds_row.append(subsystem_dict)
             speeds_matrix.append(speeds_row)
-        output_queue.put([index, methods.compress(speeds_matrix, level=settings.medium_comp_level)])
+        output_queue.put([index, methods.compress(speeds_matrix)])
 
     def _compute_local_average_speeds(self, max_distance=100, max_angle_diff=90,
                                      limit=5, amount_of_rods=200, divisions=5):
@@ -1107,8 +1107,8 @@ class Experiment(object):
         """
         Process
         """
-        quad_speeds = methods.decompress(quad_speeds_array[index], level=settings.medium_comp_level)
-        ang_speeds = methods.decompress(ang_speeds_array[index], level=settings.medium_comp_level)
+        quad_speeds = methods.decompress(quad_speeds_array[index])
+        ang_speeds = methods.decompress(ang_speeds_array[index])
         state = self.get(index)
         subgroups = state.subgroups_matrix(divisions)
         densities = []
@@ -1178,7 +1178,7 @@ class Experiment(object):
         """
         state = self.get(index)
         state.divide_in_circles(divisions)
-        state = methods.compress(state, level=methods.settings.medium_comp_level)
+        state = methods.compress(state, level=methods.settings.default_comp_level)
         output_queue.put([index, state])
 
     def create_density_video(self, divisions, folder, fps,
@@ -1294,7 +1294,7 @@ class Experiment(object):
         function = getattr(state, function_name)
         values = function(divisions)
         output_queue.put([index, values[0], values[1], values[2], methods.compress(state,
-                level=settings.medium_comp_level)])
+                level=settings.default_comp_level)])
 
     def get_z_vals(self, groups, bursts_, function_name, divisions):
         """
@@ -1356,10 +1356,10 @@ class Experiment(object):
                 if not (match2 or match1):
                     z_maxs.append(max(z_val_avg))
                     z_mins.append(min(z_val_avg))
-            z_vals_avg.append(methods.compress(z_val_avg, level=settings.medium_comp_level))
+            z_vals_avg.append(methods.compress(z_val_avg))
             if match3 or match4:
                 for dummy_time in range(10):
-                    z_vals_avg.append(methods.compress(z_val_avg, level=settings.medium_comp_level))
+                    z_vals_avg.append(methods.compress(z_val_avg))
         print CLEAR_LAST
         if not (match2 or match1):
             z_max = max(z_maxs)
@@ -1491,7 +1491,7 @@ class Experiment(object):
         subgroups = state.subgroups_matrix(divisions)
         x_val, y_val, z_val = [], [], []
         counter = 0
-        quad_speeds_ = methods.decompress(quad_speeds[index], level=settings.medium_comp_level)
+        quad_speeds_ = methods.decompress(quad_speeds[index])
         for row_index in range(len(subgroups)):
             for col_index in range(len(subgroups[row_index])):
                 subgroup = subgroups[row_index][col_index]
@@ -1635,8 +1635,8 @@ class Experiment(object):
             if _u_vals_avg is None or _v_vals_avg is None:
                 print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + str(_u_vals_avg) + "  " + str(_v_vals_avg)
             for index in range(coef):
-                u_vals_avg.append(methods.compress(_u_vals_avg, level=settings.medium_comp_level))
-                v_vals_avg.append(methods.compress(_v_vals_avg, level=settings.medium_comp_level))
+                u_vals_avg.append(methods.compress(_u_vals_avg))
+                v_vals_avg.append(methods.compress(_v_vals_avg))
         if not settings.to_file:
             fig = plt.figure()
         state = self.get(0)
@@ -1705,7 +1705,7 @@ class Experiment(object):
         state = self.get(index)
         subgroups = state.subgroups_matrix(divisions)
         x_val, y_val, u_val, v_val = [], [], [], []
-        local_speeds_ = methods.decompress(local_speeds, level=settings.medium_comp_level)
+        local_speeds_ = methods.decompress(local_speeds)
         for row_index in range(len(subgroups)):
             for col_index in range(len(subgroups[row_index])):
                 local_speeds__ = local_speeds_[row_index][col_index]
@@ -1778,7 +1778,7 @@ class Experiment(object):
             z_maxs.append(max(average))
             z_mins.append(min(average))
             for dummy_time in range(coef):
-                z_vals_avg.append(methods.compress(average, level=settings.medium_comp_level))
+                z_vals_avg.append(methods.compress(average))
         if not settings.to_file:
             fig = plt.figure()
         state = self.get(0)
@@ -1804,7 +1804,7 @@ class Experiment(object):
         Wrapper
         """
         try:
-            z_val = methods.decompress(z_vals.pop(0), settings.medium_comp_level)
+            z_val = methods.decompress(z_vals.pop(0), settings.default_comp_level)
         except IndexError:
             return
         plt.cla()
@@ -2217,7 +2217,7 @@ class Experiment(object):
         """
             Averages speeds of all rods.
         """
-        speeds = methods.decompress(self._speeds[index], level=settings.medium_comp_level)
+        speeds = methods.decompress(self._speeds[index])
         number_of_rods = len(list(speeds.keys()))
         average_speed = 0
         for speed in list(speeds.values()):
@@ -2549,7 +2549,7 @@ def compute_local_average_speeds_process(index, output_queue, local_speeds, divi
     """
     speeds_matrix = []
     angular_speeds_matrix = []
-    local_speeds_ = methods.decompress(local_speeds[index], level=settings.medium_comp_level)
+    local_speeds_ = methods.decompress(local_speeds[index])
     speeds_matrix = []
     angular_speeds_matrix = []
     for row in range(len(local_speeds_)):
@@ -2567,8 +2567,8 @@ def compute_local_average_speeds_process(index, output_queue, local_speeds, divi
                 subsys_quad_avg_ang_speed += float(speeds[1]**2)/num_rods
             speeds_matrix[row][col] = subsys_quad_avg_speed
             angular_speeds_matrix[row][col] = subsys_quad_avg_ang_speed
-    output_queue.put([index, methods.compress(speeds_matrix, level=settings.medium_comp_level),
-                    methods.compress(angular_speeds_matrix, level=settings.medium_comp_level)])
+    output_queue.put([index, methods.compress(speeds_matrix),
+                    methods.compress(angular_speeds_matrix)])
 
 def average_speeds_vectors_video_process(divisions, index, compressed_state,
                                      speeds, output_queue):
@@ -2576,7 +2576,7 @@ def average_speeds_vectors_video_process(divisions, index, compressed_state,
         Process
     """
     state = methods.decompress(compressed_state,
-                        level=methods.settings.medium_comp_level)
+                        level=methods.settings.default_comp_level)
     subgroups_matrix = state.subgroups_matrix(divisions)
     emp = [None, None]
     vectors_matrix = [[emp for dummy in range(len(subgroups_matrix[idx]))]

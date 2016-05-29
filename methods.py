@@ -10,7 +10,7 @@ import numpy
 from matplotlib import animation
 import datetime
 import inspect
-
+import lzo
 
 CURSOR_UP_ONE = '\x1b[1A'
 ERASE_LINE = '\x1b[2K'
@@ -19,6 +19,8 @@ if settings.special_chars:
     WHITE_BLOCK = u'\u25A0'
 else:
     WHITE_BLOCK = 'X'
+LZO = 1
+ZLIB = 0
 
 using_cl = False
 _writer = animation.writers['ffmpeg']
@@ -649,23 +651,36 @@ def vector_angle(vector):
         angle = math.pi
     return angle
 
-def compress(obj, level=settings.medium_comp_level):
+def compress(obj, level=settings.default_comp_level, method=settings.default_comp):
     """
     Compress data of an object.
     """
     if level is None:
         return obj
-    dumps = cPickle.dumps(obj)
-    compressed = zlib.compress(dumps, level)
+    if method==ZLIB:
+        dumps = cPickle.dumps(obj)
+        compressed = zlib.compress(dumps, level)
+    elif method==LZO:
+        level = max([level,1])
+        dumps = cPickle.dumps(obj)
+        compressed = lzo.compress(dumps, level)
+    else:
+        compressed = obj
     return compressed
 
-def decompress(obj, level=settings.medium_comp_level):
+def decompress(obj, level=settings.default_comp_level, method=settings.default_comp):
     """
     Decompress an object.
     """
     if level is None:
         return obj
-    dumps = zlib.decompress(obj)
+    if method==ZLIB:
+        dumps = zlib.decompress(obj, level)
+    elif method==LZO:
+        level = max([level,1])
+        dumps = lzo.decompress(obj, level)
+    else:
+        dumps = obj
     data = cPickle.loads(dumps)
     return data
 
@@ -759,7 +774,7 @@ def animate_scatter(x_val, y_val, z_vals,
     Specific animator.
     """
     try:
-        z_val = decompress(z_vals.pop(0), level=settings.medium_comp_level)
+        z_val = decompress(z_vals.pop(0), level=settings.default_comp_level)
     except IndexError:
         return
     plt.cla()
@@ -804,8 +819,8 @@ def animate_vector_map(x_val, y_val, u_vals, v_vals, units, name, radius):
     Specific animator.
     """
     try:
-        u_val = decompress(u_vals.pop(0), level=settings.medium_comp_level)
-        v_val = decompress(v_vals.pop(0), level=settings.medium_comp_level)
+        u_val = decompress(u_vals.pop(0), level=settings.default_comp_level)
+        v_val = decompress(v_vals.pop(0), level=settings.default_comp_level)
     except IndexError:
         return
     plt.cla()
@@ -994,7 +1009,7 @@ def animate_rods(rods, colours, x_lim, y_lim, zone_coords):
     """
     Specific animator.
     """
-    rods_12, rods_6 = decompress(rods[0], level=None), decompress(rods[1], level=None)
+    rods_12, rods_6 = decompress(rods[0]), decompress(rods[1])
     plt.cla()
     plt.clf()
     plt.xlim(x_lim)

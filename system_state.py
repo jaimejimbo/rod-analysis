@@ -168,8 +168,7 @@ class SystemState(object):
         """
         self.fill_dicts()
         try:
-            return methods.decompress(self._rods_dict[rod_id],
-                                level=methods.settings.low_comp_level)
+            return methods.decompress(self._rods_dict[rod_id])
         except KeyError:
             msg = str(rod_id)
             msg += " " + str(self._rods_dict.keys())
@@ -192,15 +191,13 @@ class SystemState(object):
         Magic method for in.
         """
         for rod_ in self._rods:
-            yield methods.decompress(rod_,
-                                level=methods.settings.low_comp_level)
+            yield methods.decompress(rod_, level=None)
 
     def __list__(self):
         """
         Returns a list of rods
         """
-        output = [methods.decompress(rod_,
-                level=methods.settings.low_comp_level) for rod_ in self]
+        output = [methods.decompress(rod_, level=None) for rod_ in self]
         return output
 
     def __len__(self):
@@ -242,24 +239,21 @@ class SystemState(object):
         """
             Adds a rod to the group
         """
-        self._rods.put(methods.compress(rod_,
-                                level=methods.settings.low_comp_level))
+        self._rods.put(methods.compress(rod_, level=None))
 
     def _get_rod(self):
         """
             Returns the first rod in the queue
         """
         rod_ = self._rods.get()
-        self._rods.put(methods.decompress(rod_,
-                                level=methods.settings.low_comp_level))
+        self._rods.put(methods.decompress(rod_, level=None))
         return rod_
 
     def _remove_rod(self, rod_):
         """
             Removes a rod from the group (queue object mod needed)
         """
-        self._rods.delete(methods.compress(rod_,
-                                level=methods.settings.low_comp_level))
+        self._rods.delete(methods.compress(rod_, level=None))
 
     def fill_dicts(self):
         """
@@ -268,8 +262,7 @@ class SystemState(object):
         if not len(self._cluster_checked_dict):
             for rod_ in self:
                 identifier = rod_.identifier
-                self._rods_dict[identifier] = methods.compress(rod_,
-                                level=methods.settings.low_comp_level)
+                self._rods_dict[identifier] = methods.compress(rod_, level=None)
                 self._cluster_checked_dict[identifier] = False
 
     def compute_center_and_radius(self):
@@ -348,8 +341,7 @@ class SystemState(object):
                         self._allowed_kappa_error,
                         self.zone_coords)
             if valid:
-                valid_rods.append(methods.compress(rod_,
-                                level=methods.settings.low_comp_level))
+                valid_rods.append(methods.compress(rod_, level=None))
         self._rods = queue.Queue(valid_rods)
         final_length = len(self._rods)
         self._reset()
@@ -366,8 +358,7 @@ class SystemState(object):
                         length_error, self._real_kappas,
                         self.zone_coords)
             if valid:
-                valid_rods.append(methods.compress(rod_,
-                                level=methods.settings.low_comp_level))
+                valid_rods.append(methods.compress(rod_, level=None))
         self._rods = queue.Queue(valid_rods)
         final_length = len(self._rods)
         self._reset()
@@ -412,8 +403,7 @@ class SystemState(object):
         div_range = range(divisions)
         output = [[[] for dummy_1 in div_range] for dummy_2 in div_range]
         for rod__ in rods_list:
-            rod_ = methods.decompress(rod__,
-                                level=methods.settings.low_comp_level)
+            rod_ = methods.decompress(rod_, level=None_)
             index_x = int((rod_.x_mid-x_min)/diff)
             index_y = int((rod_.y_mid-y_min)/diff)
             try:
@@ -448,7 +438,7 @@ class SystemState(object):
                                            self._rods, self._kappas, self._real_kappas,
                                            self._allowed_kappa_error, real_rad)
                 subsystem.check_rods()
-                subsystems.append(methods.compress(subsystem, level=settings.low_comp_level))
+                subsystems.append(methods.compress(subsystem))
         return subsystems
 
     def _compute_density_matrix(self, divisions, normalized=False):
@@ -459,7 +449,7 @@ class SystemState(object):
         density = []
         subdivision = self._actual_subdivision
         for subsystem_ in subdivision:
-            subsystem = methods.decompress(subsystem_, level=settings.low_comp_level)
+            subsystem = methods.decompress(subsystem_)
             dens = subsystem.density
             if normalized:
                 dens /= self.number_of_rods
@@ -467,8 +457,7 @@ class SystemState(object):
             subdensity.append(dens)
             density.append(subdensity)
         subdivision = None
-        self._density_matrix = methods.compress(density,
-                                level=methods.settings.low_comp_level)
+        self._density_matrix = methods.compress(density)
 
     def plottable_density_matrix(self, divisions=50):
         """
@@ -479,8 +468,7 @@ class SystemState(object):
         x_values = []
         y_values = []
         z_values = []
-        density_matrix = methods.decompress(self._density_matrix,
-                                level=methods.settings.low_comp_level)
+        density_matrix = methods.decompress(self._density_matrix)
         for row in density_matrix:
             x_values.append(row[0])
             y_values.append(row[1])
@@ -503,11 +491,11 @@ class SystemState(object):
         if not len(self._subdivision_centers):
             self.divide_in_circles(divisions)
             act_sub = self._actual_subdivision
-            actual_y = methods.decompress(act_sub[0], level=settings.low_comp_level).center[1]
+            actual_y = methods.decompress(act_sub[0]).center[1]
             row = []
             subgroups_matrix = []
             for index in range(len(act_sub)):
-                element = methods.decompress(act_sub[index], level=settings.low_comp_level)
+                element = methods.decompress(act_sub[index])
                 element_y = element.center[1]
                 if element_y != actual_y:
                     subgroups_matrix.append(row)
@@ -516,16 +504,14 @@ class SystemState(object):
                 row.append(element)
             subgroups_matrix.append(row)
             act_sub = None
-            self._subdivision_centers = methods.compress(subgroups_matrix,
-                                level=methods.settings.low_comp_level)
+            self._subdivision_centers = methods.compress(subgroups_matrix)
 
     def subgroups_matrix(self, divisions):
         """
             Returns subgroups matrix
         """
         self._create_subgroups_matrix(divisions)
-        return methods.decompress(self._subdivision_centers,
-                                level=methods.settings.low_comp_level)
+        return methods.decompress(self._subdivision_centers)
 
     def _compute_q2_and_q4(self):
         """
@@ -572,14 +558,13 @@ class SystemState(object):
         if self._correlation_q2 is None or self._correlation_q4 is None:
             subdivision = self._actual_subdivision
             for subsystem_ in subdivision:
-                subsystem = methods.decompress(subsystem_,
-                                level=methods.settings.low_comp_level)
+                subsystem = methods.decompress(subsystem_)
                 correlation_q2 = [subsystem.center[0], subsystem.center[1]]
                 correlation_q4 = [subsystem.center[0], subsystem.center[1]]
                 correlation_q2.append(subsystem.correlation_q2)
                 correlation_q4.append(subsystem.correlation_q4)
-                self._correlation_q2_subsystems.append(methods.compress(correlation_q2, level=settings.low_comp_level))
-                self._correlation_q4_subsystems.append(methods.compress(correlation_q4, level=settings.low_comp_level))
+                self._correlation_q2_subsystems.append(methods.compress(correlation_q2))
+                self._correlation_q4_subsystems.append(methods.compress(correlation_q4))
             self._correlation_q2_subsystems = self._correlation_q2_subsystems
             self._correlation_q4_subsystems = self._correlation_q4_subsystems
 
@@ -593,7 +578,7 @@ class SystemState(object):
         z_values = []
         q2_subsystems = self._correlation_q2_subsystems
         for subsystem_ in q2_subsystems:
-            subsystem = methods.decompress(subsystem_, level=settings.low_comp_level)
+            subsystem = methods.decompress(subsystem_)
             [x_val, y_val, z_val] = subsystem
             x_values.append(x_val)
             y_values.append(y_val)
@@ -618,7 +603,7 @@ class SystemState(object):
         z_values = []
         q4_subsystems = self._correlation_q4_subsystems
         for subsystem_ in q4_subsystems:
-            subsystem = methods.decompress(subsystem_, level=settings.low_comp_level)
+            subsystem = methods.decompress(subsystem_)
             [x_val, y_val, z_val] = subsystem
             x_values.append(x_val)
             y_values.append(y_val)
@@ -685,13 +670,11 @@ class SystemState(object):
         """
         subdivision = self._actual_subdivision
         for subsystem_ in subdivision:
-            subsystem = methods.decompress(subsystem_,
-                                level=methods.settings.low_comp_level)
+            subsystem = methods.decompress(subsystem_)
             row = [subsystem.center[0], subsystem.center[1]]
             row.append(subsystem.average_angle)
             self._angle_matrix.append(row)
-        self._angle_matrix = methods.compress(self._angle_matrix,
-                                level=methods.settings.low_comp_level)
+        self._angle_matrix = methods.compress(self._angle_matrix)
 
     def plottable_average_angle_matrix(self, divisions):
         """
@@ -701,8 +684,7 @@ class SystemState(object):
         x_values = []
         y_values = []
         z_values = []
-        angle_matrix = methods.decompress(self._angle_matrix,
-                                level=methods.settings.low_comp_level)
+        angle_matrix = methods.decompress(self._angle_matrix)
         for subsystem in angle_matrix:
             x_values.append(subsystem[0])
             y_values.append(subsystem[1])
@@ -869,8 +851,7 @@ class SystemState(object):
         """
         Returns the area of a rod of this system.
         """
-        first_rod = methods.decompress(list(self._rods)[0],
-                                level=methods.settings.low_comp_level)
+        first_rod = methods.decompress(list(self._rods)[0])
         return first_rod.area
 
     def _compute_closest_rod_matrix(self):
@@ -890,8 +871,7 @@ class SystemState(object):
                 continue
             new_row.append(closest_rod)
             closest_rod_matrix.append(new_row)
-        self._closest_rod_matrix = methods.compress(closest_rod_matrix,
-                                level=methods.settings.low_comp_level)
+        self._closest_rod_matrix = methods.compress(closest_rod_matrix)
         closest_rod_matrix = None
 
     @property
@@ -902,8 +882,7 @@ class SystemState(object):
         """
         if len(self._closest_rod_matrix) == 0:
             self._compute_closest_rod_matrix()
-        return methods.decompress(self._closest_rod_matrix,
-                                level=methods.settings.low_comp_level)
+        return methods.decompress(self._closest_rod_matrix)
 
     def closest_rod_dict(self):
         """
@@ -1104,8 +1083,7 @@ class SubsystemState(SystemState):
                 distance = methods.distance_between_points(self.center, rod_.center)
                 proportion = methods.norm_gaussian(distance, self.radius)
                 self._gaussian_exp[rod_.identifier] = proportion
-                rods.append(methods.compress(rod_,
-                                level=methods.settings.low_comp_level))
+                rods.append(methods.compress(rod_, level=None))
         self._reset()
         self._rods = queue.Queue(rods)
 
@@ -1175,10 +1153,8 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
             if states[new_state] is not None:
                 break
             diff += 1
-        new_state = methods.decompress(states[new_state],
-                        level=methods.settings.medium_comp_level).clone
-        states[empty_state] = methods.compress(new_state,
-                                level=methods.settings.medium_comp_level)
+        new_state = methods.decompress(states[new_state]).clone
+        states[empty_state] = methods.compress(new_state)
     print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
     return names, states
 
@@ -1210,7 +1186,7 @@ def create_rods_process(kappas, real_kappas, allowed_kappa_error,
         return
     state.compute_center_and_radius()
     state.check_rods()
-    state = methods.compress(state, level=settings.medium_comp_level)
+    state = methods.compress(state)
     states_queue.put([index, state])
 
 def create_rods_with_length(folder="./", length=10, length_error=.3, real_kappas=10,
@@ -1271,10 +1247,8 @@ def create_rods_with_length(folder="./", length=10, length_error=.3, real_kappas
             if states[new_state] is not None:
                 break
             diff += 1
-        new_state = methods.decompress(states[new_state],
-                        level=methods.settings.medium_comp_level).clone
-        states[empty_state] = methods.compress(new_state,
-                                level=methods.settings.medium_comp_level)
+        new_state = methods.decompress(states[new_state]).clone
+        states[empty_state] = methods.compress(new_state)
     print(CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE)
     return names, states
 
@@ -1305,6 +1279,6 @@ def create_rods_with_length_process(length, length_error, real_kappa,
         return
     state.compute_center_and_radius()
     state.check_rods_with_length(length, length_error)
-    state = methods.compress(state, level=settings.medium_comp_level)
+    state = methods.compress(state)
     states_queue.put([index, state])
 
