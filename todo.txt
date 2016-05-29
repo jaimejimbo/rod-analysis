@@ -5,3 +5,4 @@ BUGS:
 Cosas nuevas:
     - Longitud circunferencia que rodea a los clusters          (WIP)
     - Campo de vectores de velocidades de grupo                 (DONE)
+    - Pintar rods con distintos colores según kappa.            (WIP)
