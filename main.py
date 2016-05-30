@@ -7,10 +7,13 @@ Main script.
 Settings
 """
 #0-9 or None to disable
+LZ4_FAST = 3
+LZ4 = 2
 LZO = 1
 ZLIB = 0
-default_comp = LZO
-default_comp_level = 1
+default_comp = LZ4_FAST
+default_comp_level = None
+internal_level = None
 #Reduces cpu usage (0 for disable)
 waiting_time = 0
 if not waiting_time:
@@ -122,6 +125,8 @@ settings.write("counter_refresh = {0}".format(counter_refresh))
 settings.write("\n")
 settings.write("default_comp = {0}".format(default_comp))
 settings.write("\n")
+settings.write("internal_level = {0}".format(internal_level))
+settings.write("\n")
 try:
     rad = zone_coords[2]
     if sigma_coef:
@@ -221,8 +226,8 @@ if True:
                 experiment_.create_videos(divisions=divisions, fps=10, max_distance=150, max_angle_diff=45,
                                          number_of_bursts=1, only_density=only_density, limit=20)
             if clusters:
-                experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=1.5,
-                        max_angle_diff=1, min_size=5)
+                experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=20,
+                        max_angle_diff=5, min_size=5)
             if clusters_hist:
                 experiment_.create_cluster_histogram_video(max_distance=150,
                                     max_angle_diff=10, fps=15)
@@ -287,8 +292,8 @@ if True:
         if run_props:
             print "Computing experiment statistics..."
             log = open("props.log",'w')
-            prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop_length(145, 10, 12)
-            prop_short, prop_short_dev, shorts, shorts_dev, rad2, msq2 = run_prop_length(70, 10, 6)
+            prop_long, prop_long_dev, longs, longs_dev, rad1, msg1 = run_prop_length(145, 35, 12)
+            prop_short, prop_short_dev, shorts, shorts_dev, rad2, msq2 = run_prop_length(70, 35, 6)
             print "kappa\t\t\tdeviation"
             print msg1
             print msq2
@@ -340,12 +345,13 @@ if True:
                 except:
                     pass
             else:
-                rods_12 = run_default_length(145, 10, 12)#(15, 12, 3)#run_default_length(160, 30, 12)
-                rods_6 = run_default_length(70, 10, 6)#(7.8, 6, 2)#run_default_length(80, 30, 6)
+                rods_12 = run_default_length(145, 35, 12)#(15, 12, 3)#run_default_length(160, 30, 12)
+                rods_6 = run_default_length(70, 35, 6)#(7.8, 6, 2)#run_default_length(80, 30, 6)
             center_x, center_y, rad = zone_coords[0], zone_coords[1], zone_coords[2]
             x_lims = (center_x-rad, center_x+rad)
             y_lims = (center_y-rad, center_y+rad)
             methods.rods_animation([rods_12, rods_6], ['b', 'y'], x_lims, y_lims, zone_coords, name="rods.mp4", fps=1)
+                
 
         if run_check_dim:
             names, rod_groups = system_state.create_rods(kappas=10, real_kappas=12,

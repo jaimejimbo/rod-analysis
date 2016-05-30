@@ -4,13 +4,15 @@ Methods library.
 import re, math, os
 import multiprocessing as mp
 from PIL import Image
-import cPickle, zlib
+import cPickle
 import settings
 import numpy
 from matplotlib import animation
 import datetime
 import inspect
 import lzo
+import lz4
+import zlib
 
 CURSOR_UP_ONE = '\x1b[1A'
 ERASE_LINE = '\x1b[2K'
@@ -19,6 +21,8 @@ if settings.special_chars:
     WHITE_BLOCK = u'\u25A0'
 else:
     WHITE_BLOCK = 'X'
+LZ4_FAST = 3
+LZ4 = 2
 LZO = 1
 ZLIB = 0
 
@@ -664,6 +668,12 @@ def compress(obj, level=settings.default_comp_level, method=settings.default_com
         level = max([level,1])
         dumps = cPickle.dumps(obj)
         compressed = lzo.compress(dumps, level)
+    elif method==LZ4_FAST:
+        dumps = cPickle.dumps(obj)
+        compressed = lz4.compress_fast(dumps, level)
+    elif method==LZ4:
+        dumps = cPickle.dumps(obj)
+        compressed = lz4.compress(dumps, level)
     else:
         compressed = obj
     return compressed
@@ -679,6 +689,10 @@ def decompress(obj, level=settings.default_comp_level, method=settings.default_c
     elif method==LZO:
         level = max([level,1])
         dumps = lzo.decompress(obj, level)
+    elif method==LZ4_FAST:
+        dumps = lz4.decompress(obj)
+    elif method==LZ4:
+        dumps = lz4.decompress(obj)
     else:
         dumps = obj
     data = cPickle.loads(dumps)
@@ -754,17 +768,6 @@ def compute_distances_cl(array1, array2):
     output = numpy.empty_like(x_array_1)
     cl.enqueue_copy(queue_cl, output, dest_buf)
     return list(output)
-
-
-def needed_rods(wanted_long_prop, wanted_area_prop, area, long_area, short_area, longs, shorts):
-    """
-    Computes needed long rods / short rods to be added/removed.
-    """
-    long_rod_area = float(long_area*prop_long)/longs
-    short_rod_area = float(short_area*prop_short)/shorts
-    needed_longs = int(wanted_long_prop*wanted_area_prop*area/long_rod_area)
-    needed_shorts = int(needed_longs*long_rod_area*(1-wanted_long_prop)/(wanted_long_prop*short_rod_area))
-    return needed_longs, needed_shorts
 
 import matplotlib.pyplot as plt
 
@@ -872,7 +875,6 @@ def import_and_plot(source, radius=None, level=9):
     units = values[6]
     src.close()
     create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name)
-
 
 def needed_rods(wanted_long_prop, wanted_area_prop, area, long_area, short_area, longs, shorts):
     """
@@ -991,6 +993,8 @@ def rods_animation(rods, colours, x_lim, y_lim, zone_coords, name="rods.mp4", fp
     fig = plt.figure()
     frames = len(rods[0])
     rods_12, rods_6 = rods[0], rods[1]
+    #_export_rods(rods_12, 12)
+    #_export_rods(rods_6, 6)
     def animate(dummy_frame):
         """
         Wrapper.
@@ -1028,19 +1032,51 @@ def animate_rods(rods, colours, x_lim, y_lim, zone_coords):
     plt.xlabel("x [pixels]")
     plt.ylabel("y [pixels]")
 
-def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius=800, fps=15):
+def _export_rods(rods, kappa):
     """
-    Creates animation from data.
+    Exports rods to file.
     """
-    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating animation"
-    fig = plt.figure()
-    frames = len(z_vals_avg)
-    def animate(dummy_frame):
-        """
-        Wrapper.
-        """
-        animate_scatter(x_val, y_val, z_vals_avg,
-                            divisions, name, z_max, z_min, units, radius)
-    anim = animation.FuncAnimation(fig, animate, frames=frames)
-    anim.save(name, writer=WRITER, fps=fps)
+    output_queue = mp.Queue()
+    processes = []
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Exporting data"
+    for index in range(len(rods)):
+        rods_ = rods[index]
+        process = mp.Process(target=_export_rods_process,
+                            args=(index, output_queue, rods_, kappa))
+        processes.append(process)
+    num_processes = len(processes)
+    running, processes_left = run_processes(processes)
+    finished = 0
+    previous_time = datetime.datetime.now()
+    counter = 0
+    time_left = None
+    times = []
+    print " "
+    while finished < num_processes:
+        counter += 1
+        finished += 1
+        previous_time, counter, time_left = print_progress(finished, num_processes,
+                            counter, times, time_left, previous_time)
+        output_queue.get()
+        if len(processes_left):
+            new_process = processes_left.pop(0)
+            #time.sleep(settings.waiting_time)
+            new_process.start()
+    print CLEAR_LAST
+
+def _export_rods_process(index, output, rods, kappa):
+    """
+    process
+    """
+    name = str(index) + "_"+str(kappa)+".data"
+    file_ = open(name, 'w')
+    rods_ = decompress(rods)
+    for index in range(len(rods_[0])):
+        data = [rods_[0][index], rods[1][index], rods_[2][index], rods_[3][index]]
+        line = str(data[0]) + "\t" + str(data[1]) + "\n"
+        line += str(data[2]) + "\t" + str(data[3]) + "\n"
+        line += "\n"
+        file_.write(line)
+    file_.close()
+    output.put(None)
 

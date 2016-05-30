@@ -785,7 +785,7 @@ class SystemState(object):
             angle_diff = rod_.angle_between_rods(reference_rod)
             vector_angle = methods.vector_angle(vector)
             distance_angle = vector_angle-reference_rod.angle
-            diff = length-max_distance
+            diff = length
             max_dist = max_distance+math.sin(distance_angle)*diff
             if angle_diff <= max_angle_diff and distance < max_dist:
                 subrods = self._get_cluster_members(rod_,
@@ -977,9 +977,8 @@ class SystemState(object):
         for rod_ in self:
             x_mid = rod_.x_mid
             y_mid = rod_.y_mid
-            angle = rod_.angle
+            angle = math.radians(rod_.angle)
             length = rod_.feret
-            angle = math.radians(angle)
             x_0_list.append(x_mid - length*math.cos(angle)/2.0)
             x_f_list.append(x_mid + length*math.cos(angle)/2.0)
             y_0_list.append(y_mid - length*math.sin(angle)/2.0)

@@ -1,6 +1,6 @@
-default_comp_level = 1
+default_comp_level = None
 cpus = None
-zone_coords = [1371.0, 918.0, 807.0]
+zone_coords = [1126.5, 913.5, 844.5]
 to_file = 1
 plot = 1
 waiting_time = 0

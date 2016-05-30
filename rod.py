@@ -22,7 +22,7 @@ class Rod(object):
         self._y_mid = float(ymid)               #3
         self._major = float(major)              #4
         self._minor = float(minor)              #5
-        self._angle = float(angle)              #6
+        self._angle = -float(angle)             #6
         self._feret = float(feret)              #7
         self._feret_x = float(feretx)           #8
         self._feret_y = float(ferety)           #9
@@ -33,7 +33,7 @@ class Rod(object):
         self._hash = 0
         self._direction_matrix = matrix.zeros(2, 2)
         self._kappa = float(feret)/float(minferet)
-        self._real_kappa = kappa
+        self._real_kappa = None
         self._real_length = real_length
         #self._feret = float(real_length)
         #self._min_feret = real_length/self._kappa
@@ -138,16 +138,9 @@ class Rod(object):
     @property
     def kappa(self):
         """
-        Computed L/D of rod.
-        """
-        return self._kappa
-
-    @property
-    def kappa(self):
-        """
         Real L/D of rod. 
         """
-        return self._kappa
+        return self._real_kappa
 
     @kappa.setter
     def kappa(self, value):
@@ -195,9 +188,10 @@ class Rod(object):
         has_valid_proportions = self.has_valid_proportions(kappas,
                                                            allowed_kappa_error)
         output = is_in_main and has_valid_proportions
+        #self._real_kappa = kappa
         if output:
             self._kappa = self._real_kappa
-            #self._feret = self._real_length
+            self._feret = self._real_length
             self._min_feret = self._feret*1.0/self._kappa
         return output
 
@@ -212,9 +206,10 @@ class Rod(object):
         rod_length = self.feret
         valid_length = ((length-length_error) <= rod_length <= (length+length_error))
         cond = valid_length and is_in_main
+        #self._real_kappa = kappa
         if cond:
             self._kappa = kappa
-            #self._feret = self._real_length
+            self._feret = self._real_length
             self._feret_min = self._feret/float(kappa)
         return cond
 
