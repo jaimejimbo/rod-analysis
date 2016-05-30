@@ -33,7 +33,7 @@ class Rod(object):
         self._hash = 0
         self._direction_matrix = matrix.zeros(2, 2)
         self._kappa = float(feret)/float(minferet)
-        self._real_kappa = None
+        self._real_kappa = kappa
         self._real_length = real_length
         #self._feret = float(real_length)
         #self._min_feret = real_length/self._kappa
