@@ -497,7 +497,10 @@ class Experiment(object):
         for initial_rod_id in list(evol_dict.keys()):
             for final_rod_id in evol_dict[initial_rod_id]:
                 inverted_evol_dict[final_rod_id] |= set([initial_rod_id])
-                inverted_rel_dict[final_rod_id][initial_rod_id] = relative_dict[initial_rod_id][final_rod_id]
+                try:
+                    inverted_rel_dict[final_rod_id][initial_rod_id] = relative_dict[initial_rod_id][final_rod_id]
+                except:
+                    inverted_rel_dict[final_rod_id][initial_rod_id] = relative_dict[initial_rod_id]
         for final_rod_id in list(inverted_evol_dict.keys()):
             initial_rod_id, distance, angle_diff, vector = self._closer_rod(index,
                                           final_rod_id, selected, inverted_evol_dict,
