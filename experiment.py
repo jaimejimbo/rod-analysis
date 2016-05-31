@@ -1345,7 +1345,7 @@ class Experiment(object):
                 x_val = output[1]
                 y_val = output[2]
                 z_val = output[3]
-                assert type(output[4]) == type("string"), "El estado tiene que ir comprimido"
+                #assert type(output[4]) == type("string"), "El estado tiene que ir comprimido"
                 self._states[index] = output[4]
                 z_vals.append(z_val)
                 if len(processes_left):
@@ -2531,6 +2531,50 @@ class Experiment(object):
         """
         state = self.get(index)
         plottable_rods_ = state.plottable_rods
+        output.put([index, plottable_rods_])
+
+    def plottable_density_matrices(self, divisions):
+
+        """
+        Returns plottable rods of each system.
+        """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Compressing data "
+        density_matrices = []
+        output_queue = mp.Queue()
+        processes = []
+        for index in range(len(self)):
+            process = mp.Process(target=self._plottable_density_matrices_process,
+                                 args=(index, output_queue, divisions))
+            processes.append(process)
+            density_matrices.append(None)
+        num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
+        finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
+        while finished < num_processes:
+            counter += 1
+            finished += 1
+            previous_time, counter, time_left = methods.print_progress(finished, num_processes,
+                                counter, times, time_left, previous_time)
+            [index, plottable_density_matrix] = output_queue.get()
+            density_matrices[index] = plottable_density_matrix
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                #time.sleep(settings.waiting_time)
+                new_process.start()
+        print CLEAR_LAST
+        return density_matrices
+
+    def _plottable_density_matrices_process(self, index, output, divisions):
+        """
+        Mp wrapper
+        """
+        state = self.get(index)
+        plottable_rods_ = methods.compress(state.plottable_density_matrix(divisions))
         output.put([index, plottable_rods_])
 
 

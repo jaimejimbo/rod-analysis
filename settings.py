@@ -8,5 +8,6 @@ special_chars = 1
 waiting_time_process = 0
 ignore_temperature = 0
 counter_refresh = 20
-default_comp = 1
+default_comp = 3
+internal_level = None
 sigma = None

@@ -33,7 +33,7 @@ lost_percentage = 0
 run_imagej = 0
 run_props = 1
 run_graphs = 1
-run_check_dim = 0
+run_check_dim = 1
 get_image_dates = 0
 to_file = 1
 plot = 1
@@ -48,7 +48,8 @@ discard_exceptions = 0
 special_chars = 1
 ignore_temperature = 0
 counter_refresh = 20
-plot_rods = True
+plot_rods = 1
+order_param = 1
 import re
 
 
@@ -168,6 +169,8 @@ if True:
 
         def run_default(kappa, real_kappa, error):
             print "\n\n\n"
+            plottable_rods, density_matrices = None, None
+            bursts_groups = None
             name = str(int(real_kappa)) + "_default.log"
             log = open(name, 'w')
             msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
@@ -196,6 +199,9 @@ if True:
                 log.write(str(msg+"\n"))
             if plot_rods:
                 plottable_rods = experiment_.plottable_rods
+            if order_param:
+                density_matrices = experiment_.plottable_density_matrices(divisions)
+                bursts_groups = experiment_.bursts_groups
             try:
                 names = None
                 experiment_ = None
@@ -204,13 +210,15 @@ if True:
             except NameError:
                 pass
             log.close()
-            return plottable_rods
+            return plottable_rods, density_matrices, bursts_groups
 
         def run_default_length(length, length_error, real_kappa):
             """
                 Gets proportions of long/shorts rods.
             """
             print "\n\n\n"
+            plottable_rods, density_matrices = None, None
+            bursts_groups = None
             name = str(int(real_kappa)) + "_default.log"
             log = open(name, 'w')
             msg = "\t\t\tK"+str(real_kappa)+"\t\t\t"
@@ -226,10 +234,10 @@ if True:
                 experiment_.create_videos(divisions=divisions, fps=10, max_distance=150, max_angle_diff=45,
                                          number_of_bursts=1, only_density=only_density, limit=20)
             if clusters:
-                experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=20,
-                        max_angle_diff=5, min_size=5)
+                experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=50,
+                        max_angle_diff=10, min_size=5)
             if clusters_hist:
-                experiment_.create_cluster_histogram_video(max_distance=150,
+                experiment_.create_cluster_histogram_video(max_distance=50,
                                     max_angle_diff=10, fps=15)
             if avg_temp:
                 experiment_.plot_average_temperature(100, 10, 5)
@@ -239,6 +247,9 @@ if True:
                 log.write(str(msg+"\n"))
             if plot_rods:
                 plottable_rods = experiment_.plottable_rods
+            if order_param:
+                density_matrices = experiment_.plottable_density_matrices(divisions)
+                bursts_groups = experiment_.bursts_groups
             try:
                 names = None
                 experiment_ = None
@@ -247,7 +258,7 @@ if True:
             except NameError:
                 pass
             log.close()
-            return plottable_rods
+            return plottable_rods, density_matrices, bursts_groups
 
 
         def run_prop(kappa, real_kappa, error):
@@ -345,12 +356,15 @@ if True:
                 except:
                     pass
             else:
-                rods_12 = run_default_length(145, 35, 12)#(15, 12, 3)#run_default_length(160, 30, 12)
-                rods_6 = run_default_length(70, 35, 6)#(7.8, 6, 2)#run_default_length(80, 30, 6)
-            center_x, center_y, rad = zone_coords[0], zone_coords[1], zone_coords[2]
-            x_lims = (center_x-rad, center_x+rad)
-            y_lims = (center_y-rad, center_y+rad)
-            methods.rods_animation([rods_12, rods_6], ['b', 'y'], x_lims, y_lims, zone_coords, name="rods.mp4", fps=1)
+                rods_12, matrices_12, bursts_groups = run_default_length(145, 35, 12)#(15, 12, 3)#run_default_length(160, 30, 12)
+                rods_6, matrices_6, bursts_groups = run_default_length(70, 35, 6)#(7.8, 6, 2)#run_default_length(80, 30, 6)
+            if plot_rods:
+                center_x, center_y, rad = zone_coords[0], zone_coords[1], zone_coords[2]
+                x_lims = (center_x-rad, center_x+rad)
+                y_lims = (center_y-rad, center_y+rad)
+                methods.rods_animation([rods_12, rods_6], ['b', 'y'], x_lims, y_lims, zone_coords, name="rods.mp4", fps=1)
+            if order_param:
+                methods.order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, number_of_bursts=1)
                 
 
         if run_check_dim:

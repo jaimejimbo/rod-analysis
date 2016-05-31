@@ -33,7 +33,7 @@ class Rod(object):
         self._hash = 0
         self._direction_matrix = matrix.zeros(2, 2)
         self._kappa = float(feret)/float(minferet)
-        self._real_kappa = kappa
+        self._real_kappa = None
         self._real_length = real_length
         #self._feret = float(real_length)
         #self._min_feret = real_length/self._kappa
@@ -188,11 +188,11 @@ class Rod(object):
         has_valid_proportions = self.has_valid_proportions(kappas,
                                                            allowed_kappa_error)
         output = is_in_main and has_valid_proportions
-        #self._real_kappa = kappa
-        if output:
-            self._kappa = self._real_kappa
-            self._feret = self._real_length
-            self._min_feret = self._feret*1.0/self._kappa
+        self._real_kappa = kappa
+        #if output:
+            #self._kappa = self._real_kappa
+            #self._feret = self._real_length
+            #self._min_feret = self._feret*1.0/self._kappa
         return output
 
     def is_valid_rod_length(self, length,
@@ -206,11 +206,11 @@ class Rod(object):
         rod_length = self.feret
         valid_length = ((length-length_error) <= rod_length <= (length+length_error))
         cond = valid_length and is_in_main
-        #self._real_kappa = kappa
-        if cond:
-            self._kappa = kappa
-            self._feret = self._real_length
-            self._feret_min = self._feret/float(kappa)
+        self._real_kappa = kappa
+        #if cond:
+            #self._kappa = kappa
+            #self._feret = self._real_length
+            #self._feret_min = self._feret/float(kappa)
         return cond
 
     def vector_to_rod(self, rod, scale=1):

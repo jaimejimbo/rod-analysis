@@ -966,7 +966,7 @@ def print_progress(done, total, counter, times, time_left, previous_time, counte
     except ZeroDivisionError:
         avg_time = None
         time_left = None
-    if not time_left is None:
+    if not time_left is None and not avg_time is None:
         if time_left:
             string += "    " + str(time_left) + " minutes"
         else:
@@ -1038,6 +1038,7 @@ def _export_rods(rods, kappa):
     """
     output_queue = mp.Queue()
     processes = []
+    print "\n\n"
     print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Exporting data"
     for index in range(len(rods)):
         rods_ = rods[index]
@@ -1080,3 +1081,102 @@ def _export_rods_process(index, output, rods, kappa):
     file_.close()
     output.put(None)
 
+import copy
+
+def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, number_of_bursts=5):
+    """
+    Computes order param.
+    """
+    output_queue = mp.Queue()
+    processes = []
+    print "\n\n"
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing order param and exporting"
+    groups = copy.deepcopy(bursts_groups)
+    bursts_ = len(groups)
+    param_order_matrices = []
+    for index in range(len(matrices_12)):
+        matrix_12 = matrices_12[index]
+        matrix_6 = matrices_6[index]
+        name = str(index) + "_order_param.data"
+        process = mp.Process(target=_order_param_process,
+                            args=(index, output_queue, matrix_12, matrix_6, name))
+        processes.append(process)
+        param_order_matrices.append(None)
+    num_processes = len(processes)
+    running, processes_left = run_processes(processes)
+    finished = 0
+    previous_time = datetime.datetime.now()
+    counter = 0
+    time_left = None
+    times = []
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Getting values"
+    print " "
+    x_val, y_val, z_vals = [], [], []
+    while finished < num_processes:
+        counter += 1
+        finished += 1
+        previous_time, counter, time_left = print_progress(finished, num_processes,
+                            counter, times, time_left, previous_time)
+        index, x_val, y_val, z_val = output_queue.get()
+        z_vals.append(z_val)
+        if len(processes_left):
+            new_process = processes_left.pop(0)
+            #time.sleep(settings.waiting_time)
+            new_process.start()
+    print CLEAR_LAST
+    if settings.plot:
+        z_vals_avg = []
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing averages"
+        exit = False
+        while True:
+            groups_ = []
+            for time in range(number_of_bursts):
+                try:
+                    groups_.append(groups.pop(0))
+                except:
+                    exit = True
+                    break
+            average = []
+            try:
+                for group in groups_:
+                    for index in group:
+                        average.append(z_vals.pop(0))
+            except:
+                pass
+            average = array_average(average)
+            z_vals_avg.append(average)
+            if exit:
+                break
+        frames = len(z_vals_avg)
+        z_max = 1
+        z_min = -1
+        units = "normalized [S.U.]"
+        name = "order_param.mp4"
+        radius = 800
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting"
+        create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius)
+
+def _order_param_process(index, output_queue, matrix_12, matrix_6, name):
+    """
+    process
+    """
+    file_ = open(name, 'w')
+    z_vals = []
+    matrix_12 = decompress(matrix_12)
+    matrix_6 = decompress(matrix_6)
+    x_val_12 = matrix_12[0]
+    y_val_12 = matrix_12[1]
+    for row_index in range(len(matrix_12[0])):
+        n_12 = matrix_12[2][row_index]
+        n_6 = matrix_6[2][row_index]
+        try:
+            order_param = float(n_12-n_6)/(n_12+n_6)
+        except:
+            order_param = 0
+        line = str(x_val_12)+"\t"+str(y_val_12)+"\t"+str(order_param)+"\n"
+        file_.write(line)
+        z_vals.append(order_param)
+    file_.close()
+    output_queue.put([index, x_val_12, y_val_12, z_vals])
+
+    

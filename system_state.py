@@ -168,11 +168,17 @@ class SystemState(object):
         """
         self.fill_dicts()
         try:
-            return methods.decompress(self._rods_dict[rod_id])
+            return methods.decompress(self._rods_dict[rod_id], level=settings.internal_level)
         except KeyError:
             msg = str(rod_id)
             msg += " " + str(self._rods_dict.keys())
             raise IndexError(msg)
+
+    def get(self, index):
+        """
+        Returns rod with index.
+        """
+        return methods.decompress(list(self._rods)[index], level=settings.internal_level)
 
     def _get_rods_range(self, initial_id, final_id):
         """
@@ -191,13 +197,13 @@ class SystemState(object):
         Magic method for in.
         """
         for rod_ in self._rods:
-            yield methods.decompress(rod_, level=None)
+            yield methods.decompress(rod_, level=settings.internal_level)
 
     def __list__(self):
         """
         Returns a list of rods
         """
-        output = [methods.decompress(rod_, level=None) for rod_ in self]
+        output = [methods.decompress(rod_, level=settings.internal_level) for rod_ in self]
         return output
 
     def __len__(self):
@@ -239,21 +245,21 @@ class SystemState(object):
         """
             Adds a rod to the group
         """
-        self._rods.put(methods.compress(rod_, level=None))
+        self._rods.put(methods.compress(rod_, level=settings.internal_level))
 
     def _get_rod(self):
         """
             Returns the first rod in the queue
         """
         rod_ = self._rods.get()
-        self._rods.put(methods.decompress(rod_, level=None))
+        self._rods.put(methods.decompress(rod_, level=settings.internal_level))
         return rod_
 
     def _remove_rod(self, rod_):
         """
             Removes a rod from the group (queue object mod needed)
         """
-        self._rods.delete(methods.compress(rod_, level=None))
+        self._rods.delete(methods.compress(rod_, level=settings.internal_level))
 
     def fill_dicts(self):
         """
@@ -262,7 +268,7 @@ class SystemState(object):
         if not len(self._cluster_checked_dict):
             for rod_ in self:
                 identifier = rod_.identifier
-                self._rods_dict[identifier] = methods.compress(rod_, level=None)
+                self._rods_dict[identifier] = methods.compress(rod_, level=settings.internal_level)
                 self._cluster_checked_dict[identifier] = False
 
     def compute_center_and_radius(self):
@@ -341,7 +347,7 @@ class SystemState(object):
                         self._allowed_kappa_error,
                         self.zone_coords)
             if valid:
-                valid_rods.append(methods.compress(rod_, level=None))
+                valid_rods.append(methods.compress(rod_, level=settings.internal_level))
         self._rods = queue.Queue(valid_rods)
         final_length = len(self._rods)
         self._reset()
@@ -358,7 +364,7 @@ class SystemState(object):
                         length_error, self._real_kappas,
                         self.zone_coords)
             if valid:
-                valid_rods.append(methods.compress(rod_, level=None))
+                valid_rods.append(methods.compress(rod_, level=settings.internal_level))
         self._rods = queue.Queue(valid_rods)
         final_length = len(self._rods)
         self._reset()
@@ -403,7 +409,7 @@ class SystemState(object):
         div_range = range(divisions)
         output = [[[] for dummy_1 in div_range] for dummy_2 in div_range]
         for rod__ in rods_list:
-            rod_ = methods.decompress(rod_, level=None_)
+            rod_ = methods.decompress(rod__, level=settings.internal_level)
             index_x = int((rod_.x_mid-x_min)/diff)
             index_y = int((rod_.y_mid-y_min)/diff)
             try:
@@ -785,7 +791,7 @@ class SystemState(object):
             angle_diff = rod_.angle_between_rods(reference_rod)
             vector_angle = methods.vector_angle(vector)
             distance_angle = vector_angle-reference_rod.angle
-            diff = length
+            diff = length-max_distance
             max_dist = max_distance+math.sin(distance_angle)*diff
             if angle_diff <= max_angle_diff and distance < max_dist:
                 subrods = self._get_cluster_members(rod_,
@@ -851,7 +857,7 @@ class SystemState(object):
         """
         Returns the area of a rod of this system.
         """
-        first_rod = methods.decompress(list(self._rods)[0])
+        first_rod = self.get(0)
         return first_rod.area
 
     def _compute_closest_rod_matrix(self):
@@ -983,7 +989,7 @@ class SystemState(object):
             x_f_list.append(x_mid + length*math.cos(angle)/2.0)
             y_0_list.append(y_mid - length*math.sin(angle)/2.0)
             y_f_list.append(y_mid + length*math.sin(angle)/2.0)
-        return methods.compress([x_0_list, y_0_list, x_f_list, y_f_list], level=None)
+        return methods.compress([x_0_list, y_0_list, x_f_list, y_f_list], level=settings.internal_level)
         
 
 
@@ -1082,7 +1088,7 @@ class SubsystemState(SystemState):
                 distance = methods.distance_between_points(self.center, rod_.center)
                 proportion = methods.norm_gaussian(distance, self.radius)
                 self._gaussian_exp[rod_.identifier] = proportion
-                rods.append(methods.compress(rod_, level=None))
+                rods.append(methods.compress(rod_, level=settings.internal_level))
         self._reset()
         self._rods = queue.Queue(rods)
 
