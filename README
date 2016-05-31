@@ -3,4 +3,4 @@ Libraries to study granular particles behaviour.
 - Change execution parameters in main and then run it with python or bash (./main.py).
 
 Needs:
-  - matplotlib, scipy, numpy, ffmpeg, PIL or pillow, imagej, pyopencl.
+  - matplotlib, scipy, numpy, ffmpeg, PIL or pillow, imagej, pyopencl, zlib, lzo, lz4 (and python bindings).
