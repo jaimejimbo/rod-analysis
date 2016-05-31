@@ -4,5 +4,7 @@ BUGS:
 
 Cosas nuevas:
     - Longitud circunferencia que rodea a los clusters          (WIP)
+        - hacer mapa (Nl-Ns)/(Nl+Ns)                            (DONE)
+        - exportar datos                                        (DONE)
     - Campo de vectores de velocidades de grupo                 (DONE)
     - Pintar rods con distintos colores según kappa.            (DONE)
