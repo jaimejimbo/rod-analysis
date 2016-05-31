@@ -541,7 +541,7 @@ def array_average(array_of_arrays):
     if not using_cl:
         number_of_arrays = len(array_of_arrays)
         if not number_of_arrays:
-            return None
+            raise ValueError("any array to compute average")
         array_length = len(array_of_arrays[0])
         if not array_length:
             return sum(array_of_arrays)/number_of_arrays
@@ -772,7 +772,7 @@ def compute_distances_cl(array1, array2):
 import matplotlib.pyplot as plt
 
 def animate_scatter(x_val, y_val, z_vals,
-                        divisions, name, z_max, z_min, units, radius):
+                        divisions, name, z_max, z_min, units, radius, title):
     """
     Specific animator.
     """
@@ -793,14 +793,19 @@ def animate_scatter(x_val, y_val, z_vals,
     plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
                 vmin=z_min, vmax=z_max)
     plt.gca().invert_yaxis()
-    step = int((z_max-z_min)*10.0)/100.0
-    ticks = [int((z_min + index*step)*10.0)/10.0 for index in range(10+1)]
-    cb = plt.colorbar(ticks=ticks)
+    #step = int((z_max-z_min)*10.0)/100.0
+    #ticks = [int((z_min + index*step)*10.0)/10.0 for index in range(10+1)]
+    try:
+        cb = plt.colorbar()#ticks=ticks)
+    except TypeError:
+        print z_val
     plt.xlabel("x [pixels]")
     plt.ylabel("y [pixels]")
+    if not title is None:
+        plt.suptitle(title)
     cb.set_label(units)
 
-def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius=800, fps=15):
+def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius=800, fps=15, title=None):
     """
     Creates animation from data.
     """
@@ -812,7 +817,7 @@ def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, 
         Wrapper.
         """
         animate_scatter(x_val, y_val, z_vals_avg,
-                            divisions, name, z_max, z_min, units, radius)
+                            divisions, name, z_max, z_min, units, radius, title)
     anim = animation.FuncAnimation(fig, animate, frames=frames)
     anim.save(name, writer=WRITER, fps=fps)
 
@@ -1141,10 +1146,10 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, num
                 for group in groups_:
                     for index in group:
                         average.append(z_vals.pop(0))
+                average = array_average(average)
+                z_vals_avg.append(compress(average))
             except:
                 pass
-            average = array_average(average)
-            z_vals_avg.append(average)
             if exit:
                 break
         frames = len(z_vals_avg)
@@ -1153,8 +1158,9 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, num
         units = "normalized [S.U.]"
         name = "order_param.mp4"
         radius = 800
+        title = "Order parameter"
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting"
-        create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius)
+        create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius, title=title)
 
 def _order_param_process(index, output_queue, matrix_12, matrix_6, name):
     """
@@ -1169,11 +1175,13 @@ def _order_param_process(index, output_queue, matrix_12, matrix_6, name):
     for row_index in range(len(matrix_12[0])):
         n_12 = matrix_12[2][row_index]
         n_6 = matrix_6[2][row_index]
+        x_val = x_val_12[row_index]
+        y_val = y_val_12[row_index]
         try:
             order_param = float(n_12-n_6)/(n_12+n_6)
         except:
             order_param = 0
-        line = str(x_val_12)+"\t"+str(y_val_12)+"\t"+str(order_param)+"\n"
+        line = str(x_val)+"\t"+str(y_val)+"\t"+str(order_param)+"\n"
         file_.write(line)
         z_vals.append(order_param)
     file_.close()

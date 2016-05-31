@@ -1193,9 +1193,10 @@ class Experiment(object):
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
-        units = "Normalized occupied area [S.U.]"
+        units = "[S.U.]"
+        title = "Normalized ocupied area"
         z_max, z_min = self._generic_scatter_animator(name, function_name, units,
-                        divisions, fps=fps, number_of_bursts=number_of_bursts)
+                        divisions, fps=fps, number_of_bursts=number_of_bursts, title=title)
         self._min_density = z_min
         self._max_density = z_max
 
@@ -1221,9 +1222,10 @@ class Experiment(object):
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
-        units = "q2 [S.U.]"
+        units = "[S.U.]"
+        title = "Angular correlation 2*angle"
         self._generic_scatter_animator(name, function_name, units,
-                        divisions, fps=fps, number_of_bursts=number_of_bursts)
+                        divisions, fps=fps, number_of_bursts=number_of_bursts, title=title)
 
     def create_relative_q4_video(self, divisions, folder, fps,
                                  number_of_bursts):
@@ -1237,9 +1239,10 @@ class Experiment(object):
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
-        units = "q4 [S.U.]"
+        units = "[S.U.]"
+        title = "Angular correlation 4*angle"
         self._generic_scatter_animator(name, function_name, units,
-                        divisions, fps=fps, number_of_bursts=number_of_bursts)
+                        divisions, fps=fps, number_of_bursts=number_of_bursts, title=title)
 
     def create_average_angle_video(self, divisions, folder, fps,
                                  number_of_bursts):
@@ -1253,9 +1256,10 @@ class Experiment(object):
         kappas = self.get(0).kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
-        units = "Average angle [grad]"
+        units = "[grad]"
+        title = "Average angle"
         self._generic_scatter_animator(name, function_name, units,
-                        divisions, fps=fps, number_of_bursts=number_of_bursts)
+                        divisions, fps=fps, number_of_bursts=number_of_bursts, title=title)
 
     @property
     def radius(self):
@@ -1265,7 +1269,7 @@ class Experiment(object):
         return self.get(1).radius
 
     def _generic_scatter_animator(self, name, function_name, units,
-                                    divisions, fps=15, number_of_bursts=10):
+                                    divisions, fps=15, number_of_bursts=10, title=None):
         """
         Generic animator
         """
@@ -1277,7 +1281,7 @@ class Experiment(object):
         x_val, y_val, z_vals_avg, z_max, z_min = self.get_z_vals(groups, bursts_, function_name, divisions)
         frames = len(z_vals_avg)
         if settings.plot:
-            methods.create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, self.radius)
+            methods.create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, self.radius, title=title)
         if settings.to_file:
             output_file_name = name + ".data"
             output_file = open(output_file_name, 'w')
@@ -1787,10 +1791,11 @@ class Experiment(object):
         name = str(folder)+"Temperature"+str(kappas)+".mp4"
         z_max = max(z_maxs)
         z_min = min(z_mins)
-        units = "Temperature [mm^2/seg^2]"
+        units = "[mm^2/seg^2]"
+        title = "Average quadratic speed"
         rad = self.radius
         if settings.plot:
-            methods.create_scatter_animation(x_vals, y_vals, z_vals_avg, divisions, z_max, z_min, units, name, radius=rad, fps=fps)
+            methods.create_scatter_animation(x_vals, y_vals, z_vals_avg, divisions, z_max, z_min, units, name, radius=rad, fps=fps, title=title)
         if settings.to_file:
             output_file_name = name + ".data"
             output_file = open(output_file_name, 'w')
