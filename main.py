@@ -47,9 +47,10 @@ changing_props = 0
 discard_exceptions = 0
 special_chars = 1
 ignore_temperature = 0
-counter_refresh = 20
+counter_refresh = 5
 plot_rods = 1
 order_param = 1
+grid_length = 1000
 import re
 
 
@@ -127,6 +128,8 @@ settings.write("\n")
 settings.write("default_comp = {0}".format(default_comp))
 settings.write("\n")
 settings.write("internal_level = {0}".format(internal_level))
+settings.write("\n")
+settings.write("grid_length = {0}".format(grid_length))
 settings.write("\n")
 try:
     rad = zone_coords[2]

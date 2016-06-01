@@ -8,6 +8,8 @@ import cPickle
 import settings
 import numpy
 from matplotlib import animation
+from scipy.interpolate import griddata
+#from matplotlib.mlab import griddata
 import datetime
 import inspect
 import lzo
@@ -1000,33 +1002,76 @@ def rods_animation(rods, colours, x_lim, y_lim, zone_coords, name="rods.mp4", fp
     rods_12, rods_6 = rods[0], rods[1]
     #_export_rods(rods_12, 12)
     #_export_rods(rods_6, 6)
+    decompressed_rods_12 = []
+    decompressed_rods_6 = []
+    output_queue = mp.Queue()
+    processes = []
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Decompressing"
+    for index in range(frames):
+        rods_12_ = rods_12[index]
+        rods_6_ = rods_6[index]
+        process = mp.Process(target=_decompress_rods_process,
+                            args=(index, output_queue, rods_12_, rods_6_))
+        processes.append(process)
+        decompressed_rods_12.append(None)
+        decompressed_rods_6.append(None)
+    num_processes = len(processes)
+    running, processes_left = run_processes(processes)
+    finished = 0
+    previous_time = datetime.datetime.now()
+    counter = 0
+    time_left = None
+    times = []
+    print " "
+    while finished < num_processes:
+        counter += 1
+        finished += 1
+        previous_time, counter, time_left = print_progress(finished, num_processes,
+                            counter, times, time_left, previous_time)
+        [index, decompressed_rods_12_, decompressed_rods_6_] = output_queue.get()
+        decompressed_rods_12[index] = decompressed_rods_12_
+        decompressed_rods_6[index] = decompressed_rods_6_
+        if len(processes_left):
+            new_process = processes_left.pop(0)
+            #time.sleep(settings.waiting_time)
+            new_process.start()
+    print CLEAR_LAST
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Animating"
     def animate(dummy_frame):
         """
         Wrapper.
         """
         try:
-            rods_12_ = rods_12.pop(0)
-            rods_6_  = rods_6.pop(0)
+            rods_12_ = decompressed_rods_12.pop(0)
+            rods_6_  = decompressed_rods_6.pop(0)
             rods_ = [rods_12_, rods_6_]
         except IndexError:
             return
         animate_rods(rods_, colours, x_lim, y_lim, zone_coords)
     anim = animation.FuncAnimation(fig, animate, frames=frames)
     anim.save(name, writer=WRITER, fps=fps)
-        
+
+def _decompress_rods_process(index, output_queue, rods_12, rods_6):
+    """
+    Process
+    """
+    decomp_12 = decompress(rods_12)
+    decomp_6 = decompress(rods_6)
+    output_queue.put([index, decomp_12, decomp_6])
+
 def animate_rods(rods, colours, x_lim, y_lim, zone_coords):
     """
     Specific animator.
     """
-    rods_12, rods_6 = decompress(rods[0]), decompress(rods[1])
+    rods_12, rods_6 = rods[0], rods[1]
     plt.cla()
     plt.clf()
     plt.xlim(x_lim)
     plt.ylim(y_lim)
-    circle1 = plt.Circle((zone_coords[0], zone_coords[1]), zone_coords[2]+4, color='black')    
-    circle2 = plt.Circle((zone_coords[0], zone_coords[1]), zone_coords[2], color='white')
-    plt.gca().add_artist(circle1)
-    plt.gca().add_artist(circle2)
+    #circle1 = plt.Circle((zone_coords[0], zone_coords[1]), zone_coords[2]+4, color='black')    
+    #circle2 = plt.Circle((zone_coords[0], zone_coords[1]), zone_coords[2], color='white')
+    #plt.gca().add_artist(circle1)
+    #plt.gca().add_artist(circle2)
     # rods_12 = [x_0_list, y_0_list, x_f_list, y_f_list]
     for index in range(len(rods_12)):
         plt.plot([rods_12[0], rods_12[2]], [rods_12[1], rods_12[3]], c=colours[0], linewidth=0.7)
@@ -1159,8 +1204,41 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, num
         name = "order_param.mp4"
         radius = 800
         title = "Order parameter"
+        z_vals_avg_copy = copy.deepcopy(z_vals_avg)
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting"
         create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius, title=title)
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing contour lengths"
+        lengths = []
+        times = []
+        for index in range(len(z_vals_avg_copy)):
+            #fig = plt.figure()
+            z_val = decompress(z_vals_avg_copy[index])
+            x_grid = numpy.linspace(min(x_val), max(x_val), settings.grid_length)
+            y_grid = numpy.linspace(min(y_val), max(y_val), settings.grid_length)
+            x_val = numpy.array(x_val)
+            y_val = numpy.array(y_val)
+            z_val = numpy.array(z_val)
+            len(x_grid)
+            z_grid = griddata((x_val, y_val), z_val, (x_grid[None,:], y_grid[:,None]), method='cubic')
+            levels = [0]
+            cs = plt.contour(x_grid, y_grid, z_grid, linewidths=1.25, colors='k', levels=levels)
+            length = 0
+            x0,y0 =  cs.allsegs[0][0][0]
+            startx = x0
+            starty = y0
+            length = 0
+            for coords in cs.allsegs[0][0][1:]:
+                x1,y1 =  coords[0], coords[1]
+                length += numpy.sqrt((x1-x0)**2 + (y1-y0)**2)
+                x0,y0 = x1,y1
+            length += numpy.sqrt((startx-x0)**2 + (starty-y0)**2)
+            lengths.append(length)
+            times.append(index)
+        fig = plt.figure()
+        plt.scatter(times, lengths)
+        plt.savefig("cluster_boundaries_length.png")        
+        
+        
 
 def _order_param_process(index, output_queue, matrix_12, matrix_6, name):
     """
