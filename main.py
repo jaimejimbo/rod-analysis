@@ -14,7 +14,8 @@ LZO = 1
 ZLIB = 0
 default_comp = ZLIB
 default_comp_level = 1
-internal_level = 1
+internal_level = 0
+rod_level = None
 #Reduces cpu usage (0 for disable)
 waiting_time = 0
 if not waiting_time:
@@ -131,6 +132,8 @@ settings.write("\n")
 settings.write("internal_level = {0}".format(internal_level))
 settings.write("\n")
 settings.write("grid_length = {0}".format(grid_length))
+settings.write("\n")
+settings.write("rod_level = {0}".format(rod_level))
 settings.write("\n")
 try:
     rad = zone_coords[2]

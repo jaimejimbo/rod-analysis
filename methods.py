@@ -715,6 +715,18 @@ def decompress_state(obj):
     """
     return decompress(obj, level=settings.internal_level)
 
+def compress_rod(obj):
+    """
+    wrapper
+    """
+    return compress(obj, level=settings.rod_level)
+
+def decompress_rod(obj):
+    """
+    wrapper
+    """
+    return decompress(obj, level=settings.rod_level)
+
 def gaussian(distance, sigma=settings.sigma):
     """
     Returns gaussian probability for distance.

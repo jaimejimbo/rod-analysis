@@ -168,7 +168,7 @@ class SystemState(object):
         """
         self.fill_dicts()
         try:
-            return methods.decompress_state(self._rods_dict[rod_id])
+            return methods.decompress_rod(self._rods_dict[rod_id])
         except KeyError:
             msg = str(rod_id)
             msg += " " + str(self._rods_dict.keys())
@@ -178,7 +178,7 @@ class SystemState(object):
         """
         Returns rod with index.
         """
-        return methods.decompress_state(list(self._rods)[index])
+        return list(self._rods)[index]
 
     def _get_rods_range(self, initial_id, final_id):
         """
@@ -197,14 +197,14 @@ class SystemState(object):
         Magic method for in.
         """
         for rod_ in self._rods:
-            rod__ = methods.decompress_state(rod_)
+            rod__ = methods.decompress_rod(rod_)
             yield rod__
 
     def __list__(self):
         """
         Returns a list of rods
         """
-        output = [methods.decompress_state(rod_) for rod_ in self]
+        output = [methods.decompress_rod(rod_) for rod_ in self]
         return output
 
     def __len__(self):
@@ -246,21 +246,21 @@ class SystemState(object):
         """
             Adds a rod to the group
         """
-        self._rods.put(methods.compress_state(rod_))
+        self._rods.put(methods.compress_rod(rod_))
 
     def _get_rod(self):
         """
             Returns the first rod in the queue
         """
         rod_ = self._rods.get()
-        self._rods.put(methods.decompress_state(rod_))
+        self._rods.put(methods.decompress_rod(rod_))
         return rod_
 
     def _remove_rod(self, rod_):
         """
             Removes a rod from the group (queue object mod needed)
         """
-        self._rods.delete(methods.compress_state(rod_))
+        self._rods.delete(methods.compress_rod(rod_))
 
     def fill_dicts(self):
         """
@@ -269,7 +269,7 @@ class SystemState(object):
         if not len(self._cluster_checked_dict):
             for rod_ in self:
                 identifier = rod_.identifier
-                self._rods_dict[identifier] = methods.compress_state(rod_)
+                self._rods_dict[identifier] = methods.compress_rod(rod_)
                 self._cluster_checked_dict[identifier] = False
 
     def compute_center_and_radius(self):
@@ -348,7 +348,7 @@ class SystemState(object):
                         self._allowed_kappa_error,
                         self.zone_coords)
             if valid:
-                valid_rods.append(methods.compress_state(rod_))
+                valid_rods.append(methods.compress_rod(rod_))
         self._rods = queue.Queue(valid_rods)
         final_length = len(self._rods)
         self._reset()
@@ -365,11 +365,10 @@ class SystemState(object):
                         length_error, self._real_kappas,
                         self.zone_coords)
             if valid:
-                valid_rods.append(methods.compress_state(rod_))
+                valid_rods.append(methods.compress_rod(rod_))
         self._rods = queue.Queue(valid_rods)
         final_length = len(self._rods)
         self._reset()
-        
 
     def divide_in_circles(self, divisions):
         """
@@ -410,7 +409,7 @@ class SystemState(object):
         div_range = range(divisions)
         output = [[[] for dummy_1 in div_range] for dummy_2 in div_range]
         for rod__ in rods_list:
-            rod_ = methods.decompress_state(rod__)
+            rod_ = methods.decompress_rod(rod__)
             index_x = int((rod_.x_mid-x_min)/diff)
             index_y = int((rod_.y_mid-y_min)/diff)
             try:
@@ -1089,7 +1088,7 @@ class SubsystemState(SystemState):
                 distance = methods.distance_between_points(self.center, rod_.center)
                 proportion = methods.norm_gaussian(distance, self.radius)
                 self._gaussian_exp[rod_.identifier] = proportion
-                rods.append(methods.compress_state(rod_))
+                rods.append(methods.compress_rod(rod_))
         self._reset()
         self._rods = queue.Queue(rods)
 
