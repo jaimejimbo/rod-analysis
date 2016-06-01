@@ -12,7 +12,7 @@ LZ4_FAST = 3
 LZ4 = 2
 LZO = 1
 ZLIB = 0
-default_comp = LZ4
+default_comp = ZLIB
 default_comp_level = 1
 internal_level = 1
 #Reduces cpu usage (0 for disable)

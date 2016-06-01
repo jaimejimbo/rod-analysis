@@ -690,7 +690,7 @@ def decompress(obj, level=settings.default_comp_level, method=settings.default_c
     if level is None:
         return obj
     if method==ZLIB:
-        dumps = zlib.decompress(obj, level)
+        dumps = zlib.decompress(obj)#, level)
     elif method==LZO:
         #level = max([level,1])
         dumps = lzo.decompress(obj, level)
