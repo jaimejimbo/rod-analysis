@@ -15,6 +15,7 @@ import inspect
 import lzo
 import lz4
 import zlib
+import gzip
 
 CURSOR_UP_ONE = '\x1b[1A'
 ERASE_LINE = '\x1b[2K'
@@ -23,6 +24,7 @@ if settings.special_chars:
     WHITE_BLOCK = u'\u25A0'
 else:
     WHITE_BLOCK = 'X'
+GZIP = 4
 LZ4_FAST = 3
 LZ4 = 2
 LZO = 1
@@ -665,9 +667,10 @@ def compress(obj, level=settings.default_comp_level, method=settings.default_com
         return obj
     if method==ZLIB:
         dumps = cPickle.dumps(obj)
+        #print "Compressing with ZLIB. Level "+str(level)
         compressed = zlib.compress(dumps, level)
     elif method==LZO:
-        level = max([level,1])
+        #level = max([level,1])
         dumps = cPickle.dumps(obj)
         compressed = lzo.compress(dumps, level)
     elif method==LZ4_FAST:
@@ -675,7 +678,7 @@ def compress(obj, level=settings.default_comp_level, method=settings.default_com
         compressed = lz4.compress_fast(dumps, level)
     elif method==LZ4:
         dumps = cPickle.dumps(obj)
-        compressed = lz4.compress(dumps, level)
+        compressed = lz4.compress(dumps)#, level)
     else:
         compressed = obj
     return compressed
@@ -689,16 +692,28 @@ def decompress(obj, level=settings.default_comp_level, method=settings.default_c
     if method==ZLIB:
         dumps = zlib.decompress(obj, level)
     elif method==LZO:
-        level = max([level,1])
+        #level = max([level,1])
         dumps = lzo.decompress(obj, level)
     elif method==LZ4_FAST:
         dumps = lz4.decompress(obj)
     elif method==LZ4:
         dumps = lz4.decompress(obj)
     else:
-        dumps = obj
+        return obj
     data = cPickle.loads(dumps)
     return data
+
+def compress_state(obj):
+    """
+    wrapper
+    """
+    return compress(obj, level=settings.internal_level)
+
+def decompress_state(obj):
+    """
+    wrapper
+    """
+    return decompress(obj, level=settings.internal_level)
 
 def gaussian(distance, sigma=settings.sigma):
     """

@@ -147,14 +147,14 @@ class Experiment(object):
             identifier = state_num
         else:
             raise ValueError
-        return methods.decompress(self._states_dict[identifier])
+        return methods.decompress_state(self._states_dict[identifier])
 
     def get(self, index):
         """
             Getter with index
         """
         state = self._states[index]
-        state = methods.decompress(state)
+        state = methods.decompress_state(state)
         return state
 
     def set_coef(self, value):
@@ -199,8 +199,7 @@ class Experiment(object):
         """
         state = self.get(index)
         state.coef = value
-        output = methods.compress(state,
-                    level=methods.settings.default_comp_level)
+        output = methods.compress_state(state)
         output_queue.put([index, output])
 
     def set_coords(self, zone_coords):

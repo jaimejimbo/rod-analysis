@@ -7,13 +7,14 @@ Main script.
 Settings
 """
 #0-9 or None to disable
+GZIP = 4
 LZ4_FAST = 3
 LZ4 = 2
 LZO = 1
 ZLIB = 0
-default_comp = LZ4_FAST
-default_comp_level = None
-internal_level = None
+default_comp = LZ4
+default_comp_level = 1
+internal_level = 1
 #Reduces cpu usage (0 for disable)
 waiting_time = 0
 if not waiting_time:
