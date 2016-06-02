@@ -1312,7 +1312,7 @@ class Experiment(object):
         x_val = []
         y_val = []
         match1 = re.match(r'.*plottable_density.*', function_name)
-        match2 = re.match(r'.*q[2|4].*', function_name)
+        match2 = re.match(r'.*Q[2|4].*', function_name)
         match3 = re.match(r'.*vector.*', function_name)
         match4 = re.match(r'.*temperature.*', function_name)
         print ""
