@@ -13,8 +13,8 @@ LZ4 = 2
 LZO = 1
 ZLIB = 0
 default_comp = ZLIB
-default_comp_level = 1
-internal_level = 0
+default_comp_level = None
+internal_level = None
 rod_level = None
 #Reduces cpu usage (0 for disable)
 waiting_time = 0

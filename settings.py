@@ -1,6 +1,6 @@
 default_comp_level = None
 cpus = None
-zone_coords = [1126.5, 913.5, 844.5]
+zone_coords = [1288.5, 889.5, 799.5]
 to_file = 1
 plot = 1
 waiting_time = 0
@@ -8,7 +8,8 @@ special_chars = 1
 waiting_time_process = 0
 ignore_temperature = 0
 counter_refresh = 5
-default_comp = 3
+default_comp = 0
 internal_level = None
 grid_length = 1000
+rod_level = None
 sigma = None
