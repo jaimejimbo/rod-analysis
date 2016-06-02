@@ -1000,9 +1000,10 @@ class Experiment(object):
             processes = []
             local_speeds = self.local_speeds(max_distance, max_angle_diff,
                                             limit, amount_of_rods, divisions)
+            kappa = self.kappas
             for index in range(len(self._evolution_dictionaries)-1):
                 process = mp.Process(target=compute_local_average_speeds_process,
-                                    args=(index, output_queue, local_speeds, divisions))
+                                    args=(index, output_queue, local_speeds, divisions, kappa))
                 self._local_average_quadratic_speeds.append(None)
                 self._local_average_quadratic_angular_speeds.append(None)
                 processes.append(process)
@@ -2593,7 +2594,7 @@ class Experiment(object):
 
 
 
-def compute_local_average_speeds_process(index, output_queue, local_speeds, divisions):
+def compute_local_average_speeds_process(index, output_queue, local_speeds, divisions, kappa):
     """
     Process
         [index1_loc, index2_loc...]
