@@ -1212,15 +1212,15 @@ class Experiment(object):
             self._kappas = state.kappas
         return self._kappas
 
-    def create_relative_q2_video(self, divisions, folder, fps,
+    def create_relative_Q2_video(self, divisions, folder, fps,
                                  number_of_bursts):
         """
-        Creates a video of correlation q2 evolution.
+        Creates a video of correlation Q2 evolution.
         """
 
-        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating q2 video"
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating Q2 video"
         frames = len(self)
-        function_name = 'correlation_q2_plot_matrix'
+        function_name = 'correlation_Q2_plot_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
@@ -1229,15 +1229,15 @@ class Experiment(object):
         self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts, title=title)
 
-    def create_relative_q4_video(self, divisions, folder, fps,
+    def create_relative_Q4_video(self, divisions, folder, fps,
                                  number_of_bursts):
         """
-        Creates a video of correlation q4 evolution.
+        Creates a video of correlation Q4 evolution.
         """
 
-        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating q4 video"
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating Q4 video"
         frames = len(self)
-        function_name = 'correlation_q4_plot_matrix'
+        function_name = 'correlation_Q4_plot_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
@@ -1359,6 +1359,8 @@ class Experiment(object):
                     time.sleep(settings.waiting_time)
                     new_process.start()
                 z_val_avg = methods.array_average(z_vals)
+                if match2:
+                    z_val_avg = [math.sqrt(value) for value in z_val_avg]
                 if not (match2 or match1):
                     z_maxs.append(max(z_val_avg))
                     z_mins.append(min(z_val_avg))
@@ -1433,8 +1435,8 @@ class Experiment(object):
         self.divide_systems_in_circles(divisions)
         self.create_density_video(divisions, folder, fps, number_of_bursts)
         if not only_density:
-            self.create_relative_q2_video(divisions, folder, fps, number_of_bursts)
-            self.create_relative_q4_video(divisions, folder, fps, number_of_bursts)
+            self.create_relative_Q2_video(divisions, folder, fps, number_of_bursts)
+            self.create_relative_Q4_video(divisions, folder, fps, number_of_bursts)
         if not settings.ignore_temperature:
             self.create_temperature_video(divisions, folder, fps_temps, max_distance,
                                    max_angle_diff, limit, amount_of_rods,
@@ -2615,7 +2617,7 @@ def compute_local_average_speeds_process(index, output_queue, local_speeds, divi
             num_rods = len(subsys_dict)
             for speeds in subsys_dict.values():
                 subsys_quad_avg_speed += float(speeds[0]**2)/num_rods
-                subsys_quad_avg_ang_speed += float(speeds[1]**2)/num_rods
+                subsys_quad_avg_ang_speed += ((.5**2)/2 + (kappa**2)/12)*float(speeds[1]**2)/num_rods
             speeds_matrix[row][col] = subsys_quad_avg_speed
             angular_speeds_matrix[row][col] = subsys_quad_avg_ang_speed
     output_queue.put([index, methods.compress(speeds_matrix),

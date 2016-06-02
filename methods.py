@@ -1281,11 +1281,8 @@ def _order_param_process(index, output_queue, matrix_12, matrix_6, name):
         n_12 = matrix_12[2][row_index]
         n_6 = matrix_6[2][row_index]
         x_val = x_val_12[row_index]
-        y_val = y_val_12[row_index]
-        try:
-            order_param = float(n_12-n_6)/(n_12+n_6)
-        except:
-            order_param = 0
+	y_val = y_val_12[row_index]
+    	order_param = float(n_12-n_6+1)/2
         line = str(x_val)+"\t"+str(y_val)+"\t"+str(order_param)+"\n"
         file_.write(line)
         z_vals.append(order_param)

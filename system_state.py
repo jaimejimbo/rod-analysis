@@ -55,19 +55,19 @@ class SystemState(object):
         self._actual_subdivision = []
         self._subdivision_centers = []
         self._density_matrix = []
-        self._correlation_q2 = None
-        self._correlation_q4 = None
-        self._correlation_q2_subsystems = []
-        self._correlation_q4_subsystems = []
-        self._relative_q2_subsystems = []
-        self._relative_q4_subsystems = []
+        self._correlation_Q2 = None
+        self._correlation_Q4 = None
+        self._correlation_Q2_subsystems = []
+        self._correlation_Q4_subsystems = []
+        self._relative_Q2_subsystems = []
+        self._relative_Q4_subsystems = []
         self._average_kappa = None
         self._kappa_dev = None
         self._average_angle = None
         self._angle_matrix = []
         self._density = None
-        self._relative_q2 = None
-        self._relative_q4 = None
+        self._relative_Q2 = None
+        self._relative_Q4 = None
         self._closest_rod_matrix = []
         self._direction_matrix = []
         self._rods_dict = {}
@@ -519,14 +519,14 @@ class SystemState(object):
         self._create_subgroups_matrix(divisions)
         return methods.decompress_state(self._subdivision_centers)
 
-    def _compute_q2_and_q4(self):
+    def _compute_Q2_and_Q4(self):
         """
-            Computes correlation_q2 and correlation_q4 values
+            Computes correlation_Q2 and correlation_Q4 values
         """
         num = self.number_of_rods
         if num in [0,1,2] or not self.area:
-            self._correlation_q2 = -1000 #None
-            self._correlation_q4 = -1000 #None
+            self._correlation_Q2 = -1000 #None
+            self._correlation_Q4 = -1000 #None
             return
         cos2_av, cos4_av = 0, 0
         for rod1 in self:
@@ -535,93 +535,93 @@ class SystemState(object):
                     angle = math.radians(rod1.angle_between_rods(rod2))
                     cos2_av += math.cos(2*angle)/(num*(num-1))
                     cos4_av += math.cos(4*angle)/(num*(num-1))
-        self._correlation_q2 = cos2_av
-        self._correlation_q4 = cos4_av
+        self._correlation_Q2 = cos2_av
+        self._correlation_Q4 = cos4_av
 
     @property
-    def correlation_q2(self):
+    def correlation_Q2(self):
         """
             sqrt(<cos(2*angle)>^2+<sin(2*angle)>^2)
         """
-        if not self._correlation_q2:
-            self._compute_q2_and_q4()
-        return self._correlation_q2
+        if not self._correlation_Q2:
+            self._compute_Q2_and_Q4()
+        return self._correlation_Q2
 
     @property
-    def correlation_q4(self):
+    def correlation_Q4(self):
         """
             sqrt(<cos(4*angle)>^2+<sin(4*angle)>^2)
         """
-        if not self._correlation_q4:
-            self._compute_q2_and_q4()
-        return self._correlation_q4
+        if not self._correlation_Q4:
+            self._compute_Q2_and_Q4()
+        return self._correlation_Q4
 
-    def _compute_q2_q4_matrices(self, divisions):
+    def _compute_Q2_Q4_matrices(self, divisions):
         """
-            Computes correlation_q2 and correlation_q4 matrices for subgroups.
+            Computes correlation_Q2 and correlation_Q4 matrices for subgroups.
         """
         self.divide_in_circles(divisions)
-        if self._correlation_q2 is None or self._correlation_q4 is None:
+        if self._correlation_Q2 is None or self._correlation_Q4 is None:
             subdivision = self._actual_subdivision
             for subsystem_ in subdivision:
                 subsystem = methods.decompress_state(subsystem_)
-                correlation_q2 = [subsystem.center[0], subsystem.center[1]]
-                correlation_q4 = [subsystem.center[0], subsystem.center[1]]
-                correlation_q2.append(subsystem.correlation_q2)
-                correlation_q4.append(subsystem.correlation_q4)
-                self._correlation_q2_subsystems.append(methods.compress_state(correlation_q2))
-                self._correlation_q4_subsystems.append(methods.compress_state(correlation_q4))
-            self._correlation_q2_subsystems = self._correlation_q2_subsystems
-            self._correlation_q4_subsystems = self._correlation_q4_subsystems
+                correlation_Q2 = [subsystem.center[0], subsystem.center[1]]
+                correlation_Q4 = [subsystem.center[0], subsystem.center[1]]
+                correlation_Q2.append(subsystem.correlation_Q2)
+                correlation_Q4.append(subsystem.correlation_Q4)
+                self._correlation_Q2_subsystems.append(methods.compress_state(correlation_Q2))
+                self._correlation_Q4_subsystems.append(methods.compress_state(correlation_Q4))
+            self._correlation_Q2_subsystems = self._correlation_Q2_subsystems
+            self._correlation_Q4_subsystems = self._correlation_Q4_subsystems
 
-    def correlation_q2_plot_matrix(self, divisions):
+    def correlation_Q2_plot_matrix(self, divisions):
         """
-            Returns values for plotting correlation_q2 matrix.
+            Returns values for plotting correlation_Q2 matrix.
         """
-        self._compute_q2_q4_matrices(divisions)
+        self._compute_Q2_Q4_matrices(divisions)
         x_values = []
         y_values = []
         z_values = []
-        q2_subsystems = self._correlation_q2_subsystems
-        for subsystem_ in q2_subsystems:
+        Q2_subsystems = self._correlation_Q2_subsystems
+        for subsystem_ in Q2_subsystems:
             subsystem = methods.decompress_state(subsystem_)
             [x_val, y_val, z_val] = subsystem
             x_values.append(x_val)
             y_values.append(y_val)
             z_values.append(z_val)
-        q2_subsystems = None
+        Q2_subsystems = None
         return x_values, y_values, z_values
 
-    def correlation_q2_plot_matrix_queue(self, divisions, index, output_queue):
+    def correlation_Q2_plot_matrix_queue(self, divisions, index, output_queue):
         """
             Multiprocessing friendly function.
         """
-        x_val, y_val, z_val = self.correlation_q2_plot_matrix(divisions)
+        x_val, y_val, z_val = self.correlation_Q2_plot_matrix(divisions)
         output_queue.put([index, x_val, y_val, z_val])
 
-    def correlation_q4_plot_matrix(self, divisions):
+    def correlation_Q4_plot_matrix(self, divisions):
         """
-            Returns values for plotting correlation_q2 matrix.
+            Returns values for plotting correlation_Q2 matrix.
         """
-        self._compute_q2_q4_matrices(divisions)
+        self._compute_Q2_Q4_matrices(divisions)
         x_values = []
         y_values = []
         z_values = []
-        q4_subsystems = self._correlation_q4_subsystems
-        for subsystem_ in q4_subsystems:
+        Q4_subsystems = self._correlation_Q4_subsystems
+        for subsystem_ in Q4_subsystems:
             subsystem = methods.decompress_state(subsystem_)
             [x_val, y_val, z_val] = subsystem
             x_values.append(x_val)
             y_values.append(y_val)
             z_values.append(z_val)
-        q4_subsystems = None
+        Q4_subsystems = None
         return x_values, y_values, z_values
 
-    def correlation_q4_plot_matrix_queue(self, divisions, index, output_queue):
+    def correlation_Q4_plot_matrix_queue(self, divisions, index, output_queue):
         """
             Multiprocessing friendly function.
         """
-        x_val, y_val, z_val = self.correlation_q4_plot_matrix(divisions)
+        x_val, y_val, z_val = self.correlation_Q4_plot_matrix(divisions)
         output_queue.put([index, x_val, y_val, z_val])
 
     @property
@@ -655,7 +655,7 @@ class SystemState(object):
             Returns average angle of the system (if exists).
         """
         if not self._average_angle:
-            if self.correlation_q2 > 0.5 and self.correlation_q4 < 0.3:
+            if self.correlation_Q2 > 0.5 and self.correlation_Q4 < 0.3:
                 angle = 0
                 for rod_ in self:
                     angle2 = rod_.angle
