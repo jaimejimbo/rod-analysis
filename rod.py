@@ -154,7 +154,7 @@ class Rod(object):
         """
         Angle of rod.
         """
-        return self._angle
+        return math.radians(self._angle)
 
     def is_in_circle(self, center, rad):
         """
@@ -232,7 +232,7 @@ class Rod(object):
         """
         Returns value of angle that formes this rod with another.
         """
-        angle = abs(self.angle-rod.angle) % 180
+        angle = abs(self.angle-rod.angle) % math.pi
         return angle
 
     @property

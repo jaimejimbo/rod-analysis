@@ -1360,8 +1360,8 @@ class Experiment(object):
                     time.sleep(settings.waiting_time)
                     new_process.start()
                 z_val_avg = methods.array_average(z_vals)
-                #if match2:
-                #    z_val_avg = [math.sqrt(value) for value in z_val_avg]
+                if match2:
+                    z_val_avg = [math.sqrt(value) for value in z_val_avg]
                 if not (match2 or match1):
                     z_maxs.append(max(z_val_avg))
                     z_mins.append(min(z_val_avg))

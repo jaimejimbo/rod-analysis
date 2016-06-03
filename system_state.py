@@ -528,15 +528,13 @@ class SystemState(object):
             self._correlation_Q2 = -1000 #None
             self._correlation_Q4 = -1000 #None
             return
-        cos2_av, cos4_av = 0, 0
-        for rod1 in self:
-            for rod2 in self:
-                if rod1 != rod2:
-                    angle = math.radians(rod1.angle_between_rods(rod2))
-                    cos2_av += math.cos(2*angle)/(num*(num-1))
-                    cos4_av += math.cos(4*angle)/(num*(num-1))
-        self._correlation_Q2 = cos2_av
-        self._correlation_Q4 = cos4_av
+        Q2, Q4 = 0, 0
+        N = len(self)
+        for rod_ in self:
+            Q2 += float(math.cos(2*rod_.angle)**2 + math.sin(2*rod_.angle)**2)/N
+            Q4 += float(math.cos(4*rod_.angle)**2 + math.sin(4*rod_.angle)**2)/N
+        self._correlation_Q2 = Q2
+        self._correlation_Q4 = Q4
 
     @property
     def correlation_Q2(self):
