@@ -1,0 +1,39 @@
+##This gnuplot script generates graphical results
+reset 
+
+img0=6662
+imgN=6981
+folder_out="e=0.6/X1=0.57/graphs"
+folder_in="e=0.6/X1=0.57/results"
+
+
+set size ratio 1
+unset key
+unset title
+set contour
+set cntrparam levels 1
+unset surface
+set view map
+do for [img=img0:imgN:1]{
+	print img
+	set table sprintf("%s/interphase%04.0f",folder_in,img)
+	splot sprintf("%s/molar_fracs_local_%04.0f",folder_in,img) matrix w l
+	unset table
+}
+
+
+
+set term gif animate
+set output sprintf("%s/interphase.gif",folder_out)
+n=imgN-img0+1    #n frames
+
+do for [img=img0:imgN:2] {	
+	print sprintf("gif %.0f\%",100*(img-img0)/(imgN-img0))
+	set title sprintf("Img %04.0f",img-img0)
+	p [0:100][0:100] sprintf("%s/interphase%04.0f",folder_in,img) w l
+}
+
+
+
+
+
