@@ -584,6 +584,29 @@ def array_average(array_of_arrays):
             output = sum_arrays_with_cl(output, array_of_arrays[index])
         return normalize_opencl(output, number_of_arrays)
 
+def array_average_N(array_of_arrays):
+    """
+    Average for data of type: [[[val000, val001], [val010, val011], ...],
+                               [[val100, val101], [val110, val111], ...],
+                               ...
+    """
+    N = len(array_of_arrays[0][0])
+    M = len(array_of_arrays)
+    L = len(array_of_arrays[0])
+    array_of_arrays_ = [[[] for dummy_ in range(M)] for dummy in range(N)]
+    output = [0 for dummy in range(L)]
+    for index in range(len(array_of_arrays)):
+        array_ = array_of_arrays[index]
+        for col in range(N):
+            for index_2 in range(len(array_)):
+                array_of_arrays_[col][index].append(array_[index_2][col])
+    for col in range(N):
+        array_of_arrays_[col] = array_average(array_of_arrays_[col])
+    for col in range(N):
+        for index in range(len(array_of_arrays_[col])):
+            output[index] += array_of_arrays_[col][index]
+    return output
+
 def sum_arrays_with_cl(array1, array2):
     """
         Sums 2 arrays with GPU.
@@ -819,8 +842,10 @@ def animate_scatter(x_val, y_val, z_vals,
     y_max = max(y_val)+rad*1.1
     plt.xlim((x_min, x_max))
     plt.ylim((y_min, y_max))
-    plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
+    scat = plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
                 vmin=z_min, vmax=z_max)
+    scat.cmap.set_under('w')
+    scat.cmap.set_over('w')
     plt.gca().invert_yaxis()
     #step = int((z_max-z_min)*10.0)/100.0
     #ticks = [int((z_min + index*step)*10.0)/10.0 for index in range(10+1)]
