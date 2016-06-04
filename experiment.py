@@ -122,6 +122,7 @@ class Experiment(object):
         self._average_rod_width = None
         self._number_of_rods = None
         self._number_of_rods_dev = None
+        self._times = None
 
     def __len__(self):
         """
@@ -1361,7 +1362,13 @@ class Experiment(object):
                     new_process.start()
                 z_val_avg = methods.array_average(z_vals)
                 if match2:
-                    z_val_avg = [math.sqrt(value) for value in z_val_avg]
+                    z_val_avg_ = []
+                    for value in z_val_avg:
+                        if value>1000:
+                            z_val_avg_.append(math.sqrt(value))
+                        else:
+                            z_val_avg_.append(value)
+                    z_val_avg = z_val_avg_
                 if not (match2 or match1):
                     z_maxs.append(max(z_val_avg))
                     z_mins.append(min(z_val_avg))
@@ -2089,10 +2096,17 @@ class Experiment(object):
 	        output_file.write(data)
 	        output_file.close()
 
+    def times(self, number_of_bursts):
+        """
+        Returns times in seconds of each state.
+        """
+        return self._times
+
     def _compute_times(self, number_of_bursts):
         """
             Computes times for experiment.
         """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing times"
         diff_t = 15*number_of_bursts
         id_0 = self._get_image_id(self._indices[0])
         times = []
@@ -2171,7 +2185,6 @@ class Experiment(object):
             Average temperature over time.
         """
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing average temperature"
-
         self._compute_speeds(max_distance, max_angle_diff,
                         limit, None)
         indices = []

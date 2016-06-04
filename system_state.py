@@ -36,10 +36,7 @@ class SystemState(object):
         self._gaussian_exp = {}
         self._real_radius = 70.0
         try:
-            self._radius = zone_coords[2]
-            self._center_x = zone_coords[0]
-            self._center_y = zone_coords[1]
-            self._zone_coords = zone_coords
+            self._zone_coords = list(zone_coords)
             self._fixed_center_radius = True
         except IndexError:
             self._fixed_center_radius = False
@@ -61,8 +58,8 @@ class SystemState(object):
         self._correlation_Q4_subsystems = []
         self._relative_Q2_subsystems = []
         self._relative_Q4_subsystems = []
-        self._average_kappa = None
-        self._kappa_dev = None
+        #self._average_kappa = None
+        #self._kappa_dev = None
         self._average_angle = None
         self._angle_matrix = []
         self._density = None
@@ -77,27 +74,23 @@ class SystemState(object):
         self._clusters_max_angle_diff = None
         self._divisions = None
         self._fixed = True
-        self._area = None
         self._length, self._length_error = None, None
         if not self._fixed_center_radius:
             self._zone_cords = None
-            self._center_x = None
-            self._center_y = None
-            self._radius = None
 
     @property
     def scale(self):
         """
         Gets system scale (real_rad(mm) / rad)
         """
-        return self._real_radius*1.0/self._radius
+        return self._real_radius*1.0/self._zone_coords[2]
 
-    def set_kappa(self, value):
-        """
-            Changes kappa of all rods in system.
-        """
-        for rod_ in self:
-            rod_.kappa = value
+    #def set_kappa(self, value):
+    #    """
+    #        Changes kappa of all rods in system.
+    #    """
+    #    for rod_ in self:
+    #        rod_.kappa = value
 
     @property
     def divisions(self):
@@ -297,21 +290,19 @@ class SystemState(object):
                 center_y = sum(y_values)*1.0/self.number_of_rods
                 # radius is the average of maximum distances /2.
                 radius = (max(x_values)-min(x_values)+max(y_values)-min(y_values))/4.0
-                # radius *= (1-self._radius_correction_ratio)/4.0
-                self._center_x = center_x
-                self._center_y = center_y
-                self._radius = radius
-        self._zone_coords = (self._center_x, self._center_y, self._radius)
-        return self._center_x, self._center_y, self._radius
+                # radius *= (1-self._zone_coords[2]_correction_ratio)/4.0
+                self._zone_coords[0] = center_x
+                self._zone_coords[1] = center_y
+                self._zone_coords[2] = radius
+        self._zone_coords = (self._zone_coords[0], self._zone_coords[1], self._zone_coords[2])
+        return self._zone_coords[0], self._zone_coords[1], self._zone_coords[2]
 
     @property
     def area(self):
         """
             Area of the subsystem.
         """
-        if not self._area:
-            self._area = math.pi*self._real_radius**2
-        return self._area
+        return math.pi*self._real_radius**2
 
     @property
     def center(self):
@@ -319,7 +310,7 @@ class SystemState(object):
             Returns center of the system.
         """
         self.compute_center_and_radius()
-        return self._center_x, self._center_y
+        return self._zone_coords[0], self._zone_coords[1]
 
     @property
     def radius(self):
@@ -327,7 +318,7 @@ class SystemState(object):
             Returns radius of the system.
         """
         self.compute_center_and_radius()
-        return self._radius
+        return self._zone_coords[2]
 
     @property
     def zone_coords(self):
@@ -627,25 +618,25 @@ class SystemState(object):
         """
             Returns kappa average of group.
         """
-        if not self._average_kappa:
-            self._average_kappa = 0
-            for rod_ in self:
-                self._average_kappa += rod_.kappa
-            self._average_kappa /= self.number_of_rods
-        return self._average_kappa
+        #if not self._average_kappa:
+        #    self._average_kappa = 0
+        #    for rod_ in self:
+        #        self._average_kappa += rod_.kappa
+        #    self._average_kappa /= self.number_of_rods
+        return self.kappas #self._average_kappa
 
     @property
     def kappa_dev(self):
         """
             Returns sqrt(<kappa^2> - <kappa>^2)
         """
-        if not self._kappa_dev:
-            kappa2 = 0
-            for rod_ in self:
-                kappa2 += (rod_.kappa-self.average_kappa)**2
-            kappa2 /= (self.number_of_rods-1)
-            self._kappa_dev = math.sqrt(kappa2)
-        return self._kappa_dev
+        #if not self._kappa_dev:
+        #    kappa2 = 0
+        #    for rod_ in self:
+        #        kappa2 += (rod_.kappa-self.average_kappa)**2
+        #    kappa2 /= (self.number_of_rods-1)
+        #    self._kappa_dev = math.sqrt(kappa2)
+        return 0 #self._kappa_dev
 
     @property
     def average_angle(self):
@@ -1010,14 +1001,14 @@ class SubsystemState(SystemState):
                             allowed_kappa_error=allowed_kappa_error)
         self._is_subsystem = True
         self._center = center
-        self._radius = rad
+        self._zone_coords[2] = rad
         self._real_radius = real_rad# + real_kappas
         self._scale = real_rad*1.0/rad
         self._main_center = (zone_coords[0], zone_coords[1])
         self._main_rad = zone_coords[2]
         self._position_rad = methods.distance_between_points(self._main_center,
                                             self._center)
-        self._area = methods.effective_area(self._radius,
+        self._area = methods.effective_area(self._zone_coords[2],
                                     self._position_rad, self._main_rad)
         self._real_area = methods.effective_area(self._real_radius, 
                                                  self._position_rad*self._scale,
@@ -1035,7 +1026,7 @@ class SubsystemState(SystemState):
         """
             Center of the subsystem.
         """
-        if not self._radius:
+        if not self._zone_coords[2]:
             self.compute_center_and_radius()
         return self._center
 
@@ -1044,9 +1035,9 @@ class SubsystemState(SystemState):
         """
             Radius of the subsystem
         """
-        if not self._radius:
+        if not self._zone_coords[2]:
             self.compute_center_and_radius()
-        return self._radius
+        return self._zone_coords[2]
 
     @property
     def real_area(self):

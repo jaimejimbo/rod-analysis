@@ -1160,14 +1160,14 @@ def _export_rods_process(index, output, rods, kappa):
 
 import copy
 
-def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, number_of_bursts=5):
+def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, bursts_times, number_of_bursts=5):
     """
     Computes order param.
     """
-    output_queue = mp.Queue()
-    processes = []
     print "\n\n"
     print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing order param and exporting"
+    output_queue = mp.Queue()
+    processes = []
     groups = copy.deepcopy(bursts_groups)
     bursts_ = len(groups)
     param_order_matrices = []
@@ -1185,7 +1185,6 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, num
     previous_time = datetime.datetime.now()
     counter = 0
     time_left = None
-    times = []
     print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Getting values"
     print " "
     x_val, y_val, z_vals = [], [], []
@@ -1236,7 +1235,6 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, num
         create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius, title=title)
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing contour lengths"
         lengths = []
-        times = []
         for index in range(len(z_vals_avg_copy)):
             #fig = plt.figure()
             z_val = decompress(z_vals_avg_copy[index])
@@ -1260,9 +1258,8 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, num
                 x0,y0 = x1,y1
             length += numpy.sqrt((startx-x0)**2 + (starty-y0)**2)
             lengths.append(length)
-            times.append(index)
         fig = plt.figure()
-        plt.scatter(times, lengths)
+        plt.scatter(bursts_times, lengths)
         plt.savefig("cluster_boundaries_length.png")        
         
         

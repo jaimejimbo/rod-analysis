@@ -17,22 +17,22 @@ class Rod(object):
                         feretangle, minferet, xstart, ystart) = args_tuple
                                                 #Column
         self._id = int(ID)                      #0
-        self._area = float(area)                #1
+        #self._area = float(area)                #1
         self._x_mid = float(xmid)               #2
         self._y_mid = float(ymid)               #3
-        self._major = float(major)              #4
-        self._minor = float(minor)              #5
-        self._angle = -float(angle)             #6
+        #self._major = float(major)              #4
+        #self._minor = float(minor)              #5
+        self._angle = -math.radians(float(angle))#6
         self._feret = float(feret)              #7
-        self._feret_x = float(feretx)           #8
-        self._feret_y = float(ferety)           #9
-        self._feret_angle = float(feretangle)   #10
+        #self._feret_x = float(feretx)           #8
+        #self._feret_y = float(ferety)           #9
+        #self._feret_angle = float(feretangle)   #10
         self._min_feret = float(minferet)       #11
-        self._x_start = float(xstart)           #12
-        self._y_start = float(ystart)           #13
-        self._hash = 0
-        self._direction_matrix = matrix.zeros(2, 2)
-        self._kappa = float(feret)/float(minferet)
+        #self._x_start = float(xstart)           #12
+        #self._y_start = float(ystart)           #13
+        #self._hash = 0
+        #self._direction_matrix = matrix.zeros(2, 2)
+        #self._kappa = float(feret)/float(minferet)
         self._real_kappa = kappa
         self._real_length = real_length
         #self._feret = float(real_length)
@@ -74,7 +74,7 @@ class Rod(object):
         Check if a rod is the same as another rod.
         Rods must be of the same group.
         """
-        return self.hash_ == rod2.hash_
+        return self.id == rod2.id #self.hash_ == rod2.hash_
 
     def __ne__(self, rod2):
         """
@@ -88,8 +88,8 @@ class Rod(object):
         """
         output = ""
         output += "id: "+str(self.identifier)+"\n"
-        output += "center: "+str(self.center)+"\n"
-        output += "angle: "+str(self.angle)+"\n"
+        #output += "center: "+str(self.center)+"\n"
+        #output += "angle: "+str(self.angle)+"\n"
         return output
 
     @property
@@ -99,19 +99,19 @@ class Rod(object):
         """
         return self._id
 
-    @property
-    def hash_(self):
-        """
-        Returns an unique number of this rod.
-        Uses some of rod properties.
-        """
-        output = ""
-        output += str(self.identifier)
-        output += str(int(self.min_feret))
-        output += str(int(self.x_mid))
-        output += str(int(self.y_mid))
-        output += str(int(self.kappa))
-        return int(output)
+    #@property
+    #def hash_(self):
+    #    """
+    #    Returns an unique number of this rod.
+    #    Uses some of rod properties.
+    #    """
+    #    output = ""
+    #    output += str(self.identifier)
+    #    output += str(int(self.min_feret))
+    #    output += str(int(self.x_mid))
+    #    output += str(int(self.y_mid))
+    #    output += str(int(self.kappa))
+    #    return int(output)
 
 
     @property
@@ -142,19 +142,19 @@ class Rod(object):
         """
         return self._real_kappa
 
-    @kappa.setter
-    def kappa(self, value):
-        """
-        L/D of rod.
-        """
-        self._kappa = value
+    #@kappa.setter
+    #def kappa(self, value):
+    #    """
+    #    L/D of rod.
+    #    """
+    #    self._kappa = value
 
     @property
     def angle(self):
         """
         Angle of rod.
         """
-        return math.radians(self._angle)
+        return self._angle
 
     def is_in_circle(self, center, rad):
         """
@@ -169,13 +169,14 @@ class Rod(object):
         Checks if rod has valid L/D (kappas are possibles values
         for L/D).
         """
+        kappa_ = self.feret*1.0/self._min_feret
         try:
             for kappa in kappas:
-                if abs(self.kappa-kappa) < allowed_error:
+                if abs(kappa_-kappa) < allowed_error:
                     return True
             return False
         except TypeError:
-            return abs(self.kappa-kappas) < allowed_error
+            return abs(kappa_-kappas) < allowed_error
 
     def is_valid_rod(self, kappas,
                     allowed_kappa_error,
@@ -189,10 +190,9 @@ class Rod(object):
                                                            allowed_kappa_error)
         output = is_in_main and has_valid_proportions
         if output:
-            self._kappa = kappas
             self._real_lappa = kappas
             self._feret = self._real_length
-            self._min_feret = self._feret*1.0/self._kappa
+            self._min_feret = self._feret*1.0/kappas
         return output
 
     def is_valid_rod_length(self, length,
@@ -207,7 +207,6 @@ class Rod(object):
         valid_length = ((length-length_error) <= rod_length <= (length+length_error))
         cond = valid_length and is_in_main
         if cond:
-            self._kappa = kappa
             self._feret = self._real_length
             self._feret_min = self._feret/float(kappa)
         return cond
@@ -235,21 +234,21 @@ class Rod(object):
         angle = abs(self.angle-rod.angle) % math.pi
         return angle
 
-    @property
-    def direction_matrix(self):
-        """
-        Returns a matrix with the form:
-        ex^2-1  ex*ey
-        ex*ey   ey^2-1
-        """
-        if self._direction_matrix == matrix.zeros(2, 2):
-            e_x = math.cos(self.angle)
-            e_y = math.sin(self.angle)
-            self._direction_matrix[0][0] = 2*e_x**2-1
-            self._direction_matrix[1][1] = 2*e_y**2-1
-            self._direction_matrix[1][0] = e_x*e_y
-            self._direction_matrix[0][1] = e_x*e_y
-        return self._direction_matrix
+    #@property
+    #def direction_matrix(self):
+    #    """
+    #    Returns a matrix with the form:
+    #    ex^2-1  ex*ey
+    #    ex*ey   ey^2-1
+    #    """
+    #    if self._direction_matrix == matrix.zeros(2, 2):
+    #        e_x = math.cos(self.angle)
+    #        e_y = math.sin(self.angle)
+    #        self._direction_matrix[0][0] = 2*e_x**2-1
+    #        self._direction_matrix[1][1] = 2*e_y**2-1
+    #        self._direction_matrix[1][0] = e_x*e_y
+    #        self._direction_matrix[0][1] = e_x*e_y
+    #    return self._direction_matrix
 
     @property
     def real_length(self):
