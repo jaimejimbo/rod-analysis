@@ -842,12 +842,8 @@ def animate_scatter(x_val, y_val, z_vals,
     y_max = max(y_val)+rad*1.1
     plt.xlim((x_min, x_max))
     plt.ylim((y_min, y_max))
-    try:
-        scat = plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
+    scat = plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
                                         vmin=z_min, vmax=z_max)
-    except:
-        print z_val
-        raw_input("")
     scat.cmap.set_under('w')
     scat.cmap.set_over('w')
     plt.gca().invert_yaxis()
