@@ -1222,7 +1222,7 @@ class Experiment(object):
 
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating Q2 video"
         frames = len(self)
-        function_name = 'correlation_Q2_2_plot_matrix'
+        function_name = 'correlation_Q2_plot_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
@@ -1239,7 +1239,7 @@ class Experiment(object):
 
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating Q4 video"
         frames = len(self)
-        function_name = 'correlation_Q4_2_plot_matrix'
+        function_name = 'correlation_Q4_plot_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
@@ -1320,7 +1320,7 @@ class Experiment(object):
         print ""
         if match2:
             z_max = 1
-            z_min = -1
+            z_min = 0
         elif match1:
             z_max = 1
             z_min = 0
@@ -1362,11 +1362,14 @@ class Experiment(object):
                 if match2:
                     z_val_avg = methods.array_average_N(z_vals)
                     z_val_avg_ = []
-                    for value in z_val_avg:
-                        if value>-2:
+                    for index__ in range(len(z_val_avg[0])):
+                        cos_m = z_val_avg[0][index__]
+                        sin_m = z_val_avg[1][index__]
+                        value = cos_m**2 + sin_m**2
+                        if value<=1:
                             z_val_avg_.append(math.sqrt(value))
                         else:
-                            z_val_avg_.append(value)
+                            z_val_avg_.append(-1.0)
                     z_val_avg = z_val_avg_
                 else:
                     z_val_avg = methods.array_average(z_vals)

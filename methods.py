@@ -524,7 +524,7 @@ def run_processes(processes, cpus=None):
     if not cpus or cpus is None:
         cpus = settings.cpus
         if not cpus:
-            cpus = int(mp.cpu_count())
+            cpus = int(3*mp.cpu_count())
     try:
         for dummy in range(cpus):
             next_process = processes.pop(0)
@@ -602,10 +602,10 @@ def array_average_N(array_of_arrays):
                 array_of_arrays_[col][index].append(array_[index_2][col])
     for col in range(N):
         array_of_arrays_[col] = array_average(array_of_arrays_[col])
-    for col in range(N):
-        for index in range(len(array_of_arrays_[col])):
-            output[index] += array_of_arrays_[col][index]
-    return output
+    #for col in range(N):
+    #    for index in range(len(array_of_arrays_[col])):
+    #        output[index] += array_of_arrays_[col][index]
+    return array_of_arrays_
 
 def sum_arrays_with_cl(array1, array2):
     """
@@ -842,8 +842,12 @@ def animate_scatter(x_val, y_val, z_vals,
     y_max = max(y_val)+rad*1.1
     plt.xlim((x_min, x_max))
     plt.ylim((y_min, y_max))
-    scat = plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
-                vmin=z_min, vmax=z_max)
+    try:
+        scat = plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
+                                        vmin=z_min, vmax=z_max)
+    except:
+        print z_val
+        raw_input("")
     scat.cmap.set_under('w')
     scat.cmap.set_over('w')
     plt.gca().invert_yaxis()

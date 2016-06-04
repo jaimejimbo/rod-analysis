@@ -1,4 +1,4 @@
-default_comp_level = 1
+default_comp_level = None
 cpus = None
 zone_coords = [1129.5, 910.5, 841.5]
 to_file = 1
@@ -9,7 +9,7 @@ waiting_time_process = 0
 ignore_temperature = 0
 counter_refresh = 10
 default_comp = 3
-internal_level = 1
+internal_level = None
 grid_length = 1000
 rod_level = None
 sigma = None
