@@ -586,7 +586,7 @@ def array_average(array_of_arrays):
 
 def sum_arrays_with_cl(array1, array2):
     """
-        Sums 2 arrays with GPU. 
+        Sums 2 arrays with GPU.
     """
     mf = cl.mem_flags
     a_array = numpy.array(array1).astype(numpy.float32)
@@ -642,7 +642,7 @@ def vector_distance(vector1, vector2):
 
 def vector_module(vector):
     """
-       Returns array's module. 
+       Returns array's module.
     """
     output = 0
     for value in vector:
@@ -850,7 +850,7 @@ def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, 
     anim = animation.FuncAnimation(fig, animate, frames=frames)
     anim.save(name, writer=WRITER, fps=fps)
 
- 
+
 def animate_vector_map(x_val, y_val, u_vals, v_vals, units, name, radius):
     """
     Specific animator.
@@ -894,7 +894,7 @@ def create_vector_map(x_vals, y_vals, u_vals, v_vals, units, name, radius=800, f
     anim = animation.FuncAnimation(fig, animate, frames=frames)
     anim.save(name, writer=WRITER, fps=fps)
 
- 
+
 def import_and_plot(source, radius=None, level=9):
     """
     Imports data from a compressed file and plots it.
@@ -946,7 +946,7 @@ def plot_all_data_files(radius=None, level=9, folder="./"):
 
 def reset_dates_ids(folder="./", start=0):
     """
-    When imgs goes over id limit, they restart in start(default 0), so 
+    When imgs goes over id limit, they restart in start(default 0), so
     """
     print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Resetting dates ids"
     src = folder + "dates.txt"
@@ -1002,9 +1002,9 @@ def print_progress(done, total, counter, times, time_left, previous_time, counte
         time_left = None
     if not time_left is None and not avg_time is None:
         if time_left:
-            string += "    " + str(time_left) + " minutes"
+            string += "\t" + str(time_left) + " minutes"
         else:
-            string += "    " + str(int(left*avg_time)) + " seconds"
+            string += "\t" + str(int(left*avg_time)) + " seconds"
     print CLEAR_LAST
     print string
     return previous_time, counter, time_left, times
@@ -1095,7 +1095,7 @@ def animate_rods(rods, colours, x_lim, y_lim, zone_coords):
     plt.clf()
     plt.xlim(x_lim)
     plt.ylim(y_lim)
-    #circle1 = plt.Circle((zone_coords[0], zone_coords[1]), zone_coords[2]+4, color='black')    
+    #circle1 = plt.Circle((zone_coords[0], zone_coords[1]), zone_coords[2]+4, color='black')
     #circle2 = plt.Circle((zone_coords[0], zone_coords[1]), zone_coords[2], color='white')
     #plt.gca().add_artist(circle1)
     #plt.gca().add_artist(circle2)
@@ -1160,7 +1160,7 @@ def _export_rods_process(index, output, rods, kappa):
 
 import copy
 
-def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, bursts_times, number_of_bursts=5):
+def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, bursts_times):
     """
     Computes order param.
     """
@@ -1202,43 +1202,53 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, bur
             new_process.start()
     print CLEAR_LAST
     if settings.plot:
-        z_vals_avg = []
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing averages"
-        exit = False
-        while True:
-            groups_ = []
-            for time in range(number_of_bursts):
-                try:
-                    groups_.append(groups.pop(0))
-                except:
-                    exit = True
-                    break
-            average = []
-            try:
-                for group in groups_:
-                    for index in group:
-                        average.append(z_vals.pop(0))
-                average = array_average(average)
-                z_vals_avg.append(compress(average))
-            except:
-                pass
-            if exit:
-                break
+        z_vals_avg = []
+        output_queue = mp.Queue()
+        for index in range(len(groups)):
+            group = groups[index]
+            z_vals_avg.append(None)
+            process = mp.Process(target=_compute_z_averages_process,
+                                args=(index, output_queue, group, z_vals))
+            processes.append(process)
+            param_order_matrices.append(None)
+        num_processes = len(processes)
+        running, processes_left = run_processes(processes)
+        finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Getting values"
+        print " "
+        while finished < num_processes:
+            counter += 1
+            finished += 1
+            previous_time, counter, time_left, times = print_progress(finished, num_processes,
+                                counter, times, time_left, previous_time)
+            [index__, avg_z_val] = output_queue.get()
+            z_vals_avg[index__] = avg_z_val
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                #time.sleep(settings.waiting_time)
+                new_process.start()
+        print CLEAR_LAST
         frames = len(z_vals_avg)
+        assert frames, "Not values!"
         z_max = 1
-        z_min = -1
+        z_min = 0
         units = "normalized [S.U.]"
         name = "order_param.mp4"
         radius = 800
         title = "Order parameter"
-        z_vals_avg_copy = copy.deepcopy(z_vals_avg)
+        z_vals_copy = copy.deepcopy(z_vals_avg)
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting"
-        create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius, title=title)
+        create_scatter_animation(x_val, y_val, z_vals_copy, divisions, z_max, z_min, units, name, radius, title=title)
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing contour lengths"
         lengths = []
-        for index in range(len(z_vals_avg_copy)):
+        for index in range(len(z_vals_avg)):
             #fig = plt.figure()
-            z_val = decompress(z_vals_avg_copy[index])
+            z_val = decompress(z_vals_avg[index])
             x_grid = numpy.linspace(min(x_val), max(x_val), settings.grid_length)
             y_grid = numpy.linspace(min(y_val), max(y_val), settings.grid_length)
             x_val = numpy.array(x_val)
@@ -1261,9 +1271,19 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, bur
             lengths.append(length)
         fig = plt.figure()
         plt.scatter(bursts_times, lengths)
-        plt.savefig("cluster_boundaries_length.png")        
-        
-        
+        plt.savefig("cluster_boundaries_length.png")
+
+
+def _compute_z_averages_process(index, output_queue, group, z_vals):
+    """
+    Process
+    """
+    average = []
+    for index_ in group:
+        average.append(z_vals[index_])
+    average = array_average(average)
+    output_queue.put([index, average])
+
 
 def _order_param_process(index, output_queue, matrix_12, matrix_6, name):
     """
@@ -1279,8 +1299,8 @@ def _order_param_process(index, output_queue, matrix_12, matrix_6, name):
         n_12 = matrix_12[2][row_index]
         n_6 = matrix_6[2][row_index]
         x_val = x_val_12[row_index]
-	y_val = y_val_12[row_index]
-    	order_param = float(n_12)#float(n_12-n_6+1)/2
+        y_val = y_val_12[row_index]
+        order_param_plot = float(n_12)#float(n_12-n_6+1)/2
         line = str(x_val)+"\t"+str(y_val)+"\t"+str(order_param)+"\n"
         file_.write(line)
         z_vals.append(order_param)

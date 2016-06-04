@@ -2100,6 +2100,7 @@ class Experiment(object):
         """
         Returns times in seconds of each state.
         """
+        self._compute_times(number_of_bursts)
         return self._times
 
     def _compute_times(self, number_of_bursts):
@@ -2107,22 +2108,23 @@ class Experiment(object):
             Computes times for experiment.
         """
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing times"
-        diff_t = 15*number_of_bursts
-        id_0 = self._get_image_id(self._indices[0])
+        bursts = self.bursts_groups
+        index_0 = bursts[0][0]
+        id_0 = self._state_numbers[index_0]
         times = []
         previous_time = 0
-        for index_ in range(len(self._indices)):
-            index = self._indices[index_]
-            if not index:
-                time = 0
-            else:
-                id_1 = self._get_image_id(index)
-                index_0 = self._indices[index_-1]
-                id_0 = self._get_image_id(index_0)
+        burst_num = 0
+        for index_ in range(len(bursts)):
+            burst_num += 1
+            if burst_num == number_of_bursts:
+                burst_num = 0
+                index_1 = bursts[index_][0]
+                id_1 = self._state_numbers[index_1]
                 time = methods.time_difference(self._dates, id_0, id_1)
-            time += previous_time
-            previous_time = time
-            times.append(time)
+                id_0 = id_1
+                time += previous_time
+                previous_time = time
+                times.append(time)
         self._times = times
 
     @property

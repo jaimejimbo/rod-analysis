@@ -50,7 +50,7 @@ try:
     discard_exceptions = 0
     special_chars = 1
     ignore_temperature = 0
-    counter_refresh = 5
+    counter_refresh = 10
     plot_rods = 1
     order_param = 1
     grid_length = 1000
@@ -210,6 +210,7 @@ try:
                 if order_param:
                     density_matrices = experiment_.plottable_density_matrices(divisions)
                     bursts_groups = experiment_.bursts_groups
+                    times = experiment_.times(1)
                 try:
                     names = None
                     experiment_ = None
@@ -218,7 +219,7 @@ try:
                 except NameError:
                     pass
                 log.close()
-                return plottable_rods, density_matrices, bursts_groups
+                return plottable_rods, density_matrices, bursts_groups, times
 
             def run_default_length(length, length_error, real_kappa):
                 """
@@ -258,7 +259,7 @@ try:
                 if order_param:
                     density_matrices = experiment_.plottable_density_matrices(divisions)
                     bursts_groups = experiment_.bursts_groups
-                    times = experiment_.times
+                    times = experiment_.times(1)
                 try:
                     names = None
                     experiment_ = None
@@ -373,7 +374,7 @@ try:
                     y_lims = (center_y-rad, center_y+rad)
                     methods.rods_animation([rods_12, rods_6], ['b', 'y'], x_lims, y_lims, zone_coords, name="rods.mp4", fps=1)
                 if order_param:
-                    methods.order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, times, number_of_bursts=1)
+                    methods.order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, times)
                     
 
             if run_check_dim:
