@@ -1007,7 +1007,7 @@ def print_progress(done, total, counter, times, time_left, previous_time, counte
             string += "    " + str(int(left*avg_time)) + " seconds"
     print CLEAR_LAST
     print string
-    return previous_time, counter, time_left
+    return previous_time, counter, time_left, times
 
 def rods_differences(shorts, longs, wlprop):
     """
@@ -1053,7 +1053,7 @@ def rods_animation(rods, colours, x_lim, y_lim, zone_coords, name="rods.mp4", fp
     while finished < num_processes:
         counter += 1
         finished += 1
-        previous_time, counter, time_left = print_progress(finished, num_processes,
+        previous_time, counter, time_left, times = print_progress(finished, num_processes,
                             counter, times, time_left, previous_time)
         [index, decompressed_rods_12_, decompressed_rods_6_] = output_queue.get()
         decompressed_rods_12[index] = decompressed_rods_12_
@@ -1133,7 +1133,7 @@ def _export_rods(rods, kappa):
     while finished < num_processes:
         counter += 1
         finished += 1
-        previous_time, counter, time_left = print_progress(finished, num_processes,
+        previous_time, counter, time_left, times = print_progress(finished, num_processes,
                             counter, times, time_left, previous_time)
         output_queue.get()
         if len(processes_left):
@@ -1185,13 +1185,14 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, bur
     previous_time = datetime.datetime.now()
     counter = 0
     time_left = None
+    times = []
     print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Getting values"
     print " "
     x_val, y_val, z_vals = [], [], []
     while finished < num_processes:
         counter += 1
         finished += 1
-        previous_time, counter, time_left = print_progress(finished, num_processes,
+        previous_time, counter, time_left, times = print_progress(finished, num_processes,
                             counter, times, time_left, previous_time)
         index, x_val, y_val, z_val = output_queue.get()
         z_vals.append(z_val)

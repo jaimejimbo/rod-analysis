@@ -1126,7 +1126,7 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
     while finished_ < num_processes:
         counter += 1
         finished_ += 1
-        previous_time, counter, time_left = methods.print_progress(finished_, num_processes,
+        previous_time, counter, time_left, times = methods.print_progress(finished_, num_processes,
                                 counter, times, time_left, previous_time)
         [index, state] = states_queue.get()
         if state is not None:
@@ -1220,7 +1220,7 @@ def create_rods_with_length(folder="./", length=10, length_error=.3, real_kappas
     while finished_ < num_processes:
         counter += 1
         finished_ += 1
-        previous_time, counter, time_left = methods.print_progress(finished_, num_processes,
+        previous_time, counter, time_left, times = methods.print_progress(finished_, num_processes,
                                 counter, times, time_left, previous_time)
         [index, state] = states_queue.get()
         if state is not None:
