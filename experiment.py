@@ -1198,7 +1198,7 @@ class Experiment(object):
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
         units = "[S.U.]"
-        title = "Normalized ocupied area"
+        title = "Normalized ocupied area (gaussian)"
         z_max, z_min = self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts, title=title)
         self._min_density = z_min
@@ -1321,9 +1321,9 @@ class Experiment(object):
         if match2:
             z_max = 1
             z_min = 0
-        elif match1:
-            z_max = 1
-            z_min = 0
+        #elif match1:
+        #    z_max = 1
+        #    z_min = 0
         else:
             z_maxs = []
             z_mins = []
@@ -1373,7 +1373,7 @@ class Experiment(object):
                     z_val_avg = z_val_avg_
                 else:
                     z_val_avg = methods.array_average(z_vals)
-                if not (match2 or match1):
+                if not match2:#(match2 or match1):
                     z_maxs.append(max(z_val_avg))
                     z_mins.append(min(z_val_avg))
             z_vals_avg.append(methods.compress(z_val_avg))
@@ -1381,7 +1381,7 @@ class Experiment(object):
                 for dummy_time in range(10):
                     z_vals_avg.append(methods.compress(z_val_avg))
         print CLEAR_LAST
-        if not (match2 or match1):
+        if not match2:#(match2 or match1):
             z_max = max(z_maxs)
             z_min = min(z_mins)
         return x_val, y_val, z_vals_avg, z_max, z_min

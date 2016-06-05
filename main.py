@@ -45,7 +45,7 @@ try:
     coef = 5
     divisions = 50
     #sigma = sigma_coef * subsystem_rad
-    sigma_coef = None
+    sigma_coef = 2
     changing_props = 0
     discard_exceptions = 0
     special_chars = 1
