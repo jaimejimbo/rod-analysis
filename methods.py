@@ -756,9 +756,8 @@ def gaussian(distance, sigma=settings.sigma):
     """
     if not sigma:
         return 1
-    norm = 1.0/(sigma*math.sqrt(2*math.pi))
-    value = math.exp((-distance**2)/(2.0*sigma**2))
-    return norm*value
+    value = math.exp(-(distance**2)/(2.0*sigma**2))
+    return value
 
 def norm_gaussian(distance, rad, sigma=settings.sigma):
     """
@@ -766,7 +765,7 @@ def norm_gaussian(distance, rad, sigma=settings.sigma):
     """
     if not sigma:
         return 1
-    norm = math.erf(rad/(math.sqrt(2)*sigma))
+    norm = 2*math.erf(rad/(math.sqrt(2)*sigma))
     return gaussian(distance, sigma=sigma)*1.0/norm
 
 def compute_distances(array1, array2):
