@@ -28,6 +28,10 @@ try:
     cpus = None
     # 1 or True, 0 or False
     create_videos = 1
+    density = 1
+    Q2_Q4 = 1
+    temperature = 1
+    vector_map = 1
     clusters = 1
     clusters_hist = 1
     avg_temp = 1
@@ -40,7 +44,6 @@ try:
     get_image_dates = 0
     to_file = 1
     plot = 1
-    only_density = 0
     # variables
     coef = 5
     divisions = 50
@@ -136,6 +139,14 @@ try:
     settings.write("\n")
     settings.write("rod_level = {0}".format(rod_level))
     settings.write("\n")
+    settings.write("density = {0}".format(density))
+    settings.write("\n")
+    settings.write("Q2_Q4 = {0}".format(Q2_Q4))
+    settings.write("\n")
+    settings.write("temperature = {0}".format(temperature))
+    settings.write("\n")
+    settings.write("vector_map = {0}".format(vector_map))
+    settings.write("\n")
     try:
         rad = zone_coords[2]
         if sigma_coef:
@@ -192,7 +203,7 @@ try:
                 experiment_.set_coef(coef)
                 if create_videos:
                     experiment_.create_videos(divisions=divisions, fps=10, max_distance=30, max_angle_diff=60,
-                                             number_of_bursts=1, only_density=only_density)
+                                             number_of_bursts=1)
                 if clusters:
                     experiment_.plot_cluster_areas(number_of_bursts=1, max_distance=150,
                             max_angle_diff=10, min_size=20)
@@ -241,7 +252,7 @@ try:
                 experiment_.set_coef(coef)
                 if create_videos:
                     experiment_.create_videos(divisions=divisions, fps=10, max_distance=150, max_angle_diff=45,
-                                             number_of_bursts=1, only_density=only_density, limit=20)
+                                             number_of_bursts=1, limit=20)
                 if clusters:
                     experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=50,
                             max_angle_diff=10, min_size=5)
