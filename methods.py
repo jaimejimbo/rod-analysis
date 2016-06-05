@@ -1260,7 +1260,7 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, bur
         frames = len(z_vals_avg)
         assert frames, "Not values!"
         z_max = 1
-        z_min = 0
+        z_min = -1
         units = "normalized [S.U.]"
         name = "order_param.mp4"
         radius = 800
@@ -1305,7 +1305,7 @@ def _compute_z_averages_process(index, output_queue, group, z_vals):
     average = []
     for index_ in group:
         average.append(z_vals[index_])
-    average = array_average(average)
+    average = compress(array_average(average), level=settings.default_comp_level)
     output_queue.put([index, average])
 
 
@@ -1324,7 +1324,10 @@ def _order_param_process(index, output_queue, matrix_12, matrix_6, name):
         n_6 = matrix_6[2][row_index]
         x_val = x_val_12[row_index]
         y_val = y_val_12[row_index]
-    	order_param = float(n_12)#float(n_12-n_6+1)/2
+        if n_12+n_6 == 0:
+            order_param = -1000
+        else:
+    	    order_param = float(n_12-n_6)/(n_12+n_6) #float(n_12)#float(n_12-n_6+1)/2
         line = str(x_val)+"\t"+str(y_val)+"\t"+str(order_param)+"\n"
         file_.write(line)
         z_vals.append(order_param)
