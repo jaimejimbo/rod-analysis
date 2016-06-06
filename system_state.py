@@ -33,7 +33,7 @@ class SystemState(object):
         self._allowed_kappa_error = allowed_kappa_error
         self._radius_correction_ratio = radius_correction_ratio
         self._id_string = id_string
-        self._gaussian_exp = {}
+        #self._gaussian_exp = {}
         self._real_radius = 70.0
         try:
             self._zone_coords = list(zone_coords)
@@ -51,29 +51,28 @@ class SystemState(object):
         """
         self._actual_subdivision = []
         self._subdivision_centers = []
-        self._density_matrix = []
-        self._correlation_Q2 = None
-        self._correlation_Q4 = None
-        self._correlation_Q2_subsystems = []
-        self._correlation_Q4_subsystems = []
-        self._relative_Q2_subsystems = []
-        self._relative_Q4_subsystems = []
+        #self._density_matrix = []
+        #self._correlation_Q2 = None
+        #self._correlation_Q4 = None
+        #self._correlation_Q2_subsystems = []
+        #self._correlation_Q4_subsystems = []
+        #self._relative_Q2_subsystems = []
+        #self._relative_Q4_subsystems = []
         #self._average_kappa = None
         #self._kappa_dev = None
-        self._average_angle = None
-        self._angle_matrix = []
-        self._density = None
-        self._relative_Q2 = None
-        self._relative_Q4 = None
-        self._closest_rod_matrix = []
-        self._direction_matrix = []
+        #self._average_angle = None
+        #self._angle_matrix = []
+        #self._density = None
+        #self._relative_Q2 = None
+        #self._relative_Q4 = None
+        #self._closest_rod_matrix = []
+        #self._direction_matrix = []
         self._rods_dict = {}
-        self._clusters = []
+        #self._clusters = []
         self._cluster_checked_dict = {}
         self._clusters_max_distance = None
         self._clusters_max_angle_diff = None
         self._divisions = None
-        self._fixed = True
         self._length, self._length_error = None, None
         if not self._fixed_center_radius:
             self._zone_cords = None
@@ -294,7 +293,7 @@ class SystemState(object):
                 self._zone_coords[0] = center_x
                 self._zone_coords[1] = center_y
                 self._zone_coords[2] = radius
-        self._zone_coords = (self._zone_coords[0], self._zone_coords[1], self._zone_coords[2])
+        self._zone_coords = [self._zone_coords[0], self._zone_coords[1], self._zone_coords[2]]
         return self._zone_coords[0], self._zone_coords[1], self._zone_coords[2]
 
     @property
@@ -429,7 +428,7 @@ class SystemState(object):
         for index in range(len(centers)):
             distance = distances[index]
             center = centers[index]
-            time.sleep(settings.waiting_time_process)
+            #time.sleep(settings.waiting_time_process)
             if distance < self.radius:
                 subsystem = SubsystemState(center, rad, self.zone_coords,
                                            self._rods, self._kappas, self._real_kappas,
@@ -454,18 +453,19 @@ class SystemState(object):
             subdensity.append(dens)
             density.append(subdensity)
         subdivision = None
-        self._density_matrix = methods.compress_state(density)
+        return density
+        #self._density_matrix = methods.compress_state(density)
 
     def plottable_density_matrix(self, divisions=50):
         """
             Returns 3 arrays: one for x, another for y and the last for values.
         """
-        if len(self._density_matrix) == 0:
-            self._compute_density_matrix(divisions)
+        #if len(self._density_matrix) == 0:
+        density_matrix = self._compute_density_matrix(divisions)
         x_values = []
         y_values = []
         z_values = []
-        density_matrix = methods.decompress_state(self._density_matrix)
+        density_matrix = methods.decompress_state(density_matrix)
         for row in density_matrix:
             x_values.append(row[0])
             y_values.append(row[1])
@@ -510,71 +510,114 @@ class SystemState(object):
         self._create_subgroups_matrix(divisions)
         return methods.decompress_state(self._subdivision_centers)
 
-    def _compute_Q2_and_Q4(self):
-        """
-            Computes correlation_Q2 and correlation_Q4 values
-        """
-        num = self.number_of_rods
-        if num in [0,1,2] or not self.area:
-            self._correlation_Q2 = [-1000, -1000] #None
-            self._correlation_Q4 = [-1000, -1000] #None
-            return
-        Q2_cos, Q2_sin = 0, 0
-        Q4_cos, Q4_sin = 0, 0
-        N = len(self)
-        for rod_ in self:
-            Q2_cos += float(math.cos(2*rod_.angle))/N
-            Q2_sin += float(math.sin(2*rod_.angle))/N
-            Q4_cos += float(math.cos(4*rod_.angle))/N
-            Q4_sin += float(math.sin(4*rod_.angle))/N
-        self._correlation_Q2 = [Q2_cos, Q2_sin]
-        self._correlation_Q4 = [Q4_cos, Q4_sin]
+    #def _compute_Q2_and_Q4(self):
+    #    """
+    #        Computes correlation_Q2 and correlation_Q4 values
+    #    """
+    #    num = self.number_of_rods
+    #    if num in [0,1,2] or not self.area:
+    #        self._correlation_Q2 = [-1000, -1000] #None
+    #        self._correlation_Q4 = [-1000, -1000] #None
+    #        return
+    #    Q2_cos, Q2_sin = 0, 0
+    #    Q4_cos, Q4_sin = 0, 0
+    #    N = len(self)
+    #    for rod_ in self:
+    #        Q2_cos += float(math.cos(2*rod_.angle))/N
+    #        Q2_sin += float(math.sin(2*rod_.angle))/N
+    #        Q4_cos += float(math.cos(4*rod_.angle))/N
+    #        Q4_sin += float(math.sin(4*rod_.angle))/N
+    #    self._correlation_Q2 = [Q2_cos, Q2_sin]
+    #    self._correlation_Q4 = [Q4_cos, Q4_sin]
 
     @property
     def correlation_Q2(self):
         """
             sqrt(<cos(2*angle)>^2+<sin(2*angle)>^2)
         """
-        if not self._correlation_Q2:
-            self._compute_Q2_and_Q4()
-        return self._correlation_Q2
+        num = self.number_of_rods
+        if num in [0,1,2] or not self.area:
+            correlation_Q2 = [-1000, -1000] #None
+            return correlation_Q2
+        Q2_cos, Q2_sin = 0, 0
+        N = len(self)
+        for rod_ in self:
+            Q2_cos += float(math.cos(2*rod_.angle))/N
+            Q2_sin += float(math.sin(2*rod_.angle))/N
+        correlation_Q2 = [Q2_cos, Q2_sin]
+        return correlation_Q2
 
     @property
     def correlation_Q4(self):
         """
             sqrt(<cos(4*angle)>^2+<sin(4*angle)>^2)
         """
-        if not self._correlation_Q4:
-            self._compute_Q2_and_Q4()
-        return self._correlation_Q4
+        num = self.number_of_rods
+        if num in [0,1,2] or not self.area:
+            correlation_Q4 = [-1000, -1000] #None
+            return correlation_Q4
+        Q4_cos, Q4_sin = 0, 0
+        N = len(self)
+        for rod_ in self:
+            Q4_cos += float(math.cos(4*rod_.angle))/N
+            Q4_sin += float(math.sin(4*rod_.angle))/N
+        correlation_Q4 = [Q4_cos, Q4_sin]
+        return correlation_Q4
 
-    def _compute_Q2_Q4_matrices(self, divisions):
+    #def _compute_Q2_Q4_matrices(self, divisions):
+    #    """
+    #        Computes correlation_Q2 and correlation_Q4 matrices for subgroups.
+    #    """
+    #    self.divide_in_circles(divisions)
+    #    if self._correlation_Q2 is None or self._correlation_Q4 is None:
+    #        subdivision = self._actual_subdivision
+    #        for subsystem_ in subdivision:
+    #            subsystem = methods.decompress_state(subsystem_)
+    #            correlation_Q2 = [subsystem.center[0], subsystem.center[1]]
+    #            correlation_Q4 = [subsystem.center[0], subsystem.center[1]]
+    #            correlation_Q2.append(subsystem.correlation_Q2)
+    #            correlation_Q4.append(subsystem.correlation_Q4)
+    #            self._correlation_Q2_subsystems.append(methods.compress_state(correlation_Q2))
+    #            self._correlation_Q4_subsystems.append(methods.compress_state(correlation_Q4))
+    #        self._correlation_Q2_subsystems = self._correlation_Q2_subsystems
+    #        self._correlation_Q4_subsystems = self._correlation_Q4_subsystems
+
+    def _compute_Q2_matrix(self, divisions):
         """
-            Computes correlation_Q2 and correlation_Q4 matrices for subgroups.
+        Computes correlation_Q2 matrix
         """
         self.divide_in_circles(divisions)
-        if self._correlation_Q2 is None or self._correlation_Q4 is None:
-            subdivision = self._actual_subdivision
-            for subsystem_ in subdivision:
+        subdivision = self._actual_subdivision
+        correlation_Q2_subsystems = []
+        for subsystem_ in subdivision:
                 subsystem = methods.decompress_state(subsystem_)
                 correlation_Q2 = [subsystem.center[0], subsystem.center[1]]
-                correlation_Q4 = [subsystem.center[0], subsystem.center[1]]
                 correlation_Q2.append(subsystem.correlation_Q2)
+                correlation_Q2_subsystems.append(methods.compress_state(correlation_Q2))
+        return correlation_Q2_subsystems
+
+    def _compute_Q4_matrix(self, divisions):
+        """
+        Computes correlation_Q4 matrix
+        """
+        self.divide_in_circles(divisions)
+        subdivision = self._actual_subdivision
+        correlation_Q4_subsystems = []
+        for subsystem_ in subdivision:
+                subsystem = methods.decompress_state(subsystem_)
+                correlation_Q4 = [subsystem.center[0], subsystem.center[1]]
                 correlation_Q4.append(subsystem.correlation_Q4)
-                self._correlation_Q2_subsystems.append(methods.compress_state(correlation_Q2))
-                self._correlation_Q4_subsystems.append(methods.compress_state(correlation_Q4))
-            self._correlation_Q2_subsystems = self._correlation_Q2_subsystems
-            self._correlation_Q4_subsystems = self._correlation_Q4_subsystems
+                correlation_Q4_subsystems.append(methods.compress_state(correlation_Q4))
+        return correlation_Q4_subsystems
 
     def correlation_Q2_plot_matrix(self, divisions):
         """
             Returns values for plotting correlation_Q2 matrix.
         """
-        self._compute_Q2_Q4_matrices(divisions)
         x_values = []
         y_values = []
         z_values = []
-        Q2_subsystems = self._correlation_Q2_subsystems
+        Q2_subsystems = self._compute_Q2_matrix(divisions)
         for subsystem_ in Q2_subsystems:
             subsystem = methods.decompress_state(subsystem_)
             [x_val, y_val, z_val] = subsystem
@@ -593,13 +636,12 @@ class SystemState(object):
 
     def correlation_Q4_plot_matrix(self, divisions):
         """
-            Returns values for plotting correlation_Q2 matrix.
+            Returns values for plotting correlation_Q4 matrix.
         """
-        self._compute_Q2_Q4_matrices(divisions)
         x_values = []
         y_values = []
         z_values = []
-        Q4_subsystems = self._correlation_Q4_subsystems
+        Q4_subsystems = self._compute_Q4_matrix(divisions)
         for subsystem_ in Q4_subsystems:
             subsystem = methods.decompress_state(subsystem_)
             [x_val, y_val, z_val] = subsystem
@@ -641,75 +683,75 @@ class SystemState(object):
         #    self._kappa_dev = math.sqrt(kappa2)
         return 0 #self._kappa_dev
 
-    @property
-    def average_angle(self):
-        """
-            Returns average angle of the system (if exists).
-        """
-        if not self._average_angle:
-            if self.correlation_Q2 > 0.5 and self.correlation_Q4 < 0.3:
-                angle = 0
-                for rod_ in self:
-                    angle2 = rod_.angle
-                    if angle2 > math.pi:
-                        angle2 -= math.pi
-                    angle += angle2
-                angle /= self.number_of_rods
-                self._average_angle = angle
-                return angle
-            else:
-                return None
-        else:
-            return self._average_angle
+    #@property
+    #def average_angle(self):
+    #    """
+    #        Returns average angle of the system (if exists).
+    #    """
+    #    if not self._average_angle:
+    #        if self.correlation_Q2 > 0.5 and self.correlation_Q4 < 0.3:
+    #            angle = 0
+    #            for rod_ in self:
+    #                angle2 = rod_.angle
+    #                if angle2 > math.pi:
+    #                    angle2 -= math.pi
+    #                angle += angle2
+    #            angle /= self.number_of_rods
+    #            self._average_angle = angle
+    #            return angle
+    #        else:
+    #            return None
+    #    else:
+    #        return self._average_angle
 
-    def _compute_average_angle_matrix(self, divisions):
-        """
-            Computes average angle matrix
-        """
-        subdivision = self._actual_subdivision
-        for subsystem_ in subdivision:
-            subsystem = methods.decompress_state(subsystem_)
-            row = [subsystem.center[0], subsystem.center[1]]
-            row.append(subsystem.average_angle)
-            self._angle_matrix.append(row)
-        self._angle_matrix = methods.compress_state(self._angle_matrix)
+    #def _compute_average_angle_matrix(self, divisions):
+    #    """
+    #        Computes average angle matrix
+    #    """
+    #    subdivision = self._actual_subdivision
+    #    for subsystem_ in subdivision:
+    #        subsystem = methods.decompress_state(subsystem_)
+    #        row = [subsystem.center[0], subsystem.center[1]]
+    #        row.append(subsystem.average_angle)
+    #        self._angle_matrix.append(row)
+    #    self._angle_matrix = methods.compress_state(self._angle_matrix)
 
-    def plottable_average_angle_matrix(self, divisions):
-        """
-            Returns a plottable average angle matrix.
-        """
-        self._compute_average_angle_matrix(divisions)
-        x_values = []
-        y_values = []
-        z_values = []
-        angle_matrix = methods.decompress_state(self._angle_matrix)
-        for subsystem in angle_matrix:
-            x_values.append(subsystem[0])
-            y_values.append(subsystem[1])
-            z_values.append(subsystem[2])
-        angle_matrix = None
-        return x_values, y_values, z_values
+    #def plottable_average_angle_matrix(self, divisions):
+    #    """
+    #        Returns a plottable average angle matrix.
+    #    """
+    #    self._compute_average_angle_matrix(divisions)
+    #    x_values = []
+    #    y_values = []
+    #    z_values = []
+    #    angle_matrix = methods.decompress_state(self._angle_matrix)
+    #    for subsystem in angle_matrix:
+    #        x_values.append(subsystem[0])
+    #        y_values.append(subsystem[1])
+    #        z_values.append(subsystem[2])
+    #    angle_matrix = None
+    #    return x_values, y_values, z_values
 
-    def plottable_average_angle_matrix_queue(self, divisions, index, output_queue):
-        """
-            Multiprocessing friendly function.
-        """
-        x_val, y_val, z_val = self.plottable_average_angle_matrix(divisions)
-        output_queue.put([index, x_val, y_val, z_val])
+    #def plottable_average_angle_matrix_queue(self, divisions, index, output_queue):
+    #    """
+    #        Multiprocessing friendly function.
+    #    """
+    #    x_val, y_val, z_val = self.plottable_average_angle_matrix(divisions)
+    #    output_queue.put([index, x_val, y_val, z_val])
 
-    @property
-    def angle_histogram(self):
-        """
-            Returns all angles in a list to make an histogram.
-        """
-        output = [rod_.angle for rod_ in self]
-        return output
+    #@property
+    #def angle_histogram(self):
+    #    """
+    #        Returns all angles in a list to make an histogram.
+    #    """
+    #    output = [rod_.angle for rod_ in self]
+    #    return output
 
     def _get_closest_rod(self, rod_):
         """
             Returns closest rod in group to given rod.
         """
-        distance = 1e100
+        distance = float('inf')
         selected_rod = rod_
         for rod2 in self:
             if rod_ != rod2:
@@ -738,8 +780,8 @@ class SystemState(object):
         Angles in grad.
         """
         self.fill_dicts()
-        if len(self._clusters) and not max_distance and not max_angle_diff:
-            return self._clusters
+        #if len(self._clusters) and not max_distance and not max_angle_diff:
+        #    return self._clusters
         if not max_distance or not max_angle_diff:
             msg = "cluster method without args only valid "
             msg += "when previously computed."
@@ -760,7 +802,7 @@ class SystemState(object):
                                 max_distance, max_angle_diff)
                 if len(cluster):
                     clusters.append(cluster)
-            self._clusters = clusters
+            #self._clusters = clusters
         return clusters
 
     def _get_cluster_members(self, reference_rod,
@@ -852,59 +894,59 @@ class SystemState(object):
         first_rod = self.get(0)
         return first_rod.area
 
-    def _compute_closest_rod_matrix(self):
-        """
-            Creates closer rod matrix:
-        [[rod1, closest_rod_to_rod1],
-        [rod2, closest_rod_to_rod2],
-        ...
-        [rodN, closest_rod_to_rodN]]
-        """
-        function = self._get_closest_rod
-        closest_rod_matrix = []
-        for rod_ in self:
-            new_row = [rod_]
-            closest_rod = function(rod_)
-            if not closest_rod:
-                continue
-            new_row.append(closest_rod)
-            closest_rod_matrix.append(new_row)
-        self._closest_rod_matrix = methods.compress_state(closest_rod_matrix)
-        closest_rod_matrix = None
+    #def _compute_closest_rod_matrix(self):
+    #    """
+    #        Creates closer rod matrix:
+    #    [[rod1, closest_rod_to_rod1],
+    #    [rod2, closest_rod_to_rod2],
+    #    ...
+    #    [rodN, closest_rod_to_rodN]]
+    #    """
+    #    function = self._get_closest_rod
+    #    closest_rod_matrix = []
+    #    for rod_ in self:
+    #        new_row = [rod_]
+    #        closest_rod = function(rod_)
+    #        if not closest_rod:
+    #            continue
+    #        new_row.append(closest_rod)
+    #        closest_rod_matrix.append(new_row)
+    #    self._closest_rod_matrix = methods.compress_state(closest_rod_matrix)
+    #    closest_rod_matrix = None
 
-    @property
-    def closest_rod_matrix(self):
-        """
-            Returns closest rod matrix.
-        See _compute_closest_rod_matrix for more info.
-        """
-        if len(self._closest_rod_matrix) == 0:
-            self._compute_closest_rod_matrix()
-        return methods.decompress_state(self._closest_rod_matrix)
+    #@property
+    #def closest_rod_matrix(self):
+    #    """
+    #        Returns closest rod matrix.
+    #    See _compute_closest_rod_matrix for more info.
+    #    """
+    #    if len(self._closest_rod_matrix) == 0:
+    #        self._compute_closest_rod_matrix()
+    #    return methods.decompress_state(self._closest_rod_matrix)
 
-    def closest_rod_dict(self):
-        """
-            Returns a dictionary of closest rods.
-        """
-        closest_rod_matrix = self.closest_rod_matrix
-        dictionary = {}
-        for pair in closest_rod_matrix:
-            dictionary[pair[0].identifier] = pair[1]
-        closest_rod_matrix = None
-        return dictionary
+    #def closest_rod_dict(self):
+    #    """
+    #        Returns a dictionary of closest rods.
+    #    """
+    #    closest_rod_matrix = self.closest_rod_matrix
+    #    dictionary = {}
+    #    for pair in closest_rod_matrix:
+    #        dictionary[pair[0].identifier] = pair[1]
+    #    closest_rod_matrix = None
+    #    return dictionary
 
-    @property
-    def average_angle_using_matrix(self):
-        """
-            Returns average angle of the system using direction matrices.
-        Value in radians.
-        """
-        if len(self._direction_matrix) == 0:
-            self._direction_matrix = matrix.zeros(2, 2)
-            for rod_ in self:
-                self._direction_matrix += rod_.direction_matrix
-        eigen1, dummy_ = self._direction_matrix.diagonalize_2x2()
-        return eigen1
+    #@property
+    #def average_angle_using_matrix(self):
+    #    """
+    #        Returns average angle of the system using direction matrices.
+    #    Value in radians.
+    #    """
+    #    if len(self._direction_matrix) == 0:
+    #        self._direction_matrix = matrix.zeros(2, 2)
+    #        for rod_ in self:
+    #            self._direction_matrix += rod_.direction_matrix
+    #    eigen1, dummy_ = self._direction_matrix.diagonalize_2x2()
+    #    return eigen1
 
     def covered_area_proportion(self):
         """
@@ -1002,73 +1044,82 @@ class SubsystemState(SystemState):
         SystemState.__init__(self, rods=rods, zone_coords=self._subsystem_coords,
                             kappas=kappas, real_kappas=real_kappas,
                             allowed_kappa_error=allowed_kappa_error)
+        #(center, rad, self.zone_coords, self._rods, self._kappas, self._real_kappas, self._allowed_kappa_error, real_rad)
         self._is_subsystem = True
-        self._center = center
+        
         self._zone_coords[2] = rad
         self._real_radius = real_rad# + real_kappas
         self._scale = real_rad*1.0/rad
         self._main_center = (zone_coords[0], zone_coords[1])
         self._main_rad = zone_coords[2]
-        self._position_rad = methods.distance_between_points(self._main_center,
-                                            self._center)
-        self._area = methods.effective_area(self._zone_coords[2],
-                                    self._position_rad, self._main_rad)
-        self._real_area = methods.effective_area(self._real_radius, 
-                                                 self._position_rad*self._scale,
-                                                 self._main_rad*self._scale)
-        self._gaussian_exp = {}
+        #self._position_rad = methods.distance_between_points(self._main_center,
+        #                                    self._center)
+        #self._area = methods.effective_area(self._zone_coords[2],
+        #                            self._position_rad, self._main_rad)
+        #self._real_area = methods.effective_area(self._real_radius, 
+        #                                         self._position_rad*self._scale,
+        #                                         self._main_rad*self._scale)
+        #self._gaussian_exp = {}
 
-    def remove_all_rods(self):
-        """
-        Removes all rods of subsystem.
-        """
-        self._rods = []
+    #def remove_all_rods(self):
+    #    """
+    #    Removes all rods of subsystem.
+    #    """
+    #    self._rods = []
 
     @property
     def center(self):
         """
             Center of the subsystem.
         """
-        if not self._zone_coords[2]:
-            self.compute_center_and_radius()
-        return self._center
+        #if not self._zone_coords[2]:
+        #    self.compute_center_and_radius()
+        return self._zone_coords[0], self._zone_coords[1]
 
     @property
     def radius(self):
         """
             Radius of the subsystem
         """
-        if not self._zone_coords[2]:
-            self.compute_center_and_radius()
+        #if not self._zone_coords[2]:
+        #    self.compute_center_and_radius()
         return self._zone_coords[2]
 
-    @property
-    def real_area(self):
-        """
-        Area in mm of subsystem.
-        """
-        return self._real_area
+    #@property
+    #def real_area(self):
+    #    """
+    #    Area in mm of subsystem.
+    #    """
+    #    return self._real_area
 
     def _update_density(self):
         """
             Computes density of the group.
         """
         density = 0
+        position_rad = methods.distance_between_points(self._main_center, self.center)
+        area = methods.effective_area(self._zone_coords[2], position_rad, self._main_rad)
+        #real_area = methods.effective_area(self._real_radius, 
+        #                                         self._position_rad*self._scale,
+        #                                         self._main_rad*self._scale)
+        real_area = area*(self._scale**2)
         for rod_ in self:
-            density += rod_.area*self._gaussian_exp[rod_.identifier]
-        if not density or not self.area:
-            self._density = 0
+            distance = methods.distance_between_points(self.center, rod_.center)
+            density += rod_.area*methods.norm_gaussian(distance, rad=self.radius) #self._gaussian_exp[rod_.identifier]
+        if not density or not real_area:
+            density = 0
         else:
-            self._density = float(density)/self.real_area
+            density = float(density)/real_area
+        return density
 
     @property
     def density(self):
         """
             Returns the density of the group.
         """
-        if not self._density:
-            self._update_density()
-        return self._density
+        #if not self._density:
+        #    
+        return self._update_density()#self._density
 
     def check_rods(self):
         """
@@ -1077,19 +1128,18 @@ class SubsystemState(SystemState):
         rods = []
         for rod_ in self:
             if rod_.is_in_circle(self.center, self.radius):
-                distance = methods.distance_between_points(self.center, rod_.center)
-                proportion = methods.norm_gaussian(distance, rad=self.radius)
-                self._gaussian_exp[rod_.identifier] = proportion
+                #distance = methods.distance_between_points(self.center, rod_.center)
+                #proportion = methods.norm_gaussian(distance, rad=self.radius)
+                #self._gaussian_exp[rod_.identifier] = proportion
                 rods.append(methods.compress_rod(rod_))
         self._reset()
         self._rods = queue.Queue(rods)
 
-    def compute_center_and_radius(self):
-        """
-        Overrides
-        """
-        pass
-
+    #def compute_center_and_radius(self):
+    #    """
+    #    Overrides
+    #    """
+    #    pass
 
 def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
                 radius_correction_ratio=0.1, file_range=[]):
