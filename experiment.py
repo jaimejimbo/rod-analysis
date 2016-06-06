@@ -555,54 +555,54 @@ class Experiment(object):
                         prev_initial_rod = initial_rod
         return prev_initial_rod, min_distance, angle_diff, vector
 
-    def _debug_1(self, limit):
-        """
-        Check distances that rods moved.
-        """
-        for index in range(len(self._relative_dictionaries)-1):
-            relative_dict = methods.decompress(self._relative_dictionaries[index])
-            for subdict in relative_dict.values():
-                msg = None
-                try:
-                    for value in subdict.values():
-                        if value[0] > limit:
-                            msg = "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Value over limits: value->" + str(value[0]) + " limit->" + str(limit)
-                except:
-                    try:
-                        if subdict[0] > limit:
-                            msg = "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Value over limits: value->" + str(value[0]) + " limit->" + str(limit)
-                    except TypeError:
-                        pass
-                if not (msg is None):
-                    raw_input(msg)
+    #def _debug_1(self, limit):
+    #    """
+    #    Check distances that rods moved.
+    #    """
+    #    for index in range(len(self._relative_dictionaries)-1):
+    #        relative_dict = methods.decompress(self._relative_dictionaries[index])
+    #        for subdict in relative_dict.values():
+    #            msg = None
+    #            try:
+    #                for value in subdict.values():
+    #                    if value[0] > limit:
+    #                        msg = "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Value over limits: value->" + str(value[0]) + " limit->" + str(limit)
+    #            except:
+    #                try:
+    #                    if subdict[0] > limit:
+    #                        msg = "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Value over limits: value->" + str(value[0]) + " limit->" + str(limit)
+    #                except TypeError:
+    #                    pass
+    #            if not (msg is None):
+    #                raw_input(msg)
 
-    def _debug_2(self):
-        """
-        Check relative_dicts
-        """
-        tuples = 0
-        not_tuples = 0
-        dicts = 0
-        total = 0
-        nones = 0
-        for index in range(len(self._relative_dictionaries)-1):
-            relative_dict = methods.decompress(self._relative_dictionaries[index])
-            evol_dict = methods.decompress(self._evolution_dictionaries[index])
-            for initial_rod_id in relative_dict.keys():
-                subdict = relative_dict[initial_rod_id]
-                evoldict = evol_dict[initial_rod_id]
-                total += 1
-                is_dict = (type(subdict) == type({}))
-                is_none = (subdict is None)
-                dicts += int(is_dict)
-                is_tuple = (type(subdict) == type((0,)))
-                not_tuples += int(not is_tuple)
-                tuples += int(is_tuple)
-                nones += int(is_none)
-                if ((not is_tuple) and (not is_dict) and (not is_none)):
-                    print type(subdict)
-                    raise ValueError
-        return tuples, not_tuples, dicts, nones, total
+    #def _debug_2(self):
+    #    """
+    #    Check relative_dicts
+    #    """
+    #    tuples = 0
+    #    not_tuples = 0
+    #    dicts = 0
+    #    total = 0
+    #    nones = 0
+    #    for index in range(len(self._relative_dictionaries)-1):
+    #        relative_dict = methods.decompress(self._relative_dictionaries[index])
+    #        evol_dict = methods.decompress(self._evolution_dictionaries[index])
+    #        for initial_rod_id in relative_dict.keys():
+    #            subdict = relative_dict[initial_rod_id]
+    #            evoldict = evol_dict[initial_rod_id]
+    #            total += 1
+    #            is_dict = (type(subdict) == type({}))
+    #            is_none = (subdict is None)
+    #            dicts += int(is_dict)
+    #            is_tuple = (type(subdict) == type((0,)))
+    #            not_tuples += int(not is_tuple)
+    #            tuples += int(is_tuple)
+    #            nones += int(is_none)
+    #            if ((not is_tuple) and (not is_dict) and (not is_none)):
+    #                print type(subdict)
+    #                raise ValueError
+    #    return tuples, not_tuples, dicts, nones, total
 
     def compute_dictionaries(self, max_distance=30, max_angle_diff=90,
                             limit=30, amount_of_rods=None):
