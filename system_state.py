@@ -18,7 +18,7 @@ class SystemState(object):
         Group of rods in a moment.
     Each image has to be translated into a RodGroup (by this class?)
     """
-    __slots__ = ('_rods', '_is_subsystem', '_kappas', '_real_kappas', '_allowed_kappa_error', '_radius_correction_ratio', '_id_string', '_real_radius', '_zone_coords', '_fixed_center_radius', '_coef', '_actual_subdivision', '_subdivision_centers', '_rods_dict', '_cluster_checked_dict', '_clusters_max_distance', '_clusters_max_angle_diff', '_divisions', '_length', '_length_error')
+    __slots__ = ('_rods', '_is_subsystem', '_kappas', '_real_kappas', '_allowed_kappa_error', '_radius_correction_ratio', '_id_string', '_real_radius', '_zone_coords', '_fixed_center_radius', '_coef', '_actual_subdivision', '_subdivision_centers', '_rods_dict', '_cluster_checked_dict', '_clusters_max_distance', '_clusters_max_angle_diff', '_divisions', '_length', '_length_error', '__getstate__')
     def __init__(self, kappas=10, real_kappas=10, allowed_kappa_error=.5,
             radius_correction_ratio=0,
             id_string="", zone_coords=None, rods=None):

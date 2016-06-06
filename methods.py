@@ -689,18 +689,18 @@ def compress(obj, level=settings.default_comp_level, method=settings.default_com
     if level is None:
         return obj
     if method==ZLIB:
-        dumps = cPickle.dumps(obj)
+        dumps = cPickle.dumps(obj, -1)
         #print "Compressing with ZLIB. Level "+str(level)
         compressed = zlib.compress(dumps, level)
     elif method==LZO:
         #level = max([level,1])
-        dumps = cPickle.dumps(obj)
+        dumps = cPickle.dumps(obj, -1)
         compressed = lzo.compress(dumps, level)
     elif method==LZ4_FAST:
-        dumps = cPickle.dumps(obj)
+        dumps = cPickle.dumps(obj, -1)
         compressed = lz4.compress_fast(dumps, level)
     elif method==LZ4:
-        dumps = cPickle.dumps(obj)
+        dumps = cPickle.dumps(obj, -1)
         compressed = lz4.compress(dumps)#, level)
     else:
         compressed = obj
