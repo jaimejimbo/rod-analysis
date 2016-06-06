@@ -309,7 +309,8 @@ class Experiment(object):
         """
         state = self.get(index)
         if not state:
-            msg = "State is not defined. " + index + "\n\n"
+            msg = "State is not defined. " + str(index) + "\t" + str(state) + "\n\n"
+            print msg
             raise TypeError(msg)
         evol_dict = methods.decompress(self._evolution_dictionaries[index])
         relative_dict = methods.decompress(self._relative_dictionaries[index])

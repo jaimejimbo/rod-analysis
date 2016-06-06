@@ -18,6 +18,7 @@ class SystemState(object):
         Group of rods in a moment.
     Each image has to be translated into a RodGroup (by this class?)
     """
+    __slots__ = ('_rods', '_is_subsystem', '_kappas', '_real_kappas', '_allowed_kappa_error', '_radius_correction_ratio', '_id_string', '_real_radius', '_zone_coords', '_fixed_center_radius', '_coef', '_actual_subdivision', '_subdivision_centers', '_rods_dict', '_cluster_checked_dict', '_clusters_max_distance', '_clusters_max_angle_diff', '_divisions', '_length', '_length_error')
     def __init__(self, kappas=10, real_kappas=10, allowed_kappa_error=.5,
             radius_correction_ratio=0,
             id_string="", zone_coords=None, rods=None):
@@ -75,7 +76,7 @@ class SystemState(object):
         self._divisions = None
         self._length, self._length_error = None, None
         if not self._fixed_center_radius:
-            self._zone_cords = None
+            self._zone_coords = None
 
     @property
     def scale(self):
@@ -788,7 +789,7 @@ class SystemState(object):
             raise ValueError(msg)
         cond2 = (self._clusters_max_distance != max_distance)
         cond2 &= (self._clusters_max_angle_diff != max_angle_diff)
-        if not len(self._clusters) or cond2:
+        if cond2: #not len(self._clusters) or cond2:
             self._clusters_max_distance = max_distance
             self._clusters_max_angle_diff = max_angle_diff
             clusters = []

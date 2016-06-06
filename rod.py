@@ -7,7 +7,7 @@ class Rod(object):
     """
     Rod object.
     """
-
+    __slots__ = ('_identifier', '_x_mid', '_y_mid', '_angle', '_feret', '_min_feret', '_real_kappa', '_real_length')
     def __init__(self, args_tuple, kappa=None, real_length=None):
         """
         Initialization of rod
@@ -16,7 +16,7 @@ class Rod(object):
                         angle, feret, feretx, ferety,
                         feretangle, minferet, xstart, ystart) = args_tuple
                                                 #Column
-        self._id = int(ID)                      #0
+        self._identifier = int(ID)                      #0
         #self._area = float(area)                #1
         self._x_mid = float(xmid)               #2
         self._y_mid = float(ymid)               #3
@@ -97,7 +97,7 @@ class Rod(object):
         """
         Returns an identification number.
         """
-        return self._id
+        return self._identifier
 
     #@property
     #def hash_(self):
@@ -208,7 +208,7 @@ class Rod(object):
         cond = valid_length and is_in_main
         if cond:
             self._feret = self._real_length
-            self._feret_min = self._feret/float(kappa)
+            self._min_feret = self._feret/float(kappa)
         return cond
 
     def vector_to_rod(self, rod, scale=1):
