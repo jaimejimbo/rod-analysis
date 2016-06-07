@@ -440,7 +440,7 @@ class SystemState(object):
         x_values = []
         y_values = []
         z_values = []
-        density_matrix = methods.decompress_state(density_matrix)
+        density_matrix = density_matrix
         for row in density_matrix:
             x_values.append(row[0])
             y_values.append(row[1])
