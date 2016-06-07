@@ -1244,7 +1244,7 @@ class Experiment(object):
             output_file.close()
         return z_max, z_min
 
-    def _generic_scatter_animator_process(self, divisions, index, output_queue, function_name):
+    def _get_z_vals_process(self, divisions, index, output_queue, function_name):
         """
         Process
         """
@@ -1289,7 +1289,7 @@ class Experiment(object):
             output_queue = mp.Queue()
             processes = []
             for index in group:
-                process = mp.Process(target=self._generic_scatter_animator_process,
+                process = mp.Process(target=self._get_z_vals_process,
                                      args=(divisions, index, output_queue, function_name))
                 processes.append(process)
             num_processes = len(processes)
