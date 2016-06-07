@@ -1030,8 +1030,123 @@ class SystemState(object):
 
 
 
+class SubsystemState(object):
+    """
+        Group of rods. Used to put all rods that are in a zone or
+    have something in common.
+    """
 
-class SubsystemState(SystemState):
+    def __init__(self, center, rad, zone_coords, rods, kappas, real_kappas, allowed_kappa_error, real_rad):
+        """
+            Initialization
+        """
+        self._subsystem_coords = (center[0], center[1], rad)
+        #(center, rad, self.zone_coords, self._rods, self._kappas, self._real_kappas, self._allowed_kappa_error, real_rad)
+        self._is_subsystem = True
+        
+        self._zone_coords[2] = rad
+        self._real_radius = real_rad# + real_kappas
+        self._scale = real_rad*1.0/rad
+        self._main_center = (zone_coords[0], zone_coords[1])
+        self._main_rad = zone_coords[2]
+        #self._position_rad = methods.distance_between_points(self._main_center,
+        #                                    self._center)
+        #self._area = methods.effective_area(self._zone_coords[2],
+        #                            self._position_rad, self._main_rad)
+        #self._real_area = methods.effective_area(self._real_radius, 
+        #                                         self._position_rad*self._scale,
+        #                                         self._main_rad*self._scale)
+        #self._gaussian_exp = {}
+
+    #def remove_all_rods(self):
+    #    """
+    #    Removes all rods of subsystem.
+    #    """
+    #    self._rods = []
+
+    @property
+    def center(self):
+        """
+            Center of the subsystem.
+        """
+        #if not self._zone_coords[2]:
+        #    self.compute_center_and_radius()
+        return self._zone_coords[0], self._zone_coords[1]
+
+    @property
+    def radius(self):
+        """
+            Radius of the subsystem
+        """
+        #if not self._zone_coords[2]:
+        #    self.compute_center_and_radius()
+        return self._zone_coords[2]
+
+    #@property
+    #def real_area(self):
+    #    """
+    #    Area in mm of subsystem.
+    #    """
+    #    return self._real_area
+
+    def _update_density(self):
+        """
+            Computes density of the group.
+        """
+        density = 0
+        position_rad = methods.distance_between_points(self._main_center, self.center)
+        area = methods.effective_area(self._zone_coords[2], position_rad, self._main_rad)
+        #real_area = methods.effective_area(self._real_radius, 
+        #                                         self._position_rad*self._scale,
+        #                                         self._main_rad*self._scale)
+        real_area = area*(self._scale**2)
+        for rod_ in self:
+            distance = methods.distance_between_points(self.center, rod_.center)
+            density += rod_.area*methods.norm_gaussian(distance, rad=self.radius) #self._gaussian_exp[rod_.identifier]
+        if not density or not real_area:
+            density = 0
+        else:
+            density = float(density)/real_area
+        return density
+
+    @property
+    def density(self):
+        """
+            Returns the density of the group.
+        """
+        #if not self._density:
+        #    
+        return self._update_density()#self._density
+
+    def check_rods(self):
+        """
+            Check if rods are correct.
+        """
+        rods = []
+        for rod_ in self:
+            if rod_.is_in_circle(self.center, self.radius):
+                #distance = methods.distance_between_points(self.center, rod_.center)
+                #proportion = methods.norm_gaussian(distance, rad=self.radius)
+                #self._gaussian_exp[rod_.identifier] = proportion
+                rods.append(methods.compress_rod(rod_))
+        self._reset()
+        self._rods = queue.Queue(rods)
+
+    #def compute_center_and_radius(self):
+    #    """
+    #    Overrides
+    #    """
+    #    pass
+
+
+
+
+
+
+
+
+
+class SubsystemState_(SystemState):
     """
         Group of rods. Used to put all rods that are in a zone or
     have something in common.
@@ -1141,6 +1256,15 @@ class SubsystemState(SystemState):
     #    Overrides
     #    """
     #    pass
+
+
+
+
+
+
+
+
+
 
 def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
                 radius_correction_ratio=0.1, file_range=[]):
