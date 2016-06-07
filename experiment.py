@@ -2026,6 +2026,8 @@ class Experiment(object):
         clust.close()
         if settings.plot:
             try:
+                valid_times = [0] + valid_times
+                norm_areas = [0] + norm_areas
                 data_plt = plt.scatter(valid_times, norm_areas, label="Area clusters")
                 plt.legend()
                 kappa = int(self.average_kappa)
