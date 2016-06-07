@@ -420,7 +420,7 @@ class SystemState(object):
             index_x = int((rod_.x_mid-x_min)/diff)
             index_y = int((rod_.y_mid-y_min)/diff)
             center = (possible_x_values[index_x], possible_y_values[index_y])
-            output[index_y][index_x].append(rod_)
+            output[index_x][index_y].append(rod_)
         return output
 
     def _compute_density_matrix(self, divisions, normalized=False):

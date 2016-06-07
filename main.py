@@ -201,6 +201,7 @@ try:
                                                     system_states_list=rod_groups,
                                                     dates=dates, diff_t=3/5.0)
                 experiment_.set_coef(coef)
+                times = experiment_.times(1)
                 if create_videos:
                     experiment_.create_videos(divisions=divisions, fps=10, max_distance=30, max_angle_diff=60,
                                              number_of_bursts=1)
@@ -221,7 +222,6 @@ try:
                 if order_param:
                     density_matrices = experiment_.plottable_density_matrices(divisions)
                     bursts_groups = experiment_.bursts_groups
-                    times = experiment_.times(1)
                 try:
                     names = None
                     experiment_ = None
@@ -250,6 +250,7 @@ try:
                                                     dates=dates, diff_t=5/3.0)
                 log.write(str(msg+"\n"))
                 experiment_.set_coef(coef)
+                times = experiment_.times(1)
                 if create_videos:
                     experiment_.create_videos(divisions=divisions, fps=10, max_distance=150, max_angle_diff=45,
                                              number_of_bursts=1, limit=20)
@@ -270,7 +271,6 @@ try:
                 if order_param:
                     density_matrices = experiment_.plottable_density_matrices(divisions)
                     bursts_groups = experiment_.bursts_groups
-                    times = experiment_.times(1)
                 try:
                     names = None
                     experiment_ = None
@@ -383,7 +383,7 @@ try:
                     center_x, center_y, rad = zone_coords[0], zone_coords[1], zone_coords[2]
                     x_lims = (center_x-rad, center_x+rad)
                     y_lims = (center_y-rad, center_y+rad)
-                    methods.rods_animation([rods_12, rods_6], ['b', 'y'], x_lims, y_lims, zone_coords, name="rods.mp4", fps=1)
+                    methods.rods_animation([rods_12, rods_6], ['b', 'r'], x_lims, y_lims, zone_coords, name="rods.mp4", fps=1)
                 if order_param:
                     methods.order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, times)
                     
