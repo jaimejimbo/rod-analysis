@@ -861,6 +861,12 @@ class SubsystemState(object):
             rod__ = methods.decompress_rod(rod_)
             yield rod__
 
+    def __len__(self):
+        """
+        Magic methods for len
+        """
+        return len(self._rods)
+
     @property
     def center(self):
         """
