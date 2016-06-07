@@ -410,4 +410,4 @@ try:
     #    os.system("pkill -f main.py")
     #exit()
 except KeyboardInterrupt:
-    os.system("pkill -f python")
+    pass#os.system("pkill -f python")

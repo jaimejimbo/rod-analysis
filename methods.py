@@ -1124,10 +1124,8 @@ def animate_rods(rods, colours, x_lim, y_lim, zone_coords):
     #plt.gca().add_artist(circle1)
     #plt.gca().add_artist(circle2)
     # rods_12 = [x_0_list, y_0_list, x_f_list, y_f_list]
-    for index in range(len(rods_12)):
-        plt.plot([rods_12[0], rods_12[2]], [rods_12[1], rods_12[3]], c=colours[0], linewidth=0.7)
-    for index in range(len(rods_6)):
-        plt.plot([rods_6[0], rods_6[2]], [rods_6[1], rods_6[3]], c=colours[1], linewidth=0.7)
+    plt.plot([rods_12[0], rods_12[2]], [rods_12[1], rods_12[3]], c=colours[0], linewidth=0.7)
+    plt.plot([rods_6[0], rods_6[2]], [rods_6[1], rods_6[3]], c=colours[1], linewidth=0.7)
     plt.gca().invert_yaxis()
     #plt.gca().invert_xaxis()
     plt.xlabel("x [pixels]")

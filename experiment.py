@@ -189,7 +189,7 @@ class Experiment(object):
             self._states[index] = compressed_state
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
+                #time.sleep(settings.waiting_time)
                 new_process.start()
         print CLEAR_LAST
 
@@ -234,7 +234,7 @@ class Experiment(object):
             self._states[index] = compressed_state
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
+                #time.sleep(settings.waiting_time)
                 new_process.start()
         print CLEAR_LAST
 
@@ -295,7 +295,7 @@ class Experiment(object):
             self._initial_rods[index] = initial_rods
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
+                #time.sleep(settings.waiting_time)
                 new_process.start()
         for index in range(len(self)-1):
             self._final_rods[index] = self._initial_rods[index+1]
@@ -357,7 +357,7 @@ class Experiment(object):
             self._relative_dictionaries[index] = output_row[2]
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
+                #time.sleep(settings.waiting_time)
                 new_process.start()
         print CLEAR_LAST
 
@@ -476,7 +476,7 @@ class Experiment(object):
             self._final_rods[index] -= selected[1]
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
+                #time.sleep(settings.waiting_time)
                 new_process.start()
         print CLEAR_LAST
 
@@ -611,7 +611,7 @@ class Experiment(object):
             self._relative_dictionaries[index] = relative_dict
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
+                #time.sleep(settings.waiting_time)
                 new_process.start()
         print CLEAR_LAST
         
@@ -693,7 +693,7 @@ class Experiment(object):
             self._relative_dictionaries[index] = relative_dict
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
+                #time.sleep(settings.waiting_time)
                 new_process.start()
         print CLEAR_LAST
 
@@ -780,7 +780,7 @@ class Experiment(object):
                 self._vector_speeds[index_vector] = vector_speeds
                 if len(processes_left):
                     new_process = processes_left.pop(0)
-                    time.sleep(settings.waiting_time)
+                    #time.sleep(settings.waiting_time)
                     new_process.start()
             print CLEAR_LAST
 
@@ -897,7 +897,7 @@ class Experiment(object):
             self._local_speeds[index] = speeds_matrix
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
+                #time.sleep(settings.waiting_time)
                 new_process.start()
         print CLEAR_LAST
 
@@ -977,7 +977,7 @@ class Experiment(object):
                 self._local_average_quadratic_angular_speeds[index] = output[2]
                 if len(processes_left):
                     new_process = processes_left.pop(0)
-                    time.sleep(settings.waiting_time)
+                    #time.sleep(settings.waiting_time)
                     new_process.start()
             print CLEAR_LAST
 
@@ -1049,7 +1049,7 @@ class Experiment(object):
                 self._speeds_matrices[output[3]](output[2])
                 if len(processes_left):
                     new_process = processes_left.pop(0)
-                    time.sleep(settings.waiting_time)
+                    #time.sleep(settings.waiting_time)
                     new_process.start()
             self._densities_array = densities
             self._quad_speeds_array = quad_speeds
@@ -1122,7 +1122,7 @@ class Experiment(object):
                 self._states[index] = state
                 if len(processes_left):
                     new_process = processes_left.pop(0)
-                    time.sleep(settings.waiting_time)
+                    #time.sleep(settings.waiting_time)
                     new_process.start()
             print CLEAR_LAST
 
@@ -1307,7 +1307,7 @@ class Experiment(object):
                 z_vals.append(z_val)
                 if len(processes_left):
                     new_process = processes_left.pop(0)
-                    time.sleep(settings.waiting_time)
+                    #time.sleep(settings.waiting_time)
                     new_process.start()
                 if match2:
                     z_val_avg = methods.array_average_N(z_vals)
@@ -1366,7 +1366,7 @@ class Experiment(object):
                 self._image_id_by_index[index] = output
                 if len(processes_left):
                     new_process = processes_left.pop(0)
-                    time.sleep(settings.waiting_time)
+                    #time.sleep(settings.waiting_time)
                     new_process.start()
             print CLEAR_LAST
 
@@ -1448,7 +1448,7 @@ class Experiment(object):
             z_vals.append(output[2])
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
+                #time.sleep(settings.waiting_time)
                 new_process.start()
         print CLEAR_LAST
         return x_vals, y_vals, z_vals
@@ -1517,7 +1517,7 @@ class Experiment(object):
             arrays[index] = array
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
+                #time.sleep(settings.waiting_time)
                 new_process.start()
         def animate(dummy_frame):
             """
@@ -1663,7 +1663,7 @@ class Experiment(object):
             v_vals.append(output[3])
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
+                #time.sleep(settings.waiting_time)
                 new_process.start()
         print CLEAR_LAST
         return x_vals, y_vals, u_vals, v_vals
@@ -1875,7 +1875,7 @@ class Experiment(object):
             areas[index] = area
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
+                #time.sleep(settings.waiting_time)
                 new_process.start()
         print CLEAR_LAST
         return areas
@@ -2176,7 +2176,7 @@ class Experiment(object):
             average_speeds[index] = average_speed
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
+                #time.sleep(settings.waiting_time)
                 new_process.start()
         print CLEAR_LAST
         if not settings.to_file:
@@ -2269,7 +2269,7 @@ class Experiment(object):
             props[index] = prop
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                time.sleep(settings.waiting_time)
+                #time.sleep(settings.waiting_time)
                 new_process.start()
         print CLEAR_LAST
         avg = float(sum(props))/len(props)
@@ -2329,7 +2329,7 @@ class Experiment(object):
                 number_of_rods_.append(number_of_rods)
                 if len(processes_left):
                     new_process = processes_left.pop(0)
-                    time.sleep(settings.waiting_time)
+                    #time.sleep(settings.waiting_time)
                     new_process.start()
             print CLEAR_LAST
             self._average_kappa = sum(kappas)*1.0/len(kappas)
