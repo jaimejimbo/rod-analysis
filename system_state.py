@@ -354,13 +354,54 @@ class SystemState(object):
             possible_y_values = [start_y + (times)*diff
                                  for times in range(divisions)]
             rad = diff*math.sqrt(2)*self._coef/2.0
-            #rods_by_coords = self._separate_rods_by_coords(possible_x_values,
-            #                        possible_y_values, rad, diff,
-            #                        divisions)
+            rods_by_coords = self._separate_rods_by_coords(possible_x_values,
+                                    possible_y_values, rad, diff,
+                                    divisions)
             real_rad = rad*self.scale#self._real_radius*math.sqrt(2)*self._coef*1.0/divisions
             subsystems = self._subsystems(possible_x_values, possible_y_values,
-                                          rad, diff, divisions, real_rad)
+                                          rad, diff, divisions, real_rad, rods_by_coords)
             self._actual_subdivision = subsystems
+
+    def _subsystems(self, possible_x_values, possible_y_values, rad, diff,
+                            divisions, real_rad, rods_by_coords):
+        """
+            Creates subsystems
+        """
+        subsystems = []
+        centers = []
+        for actual_y in possible_y_values:
+            for actual_x in possible_x_values:
+                centers.append((actual_x, actual_y))
+        array2 = [self.center for dummy in range(len(centers))]
+        distances = methods.compute_distances(centers, array2)
+        array2 = None
+        x_min = min(possible_x_values)
+        y_min = min(possible_y_values)
+        for index in range(len(centers)):
+            distance = distances[index]
+            #time.sleep(settings.waiting_time_process)
+            if distance < self.radius:
+                center = centers[index]
+                available_rods = set([])
+                index_x = int((center[0]-x_min)/diff)
+                index_y = int((center[1]-y_min)/diff)
+                number_of_squares = int(self.coef/2)+1
+                for diff_index_x in range(number_of_squares):
+                    for diff_index_y in range(number_of_squares):
+                        try:
+                            available_rods |= set(rods_by_coords[index_x-diff_index_x][index_y-diff_index_y])
+                            available_rods |= set(rods_by_coords[index_x+diff_index_x][index_y+diff_index_y])
+                            available_rods |= set(rods_by_coords[index_x-diff_index_x][index_y+diff_index_y])
+                            available_rods |= set(rods_by_coords[index_x+diff_index_x][index_y-diff_index_y])
+                        except IndexError:
+                            continue
+                available_rods = list(available_rods)
+                subsystem = SubsystemState(center, rad, self.zone_coords,
+                                           available_rods, self._kappas, self._real_kappas,
+                                           self._allowed_kappa_error, real_rad)
+                subsystem.check_rods()
+                subsystems.append(methods.compress_state(subsystem))
+        return subsystems
 
     def _separate_rods_by_coords(self, possible_x_values,
                                     possible_y_values, rad, diff,
@@ -378,33 +419,9 @@ class SystemState(object):
         for rod_ in self:
             index_x = int((rod_.x_mid-x_min)/diff)
             index_y = int((rod_.y_mid-y_min)/diff)
+            center = (possible_x_values[index_x], possible_y_values[index_y])
             output[index_y][index_x].append(rod_)
         return output
-
-    def _subsystems(self, possible_x_values, possible_y_values, rad, diff,
-                            divisions, real_rad):
-        """
-            Creates subsystems
-        """
-        subsystems = []
-        centers = []
-        for actual_y in possible_y_values:
-            for actual_x in possible_x_values:
-                centers.append((actual_x, actual_y))
-        array2 = [self.center for dummy in range(len(centers))]
-        distances = methods.compute_distances(centers, array2)
-        array2 = None
-        for index in range(len(centers)):
-            distance = distances[index]
-            #time.sleep(settings.waiting_time_process)
-            if distance < self.radius:
-                center = centers[index]
-                subsystem = SubsystemState(center, rad, self.zone_coords,
-                                           self._rods, self._kappas, self._real_kappas,
-                                           self._allowed_kappa_error, real_rad)
-                subsystem.check_rods()
-                subsystems.append(methods.compress_state(subsystem))
-        return subsystems
 
     def _compute_density_matrix(self, divisions, normalized=False):
         """
