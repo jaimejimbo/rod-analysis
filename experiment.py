@@ -1905,12 +1905,14 @@ class Experiment(object):
             msg = "Both or none to be defined: max_distance, max_angle_diff"
             raise ValueError(msg)
         if not len(self._cluster_areas):
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Obtaining cluster areas with min_size=" + str(min_size)
             z_vals = self._get_cluster_areas(max_distance=max_distance,
                             max_angle_diff=max_angle_diff, min_size=min_size)
             areas, indices = self._average_cluster_areas(z_vals,
                                         number_of_bursts=number_of_bursts,
                                         min_size=min_size)
             self._cluster_areas = areas
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Obtaining cluster areas with min_size=0"
             z_vals = self._get_cluster_areas(max_distance=max_distance,
                             max_angle_diff=max_angle_diff, min_size=0)
             norm_areas, indices = self._average_cluster_areas(z_vals,
