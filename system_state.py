@@ -354,18 +354,20 @@ class SystemState(object):
             possible_y_values = [start_y + (times)*diff
                                  for times in range(divisions)]
             rad = diff*math.sqrt(2)*self._coef/2.0
-            real_rad = self._real_radius*math.sqrt(2)*self._coef*1.0/divisions
+            #rods_by_coords = self._separate_rods_by_coords(possible_x_values,
+            #                        possible_y_values, rad, diff,
+            #                        divisions)
+            real_rad = rad*self.scale#self._real_radius*math.sqrt(2)*self._coef*1.0/divisions
             subsystems = self._subsystems(possible_x_values, possible_y_values,
                                           rad, diff, divisions, real_rad)
             self._actual_subdivision = subsystems
 
-    def _separate_rods_by_coords(self, rods_list, possible_x_values,
+    def _separate_rods_by_coords(self, possible_x_values,
                                     possible_y_values, rad, diff,
                                     divisions):
         """
             Separates rods by zones. It reduces the amount of steps that
         the programm makes.
-        BUG: indices get higher values than allowed.
         """
         x_min = min(possible_x_values)
         y_min = min(possible_y_values)
@@ -373,16 +375,10 @@ class SystemState(object):
         y_max = max(possible_y_values)
         div_range = range(divisions)
         output = [[[] for dummy_1 in div_range] for dummy_2 in div_range]
-        for rod__ in rods_list:
-            rod_ = methods.decompress_rod(rod__)
+        for rod_ in self:
             index_x = int((rod_.x_mid-x_min)/diff)
             index_y = int((rod_.y_mid-y_min)/diff)
-            try:
-                output[index_y][index_x].append(rod_)
-            except IndexError:
-                print index_y, index_x
-                print len(output), len(output[index_y])
-                raise IndexError
+            output[index_y][index_x].append(rod_)
         return output
 
     def _subsystems(self, possible_x_values, possible_y_values, rad, diff,
@@ -391,8 +387,6 @@ class SystemState(object):
             Creates subsystems
         """
         subsystems = []
-        y_vals = range(len(possible_y_values))
-        x_vals = range(len(possible_x_values))
         centers = []
         for actual_y in possible_y_values:
             for actual_x in possible_x_values:
@@ -402,9 +396,9 @@ class SystemState(object):
         array2 = None
         for index in range(len(centers)):
             distance = distances[index]
-            center = centers[index]
             #time.sleep(settings.waiting_time_process)
             if distance < self.radius:
+                center = centers[index]
                 subsystem = SubsystemState(center, rad, self.zone_coords,
                                            self._rods, self._kappas, self._real_kappas,
                                            self._allowed_kappa_error, real_rad)
