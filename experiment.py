@@ -122,7 +122,6 @@ class Experiment(object):
         self._average_rod_width = None
         self._number_of_rods = None
         self._number_of_rods_dev = None
-        self._times = None
 
     def __len__(self):
         """
@@ -1934,8 +1933,7 @@ class Experiment(object):
                                        min_size=min_size)
             total_areas = self._total_cluster_areas
             indices = self._indices
-            self._compute_times(number_of_bursts)
-            times = self._times
+            times = self.times(number_of_bursts)
             times.pop(0)
             cluster_areas.pop(0)
             log_areas = []
@@ -1967,9 +1965,10 @@ class Experiment(object):
         assert total_areas, "Error"
         norm_areas = []
         self._compute_times(number_of_bursts=number_of_bursts)
-        times = []
+        times_all = self.times(number_of_bursts)
+        valid_times = []
         for index in range(len(areas)):
-            time = self._times[index]
+            time = times_all[index]
             if time>0:
                 area = areas[index]
                 total_area = total_areas[index]
@@ -1978,7 +1977,7 @@ class Experiment(object):
                 except ZeroDivisionError:
                     proportion = 0
                     continue
-                times.append(time)
+                valid_times.append(time)
                 norm_areas.append(proportion)
         if settings.plot:
             fig = plt.figure()
@@ -1989,15 +1988,12 @@ class Experiment(object):
                                             max_angle_diff=max_angle_diff,
                                             min_size=min_size)
         line = []
-        times_ = []
-        for time in times:
-            if time != 0:
+        for time in times_all:
+            if time > 0:
                 value = indep*(time**exponent)
                 if value>1:
                     print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Valor excesivo: " + str(value) + " time: " + str(time) + " indep: " + str(indep) + " exponent: " + str(exponent)
                 line.append(value)
-                times_.append(time)
-        times = times_
         name = "coef_K"+str(self.kappas)+".log"
         output = open(name, 'w')
         text = "Exponent: "+str(exponent)+"\nindep: "+str(indep) +"\n"
@@ -2005,40 +2001,40 @@ class Experiment(object):
         output.close()
         if settings.plot:
             label = "Exponente: "+str(exponent)
-            line_plt = plt.plot(times, line, label=label)
+            line_plt = plt.plot(valid_times, line, label=label)
         if settings.to_file:
 		    output_file_name = "linear_approx_K"+str(self.kappas)+".data"
 		    output_file = open(output_file_name, 'w')
-		    data = methods.compress([times, line], level=9)
+		    data = methods.compress([valid_times, line], level=9)
 		    output_file.write(data)
 		    output_file.close()
         clust = open("cluster_areas.txt", "w")
-        for index in range(len(times)):
+        for index in range(len(valid_times)):
             try:
-                string = str(times[index])+"    "+str(norm_areas[index])+"\n"
+                string = str(valid_times[index])+"\t"+str(norm_areas[index])+"\n"
                 clust.write(string)
             except:
                 pass
         clust.close()
         clust = open("cluster_areas_log.txt", "w")
-        for index in range(len(times)):
+        for index in range(len(valid_times)):
             try:
-                string = str(math.log(times[index]))+"    "+str(math.log(norm_areas[index]))+"\n"
+                string = str(math.log(valid_times[index]))+"\t"+str(math.log(norm_areas[index]))+"\n"
                 clust.write(string)
             except:
                 pass
         clust.close()
         if settings.plot:
             try:
-                data_plt = plt.scatter(times, norm_areas, label="Area clusters")
+                data_plt = plt.scatter(valid_times, norm_areas, label="Area clusters")
                 plt.legend()
                 kappa = int(self.average_kappa)
                 title = "K"+str(kappa)
                 plt.ylim((0, 1.2))
                 plt.suptitle(title)
             except ValueError:
-                print(len(times), len(norm_areas))
-                print(times, norm_areas)
+                print(len(valid_times), len(norm_areas))
+                print(valid_times, norm_areas)
                 raise ValueError
             plt.grid(b=True, which='major', color='b', linestyle='-')
             plt.grid(b=True, which='minor', color='b', linestyle='--')
@@ -2049,7 +2045,7 @@ class Experiment(object):
         if settings.to_file:
 	        output_file_name = "cluster_areas_K"+str(self.kappas)+".data"
 	        output_file = open(output_file_name, 'w')
-	        data = methods.compress([times, norm_areas], level=9)
+	        data = methods.compress([valid_times, norm_areas], level=9)
 	        output_file.write(data)
 	        output_file.close()
 
@@ -2057,8 +2053,8 @@ class Experiment(object):
         """
         Returns times in seconds of each state.
         """
-        self._compute_times(number_of_bursts)
-        return self._times
+        times = self._compute_times(number_of_bursts)
+        return times
 
     def _compute_times(self, number_of_bursts):
         """
@@ -2082,7 +2078,7 @@ class Experiment(object):
                 time += previous_time
                 previous_time = time
                 times.append(time)
-        self._times = times
+        return times
 
     @property
     def bursts_groups(self):
