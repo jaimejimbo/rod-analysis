@@ -600,12 +600,31 @@ def array_average_N(array_of_arrays):
         for col in range(N):
             for index_2 in range(len(array_)):
                 array_of_arrays_[col][index].append(array_[index_2][col])
+    output_queue = mp.Queue()
+    processes = []
     for col in range(N):
-        array_of_arrays_[col] = array_average(array_of_arrays_[col])
-    #for col in range(N):
-    #    for index in range(len(array_of_arrays_[col])):
-    #        output[index] += array_of_arrays_[col][index]
+        array_of_arrays__ = array_of_arrays_[col]
+        process = mp.Process(target=array_average_N_process,
+                             args=(col, output_queue, array_of_arrays__))
+        processes.append(process)
+    num_processes = len(processes)
+    running, processes_left = run_processes(processes)
+    finished = 0
+    while finished < num_processes:
+        finished += 1
+        [col, array_of_arrays___] = output_queue.get()
+        array_of_arrays_[col] = array_of_arrays___
+        if len(processes_left):
+            new_process = processes_left.pop(0)
+            #time.sleep(settings.waiting_time)
+            new_process.start()
     return array_of_arrays_
+
+def array_average_N_process(col, output_queue, array_of_arrays):
+    """
+    Process
+    """
+    output_queue.put([col, array_average(array_of_arrays)])
 
 def sum_arrays_with_cl(array1, array2):
     """
