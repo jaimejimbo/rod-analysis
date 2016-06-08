@@ -1315,9 +1315,9 @@ class Experiment(object):
                 output_queue_ = mp.Queue()
                 processes_ = []
                 length = len(z_val_avg[0])
-                block_length = int(length/6)
+                block_length = int(length/settings.cpus)
                 block_index = 0
-                for block in range(6):
+                for block in range(settings.cpus):
                     block_end = block_index+block_length
                     cos_m = z_val_avg[0][block_index:block_end]
                     sin_m = z_val_avg[1][block_index:block_end]
@@ -1339,7 +1339,6 @@ class Experiment(object):
                         new_process = processes_left_.pop(0)
                         #time.sleep(settings.waiting_time)
                         new_process.start()
-                assert len(x_val)==len(z_val_avg_), "ASDASD"
                 z_val_avg = z_val_avg_
             else:
                 z_val_avg = methods.array_average(z_vals)
