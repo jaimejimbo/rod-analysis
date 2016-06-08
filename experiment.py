@@ -466,8 +466,8 @@ class Experiment(object):
         while finished < num_processes:
             counter += 1
             finished += 1
-            #previous_time, counter, time_left, times = methods.print_progress(finished, num_processes,
-            #                        counter, times, time_left, previous_time)
+            previous_time, counter, time_left, times = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
             output = output_queue.get()
             selected = selected_queue.get()
             index = output[0]
