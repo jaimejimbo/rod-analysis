@@ -231,7 +231,10 @@ class Rod(object):
         """
         Returns value of angle that formes this rod with another.
         """
-        angle = abs(self.angle-rod.angle) % math.pi
+        imagej_angle = self.angle-rod.angle
+        angle = abs(imagej_angle) % math.pi/2.0
+        if angle == 0 and int(imagej_angle/(math.pi/2.0))==1:
+            angle = math.pi/2.0
         return angle
 
     #@property

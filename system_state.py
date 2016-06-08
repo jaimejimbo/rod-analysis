@@ -18,7 +18,7 @@ class SystemState(object):
         Group of rods in a moment.
     Each image has to be translated into a RodGroup (by this class?)
     """
-    __slots__ = ('_rods', '_is_subsystem', '_kappas', '_real_kappas', '_allowed_kappa_error', '_radius_correction_ratio', '_id_string', '_real_radius', '_zone_coords', '_fixed_center_radius', '_coef', '_actual_subdivision', '_subdivision_centers', '_rods_dict', '_cluster_checked_dict', '_clusters_max_distance', '_clusters_max_angle_diff', '_divisions', '_length', '_length_error', '__getstate__')
+    __slots__ = ('_rods', '_is_subsystem', '_kappas', '_real_kappas', '_allowed_kappa_error', '_radius_correction_ratio', '_id_string', '_real_radius', '_zone_coords', '_fixed_center_radius', '_coef', '_actual_subdivision', '_subdivision_centers', '_rods_dict', '_cluster_checked_dict', '_clusters_max_distance', '_clusters_max_angle_diff', '_divisions', '_length', '_length_error', '__getstate__', '_grid_of_rods')
     def __init__(self, kappas=10, real_kappas=10, allowed_kappa_error=.5,
             radius_correction_ratio=0,
             id_string="", zone_coords=None, rods=None):
@@ -56,6 +56,7 @@ class SystemState(object):
         self._clusters_max_angle_diff = None
         self._divisions = None
         self._length, self._length_error = None, None
+        self._grid_of_rods = None
         if not self._fixed_center_radius:
             self._zone_coords = None
 
@@ -354,7 +355,7 @@ class SystemState(object):
             possible_y_values = [start_y + (times)*diff
                                  for times in range(divisions)]
             rad = diff*math.sqrt(2)*self._coef/2.0
-            rods_by_coords = self._separate_rods_by_coords(possible_x_values,
+            rods_by_coords = self.separate_rods_by_coords(possible_x_values,
                                     possible_y_values, rad, diff,
                                     divisions)
             real_rad = rad*self.scale#self._real_radius*math.sqrt(2)*self._coef*1.0/divisions
@@ -403,7 +404,7 @@ class SystemState(object):
                 subsystems.append(methods.compress_state(subsystem))
         return subsystems
 
-    def _separate_rods_by_coords(self, possible_x_values,
+    def separate_rods_by_coords(self, possible_x_values,
                                     possible_y_values, rad, diff,
                                     divisions):
         """
@@ -421,7 +422,28 @@ class SystemState(object):
             index_y = int((rod_.y_mid-y_min)/diff)
             center = (possible_x_values[index_x], possible_y_values[index_y])
             output[index_x][index_y].append(rod_)
+        self._grid_of_rods = output
         return output
+
+    def grid_of_rods(self, divisions):
+        """
+        Grid of rods
+        """
+        if self._grid_of_rods is None or divisions != self._divisions:
+            start_x = self.center[0]-self.radius
+            end_x = self.center[0]+self.radius
+            start_y = self.center[1]-self.radius
+            diff = abs(start_x-end_x)/float(divisions)
+            # Getting all possible x and y values.
+            possible_x_values = [start_x + (times)*diff
+                                 for times in range(divisions)]
+            possible_y_values = [start_y + (times)*diff
+                                 for times in range(divisions)]
+            rad = diff*math.sqrt(2)*self._coef/2.0
+            rods_by_coords = self.separate_rods_by_coords(possible_x_values,
+                                    possible_y_values, rad, diff,
+                                    divisions)
+        return self._grid_of_rods
 
     def _compute_density_matrix(self, divisions, normalized=False):
         """

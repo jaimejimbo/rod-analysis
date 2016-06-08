@@ -7,6 +7,8 @@ Main script.
 Settings
 """
 try:
+    import multiprocessing as mp
+    import re, math
     #0-9 or None to disable
     GZIP = 4
     LZ4_FAST = 3
@@ -26,6 +28,8 @@ try:
         waiting_time_process = 0
     #None uses all cpus      
     cpus = None
+    if cpus is None:
+        cpus = int(mp.cpu_count())
     # 1 or True, 0 or False
     create_videos = 1
     density = 1
@@ -57,7 +61,7 @@ try:
     plot_rods = 1
     order_param = 1
     grid_length = 1000
-    import re
+    temp_final_rod_num_limit = 20
 
 
 
@@ -252,8 +256,8 @@ try:
                 experiment_.set_coef(coef)
                 times = experiment_.times(1)
                 if create_videos:
-                    experiment_.create_videos(divisions=divisions, fps=10, max_distance=150, max_angle_diff=45,
-                                             number_of_bursts=1, limit=20)
+                    experiment_.create_videos(divisions=divisions, fps=10, max_distance=150, max_angle_diff=math.pi/4,
+                                             number_of_bursts=1, limit=temp_final_rod_num_limit)
                 if clusters:
                     experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=50,
                             max_angle_diff=10, min_size=5)
@@ -261,7 +265,7 @@ try:
                     experiment_.create_cluster_histogram_video(max_distance=50,
                                         max_angle_diff=10, fps=15)
                 if avg_temp:
-                    experiment_.plot_average_temperature(100, 10, 5)
+                    experiment_.plot_average_temperature(max_distance=100, max_angle_diff=10, limit=5)
                 if lost_percentage:
                     percentage, std_dev = experiment_.lost_rods_percentage
                     msg = "Rods lost: "+str(percentage)+"%\t"+" Standard deviation: "+str(std_dev)

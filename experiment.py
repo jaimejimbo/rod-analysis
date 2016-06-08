@@ -323,7 +323,7 @@ class Experiment(object):
         rel_dict = methods.compress(relative_dict)
         output_queue.put([index, evol_dict, rel_dict, initial_rods])
 
-    def _fill_dicts(self, max_distance, max_angle_diff,
+    def _fill_dicts(self, max_distance, max_angle_diff, index_rad=1, temp_divisions=10,
                     limit=20, amount_of_rods=None):
         """
             Looks for rods that have only one possible predecessor.
@@ -337,7 +337,7 @@ class Experiment(object):
         for index in range(len(self)-1):
             processes.append(mp.Process(target=self._fill_dicts_process_limited,
                                     args=(index, max_distance, max_angle_diff,
-                                        output_queue, limit, amount_of_rods)))
+                                        output_queue, index_rad, temp_divisions, limit, amount_of_rods)))
         num_processes = len(processes)
         running, processes_left = methods.run_processes(processes)
         finished_ = 0
@@ -362,7 +362,7 @@ class Experiment(object):
         print CLEAR_LAST
 
     def _fill_dicts_process_limited(self, index, max_distance,
-                                max_angle_diff, output_queue,
+                                max_angle_diff, output_queue, index_rad, temp_divisions,
                                 limit=20, amount_of_rods=None):
         """
             Allows to create a process and use all cores.
@@ -370,28 +370,34 @@ class Experiment(object):
         """
         initial_state = self.get(index)
         final_state = self.get(index+1)
-        assert type(initial_state) != type("string"), "initial state can't be a string."
+        initial_grid_of_rods = initial_state.grid_of_rods(temp_divisions)
+        final_grid_of_rods = final_state.grid_of_rods(temp_divisions)
         evol_dict = methods.decompress(self._evolution_dictionaries[index])
         relative_dict = methods.decompress(self._relative_dictionaries[index])
-        error = True
-        for initial_rod in initial_state:
-            initial_id = initial_rod.identifier
-            if not amount_of_rods:
-                available_final_rods = list(final_state)
-            else:
-                start_id = initial_id-amount_of_rods/2
-                end_id = initial_id+amount_of_rods/2
-                available_final_rods = final_state._get_rods_range(start_id,
-                                                                  end_id)
+        available_final_rods_ = {}
+        for index_x in range(len(initial_grid_of_rods)):
+            for index_y in range(len(initial_grid_of_rods[index_x])):
+                available_final_rods = set([])
+                for index_x_diff in range(index_rad+1):
+                    for index_y_diff in range(index_rad+1):
+                        new_x_index = index_x+index_x_diff
+                        new_y_index = index_y+index_y_diff
+                        if 0<=new_x_index<temp_divisions and 0<=new_y_index<temp_divisions:
+                            available_final_rods |= set(final_grid_of_rods[new_x_index][new_y_index])
+                available_final_rods = list(available_final_rods)
+                for rod__ in initial_grid_of_rods[index_x][index_y]:
+                    available_final_rods_[rod__.identifier] = available_final_rods
+        available_final_rods = available_final_rods_
+        for initial_id in available_final_rods.keys():
             speeds = []
+            initial_rod = initial_state[initial_id]
             initial_kappa = initial_rod.kappa
             kappa_error = initial_state.kappa_error/2
-            for final_rod in available_final_rods:
+            for final_rod in available_final_rods[initial_id]:
                 final_id = final_rod.identifier
                 distance = initial_rod.distance_to_rod(final_rod, scale=initial_state.scale)
                 vector = initial_rod.vector_to_rod(final_rod, scale=initial_state.scale)
                 angle = initial_rod.angle_between_rods(final_rod)
-                angle = abs(min([angle, 180-angle]))
                 speed = float(distance)/self._diff_t
                 if (distance <= max_distance and angle <= max_angle_diff):
                     speeds.append([speed, final_id])
@@ -408,9 +414,6 @@ class Experiment(object):
                         relative_dict[initial_id][final_id] = (distance, angle, vector)
                         evol_dict[initial_id] -= set([rod_id])
                         del relative_dict[initial_id][rod_id]
-        for initial_id in relative_dict.keys():
-            if len(relative_dict[initial_id]) == 1:
-                relative_dict[initial_id] = relative_dict[initial_id].values()[0]
         output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict)])
 
     def _remove_final_rod(self, index, initial_rod_id, final_rod_id):
@@ -463,8 +466,8 @@ class Experiment(object):
         while finished < num_processes:
             counter += 1
             finished += 1
-            previous_time, counter, time_left, times = methods.print_progress(finished, num_processes,
-                                    counter, times, time_left, previous_time)
+            #previous_time, counter, time_left, times = methods.print_progress(finished, num_processes,
+            #                        counter, times, time_left, previous_time)
             output = output_queue.get()
             selected = selected_queue.get()
             index = output[0]
@@ -1432,6 +1435,7 @@ class Experiment(object):
             self.create_relative_Q2_video(divisions, folder, fps, number_of_bursts)
             self.create_relative_Q4_video(divisions, folder, fps, number_of_bursts)
         if settings.temperature:
+            max_angle_diff = math.radians(max_angle_diff)
             self.create_temperature_video(divisions, folder, fps_temps, max_distance,
                                    max_angle_diff, limit, amount_of_rods,
                                    number_of_bursts, coef)
@@ -2170,11 +2174,12 @@ class Experiment(object):
             print CLEAR_LAST
         return self._bursts_groups
 
-    def plot_average_temperature(self, max_distance, max_angle_diff, limit):
+    def plot_average_temperature(self, max_distance=None, max_angle_diff=None, limit=None):
         """
             Average temperature over time.
         """
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing average temperature"
+        max_angle_diff = math.radians(max_angle_diff)
         self._compute_speeds(max_distance, max_angle_diff,
                         limit, None)
         indices = []
