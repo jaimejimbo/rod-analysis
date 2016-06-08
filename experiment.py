@@ -1309,29 +1309,37 @@ class Experiment(object):
                     new_process = processes_left.pop(0)
                     #time.sleep(settings.waiting_time)
                     new_process.start()
-            if match2:  #this consume a lot of resources. (Optimizable)
+            if match2:
                 z_val_avg = methods.array_average_N(z_vals)
                 z_val_avg_ = []
                 output_queue_ = mp.Queue()
                 processes_ = []
-                for index__ in range(len(z_val_avg[0])):
-                    cos_m = z_val_avg[0][index__]
-                    sin_m = z_val_avg[1][index__]
+                length = len(z_val_avg[0])
+                block_length = int(length/6)
+                block_index = 0
+                for block in range(6):
+                    block_end = block_index+block_length
+                    cos_m = z_val_avg[0][block_index:block_end]
+                    sin_m = z_val_avg[1][block_index:block_end]
                     process = mp.Process(target=self._get_z_vals_Q_process,
-                                         args=(index__, cos_m, sin_m, output_queue_))
+                                         args=(block_index, cos_m, sin_m, output_queue_))
+                    block_index = block_end
                     processes_.append(process)
+                for dummy in range(length):
                     z_val_avg_.append(None)
                 num_processes_ = len(processes_)
                 running_, processes_left_ = methods.run_processes(processes_)
                 finished__ = 0
                 while finished__ < num_processes_:
                     finished__ += 1
-                    [index__, value] = output_queue_.get()
-                    z_val_avg_[index__] = value
+                    [block_index, values] = output_queue_.get()
+                    block_end = block_index+block_length
+                    z_val_avg_[block_index:block_end] = values
                     if len(processes_left_):
                         new_process = processes_left_.pop(0)
                         #time.sleep(settings.waiting_time)
                         new_process.start()
+                assert len(x_val)==len(z_val_avg_), "ASDASD"
                 z_val_avg = z_val_avg_
             else:
                 z_val_avg = methods.array_average(z_vals)
@@ -1348,16 +1356,17 @@ class Experiment(object):
             z_min = min(z_mins)
         return x_val, y_val, z_vals_avg, z_max, z_min
 
-    def _get_z_vals_Q_process(self, index, cos_m, sin_m, output_queue):
+    def _get_z_vals_Q_process(self, block_index, cos_m, sin_m, output_queue):
         """
         Process
         """
-        value = cos_m**2 + sin_m**2
-        if value<=1:
-            value = math.sqrt(value)
-        else:
-            value = -1.0
-        output_queue.put([index, value])
+        values = [cos_m[index]**2 + sin_m[index]**2 for index in range(len(cos_m))]
+        for index in range(len(cos_m)):
+            if values[index]<=1:
+                values[index] = math.sqrt(values[index])
+            else:
+                values[index] = -1.0
+        output_queue.put([block_index, values])
 
     def _get_image_ids(self):
         """
