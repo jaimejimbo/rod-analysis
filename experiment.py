@@ -800,7 +800,7 @@ class Experiment(object):
         for initial_rod_id in list(rel_dict.keys()):
             try:
                 values = rel_dict[initial_rod_id].values()
-            except:
+            except AttributeError:
                 values = rel_dict[initial_rod_id]
             try:
                 speed = float(values[0])*1.0/self._diff_t
@@ -2025,7 +2025,7 @@ class Experiment(object):
                                                 max_angle_diff=max_angle_diff,
                                                 min_size=min_size)
         except ValueError:
-            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "All areas are 0 (no long enough clusters in systems). Skiping"
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "All areas are 0 (no long enough clusters in systems). Skipping"
             return
         line = []
         for time in times_all:
