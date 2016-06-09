@@ -989,7 +989,7 @@ class SubsystemState(object):
             sqrt(<cos(2*angle)>^2+<sin(2*angle)>^2)
         """
         num = self.number_of_rods
-        if num in [0,1,2] or not self.area:
+        if num in [0,1] or not self.area:
             correlation_Q2 = [-1000, -1000]
             return correlation_Q2
         Q2_cos, Q2_sin = 0, 0
@@ -1006,7 +1006,7 @@ class SubsystemState(object):
             sqrt(<cos(4*angle)>^2+<sin(4*angle)>^2)
         """
         num = self.number_of_rods
-        if num in [0,1,2] or not self.area:
+        if num in [0,1] or not self.area:
             correlation_Q4 = [-1000, -1000]
             return correlation_Q4
         Q4_cos, Q4_sin = 0, 0
