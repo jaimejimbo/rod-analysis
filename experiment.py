@@ -1554,6 +1554,7 @@ class Experiment(object):
                 new_process = processes_left.pop(0)
                 #time.sleep(settings.waiting_time)
                 new_process.start()
+        print CLEAR_LAST
         def animate(dummy_frame):
             """
             Animation function.
@@ -2108,7 +2109,7 @@ class Experiment(object):
         id_0 = self._state_numbers[index_0]
         times = []
         previous_time = 0
-        burst_num = 0
+        burst_num = number_of_bursts-1
         for index_ in range(len(bursts)):
             burst_num += 1
             if burst_num == number_of_bursts:
