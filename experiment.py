@@ -1999,7 +1999,6 @@ class Experiment(object):
                                    max_angle_diff=max_angle_diff,
                                    min_size=min_size)
         total_areas = self._total_cluster_areas
-        assert total_areas, "Error"
         norm_areas = []
         self._compute_times(number_of_bursts=number_of_bursts)
         times_all = self.times(number_of_bursts)

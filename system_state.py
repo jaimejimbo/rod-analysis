@@ -705,7 +705,7 @@ class SystemState(object):
         try:
             return float(sum(lengths))/len(lengths)
         except ZeroDivisionError:
-            print "No clusters detected."   
+            print "No clusters detected.\n\n"   
 
     def cluster_lengths(self, max_distance=None,
                             max_angle_diff=None, min_size=3):
@@ -1066,7 +1066,7 @@ def create_rods(folder="./", kappas=10, real_kappas=10, allowed_kappa_error=.3,
             pass
     num_of_files = len(names)
     if not num_of_files:
-        print "No files to import."
+        print "No files to import.\n\n"
         raise ValueError
     states = [None for dummy_ in range(num_of_files)]
     processes = []
@@ -1160,7 +1160,7 @@ def create_rods_with_length(folder="./", length=10, length_error=.3, real_kappas
             pass
     num_of_files = len(names)
     if not num_of_files:
-        print "No files to import."
+        print "No files to import.\n\n"
         raise ValueError
     states = [None for dummy_ in range(num_of_files)]
     processes = []

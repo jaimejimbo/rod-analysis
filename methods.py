@@ -70,21 +70,21 @@ def segment_area(rad, min_dist):
     elif abs(min_dist) >= rad:
         return math.pi*rad**2
     phi = math.acos(abs(min_dist)/rad)
-    assert 0 <= phi <= math.pi/2, "Error in angle"
+    assert 0 <= phi <= math.pi/2, "Error in angle\n\n"
     if phi <= 1e-10:
         if min_dist > 0:
             return 0
         else:
             return math.pi*rad**2
     section = phi*rad**2
-    assert section >= 0, "segment_area: Section is negative"
+    assert section >= 0, "segment_area: Section is negative\n\n"
     distance_between_intersections = 2*min_dist*math.tan(phi)
     msg = "segment_area: distance between "
-    msg += "intersections can't be greater than diameter"
+    msg += "intersections can't be greater than diameter\n\n"
     assert distance_between_intersections <= 2*rad, msg
     triangle_area = distance_between_intersections*min_dist/2.0
     msg = "segment_area: Triangle area must be smaller than section area"
-    msg += "\nRatio="+str(triangle_area*1.0/section)
+    msg += "\nRatio="+str(triangle_area*1.0/section)+"\n\n"
     assert triangle_area < section, msg
     if min_dist >= 0:
         output = section - triangle_area
@@ -93,7 +93,7 @@ def segment_area(rad, min_dist):
     msg = "segment_area: Obtained area is negative. "
     msg += "Values: rad:"+str(rad)
     msg += " min_dist:"+str(min_dist)+" rat:"+str(min_dist/rad)
-    msg += " phi:"+str(phi)+" area:"+str(output)
+    msg += " phi:"+str(phi)+" area:"+str(output)+"\n\n"
     assert output > 0, msg
     return output
 
@@ -115,13 +115,13 @@ def effective_area(small_rad, small_position_rad, main_rad):
         return 0
     min_dist_main = small_position_rad+min_dist
     correction = segment_area(main_rad, min_dist_main)
-    msg = "effective_area: Correction must be smaller than small circle's area"
+    msg = "effective_area: Correction must be smaller than small circle's area\n\n"
     assert correction < math.pi*small_rad**2, msg
     section_area = segment_area(small_rad, min_dist)
     small_area = math.pi*small_rad**2
-    msg = "In the limit, h=-rad has to return total area"
+    msg = "In the limit, h=-rad has to return total area\n\n"
     assert small_area == segment_area(small_rad, -small_rad), msg
-    msg = "Correction too high: Ration: "+str(float(correction)/small_area)
+    msg = "Correction too high: Ration: "+str(float(correction)/small_area)+"\n\n"
     assert correction < small_area, msg
     output = math.pi*small_rad**2 - section_area + correction
     return output
@@ -676,7 +676,7 @@ def vector_distance(vector1, vector2):
         Returns distance between vectors
     """
     diff = []
-    assert len(vector1)==len(vector2), "Use vectors of same dimension"
+    assert len(vector1)==len(vector2), "Use vectors of same dimension\n\n"
     for index in range(len(vector1)):
         diffi = vector1[index]-vector2[index]
         diff.append(diffi)
@@ -1275,7 +1275,7 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, bur
                 new_process.start()
         print CLEAR_LAST
         frames = len(z_vals_avg)
-        assert frames, "Not values!"
+        assert frames, "Not values! \n\n"
         z_max = 1
         z_min = -1
         units = "normalized [S.U.]"
