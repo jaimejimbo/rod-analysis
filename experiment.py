@@ -2020,10 +2020,14 @@ class Experiment(object):
             fig = plt.figure()
             plt.xlabel("time[seconds]")
             plt.ylabel("cluster area proportion")
-        exponent, indep = self.get_order_evolution_coeficient(number_of_bursts=number_of_bursts,
-                                            max_distance=max_distance,
-                                            max_angle_diff=max_angle_diff,
-                                            min_size=min_size)
+        try:
+            exponent, indep = self.get_order_evolution_coeficient(number_of_bursts=number_of_bursts,
+                                                max_distance=max_distance,
+                                                max_angle_diff=max_angle_diff,
+                                                min_size=min_size)
+        except ValueError:
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "All areas are 0 (no long enough clusters in systems). Skiping"
+            return
         line = []
         for time in times_all:
             if time > 0:

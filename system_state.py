@@ -744,7 +744,6 @@ class SystemState(object):
         if not rods_num or not rod_area:
             return 0
         total_area = rods_num*self.rod_area
-        assert total_area, "Total area faillure: "+str(total_area)
         return total_area
 
     @property

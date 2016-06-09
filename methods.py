@@ -883,16 +883,16 @@ def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, 
     """
     print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating animation"
     fig = plt.figure()
-    frames = len(z_vals_avg)
+    num_frames = len(z_vals_avg)
+    
     def animate(dummy_frame):
         """
         Wrapper.
         """
         animate_scatter(x_val, y_val, z_vals_avg,
                             divisions, name, z_max, z_min, units, radius, title)
-    anim = animation.FuncAnimation(fig, animate, frames=frames)
+    anim = animation.FuncAnimation(fig, animate, frames=num_frames)
     anim.save(name, writer=WRITER, fps=fps)
-
 
 def animate_vector_map(x_val, y_val, u_vals, v_vals, units, name, radius):
     """
