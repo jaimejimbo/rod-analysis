@@ -157,7 +157,5 @@ def plot_nums_length(length, length_error, real_kappa):
                                         dates=dates, diff_t=5/3.0)
     experiment_.plot_number_of_rods_over_time()
 
-#plot_nums(50, 50, 50)
-plot_nums_length(160, 20, 12)
-plot_nums_length(80, 20, 6)
-#plot_nums(8, 6, 5)
+plot_nums(50, 50, 50)
+plot_nums(8, 6, 5)

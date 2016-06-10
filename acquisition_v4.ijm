@@ -49,7 +49,7 @@ for(img_num=4118; img_num<=4119; img_num++){
 	close();
 	selectWindow("Result of Result of 0");
 	rename(a);
-    	makeOval(564, 111, 1614, 1623);
+    makeOval(288, 69, 1683, 1692);
 	run("Make Inverse");
 	run("Fill", "slice");
 	run("Invert");

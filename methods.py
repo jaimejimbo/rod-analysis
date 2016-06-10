@@ -4,32 +4,47 @@ Methods library.
 import re, math, os
 import multiprocessing as mp
 from PIL import Image
-import cPickle, zlib
+import cPickle
 import settings
 import numpy
 from matplotlib import animation
+from scipy.interpolate import griddata
+#from matplotlib.mlab import griddata
 import datetime
 import inspect
-
+import lzo
+import lz4
+import zlib
+import gzip
 
 CURSOR_UP_ONE = '\x1b[1A'
 ERASE_LINE = '\x1b[2K'
+CLEAR_LAST = CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
 if settings.special_chars:
     WHITE_BLOCK = u'\u25A0'
 else:
     WHITE_BLOCK = 'X'
+GZIP = 4
+LZ4_FAST = 3
+LZ4 = 2
+LZO = 1
+ZLIB = 0
 
 using_cl = False
 _writer = animation.writers['ffmpeg']
 writer = _writer(fps=15, metadata=dict(artist='Jaime Perez Aparicio'), bitrate=1800)
 WRITER = writer
+
 try:
     import pyopencl as cl
-    ctx = cl.create_some_context()
-    queue_cl = cl.CommandQueue(ctx)
+    platform = cl.get_platforms()
+    my_gpu_devices = platform[0].get_devices(device_type=cl.device_type.CPU)
+    ctx = cl.Context(devices=my_gpu_devices)
     using_cl = True
 except:
     using_cl = False
+
+using_cl = False
 
 def change_compression_coef(new_coef):
     """
@@ -55,21 +70,21 @@ def segment_area(rad, min_dist):
     elif abs(min_dist) >= rad:
         return math.pi*rad**2
     phi = math.acos(abs(min_dist)/rad)
-    assert 0 <= phi <= math.pi/2, "Error in angle"
+    assert 0 <= phi <= math.pi/2, "Error in angle\n\n"
     if phi <= 1e-10:
         if min_dist > 0:
             return 0
         else:
             return math.pi*rad**2
     section = phi*rad**2
-    assert section >= 0, "segment_area: Section is negative"
+    assert section >= 0, "segment_area: Section is negative\n\n"
     distance_between_intersections = 2*min_dist*math.tan(phi)
     msg = "segment_area: distance between "
-    msg += "intersections can't be greater than diameter"
+    msg += "intersections can't be greater than diameter\n\n"
     assert distance_between_intersections <= 2*rad, msg
     triangle_area = distance_between_intersections*min_dist/2.0
     msg = "segment_area: Triangle area must be smaller than section area"
-    msg += "\nRatio="+str(triangle_area*1.0/section)
+    msg += "\nRatio="+str(triangle_area*1.0/section)+"\n\n"
     assert triangle_area < section, msg
     if min_dist >= 0:
         output = section - triangle_area
@@ -78,7 +93,7 @@ def segment_area(rad, min_dist):
     msg = "segment_area: Obtained area is negative. "
     msg += "Values: rad:"+str(rad)
     msg += " min_dist:"+str(min_dist)+" rat:"+str(min_dist/rad)
-    msg += " phi:"+str(phi)+" area:"+str(output)
+    msg += " phi:"+str(phi)+" area:"+str(output)+"\n\n"
     assert output > 0, msg
     return output
 
@@ -100,13 +115,13 @@ def effective_area(small_rad, small_position_rad, main_rad):
         return 0
     min_dist_main = small_position_rad+min_dist
     correction = segment_area(main_rad, min_dist_main)
-    msg = "effective_area: Correction must be smaller than small circle's area"
+    msg = "effective_area: Correction must be smaller than small circle's area\n\n"
     assert correction < math.pi*small_rad**2, msg
     section_area = segment_area(small_rad, min_dist)
     small_area = math.pi*small_rad**2
-    msg = "In the limit, h=-rad has to return total area"
+    msg = "In the limit, h=-rad has to return total area\n\n"
     assert small_area == segment_area(small_rad, -small_rad), msg
-    msg = "Correction too high: Ration: "+str(float(correction)/small_area)
+    msg = "Correction too high: Ration: "+str(float(correction)/small_area)+"\n\n"
     assert correction < small_area, msg
     output = math.pi*small_rad**2 - section_area + correction
     return output
@@ -530,7 +545,7 @@ def array_average(array_of_arrays):
     if not using_cl:
         number_of_arrays = len(array_of_arrays)
         if not number_of_arrays:
-            return None
+            raise ValueError("any array to compute average")
         array_length = len(array_of_arrays[0])
         if not array_length:
             return sum(array_of_arrays)/number_of_arrays
@@ -551,7 +566,11 @@ def array_average(array_of_arrays):
                 msg = "Arrays are not of same length."
                 raise ValueError(msg)
             for index in range(len(array)):
-                output[index] += float(array[index])/number_of_arrays
+                if array[index] is None:
+                    output[index] = None
+                    break
+                else:
+                    output[index] += float(array[index])/number_of_arrays
         return output
     else:
         number_of_arrays = len(array_of_arrays)
@@ -565,9 +584,51 @@ def array_average(array_of_arrays):
             output = sum_arrays_with_cl(output, array_of_arrays[index])
         return normalize_opencl(output, number_of_arrays)
 
+def array_average_N(array_of_arrays):
+    """
+    Average for data of type: [[[val000, val001], [val010, val011], ...],
+                               [[val100, val101], [val110, val111], ...],
+                               ...
+    """
+    N = len(array_of_arrays[0][0])
+    M = len(array_of_arrays)
+    L = len(array_of_arrays[0])
+    array_of_arrays_ = [[[] for dummy_ in range(M)] for dummy in range(N)]
+    output = [0 for dummy in range(L)]
+    for index in range(len(array_of_arrays)):
+        array_ = array_of_arrays[index]
+        for col in range(N):
+            for index_2 in range(len(array_)):
+                array_of_arrays_[col][index].append(array_[index_2][col])
+    output_queue = mp.Queue()
+    processes = []
+    for col in range(N):
+        array_of_arrays__ = array_of_arrays_[col]
+        process = mp.Process(target=array_average_N_process,
+                             args=(col, output_queue, array_of_arrays__))
+        processes.append(process)
+    num_processes = len(processes)
+    running, processes_left = run_processes(processes)
+    finished = 0
+    while finished < num_processes:
+        finished += 1
+        [col, array_of_arrays___] = output_queue.get()
+        array_of_arrays_[col] = array_of_arrays___
+        if len(processes_left):
+            new_process = processes_left.pop(0)
+            #time.sleep(settings.waiting_time)
+            new_process.start()
+    return array_of_arrays_
+
+def array_average_N_process(col, output_queue, array_of_arrays):
+    """
+    Process
+    """
+    output_queue.put([col, array_average(array_of_arrays)])
+
 def sum_arrays_with_cl(array1, array2):
     """
-        Sums 2 arrays with GPU. 
+        Sums 2 arrays with GPU.
     """
     mf = cl.mem_flags
     a_array = numpy.array(array1).astype(numpy.float32)
@@ -610,11 +671,25 @@ def array_x_scalar_cl(array, value):
     cl.enqueue_copy(queue_cl, output, dest_buf)
     return list(output)
 
+def vector_distance(vector1, vector2):
+    """
+        Returns distance between vectors
+    """
+    diff = []
+    assert len(vector1)==len(vector2), "Use vectors of same dimension\n\n"
+    for index in range(len(vector1)):
+        diffi = vector1[index]-vector2[index]
+        diff.append(diffi)
+    return vector_module(diff)
+
 def vector_module(vector):
     """
-       Returns array's module. 
+       Returns array's module.
     """
-    return math.sqrt(vector[0]**2+vector[1]**2)
+    output = 0
+    for value in vector:
+        output += value**2
+    return math.sqrt(output)
 
 def vector_angle(vector):
     """
@@ -626,25 +701,73 @@ def vector_angle(vector):
         angle = math.pi
     return angle
 
-def compress(obj, level=settings.low_comp_level):
+def compress(obj, level=settings.default_comp_level, method=settings.default_comp):
     """
     Compress data of an object.
     """
     if level is None:
         return obj
-    dumps = cPickle.dumps(obj)
-    compressed = zlib.compress(dumps, level)
+    if method==ZLIB:
+        dumps = cPickle.dumps(obj, -1)
+        #print "Compressing with ZLIB. Level "+str(level)
+        compressed = zlib.compress(dumps, level)
+    elif method==LZO:
+        #level = max([level,1])
+        dumps = cPickle.dumps(obj, -1)
+        compressed = lzo.compress(dumps, level)
+    elif method==LZ4_FAST:
+        dumps = cPickle.dumps(obj, -1)
+        compressed = lz4.compress_fast(dumps, level)
+    elif method==LZ4:
+        dumps = cPickle.dumps(obj, -1)
+        compressed = lz4.compress(dumps)#, level)
+    else:
+        compressed = obj
     return compressed
 
-def decompress(obj, level=settings.low_comp_level):
+def decompress(obj, level=settings.default_comp_level, method=settings.default_comp):
     """
     Decompress an object.
     """
     if level is None:
         return obj
-    dumps = zlib.decompress(obj)
+    if method==ZLIB:
+        dumps = zlib.decompress(obj)#, level)
+    elif method==LZO:
+        #level = max([level,1])
+        dumps = lzo.decompress(obj, level)
+    elif method==LZ4_FAST:
+        dumps = lz4.decompress(obj)
+    elif method==LZ4:
+        dumps = lz4.decompress(obj)
+    else:
+        return obj
     data = cPickle.loads(dumps)
     return data
+
+def compress_state(obj):
+    """
+    wrapper
+    """
+    return compress(obj, level=settings.internal_level)
+
+def decompress_state(obj):
+    """
+    wrapper
+    """
+    return decompress(obj, level=settings.internal_level)
+
+def compress_rod(obj):
+    """
+    wrapper
+    """
+    return compress(obj, level=settings.rod_level)
+
+def decompress_rod(obj):
+    """
+    wrapper
+    """
+    return decompress(obj, level=settings.rod_level)
 
 def gaussian(distance, sigma=settings.sigma):
     """
@@ -652,18 +775,17 @@ def gaussian(distance, sigma=settings.sigma):
     """
     if not sigma:
         return 1
-    norm = 1.0/(sigma*math.sqrt(2*math.pi))
-    value = math.exp((-distance**2)/(2.0*sigma**2))
-    return norm*value
+    value = math.exp(-(distance**2)/(2.0*sigma**2))
+    return value
 
-def norm_gaussian(distance, rad, sigma=settings.sigma):
+def norm_gaussian(distance, rad=float('inf'), sigma=settings.sigma):
     """
     Returns gaussian prob for distance (normalized to circle).
     """
-    if not sigma:
+    if sigma==0:
         return 1
-    norm = math.erf(rad/(math.sqrt(2)*sigma))
-    return gaussian(distance, sigma=sigma)*1.0/norm
+    norm = 1.0/(math.sqrt(2.0*math.pi)*sigma*math.erf(rad*1.0/(math.sqrt(2)*sigma)))
+    return gaussian(distance, sigma=sigma)*norm
 
 def compute_distances(array1, array2):
     """
@@ -717,26 +839,15 @@ def compute_distances_cl(array1, array2):
     cl.enqueue_copy(queue_cl, output, dest_buf)
     return list(output)
 
-
-def needed_rods(wanted_long_prop, wanted_area_prop, area, long_area, short_area, longs, shorts):
-    """
-    Computes needed long rods / short rods to be added/removed.
-    """
-    long_rod_area = float(long_area*prop_long)/longs
-    short_rod_area = float(short_area*prop_short)/shorts
-    needed_longs = int(wanted_long_prop*wanted_area_prop*area/long_rod_area)
-    needed_shorts = int(needed_longs*long_rod_area*(1-wanted_long_prop)/(wanted_long_prop*short_rod_area))
-    return needed_longs, needed_shorts
-
 import matplotlib.pyplot as plt
 
 def animate_scatter(x_val, y_val, z_vals,
-                        divisions, name, z_max, z_min, units, radius):
+                        divisions, name, z_max, z_min, units, radius, title):
     """
     Specific animator.
     """
     try:
-        z_val = decompress(z_vals.pop(0), level=settings.medium_comp_level)
+        z_val = decompress(z_vals.pop(0), level=settings.default_comp_level)
     except IndexError:
         return
     plt.cla()
@@ -749,31 +860,84 @@ def animate_scatter(x_val, y_val, z_vals,
     y_max = max(y_val)+rad*1.1
     plt.xlim((x_min, x_max))
     plt.ylim((y_min, y_max))
-    plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
-                vmin=z_min, vmax=z_max)
+    scat = plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
+                                        vmin=z_min, vmax=z_max)
+    scat.cmap.set_under('w')
+    scat.cmap.set_over('w')
     plt.gca().invert_yaxis()
-    cb = plt.colorbar()
+    #step = int((z_max-z_min)*10.0)/100.0
+    #ticks = [int((z_min + index*step)*10.0)/10.0 for index in range(10+1)]
+    try:
+        cb = plt.colorbar()#ticks=ticks)
+    except TypeError:
+        print z_val
     plt.xlabel("x [pixels]")
     plt.ylabel("y [pixels]")
+    if not title is None:
+        plt.suptitle(title)
     cb.set_label(units)
 
-def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius=800, fps=15):
+def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius=800, fps=15, title=None):
     """
     Creates animation from data.
     """
     print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating animation"
     fig = plt.figure()
-    frames = len(z_vals_avg)
+    num_frames = len(z_vals_avg)
+    
     def animate(dummy_frame):
         """
         Wrapper.
         """
         animate_scatter(x_val, y_val, z_vals_avg,
-                            divisions, name, z_max, z_min, units, radius)
+                            divisions, name, z_max, z_min, units, radius, title)
+    anim = animation.FuncAnimation(fig, animate, frames=num_frames)
+    anim.save(name, writer=WRITER, fps=fps)
+
+def animate_vector_map(x_val, y_val, u_vals, v_vals, units, name, radius):
+    """
+    Specific animator.
+    """
+    try:
+        u_val = decompress(u_vals.pop(0), level=settings.default_comp_level)
+        v_val = decompress(v_vals.pop(0), level=settings.default_comp_level)
+    except IndexError:
+        return
+    plt.cla()
+    plt.clf()
+    rad = radius/3.0
+    size = (rad/4)**2
+    x_min = min(x_val)-rad*1.1
+    x_max = max(x_val)+rad*1.1
+    y_min = min(y_val)-rad*1.1
+    y_max = max(y_val)+rad*1.1
+    plt.xlim((x_min, x_max))
+    plt.ylim((y_min, y_max))
+    try:
+        plt.quiver(x_val, y_val, u_val, v_val, label=units, pivot="mid", units="inches")
+    except TypeError:
+        print (x_val, y_val, u_val, v_val)
+    plt.gca().invert_yaxis()
+    plt.xlabel("x [pixels]")
+    plt.ylabel("y [pixels]")
+    #plt.legend()
+
+def create_vector_map(x_vals, y_vals, u_vals, v_vals, units, name, radius=800, fps=15):
+    """
+    Creates animation from data.
+    """
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating vector animation"
+    fig = plt.figure()
+    frames = len(u_vals)
+    def animate(dummy_frame):
+        """
+        Wrapper.
+        """
+        animate_vector_map(x_vals, y_vals, u_vals, v_vals, units, name, radius)
     anim = animation.FuncAnimation(fig, animate, frames=frames)
     anim.save(name, writer=WRITER, fps=fps)
 
- 
+
 def import_and_plot(source, radius=None, level=9):
     """
     Imports data from a compressed file and plots it.
@@ -788,7 +952,6 @@ def import_and_plot(source, radius=None, level=9):
     units = values[6]
     src.close()
     create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name)
-
 
 def needed_rods(wanted_long_prop, wanted_area_prop, area, long_area, short_area, longs, shorts):
     """
@@ -808,7 +971,7 @@ def plot_all_data_files(radius=None, level=9, folder="./"):
     print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting data from files"
     regular_expression = re.compile(r'.*\.data')
     dens_re = re.compile(r'.*dens.*\.data')
-    g2_g4_re = re.compile(r'.*g[2-4].*\.data')
+    q2_q4_re = re.compile(r'.*q[2-4].*\.data')
     temp_re = re.compile(r'.*temp.*\.data')
     cluster_re = re.compile(r'.*cluster.*\.data')
     files = get_file_names(folder=folder, regular_expression=regular_expression)
@@ -816,7 +979,7 @@ def plot_all_data_files(radius=None, level=9, folder="./"):
         if dens_re.match(file_):
             print "Ploting "+file_
             import_and_plot(file_)
-        elif g2_g4_re.match(file_):
+        elif q2_q4_re.match(file_):
             print "Ploting "+file_
             import_and_plot(file_)
         else:
@@ -826,7 +989,7 @@ def plot_all_data_files(radius=None, level=9, folder="./"):
 
 def reset_dates_ids(folder="./", start=0):
     """
-    When imgs goes over id limit, they restart in start(default 0), so 
+    When imgs goes over id limit, they restart in start(default 0), so
     """
     print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Resetting dates ids"
     src = folder + "dates.txt"
@@ -849,7 +1012,7 @@ def reset_dates_ids(folder="./", start=0):
     output_.close()
     input_.close()
 
-def print_progress(done, total, counter, times, time_left, previous_time):
+def print_progress(done, total, counter, times, time_left, previous_time, counter_refresh=settings.counter_refresh):
     """
     Print progress of stack of tasks.
     """
@@ -867,16 +1030,325 @@ def print_progress(done, total, counter, times, time_left, previous_time):
     string += WHITE_BLOCK*prog
     string += " "*(40-prog)
     string += "]"
-    if counter >= 3:
+    if counter >= counter_refresh:
         counter = 0
-        avg_time = sum(times)*1.0/len(times)
-        time_left = int(left*avg_time/60)
-    if not time_left is None:
-        if time_left:
-            string += "    " + str(time_left) + " minutes"
+    try:
+        subtimes = []
+        if counter == 0:
+            subtimes = times
         else:
-            string += "    " + str(int(left*avg_time)) + " seconds"
-    print CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
+            subtimes = times[:-counter]
+        avg_time = sum(subtimes)*1.0/(len(times)-counter)
+        time_left = int(left*avg_time/60)
+    except ZeroDivisionError:
+        avg_time = None
+        time_left = None
+    if not time_left is None and not avg_time is None:
+        if time_left:
+            string += "\t" + str(time_left) + " minutes"
+        else:
+            string += "\t" + str(int(left*avg_time)) + " seconds"
+    print CLEAR_LAST
     print string
-    return previous_time
+    return previous_time, counter, time_left, times
 
+def rods_differences(shorts, longs, wlprop):
+    """
+    Computes how many rods must be included.
+    """
+    diff_l = int(((wlprop-1)*longs+wlprop*shorts)*1.0/(1+wlprop))
+    diff_s = -2*diff_l
+    Nl = diff_l + longs
+    Ns = diff_s + shorts
+    return diff_l, diff_s, Nl, Ns
+
+def rods_animation(rods, colours, x_lim, y_lim, zone_coords, name="rods.mp4", fps=1):
+    """
+    Plot rods with colours
+    """
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating rods animation"
+    fig = plt.figure()
+    frames = len(rods[0])
+    rods_12, rods_6 = rods[0], rods[1]
+    #_export_rods(rods_12, 12)
+    #_export_rods(rods_6, 6)
+    decompressed_rods_12 = []
+    decompressed_rods_6 = []
+    output_queue = mp.Queue()
+    processes = []
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Decompressing"
+    for index in range(frames):
+        rods_12_ = rods_12[index]
+        rods_6_ = rods_6[index]
+        process = mp.Process(target=_decompress_rods_process,
+                            args=(index, output_queue, rods_12_, rods_6_))
+        processes.append(process)
+        decompressed_rods_12.append(None)
+        decompressed_rods_6.append(None)
+    num_processes = len(processes)
+    running, processes_left = run_processes(processes)
+    finished = 0
+    previous_time = datetime.datetime.now()
+    counter = 0
+    time_left = None
+    times = []
+    print " "
+    while finished < num_processes:
+        counter += 1
+        finished += 1
+        previous_time, counter, time_left, times = print_progress(finished, num_processes,
+                            counter, times, time_left, previous_time)
+        [index, decompressed_rods_12_, decompressed_rods_6_] = output_queue.get()
+        decompressed_rods_12[index] = decompressed_rods_12_
+        decompressed_rods_6[index] = decompressed_rods_6_
+        if len(processes_left):
+            new_process = processes_left.pop(0)
+            #time.sleep(settings.waiting_time)
+            new_process.start()
+    print CLEAR_LAST
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Animating"
+    def animate(dummy_frame):
+        """
+        Wrapper.
+        """
+        try:
+            rods_12_ = decompressed_rods_12.pop(0)
+            rods_6_  = decompressed_rods_6.pop(0)
+            rods_ = [rods_12_, rods_6_]
+        except IndexError:
+            return
+        animate_rods(rods_, colours, x_lim, y_lim, zone_coords)
+    anim = animation.FuncAnimation(fig, animate, frames=frames)
+    anim.save(name, writer=WRITER, fps=fps)
+
+def _decompress_rods_process(index, output_queue, rods_12, rods_6):
+    """
+    Process
+    """
+    decomp_12 = decompress(rods_12)
+    decomp_6 = decompress(rods_6)
+    output_queue.put([index, decomp_12, decomp_6])
+
+def animate_rods(rods, colours, x_lim, y_lim, zone_coords):
+    """
+    Specific animator.
+    """
+    rods_12, rods_6 = rods[0], rods[1]
+    plt.cla()
+    plt.clf()
+    plt.xlim(x_lim)
+    plt.ylim(y_lim)
+    #circle1 = plt.Circle((zone_coords[0], zone_coords[1]), zone_coords[2]+4, color='black')
+    #circle2 = plt.Circle((zone_coords[0], zone_coords[1]), zone_coords[2], color='white')
+    #plt.gca().add_artist(circle1)
+    #plt.gca().add_artist(circle2)
+    # rods_12 = [x_0_list, y_0_list, x_f_list, y_f_list]
+    plt.plot([rods_12[0], rods_12[2]], [rods_12[1], rods_12[3]], c=colours[0], linewidth=1.5)
+    plt.plot([rods_6[0], rods_6[2]], [rods_6[1], rods_6[3]], c=colours[1], linewidth=1.5)
+    plt.gca().invert_yaxis()
+    #plt.gca().invert_xaxis()
+    plt.xlabel("x [pixels]")
+    plt.ylabel("y [pixels]")
+
+def _export_rods(rods, kappa):
+    """
+    Exports rods to file.
+    """
+    output_queue = mp.Queue()
+    processes = []
+    print "\n\n"
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Exporting data"
+    for index in range(len(rods)):
+        rods_ = rods[index]
+        process = mp.Process(target=_export_rods_process,
+                            args=(index, output_queue, rods_, kappa))
+        processes.append(process)
+    num_processes = len(processes)
+    running, processes_left = run_processes(processes)
+    finished = 0
+    previous_time = datetime.datetime.now()
+    counter = 0
+    time_left = None
+    times = []
+    print " "
+    while finished < num_processes:
+        counter += 1
+        finished += 1
+        previous_time, counter, time_left, times = print_progress(finished, num_processes,
+                            counter, times, time_left, previous_time)
+        output_queue.get()
+        if len(processes_left):
+            new_process = processes_left.pop(0)
+            #time.sleep(settings.waiting_time)
+            new_process.start()
+    print CLEAR_LAST
+
+def _export_rods_process(index, output, rods, kappa):
+    """
+    process
+    """
+    name = str(index) + "_"+str(kappa)+".data"
+    file_ = open(name, 'w')
+    rods_ = decompress(rods)
+    for index in range(len(rods_[0])):
+        data = [rods_[0][index], rods[1][index], rods_[2][index], rods_[3][index]]
+        line = str(data[0]) + "\t" + str(data[1]) + "\n"
+        line += str(data[2]) + "\t" + str(data[3]) + "\n"
+        line += "\n"
+        file_.write(line)
+    file_.close()
+    output.put(None)
+
+import copy
+
+def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, bursts_times):
+    """
+    Computes order param.
+    """
+    print "\n\n"
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing order param and exporting"
+    output_queue = mp.Queue()
+    processes = []
+    groups = copy.deepcopy(bursts_groups)
+    bursts_ = len(groups)
+    param_order_matrices = []
+    for index in range(len(matrices_12)):
+        matrix_12 = matrices_12[index]
+        matrix_6 = matrices_6[index]
+        name = str(index) + "_order_param.data"
+        process = mp.Process(target=_order_param_process,
+                            args=(index, output_queue, matrix_12, matrix_6, name))
+        processes.append(process)
+        param_order_matrices.append(None)
+    num_processes = len(processes)
+    running, processes_left = run_processes(processes)
+    finished = 0
+    previous_time = datetime.datetime.now()
+    counter = 0
+    time_left = None
+    times = []
+    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Getting values"
+    print " "
+    x_val, y_val, z_vals = [], [], []
+    while finished < num_processes:
+        counter += 1
+        finished += 1
+        previous_time, counter, time_left, times = print_progress(finished, num_processes,
+                            counter, times, time_left, previous_time)
+        index, x_val, y_val, z_val = output_queue.get()
+        z_vals.append(z_val)
+        if len(processes_left):
+            new_process = processes_left.pop(0)
+            #time.sleep(settings.waiting_time)
+            new_process.start()
+    print CLEAR_LAST
+    if settings.plot:
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing averages"
+        z_vals_avg = []
+        output_queue = mp.Queue()
+        for index in range(len(groups)):
+            group = groups[index]
+            z_vals_avg.append(None)
+            process = mp.Process(target=_compute_z_averages_process,
+                                args=(index, output_queue, group, z_vals))
+            processes.append(process)
+            param_order_matrices.append(None)
+        num_processes = len(processes)
+        running, processes_left = run_processes(processes)
+        finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Getting values"
+        print " "
+        while finished < num_processes:
+            counter += 1
+            finished += 1
+            previous_time, counter, time_left, times = print_progress(finished, num_processes,
+                                counter, times, time_left, previous_time)
+            [index__, avg_z_val] = output_queue.get()
+            z_vals_avg[index__] = avg_z_val
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                #time.sleep(settings.waiting_time)
+                new_process.start()
+        print CLEAR_LAST
+        frames = len(z_vals_avg)
+        assert frames, "Not values! \n\n"
+        z_max = 1
+        z_min = -1
+        units = "normalized [S.U.]"
+        name = "order_param.mp4"
+        radius = 800
+        title = "Order parameter"
+        z_vals_copy = copy.deepcopy(z_vals_avg)
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting"
+        create_scatter_animation(x_val, y_val, z_vals_copy, divisions, z_max, z_min, units, name, radius, title=title)
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing contour lengths"
+        lengths = []
+        for index in range(len(z_vals_avg)):
+            #fig = plt.figure()
+            z_val = decompress(z_vals_avg[index])
+            x_grid = numpy.linspace(min(x_val), max(x_val), settings.grid_length)
+            y_grid = numpy.linspace(min(y_val), max(y_val), settings.grid_length)
+            x_val = numpy.array(x_val)
+            y_val = numpy.array(y_val)
+            z_val = numpy.array(z_val)
+            len(x_grid)
+            z_grid = griddata((x_val, y_val), z_val, (x_grid[None,:], y_grid[:,None]), method='cubic')
+            levels = [0]
+            cs = plt.contour(x_grid, y_grid, z_grid, linewidths=1.25, colors='k', levels=levels)
+            length = 0
+            x0,y0 =  cs.allsegs[0][0][0]
+            startx = x0
+            starty = y0
+            length = 0
+            for coords in cs.allsegs[0][0][1:]:
+                x1,y1 =  coords[0], coords[1]
+                length += numpy.sqrt((x1-x0)**2 + (y1-y0)**2)
+                x0,y0 = x1,y1
+            length += numpy.sqrt((startx-x0)**2 + (starty-y0)**2)
+            lengths.append(length)
+        fig = plt.figure()
+        plt.scatter(bursts_times, lengths)
+        plt.savefig("cluster_boundaries_length.png")
+
+
+def _compute_z_averages_process(index, output_queue, group, z_vals):
+    """
+    Process
+    """
+    average = []
+    for index_ in group:
+        average.append(z_vals[index_])
+    average = compress(array_average(average), level=settings.default_comp_level)
+    output_queue.put([index, average])
+
+
+def _order_param_process(index, output_queue, matrix_12, matrix_6, name):
+    """
+    process
+    """
+    file_ = open(name, 'w')
+    z_vals = []
+    matrix_12 = decompress(matrix_12)
+    matrix_6 = decompress(matrix_6)
+    x_val_12 = matrix_12[0]
+    y_val_12 = matrix_12[1]
+    for row_index in range(len(matrix_12[0])):
+        n_12 = matrix_12[2][row_index]
+        n_6 = matrix_6[2][row_index]
+        x_val = x_val_12[row_index]
+        y_val = y_val_12[row_index]
+        if n_12+n_6 == 0:
+            order_param = -1000
+        else:
+    	    order_param = float(n_12-n_6)/(n_12+n_6) #float(n_12)#float(n_12-n_6+1)/2
+        line = str(x_val)+"\t"+str(y_val)+"\t"+str(order_param)+"\n"
+        file_.write(line)
+        z_vals.append(order_param)
+    file_.close()
+    output_queue.put([index, x_val_12, y_val_12, z_vals])
+
+    
