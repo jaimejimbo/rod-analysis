@@ -55,7 +55,7 @@ try:
     sigma_coef = 2
     changing_props = 0
     discard_exceptions = 0
-    special_chars = 1
+    special_chars = 0
     ignore_temperature = 0
     counter_refresh = 10
     plot_rods = 1
