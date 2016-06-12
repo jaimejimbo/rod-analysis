@@ -1522,7 +1522,7 @@ class Experiment(object):
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating cluster histogram animation"
         kappa = self.kappas
         prop = self.average_covered_area_proportion[0]
-        name = "cluster_hist_K"+str(int(kappa))+"prop"+str(round(100*prop,1))+"%.mp4"
+        name = "cluster_hist_K"+str(int(kappa))+".mp4"#"prop"+str(round(100*prop,1))+"%.mp4"
         processes = []
         output_queue = mp.Queue()
         arrays = []
