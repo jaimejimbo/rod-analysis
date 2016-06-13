@@ -1249,7 +1249,6 @@ class Experiment(object):
             Get z values for function.
         """
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Getting function values: [" + str(function_name) +"]"
-        z_vals = []
         z_vals_avg = []
         x_val = []
         y_val = []
@@ -1275,6 +1274,7 @@ class Experiment(object):
         for group in groups:
             finished_ += 1
             counter += 1
+            z_vals = []
             previous_time, counter, time_left, times = methods.print_progress(finished_, bursts_, counter, times, time_left, previous_time)
             output_queue = mp.Queue()
             processes = []
@@ -1351,7 +1351,7 @@ class Experiment(object):
         """
         values = [cos_m[index]**2 + sin_m[index]**2 for index in range(len(cos_m))]
         for index in range(len(cos_m)):
-            if values[index]<=1:
+            if 0<=values[index]<=1:
                 values[index] = math.sqrt(values[index])
             else:
                 values[index] = -1.0

@@ -560,7 +560,6 @@ class SystemState(object):
             x_values.append(x_val)
             y_values.append(y_val)
             z_values.append(z_val)
-        Q2_subsystems = None
         return x_values, y_values, z_values
 
     def correlation_Q2_plot_matrix_queue(self, divisions, index, output_queue):
