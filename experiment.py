@@ -378,8 +378,8 @@ class Experiment(object):
         for index_x in range(len(initial_grid_of_rods)):
             for index_y in range(len(initial_grid_of_rods[index_x])):
                 available_final_rods = set([])
-                for index_x_diff in range(index_rad+1):
-                    for index_y_diff in range(index_rad+1):
+                for index_x_diff in range(-index_rad, index_rad+1):
+                    for index_y_diff in range(-index_rad, index_rad+1):
                         new_x_index = index_x+index_x_diff
                         new_y_index = index_y+index_y_diff
                         if 0<=new_x_index<temp_divisions and 0<=new_y_index<temp_divisions:
@@ -388,6 +388,7 @@ class Experiment(object):
                 for rod__ in initial_grid_of_rods[index_x][index_y]:
                     available_final_rods_[rod__.identifier] = available_final_rods
         available_final_rods = available_final_rods_
+        speeds_ = {}
         for initial_id in available_final_rods.keys():
             speeds = []
             initial_rod = initial_state[initial_id]
@@ -397,23 +398,23 @@ class Experiment(object):
                 final_id = final_rod.identifier
                 distance = initial_rod.distance_to_rod(final_rod, scale=initial_state.scale)
                 vector = initial_rod.vector_to_rod(final_rod, scale=initial_state.scale)
+                #if vector[1]>0: print "A"
+                #else: print "B"
                 angle = initial_rod.angle_between_rods(final_rod)
-                speed = float(distance)/self._diff_t
                 if (distance <= max_distance and angle <= max_angle_diff):
-                    speeds.append([speed, final_id])
+                    speeds.append([distance, final_id, vector, angle])
                     speeds.sort()
                     if len(speeds) > limit:
-                        dummy, rod_id = speeds.pop(-1)
+                        dummy, rod_id, dummy, dummy = speeds.pop(-1)
                     else:
-                        dummy, rod_id = speeds[-1]
-                        evol_dict[initial_id] |= set([final_id])
-                        relative_dict[initial_id][final_id] = (distance, angle, vector)
+                        dummy, rod_id, dummy, dummy = speeds[-1]
                         continue
-                    if rod_id != final_id:
-                        evol_dict[initial_id] |= set([final_id])
-                        relative_dict[initial_id][final_id] = (distance, angle, vector)
-                        evol_dict[initial_id] -= set([rod_id])
-                        del relative_dict[initial_id][rod_id]
+            speeds_[initial_id] = speeds
+        for initial_id in available_final_rods.keys():
+            for speed in speeds_[initial_id]:
+                [distance, final_id, vector, angle] = speed
+                evol_dict[initial_id] |= set([final_id])
+                relative_dict[initial_id][final_id] = (distance, angle, vector)
         output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict)])
 
     def _remove_final_rod(self, index, initial_rod_id, final_rod_id):
@@ -491,27 +492,14 @@ class Experiment(object):
         selected = set([])
         evol_dict = methods.decompress(self._evolution_dictionaries[index])
         relative_dict = methods.decompress(self._relative_dictionaries[index])
-        inverted_rel_dict = {}
-        inverted_evol_dict = {}
         for initial_rod_id in list(evol_dict.keys()):
-            for final_rod_id in evol_dict[initial_rod_id]:
-                inverted_evol_dict[final_rod_id] = set([])
-                inverted_rel_dict[final_rod_id] = {}
-        for initial_rod_id in list(evol_dict.keys()):
-            for final_rod_id in evol_dict[initial_rod_id]:
-                inverted_evol_dict[final_rod_id] |= set([initial_rod_id])
-                try:
-                    inverted_rel_dict[final_rod_id][initial_rod_id] = relative_dict[initial_rod_id][final_rod_id]
-                except:
-                    inverted_rel_dict[final_rod_id][initial_rod_id] = relative_dict[initial_rod_id]
-        for final_rod_id in list(inverted_evol_dict.keys()):
-            initial_rod_id, distance, angle_diff, vector = self._closer_rod(index,
-                                          final_rod_id, selected, inverted_evol_dict,
-                                          inverted_rel_dict, max_distance)
+            final_rod_id, distance, angle_diff, vector = self._closer_rod(index,
+                                          initial_rod_id, selected, evol_dict,
+                                          relative_dict, max_distance)
             if not(initial_rod_id is None):
                 evol_dict[initial_rod_id] = final_rod_id
                 relative_dict[initial_rod_id] = (distance, angle_diff, vector)
-                selected |= set([initial_rod_id])
+                selected |= set([final_rod_id])
         output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict)])
         selected_queue.put([index, selected])
 
@@ -548,8 +536,7 @@ class Experiment(object):
                     else:
                         return None, None, None, None
                 if initial_rod not in selected:
-                    relative_dict = relative_dict_[final_rod]
-                    rel = relative_dict[initial_rod]
+                    rel = relative_dict_[final_rod][initial_rod]
                     distance = rel[0]
                     if distance < min_distance:
                         min_distance = distance
@@ -663,7 +650,7 @@ class Experiment(object):
                                   amount_of_rods=amount_of_rods)
         return self._evolution_dictionaries
 
-    def _join_rods_left(self, max_distance=50):
+    def _join_rods_left(self, max_distance=5):
         """
         After using methods listed before, some rods are unjoined.
         This joins closest rods.
@@ -701,7 +688,7 @@ class Experiment(object):
         print CLEAR_LAST
 
 
-    def _join_rods_left_process(self, index, output_queue, max_distance=150):
+    def _join_rods_left_process(self, index, output_queue, max_distance):
         """
         Process for method.
         """
@@ -731,7 +718,7 @@ class Experiment(object):
                 continue
             evol_dict[selected_rod_id] = final_rod_id
             angle_diff = final_rod.angle_between_rods(selected_rod)
-            angle_diff = min([angle_diff, 180-angle_diff])
+            distance1 = final_rod.distance_to_rod(selected_rod, scale=initial_state.scale)
             vector = selected_rod.vector_to_rod(final_rod)
             relative_dict[selected_rod_id] = (min_distance, angle_diff, vector)
             initial_rods -= set([selected_rod_id])

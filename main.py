@@ -259,7 +259,7 @@ try:
                     experiment_.create_videos(divisions=divisions, fps=10, max_distance=150, max_angle_diff=math.pi/4,
                                              number_of_bursts=1, limit=temp_final_rod_num_limit)
                 if clusters:
-                    experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=50,
+                    experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=1.8,
                             max_angle_diff=10, min_size=5)
                 if clusters_hist:
                     experiment_.create_cluster_histogram_video(max_distance=50,
