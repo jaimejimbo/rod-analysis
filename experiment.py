@@ -1501,7 +1501,7 @@ class Experiment(object):
                 z_val.append(quad_speed)
         output_queue.put([x_val, y_val, z_val])
 
-    def create_cluster_histogram_video(self, max_distance=None,
+    def create_cluster_histogram_video(self, divisions_clust, index_length, max_distance=None,
                                     max_angle_diff=None, fps=15):
         """
             Creates a video of cluster length histogram.
@@ -1516,7 +1516,7 @@ class Experiment(object):
         fig = plt.figure()
         for index in range(len(self)):
             process = mp.Process(target=self.create_cluster_hist_video_process,
-                                 args=(index, max_distance, max_angle_diff,
+                                 args=(index, divisions_clust, index_length, max_distance, max_angle_diff,
                                        output_queue))
             processes.append(process)
             arrays.append(None)
@@ -1986,10 +1986,14 @@ class Experiment(object):
         total_areas = self._total_cluster_areas
         norm_areas = []
         self._compute_times(number_of_bursts=number_of_bursts)
-        times_all = self.times(number_of_bursts)
+        times_all = self.times(None)
         valid_times = []
         for index in range(len(areas)):
-            time = times_all[index]
+            try:
+                time = times_all[index]
+            except IndexError:
+                print len(times_all), len(areas)
+                print times_all
             if time>0:
                 area = areas[index]
                 total_area = total_areas[index]
@@ -2005,7 +2009,7 @@ class Experiment(object):
             plt.xlabel("time[seconds]")
             plt.ylabel("cluster area proportion")
         try:
-            exponent, indep = self.get_order_evolution_coeficient(number_of_bursts=number_of_bursts,
+            exponent, indep = self.get_order_evolution_coeficient(divisions_clust, index_length, number_of_bursts=number_of_bursts,
                                                 max_distance=max_distance,
                                                 max_angle_diff=max_angle_diff,
                                                 min_size=min_size)
@@ -2088,24 +2092,37 @@ class Experiment(object):
             Computes times for experiment.
         """
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing times"
-        bursts = self.bursts_groups
-        index_0 = bursts[0][0]
-        id_0 = self._state_numbers[index_0]
-        times = []
-        previous_time = 0
-        burst_num = number_of_bursts-1
-        for index_ in range(len(bursts)):
-            burst_num += 1
-            if burst_num == number_of_bursts:
-                burst_num = 0
-                index_1 = bursts[index_][0]
-                id_1 = self._state_numbers[index_1]
+        if number_of_bursts is None:
+            times = []
+            id_0 = self._state_numbers[0]
+            previous_time = 0
+            for index_ in range(len(self)):
+                id_1 = self._state_numbers[index_]
                 time = methods.time_difference(self._dates, id_0, id_1)
                 id_0 = id_1
                 time += previous_time
                 previous_time = time
                 times.append(time)
-        return times
+            return times
+        else:
+            bursts = self.bursts_groups
+            index_0 = bursts[0][0]
+            id_0 = self._state_numbers[index_0]
+            times = []
+            previous_time = 0
+            burst_num = number_of_bursts-1
+            for index_ in range(len(bursts)):
+                burst_num += 1
+                if burst_num == number_of_bursts:
+                    burst_num = 0
+                    index_1 = bursts[index_][0]
+                    id_1 = self._state_numbers[index_1]
+                    time = methods.time_difference(self._dates, id_0, id_1)
+                    id_0 = id_1
+                    time += previous_time
+                    previous_time = time
+                    times.append(time)
+            return times
 
     @property
     def bursts_groups(self):
