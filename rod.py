@@ -217,8 +217,8 @@ class Rod(object):
         Start in self.
         """
         scale = float(scale)
-        diff_x = (rod.x_mid-self.x_mid)/scale
-        diff_y = (rod.y_mid-self.y_mid)/scale
+        diff_x = (rod.x_mid-self.x_mid)*scale
+        diff_y = (rod.y_mid-self.y_mid)*scale
         return (diff_x, diff_y)
 
     def distance_to_rod(self, rod, scale):#=1):
