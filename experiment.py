@@ -2003,33 +2003,33 @@ class Experiment(object):
             fig = plt.figure()
             plt.xlabel("time[seconds]")
             plt.ylabel("cluster area proportion")
-        try:
-            exponent, indep = self.get_order_evolution_coeficient(divisions_clust, index_length, number_of_bursts=number_of_bursts,
-                                                max_distance=max_distance,
-                                                max_angle_diff=max_angle_diff,
-                                                min_size=min_size)                                       
-        except ValueError:
-            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "All areas are 0 (no long enough clusters in systems). Skipping"
-            #print total_areas
-            return
-        line = []
-        for time in times_all:
-            value = indep*(time**exponent)
-            line.append(value)
-        name = "coef_K"+str(self.kappas)+".log"
-        output = open(name, 'w')
-        text = "Exponent: "+str(exponent)+"\nindep: "+str(indep) +"\n"
-        output.write(text)
-        output.close()
-        if settings.plot:
-            label = "Exponente: "+str(exponent)
-            line_plt = plt.plot(valid_times, line, label=label)
-        if settings.to_file:
-		    output_file_name = "linear_approx_K"+str(self.kappas)+".data"
-		    output_file = open(output_file_name, 'w')
-		    data = methods.compress([valid_times, line], level=9)
-		    output_file.write(data)
-		    output_file.close()
+        #try:
+        #    exponent, indep = self.get_order_evolution_coeficient(divisions_clust, index_length, number_of_bursts=number_of_bursts,
+        #                                        max_distance=max_distance,
+        #                                        max_angle_diff=max_angle_diff,
+        #                                        min_size=min_size)                                       
+        #except ValueError:
+        #    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "All areas are 0 (no long enough clusters in systems). Skipping"
+        #    #print total_areas
+        #    return
+        #line = []
+        #for time in times_all:
+        #    value = indep*(time**exponent)
+        #    line.append(value)
+        #name = "coef_K"+str(self.kappas)+".log"
+        #output = open(name, 'w')
+        #text = "Exponent: "+str(exponent)+"\nindep: "+str(indep) +"\n"
+        #output.write(text)
+        #output.close()
+        #if settings.plot:
+        #    label = "Exponente: "+str(exponent)
+        #    line_plt = plt.plot(valid_times, line, label=label)
+        #if settings.to_file:
+		#    output_file_name = "linear_approx_K"+str(self.kappas)+".data"
+		#    output_file = open(output_file_name, 'w')
+		#    data = methods.compress([valid_times, line], level=9)
+		#    output_file.write(data)
+		#    output_file.close()
         clust = open("cluster_areas.txt", "w")
         for index in range(len(valid_times)):
             try:
