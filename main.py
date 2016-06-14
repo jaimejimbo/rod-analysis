@@ -64,8 +64,13 @@ try:
     order_param = 1
     grid_length = 1000
     temp_final_rod_num_limit = 20
-
-
+    cluster_bursts = 1
+    cluster_max_dist = 1.8
+    cluster_max_angle = math.radians(10)
+    cluster_min_size=5
+    evol_max_dist = 12
+    evol_max_ang_diff = math.radians(45)
+    evol_bursts = 1
 
 
 
@@ -209,14 +214,16 @@ try:
                 experiment_.set_coef(coef)
                 times = experiment_.times(1)
                 if create_videos:
-                    experiment_.create_videos(divisions=divisions, fps=10, max_distance=30, max_angle_diff=60,
-                                             number_of_bursts=1)
+                    experiment_.create_videos(divisions=divisions, fps=10, max_distance=evol_max_dist, max_angle_diff=evol_max_ang_diff,
+                                             number_of_bursts=evol_bursts, limit=temp_final_rod_num_limit)
                 if clusters:
-                    experiment_.plot_cluster_areas(cluster_divisions, cluster_index_length, number_of_bursts=5, max_distance=1.8,
-                            max_angle_diff=10, min_size=5)
+                    experiment_.plot_cluster_areas(cluster_divisions, cluster_index_length,
+                            number_of_bursts=cluster_bursts, max_distance=cluster_max_dist,
+                            max_angle_diff=cluster_max_angle, min_size=cluster_min_size)
                 if clusters_hist:
-                    experiment_.create_cluster_histogram_video(cluster_divisions, cluster_index_length, max_distance=50,
-                                        max_angle_diff=10, fps=15)
+                    experiment_.create_cluster_histogram_video(cluster_divisions, 
+                                cluster_index_length, max_distance=cluster_max_dist,
+                                max_angle_diff=cluster_max_angle, fps=15)
                 if avg_temp:
                     experiment_.plot_average_temperature(100, 10, 5)
                 if lost_percentage:
@@ -258,14 +265,16 @@ try:
                 experiment_.set_coef(coef)
                 times = experiment_.times(1)
                 if create_videos:
-                    experiment_.create_videos(divisions=divisions, fps=10, max_distance=150, max_angle_diff=math.pi/4,
-                                             number_of_bursts=1, limit=temp_final_rod_num_limit)
+                    experiment_.create_videos(divisions=divisions, fps=10, max_distance=evol_max_dist, max_angle_diff=evol_max_ang_diff,
+                                             number_of_bursts=evol_bursts, limit=temp_final_rod_num_limit)
                 if clusters:
-                    experiment_.plot_cluster_areas(cluster_divisions, cluster_index_length, number_of_bursts=5, max_distance=1.8,
-                            max_angle_diff=10, min_size=5)
+                    experiment_.plot_cluster_areas(cluster_divisions, cluster_index_length,
+                            number_of_bursts=cluster_bursts, max_distance=cluster_max_dist,
+                            max_angle_diff=cluster_max_angle, min_size=cluster_min_size)
                 if clusters_hist:
-                    experiment_.create_cluster_histogram_video(cluster_divisions, cluster_index_length, max_distance=50,
-                                        max_angle_diff=10, fps=15)
+                    experiment_.create_cluster_histogram_video(cluster_divisions, 
+                                cluster_index_length, max_distance=cluster_max_dist,
+                                max_angle_diff=cluster_max_angle, fps=15)
                 if avg_temp:
                     experiment_.plot_average_temperature(max_distance=100, max_angle_diff=10, limit=5)
                 if lost_percentage:
