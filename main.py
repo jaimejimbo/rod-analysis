@@ -67,7 +67,7 @@ try:
     cluster_bursts = 1
     cluster_max_dist = 1.8
     cluster_max_angle = math.radians(10)
-    cluster_min_size=5
+    cluster_min_size = 5
     evol_max_dist = 12
     evol_max_ang_diff = math.radians(45)
     evol_bursts = 1
