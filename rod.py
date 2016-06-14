@@ -211,7 +211,7 @@ class Rod(object):
             self._min_feret = self._feret/float(kappa)
         return cond
 
-    def vector_to_rod(self, rod, scale=1):
+    def vector_to_rod(self, rod, scale):#=1):
         """
         Returns a vector that joins 2 rods.
         Start in self.
@@ -221,7 +221,7 @@ class Rod(object):
         diff_y = (rod.y_mid-self.y_mid)/scale
         return (diff_x, diff_y)
 
-    def distance_to_rod(self, rod, scale=1):
+    def distance_to_rod(self, rod, scale):#=1):
         """
         Returns the distance to another rod.
         """

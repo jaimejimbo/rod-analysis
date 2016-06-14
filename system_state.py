@@ -615,7 +615,7 @@ class SystemState(object):
         selected_rod = rod_
         for rod2 in self:
             if rod_ != rod2:
-                new_distance = rod_.distance_to_rod(rod2)
+                new_distance = rod_.distance_to_rod(rod2, self.scale)
                 if new_distance < distance:
                     distance = new_distance
                     selected_rod = rod2
@@ -652,8 +652,8 @@ class SystemState(object):
         start_x = self.center[0]-self.radius
         end_x = self.center[0]+self.radius
         start_y = self.center[1]-self.radius
-        start_xy = [start_x, start_y]
         diff = abs(start_x-end_x)/float(divisions)
+        start_xy = [start_x, start_y, diff]
         possible_x_values = [start_x + (times)*diff
                              for times in range(divisions)]
         possible_y_values = [start_y + (times)*diff
@@ -694,28 +694,26 @@ class SystemState(object):
         divisions = divisions_clust
         self._cluster_checked_dict[reference_rod.identifier] = True
         length = reference_rod.feret
-        [start_x, start_y] = start_xy
-        index_x = int((reference_rod.x_mid-start_x)/divisions)
-        index_y = int((reference_rod.x_mid-start_y)/divisions)
+        [start_x, start_y, diff] = start_xy
+        index_x = int((reference_rod.x_mid-start_x)/diff)
+        index_y = int((reference_rod.y_mid-start_y)/diff)
         available_rods = set([])
         for index_x_diff in range(-index_length, index_length+1):
             for index_y_diff in range(-index_length, index_length+1):
                 new_index_x = index_x + index_x_diff
                 new_index_y = index_y + index_y_diff
                 if 0<=new_index_x<divisions and 0<=new_index_y<divisions:
-                    available_rods |= set(rods_by_coords[new_index_x][new_index_y])
+                    rods_ = rods_by_coords[new_index_x][new_index_y]
+                    available_rods |= set(rods_)
         available_rods = list(available_rods)
         for rod_ in available_rods:
             if self._cluster_checked_dict[rod_.identifier]:
                 continue
-            vector = reference_rod.vector_to_rod(rod_)
+            vector = reference_rod.vector_to_rod(rod_, self.scale)
             distance = methods.vector_module(vector)
             angle_diff = rod_.angle_between_rods(reference_rod)
             vector_angle = methods.vector_angle(vector)
-            distance_angle = vector_angle-reference_rod.angle
-            diff = length-max_distance
-            max_dist = max_distance+math.sin(distance_angle)*diff
-            if angle_diff <= max_angle_diff and distance < max_dist:
+            if angle_diff <= max_angle_diff and distance < max_distance:
                 subrods = self._get_cluster_members(rod_, rods_by_coords, start_xy,
                                 max_distance, max_angle_diff,
                                 divisions_clust, index_length)

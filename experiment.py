@@ -396,8 +396,8 @@ class Experiment(object):
             kappa_error = initial_state.kappa_error/2
             for final_rod in available_final_rods[initial_id]:
                 final_id = final_rod.identifier
-                distance = initial_rod.distance_to_rod(final_rod, scale=initial_state.scale)
-                vector = initial_rod.vector_to_rod(final_rod, scale=initial_state.scale)
+                distance = initial_rod.distance_to_rod(final_rod, initial_state.scale)
+                vector = initial_rod.vector_to_rod(final_rod, initial_state.scale)
                 #if vector[1]>0: print "A"
                 #else: print "B"
                 angle = initial_rod.angle_between_rods(final_rod)
@@ -709,7 +709,7 @@ class Experiment(object):
             final_rod = final_state[final_rod_id]
             for initial_rod_id in initial_rods:
                 initial_rod = initial_state[initial_rod_id]
-                distance = final_rod.distance_to_rod(initial_rod, scale=initial_state.scale)
+                distance = final_rod.distance_to_rod(initial_rod, initial_state.scale)
                 if distance < min_distance:
                     min_distance = distance
                     selected_rod_id = initial_rod_id
@@ -718,8 +718,8 @@ class Experiment(object):
                 continue
             evol_dict[selected_rod_id] = final_rod_id
             angle_diff = final_rod.angle_between_rods(selected_rod)
-            distance1 = final_rod.distance_to_rod(selected_rod, scale=initial_state.scale)
-            vector = selected_rod.vector_to_rod(final_rod)
+            distance1 = final_rod.distance_to_rod(selected_rod, initial_state.scale)
+            vector = selected_rod.vector_to_rod(final_rod, initial_state.scale)
             relative_dict[selected_rod_id] = (min_distance, angle_diff, vector)
             initial_rods -= set([selected_rod_id])
         output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict)])
@@ -1820,8 +1820,7 @@ class Experiment(object):
         plt.ylabel("y [pixels]")
         cb.set_label("Temperature [pixels^2/seg^2]")
 
-    def _average_cluster_areas(self, z_vals, number_of_bursts=1,
-                               min_size=3):
+    def _average_cluster_areas(self, z_vals, number_of_bursts=1):
         """
         Wrapper
         """
@@ -1830,37 +1829,41 @@ class Experiment(object):
         z_vals_avg = []
         index = 0
         indices = []
-        while not end:
-            initial_id = self._get_image_id(index)
-            indices.append(index)
-            groups = []
-            average = None
-            _z_vals = []
-            for dummy_time in range(number_of_bursts):
+        if number_of_bursts is None:
+            indices = range(0, len(bursts_groups)*5)
+            z_vals_avg = z_vals
+        else:
+            while not end:
+                initial_id = self._get_image_id(index)
+                indices.append(index)
+                groups = []
+                average = None
+                _z_vals = []
+                for dummy_time in range(number_of_bursts):
+                    try:
+                        group = bursts_groups.pop(0)
+                        groups.append(group)
+                    except IndexError:
+                        end = True
+                if not len(groups):
+                    break
+                for group in groups:
+                    for dummy_time in group:
+                        index += 1
+                        z_val = z_vals.pop(0)
+                        _z_vals.append(z_val)
                 try:
-                    group = bursts_groups.pop(0)
-                    groups.append(group)
-                except IndexError:
-                    end = True
-            if not len(groups):
-                break
-            for group in groups:
-                for dummy_time in group:
-                    index += 1
-                    z_val = z_vals.pop(0)
-                    _z_vals.append(z_val)
-            try:
-                average = sum(_z_vals)/float(len(_z_vals))
-            except TypeError:
-                not_none_vals = []
-                for val in _z_vals:
-                    if val is not None:
-                        not_none_vals.append(val)
-                try:
-                    average = sum(not_none_vals)/float(len(not_none_vals))
-                except ZeroDivisionError:
-                    average = 0
-            z_vals_avg.append(average)
+                    average = sum(_z_vals)/float(len(_z_vals))
+                except TypeError:
+                    not_none_vals = []
+                    for val in _z_vals:
+                        if val is not None:
+                            not_none_vals.append(val)
+                    try:
+                        average = sum(not_none_vals)/float(len(not_none_vals))
+                    except ZeroDivisionError:
+                        average = 0
+                z_vals_avg.append(average)
         return z_vals_avg, indices
 
     def _get_cluster_areas(self, divisions_clust, index_length, max_distance=None,
@@ -1931,35 +1934,28 @@ class Experiment(object):
             z_vals = self._get_cluster_areas(divisions_clust, index_length, max_distance=max_distance,
                             max_angle_diff=max_angle_diff, min_size=min_size)
             areas, indices = self._average_cluster_areas(z_vals,
-                                        number_of_bursts=number_of_bursts,
-                                        min_size=min_size)
+                                        number_of_bursts=number_of_bursts)
             self._cluster_areas = areas
             print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Obtaining cluster areas with min_size=0"
             z_vals = self._get_cluster_areas(divisions_clust, index_length, max_distance=max_distance,
                             max_angle_diff=max_angle_diff, min_size=0)
             norm_areas, indices = self._average_cluster_areas(z_vals,
-                                        number_of_bursts=number_of_bursts,
-                                        min_size=0)
+                                        number_of_bursts=number_of_bursts)
             self._total_cluster_areas = norm_areas
             self._indices = indices
         return self._cluster_areas
 
-    def get_order_evolution_coeficient(self, divisions_clust, index_length, number_of_bursts=1, max_distance=None,
-                    max_angle_diff=None, min_size=5):
+    def get_order_evolution_coeficient(self, divisions_clust, index_length, number_of_bursts=None, max_distance=1.8,
+                    max_angle_diff=10, min_size=5):
         """
             Returns coeficient of order param evolution.
         """
         if self._popt is None or self._std_dev is None:
             print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing order evolution parameter"
-            cluster_areas = self.cluster_areas(divisions_clust, index_length, number_of_bursts=number_of_bursts,
-                                       max_distance=max_distance,
-                                       max_angle_diff=max_angle_diff,
-                                       min_size=min_size)
+            cluster_areas = self._cluster_areas
             total_areas = self._total_cluster_areas
             indices = self._indices
             times = self.times(number_of_bursts)
-            times.pop(0)
-            cluster_areas.pop(0)
             log_areas = []
             log_times = []
             for index in range(len(cluster_areas)):
@@ -1976,17 +1972,17 @@ class Experiment(object):
         return exponent, indep
 
     def plot_cluster_areas(self, divisions_clust, index_length, number_of_bursts=1, max_distance=None,
-                    max_angle_diff=None, min_size=10):
+                    max_angle_diff=None, min_size=5):
         """
             Plots cluster areas evolution.
         """
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing cluster areas"
-        areas = self.cluster_areas(divisions_clust, index_length, 
+        areas = self.cluster_areas(divisions_clust, index_length, number_of_bursts=number_of_bursts,
                     max_distance=max_distance, max_angle_diff=max_angle_diff, min_size=min_size)
         total_areas = self._total_cluster_areas
         norm_areas = []
         self._compute_times(number_of_bursts=number_of_bursts)
-        times_all = self.times(None)
+        times_all = self.times(number_of_bursts)
         valid_times = []
         for index in range(len(areas)):
             try:
@@ -1994,16 +1990,15 @@ class Experiment(object):
             except IndexError:
                 print len(times_all), len(areas)
                 print times_all
-            if time>0:
-                area = areas[index]
-                total_area = total_areas[index]
-                try:
-                    proportion = float(area)/total_area
-                except ZeroDivisionError:
-                    proportion = 0
-                    continue
-                valid_times.append(time)
-                norm_areas.append(proportion)
+            area = areas[index]
+            total_area = total_areas[index]
+            try:
+                proportion = float(area)/total_area
+            except ZeroDivisionError:
+                proportion = 0
+                continue
+            valid_times.append(time)
+            norm_areas.append(proportion)
         if settings.plot:
             fig = plt.figure()
             plt.xlabel("time[seconds]")
@@ -2012,17 +2007,15 @@ class Experiment(object):
             exponent, indep = self.get_order_evolution_coeficient(divisions_clust, index_length, number_of_bursts=number_of_bursts,
                                                 max_distance=max_distance,
                                                 max_angle_diff=max_angle_diff,
-                                                min_size=min_size)
+                                                min_size=min_size)                                       
         except ValueError:
             print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "All areas are 0 (no long enough clusters in systems). Skipping"
+            #print total_areas
             return
         line = []
         for time in times_all:
-            if time > 0:
-                value = indep*(time**exponent)
-                if value>1:
-                    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Valor excesivo: " + str(value) + " time: " + str(time) + " indep: " + str(indep) + " exponent: " + str(exponent)
-                line.append(value)
+            value = indep*(time**exponent)
+            line.append(value)
         name = "coef_K"+str(self.kappas)+".log"
         output = open(name, 'w')
         text = "Exponent: "+str(exponent)+"\nindep: "+str(indep) +"\n"
