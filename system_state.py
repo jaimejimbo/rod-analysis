@@ -621,11 +621,11 @@ class SystemState(object):
                     selected_rod = rod2
         return selected_rod
 
-    def clusters(self, max_distance=None, max_angle_diff=None, min_size=3):
+    def clusters(self, divisions_clust, index_length=1, max_distance=None, max_angle_diff=None, min_size=3):
         """
             Returns clusters with min_size number of rods or more.
         """
-        clusters = self._get_clusters(max_distance=max_distance,
+        clusters = self._get_clusters(divisions_clust, index_length, max_distance=max_distance,
                                   max_angle_diff=max_angle_diff)
         output = []
         for cluster in clusters:
@@ -633,7 +633,7 @@ class SystemState(object):
                 output.append(cluster)
         return output
 
-    def _get_clusters(self, max_distance=None, max_angle_diff=None):
+    def _get_clusters(self, divisions_clust, index_length, max_distance=1.8, max_angle_diff=10):
         """
             Gets the cluster for rod.
         Recursive method.
@@ -646,8 +646,22 @@ class SystemState(object):
             msg = "cluster method without args only valid "
             msg += "when previously computed."
             raise ValueError(msg)
+        divisions = divisions_clust
         cond2 = (self._clusters_max_distance != max_distance)
         cond2 &= (self._clusters_max_angle_diff != max_angle_diff)
+        start_x = self.center[0]-self.radius
+        end_x = self.center[0]+self.radius
+        start_y = self.center[1]-self.radius
+        start_xy = [start_x, start_y]
+        diff = abs(start_x-end_x)/float(divisions)
+        possible_x_values = [start_x + (times)*diff
+                             for times in range(divisions)]
+        possible_y_values = [start_y + (times)*diff
+                             for times in range(divisions)]
+        rad = diff*math.sqrt(2)*self._coef/2.0
+        rods_by_coords = self.separate_rods_by_coords(possible_x_values,
+                                    possible_y_values, rad, diff,
+                                    divisions_clust)
         if cond2: #not len(self._clusters) or cond2:
             self._clusters_max_distance = max_distance
             self._clusters_max_angle_diff = max_angle_diff
@@ -658,15 +672,17 @@ class SystemState(object):
                 if self._cluster_checked_dict[rod_.identifier]:
                     continue
                 rods_left -= set([rod_])
-                cluster = self._get_cluster_members(rod_,
-                                max_distance, max_angle_diff)
+                cluster = self._get_cluster_members(rod_, rods_by_coords, start_xy,
+                                max_distance, max_angle_diff,
+                                divisions_clust, index_length)
                 if len(cluster):
                     clusters.append(cluster)
             #self._clusters = clusters
         return clusters
 
-    def _get_cluster_members(self, reference_rod,
-                                    max_distance, max_angle_diff):
+    def _get_cluster_members(self, reference_rod, rods_by_coords, start_xy,
+                                    max_distance, max_angle_diff, 
+                                    divisions_clust, index_length):
         """
             Gets the closest neighbour to a rod that fulfill
         some conditions.
@@ -675,9 +691,21 @@ class SystemState(object):
         rods = set([reference_rod.identifier])
         if self._cluster_checked_dict[reference_rod.identifier]:
             return set([])
+        divisions = divisions_clust
         self._cluster_checked_dict[reference_rod.identifier] = True
         length = reference_rod.feret
-        for rod_ in self:
+        [start_x, start_y] = start_xy
+        index_x = int((reference_rod.x_mid-start_x)/divisions)
+        index_y = int((reference_rod.x_mid-start_y)/divisions)
+        available_rods = set([])
+        for index_x_diff in range(-index_length, index_length+1):
+            for index_y_diff in range(-index_length, index_length+1):
+                new_index_x = index_x + index_x_diff
+                new_index_y = index_y + index_y_diff
+                if 0<=new_index_x<divisions and 0<=new_index_y<divisions:
+                    available_rods |= set(rods_by_coords[new_index_x][new_index_y])
+        available_rods = list(available_rods)
+        for rod_ in available_rods:
             if self._cluster_checked_dict[rod_.identifier]:
                 continue
             vector = reference_rod.vector_to_rod(rod_)
@@ -688,8 +716,9 @@ class SystemState(object):
             diff = length-max_distance
             max_dist = max_distance+math.sin(distance_angle)*diff
             if angle_diff <= max_angle_diff and distance < max_dist:
-                subrods = self._get_cluster_members(rod_,
-                                               max_distance, max_angle_diff)
+                subrods = self._get_cluster_members(rod_, rods_by_coords, start_xy,
+                                max_distance, max_angle_diff,
+                                divisions_clust, index_length)
                 rods |= subrods
         return rods
 
@@ -706,7 +735,7 @@ class SystemState(object):
         except ZeroDivisionError:
             print "No clusters detected.\n\n"   
 
-    def cluster_lengths(self, max_distance=None,
+    def cluster_lengths(self, divisions_clust, index_length=1, max_distance=None,
                             max_angle_diff=None, min_size=3):
         """
             Creates an array of lengths of clusters:
@@ -714,31 +743,28 @@ class SystemState(object):
         2 of length 4...
         """
         lengths = []
-        clusters = self.clusters(max_distance,
-                                max_angle_diff, min_size)
+        clusters = self.clusters(divisions_clust, index_length=index_length, max_distance=max_distance, max_angle_diff=max_angle_diff, min_size=min_size)
         for cluster in clusters:
             lengths.append(len(cluster))
         return lengths
 
-    def number_of_clusters(self, max_distance=None,
+    def number_of_clusters(self, divisions_clust, index_length=1, max_distance=None,
                             max_angle_diff=None, min_size=3):
         """
             Returns the number of clusters in the system.
         Angles in grad.
         """
-        clusters = self.clusters(max_distance,
-                                max_angle_diff, min_size)
+        clusters = self.clusters(divisions_clust, index_length=index_length, max_distance=max_distance, max_angle_diff=max_angle_diff, min_size=min_size)
         return len(clusters)
 
-    def total_area_of_clusters(self, max_distance=None,
+    def total_area_of_clusters(self, divisions_clust, index_length=1, max_distance=None,
                                 max_angle_diff=None, min_size=3):
         """
             Returns the area covered by clusters.
         """
         rod_area = self.rod_area
-        rods_num = self.cluster_lengths(max_distance=max_distance,
-                                               max_angle_diff=max_angle_diff,
-                                               min_size=min_size)
+        rods_num = self.cluster_lengths(divisions_clust, index_length=index_length, 
+                max_distance=max_distance, max_angle_diff=max_angle_diff, min_size=min_size)
         rods_num = sum(rods_num)
         if not rods_num or not rod_area:
             return 0

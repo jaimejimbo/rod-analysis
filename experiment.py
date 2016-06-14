@@ -1569,15 +1569,14 @@ class Experiment(object):
         except:
             pass
 
-    def create_cluster_hist_video_process(self, index, max_distance, max_angle_diff,
+    def create_cluster_hist_video_process(self, index, divisions_clust, index_length, max_distance, max_angle_diff,
                                         output_queue):
         """
         Process
         """
         state = self.get(index)
-        array = state.cluster_lengths(max_distance=max_distance,
-                                            max_angle_diff=max_angle_diff,
-                                            min_size=1)
+        array = state.cluster_lengths(divisions_clust, index_length=index_length, max_distance=max_distance,
+                            max_angle_diff=max_angle_diff, min_size=1)
         for index2 in range(len(array)):
             array[index2] *= index2
         output_queue.put([index, array])
@@ -1864,7 +1863,7 @@ class Experiment(object):
             z_vals_avg.append(average)
         return z_vals_avg, indices
 
-    def _get_cluster_areas(self, max_distance=None,
+    def _get_cluster_areas(self, divisions_clust, index_length, max_distance=None,
                     max_angle_diff=None, min_size=3):
         """
         Compute cluster areas for all states.
@@ -1875,7 +1874,7 @@ class Experiment(object):
         areas = []
         for index in range(len(self)):
             process = mp.Process(target=self._get_cluster_areas_process,
-                                 args=(index, max_distance,
+                                 args=(index, divisions_clust, index_length, max_distance,
                                     max_angle_diff, output_queue, min_size))
             processes.append(process)
             areas.append(None)
@@ -1903,18 +1902,18 @@ class Experiment(object):
         print CLEAR_LAST
         return areas
 
-    def _get_cluster_areas_process(self, index, max_distance,
+    def _get_cluster_areas_process(self, index, divisions_clust, index_length, max_distance,
                     max_angle_diff, output_queue, min_size):
         """
         Process
         """
         state = self.get(index)
-        area = state.total_area_of_clusters(max_distance=max_distance,
+        area = state.total_area_of_clusters(divisions_clust, index_length=index_length, max_distance=max_distance,
                             max_angle_diff=max_angle_diff, min_size=min_size)
         output_queue.put([index, area])
         return
 
-    def cluster_areas(self, number_of_bursts=1, max_distance=None,
+    def cluster_areas(self, divisions_clust, index_length, number_of_bursts=1, max_distance=None,
                     max_angle_diff=None, min_size=5):
         """
         Returns an array where each value is total cluster area in
@@ -1929,14 +1928,14 @@ class Experiment(object):
             raise ValueError(msg)
         if not len(self._cluster_areas):
             print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Obtaining cluster areas with min_size=" + str(min_size)
-            z_vals = self._get_cluster_areas(max_distance=max_distance,
+            z_vals = self._get_cluster_areas(divisions_clust, index_length, max_distance=max_distance,
                             max_angle_diff=max_angle_diff, min_size=min_size)
             areas, indices = self._average_cluster_areas(z_vals,
                                         number_of_bursts=number_of_bursts,
                                         min_size=min_size)
             self._cluster_areas = areas
             print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Obtaining cluster areas with min_size=0"
-            z_vals = self._get_cluster_areas(max_distance=max_distance,
+            z_vals = self._get_cluster_areas(divisions_clust, index_length, max_distance=max_distance,
                             max_angle_diff=max_angle_diff, min_size=0)
             norm_areas, indices = self._average_cluster_areas(z_vals,
                                         number_of_bursts=number_of_bursts,
@@ -1945,14 +1944,14 @@ class Experiment(object):
             self._indices = indices
         return self._cluster_areas
 
-    def get_order_evolution_coeficient(self, number_of_bursts=1, max_distance=None,
+    def get_order_evolution_coeficient(self, divisions_clust, index_length, number_of_bursts=1, max_distance=None,
                     max_angle_diff=None, min_size=5):
         """
             Returns coeficient of order param evolution.
         """
         if self._popt is None or self._std_dev is None:
             print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing order evolution parameter"
-            cluster_areas = self.cluster_areas(number_of_bursts=number_of_bursts,
+            cluster_areas = self.cluster_areas(divisions_clust, index_length, number_of_bursts=number_of_bursts,
                                        max_distance=max_distance,
                                        max_angle_diff=max_angle_diff,
                                        min_size=min_size)
@@ -1976,16 +1975,14 @@ class Experiment(object):
             indep = math.e**intercept
         return exponent, indep
 
-    def plot_cluster_areas(self, number_of_bursts=1, max_distance=None,
+    def plot_cluster_areas(self, divisions_clust, index_length, number_of_bursts=1, max_distance=None,
                     max_angle_diff=None, min_size=10):
         """
             Plots cluster areas evolution.
         """
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing cluster areas"
-        areas = self.cluster_areas(number_of_bursts=number_of_bursts,
-                                   max_distance=max_distance,
-                                   max_angle_diff=max_angle_diff,
-                                   min_size=min_size)
+        areas = self.cluster_areas(divisions_clust, index_length, 
+                    max_distance=max_distance, max_angle_diff=max_angle_diff, min_size=min_size)
         total_areas = self._total_cluster_areas
         norm_areas = []
         self._compute_times(number_of_bursts=number_of_bursts)

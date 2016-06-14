@@ -38,7 +38,7 @@ try:
     vector_map = 1
     clusters = 1
     clusters_hist = 1
-    avg_temp = 1
+    avg_temp = 0
     order_param_exp = 1
     lost_percentage = 0
     run_imagej = 0
@@ -51,6 +51,8 @@ try:
     # variables
     coef = 5
     divisions = 50
+    cluster_divisions = 10
+    cluster_index_length = 1
     #sigma = sigma_coef * subsystem_rad
     sigma_coef = 2
     changing_props = 0
@@ -210,10 +212,10 @@ try:
                     experiment_.create_videos(divisions=divisions, fps=10, max_distance=30, max_angle_diff=60,
                                              number_of_bursts=1)
                 if clusters:
-                    experiment_.plot_cluster_areas(number_of_bursts=1, max_distance=150,
-                            max_angle_diff=10, min_size=20)
+                    experiment_.plot_cluster_areas(cluster_divisions, cluster_index_length, number_of_bursts=5, max_distance=1.8,
+                            max_angle_diff=10, min_size=5)
                 if clusters_hist:
-                    experiment_.create_cluster_histogram_video(max_distance=150,
+                    experiment_.create_cluster_histogram_video(cluster_divisions, cluster_index_length, max_distance=50,
                                         max_angle_diff=10, fps=15)
                 if avg_temp:
                     experiment_.plot_average_temperature(100, 10, 5)
@@ -259,10 +261,10 @@ try:
                     experiment_.create_videos(divisions=divisions, fps=10, max_distance=150, max_angle_diff=math.pi/4,
                                              number_of_bursts=1, limit=temp_final_rod_num_limit)
                 if clusters:
-                    experiment_.plot_cluster_areas(number_of_bursts=5, max_distance=1.8,
+                    experiment_.plot_cluster_areas(cluster_divisions, cluster_index_length, number_of_bursts=5, max_distance=1.8,
                             max_angle_diff=10, min_size=5)
                 if clusters_hist:
-                    experiment_.create_cluster_histogram_video(max_distance=50,
+                    experiment_.create_cluster_histogram_video(cluster_divisions, cluster_index_length, max_distance=50,
                                         max_angle_diff=10, fps=15)
                 if avg_temp:
                     experiment_.plot_average_temperature(max_distance=100, max_angle_diff=10, limit=5)
