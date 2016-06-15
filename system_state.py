@@ -520,35 +520,35 @@ class SystemState(object):
 
     def _compute_Q2_matrix(self, divisions):
         """
-        Computes correlation_Q2 matrix
+        Computes Q2 matrix
         """
         self.divide_in_circles(divisions)
         subdivision = self._actual_subdivision
-        correlation_Q2_subsystems = []
+        Q2_subsystems = []
         for subsystem_ in subdivision:
                 subsystem = methods.decompress_state(subsystem_)
-                correlation_Q2 = [subsystem.center[0], subsystem.center[1]]
-                correlation_Q2.append(subsystem.correlation_Q2)
-                correlation_Q2_subsystems.append(methods.compress_state(correlation_Q2))
-        return correlation_Q2_subsystems
+                Q2 = [subsystem.center[0], subsystem.center[1]]
+                Q2.append(subsystem.Q2)
+                Q2_subsystems.append(methods.compress_state(Q2))
+        return Q2_subsystems
 
     def _compute_Q4_matrix(self, divisions):
         """
-        Computes correlation_Q4 matrix
+        Computes Q4 matrix
         """
         self.divide_in_circles(divisions)
         subdivision = self._actual_subdivision
-        correlation_Q4_subsystems = []
+        Q4_subsystems = []
         for subsystem_ in subdivision:
                 subsystem = methods.decompress_state(subsystem_)
-                correlation_Q4 = [subsystem.center[0], subsystem.center[1]]
-                correlation_Q4.append(subsystem.correlation_Q4)
-                correlation_Q4_subsystems.append(methods.compress_state(correlation_Q4))
-        return correlation_Q4_subsystems
+                Q4 = [subsystem.center[0], subsystem.center[1]]
+                Q4.append(subsystem.Q4)
+                Q4_subsystems.append(methods.compress_state(Q4))
+        return Q4_subsystems
 
-    def correlation_Q2_plot_matrix(self, divisions):
+    def Q2_plot_matrix(self, divisions):
         """
-            Returns values for plotting correlation_Q2 matrix.
+            Returns values for plotting Q2 matrix.
         """
         x_values = []
         y_values = []
@@ -562,16 +562,16 @@ class SystemState(object):
             z_values.append(z_val)
         return x_values, y_values, z_values
 
-    def correlation_Q2_plot_matrix_queue(self, divisions, index, output_queue):
+    def Q2_plot_matrix_queue(self, divisions, index, output_queue):
         """
             Multiprocessing friendly function.
         """
-        x_val, y_val, z_val = self.correlation_Q2_plot_matrix(divisions)
+        x_val, y_val, z_val = self.Q2_plot_matrix(divisions)
         output_queue.put([index, x_val, y_val, z_val])
 
-    def correlation_Q4_plot_matrix(self, divisions):
+    def Q4_plot_matrix(self, divisions):
         """
-            Returns values for plotting correlation_Q4 matrix.
+            Returns values for plotting Q4 matrix.
         """
         x_values = []
         y_values = []
@@ -586,11 +586,11 @@ class SystemState(object):
         Q4_subsystems = None
         return x_values, y_values, z_values
 
-    def correlation_Q4_plot_matrix_queue(self, divisions, index, output_queue):
+    def Q4_plot_matrix_queue(self, divisions, index, output_queue):
         """
             Multiprocessing friendly function.
         """
-        x_val, y_val, z_val = self.correlation_Q4_plot_matrix(divisions)
+        x_val, y_val, z_val = self.Q4_plot_matrix(divisions)
         output_queue.put([index, x_val, y_val, z_val])
 
     @property
@@ -1006,38 +1006,38 @@ class SubsystemState(object):
         self._rods = queue.Queue(rods)
 
     @property
-    def correlation_Q2(self):
+    def Q2(self):
         """
             sqrt(<cos(2*angle)>^2+<sin(2*angle)>^2)
         """
         num = self.number_of_rods
         if num in [0,1] or not self.area:
-            correlation_Q2 = [-1000, -1000]
-            return correlation_Q2
+            Q2 = [-1000, -1000]
+            return Q2
         Q2_cos, Q2_sin = 0, 0
         N = len(self)
         for rod_ in self:
             Q2_cos += float(math.cos(2*rod_.angle))/N
             Q2_sin += float(math.sin(2*rod_.angle))/N
-        correlation_Q2 = [Q2_cos, Q2_sin]
-        return correlation_Q2
+        Q2 = [Q2_cos, Q2_sin]
+        return Q2
 
     @property
-    def correlation_Q4(self):
+    def Q4(self):
         """
             sqrt(<cos(4*angle)>^2+<sin(4*angle)>^2)
         """
         num = self.number_of_rods
         if num in [0,1] or not self.area:
-            correlation_Q4 = [-1000, -1000]
-            return correlation_Q4
+            Q4 = [-1000, -1000]
+            return Q4
         Q4_cos, Q4_sin = 0, 0
         N = len(self)
         for rod_ in self:
             Q4_cos += float(math.cos(4*rod_.angle))/N
             Q4_sin += float(math.sin(4*rod_.angle))/N
-        correlation_Q4 = [Q4_cos, Q4_sin]
-        return correlation_Q4
+        Q4 = [Q4_cos, Q4_sin]
+        return Q4
 
 
 

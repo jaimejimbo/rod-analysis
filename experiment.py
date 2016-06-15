@@ -604,7 +604,7 @@ class Experiment(object):
                 #time.sleep(settings.waiting_time)
                 new_process.start()
         print CLEAR_LAST
-        
+
 
     def _clean_unmatched_rods_process(self, index, output_queue):
         """
@@ -632,7 +632,7 @@ class Experiment(object):
                 relative_dict[initial_rod_id] = None
         assert len(initial_rods_1) == len(initial_rods_2), "Lost rods\n\n"
         output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict)])
-        
+
 
     def evolution_dictionaries(self, max_distance=100, max_angle_diff=90,
                                 limit=5, amount_of_rods=200):
@@ -1162,7 +1162,7 @@ class Experiment(object):
 
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating Q2 video"
         frames = len(self)
-        function_name = 'correlation_Q2_plot_matrix'
+        function_name = 'Q2_plot_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
@@ -1179,7 +1179,7 @@ class Experiment(object):
 
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating Q4 video"
         frames = len(self)
-        function_name = 'correlation_Q4_plot_matrix'
+        function_name = 'Q4_plot_matrix'
         kappas = self.kappas
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
@@ -1647,7 +1647,7 @@ class Experiment(object):
             data = methods.compress([x_vals, y_vals, u_vals_avg, v_vals_avg, units, name, self.radius], level=9)
             output_file.write(data)
             output_file.close()
-        
+
 
     def plottable_vectors(self, max_distance, max_angle_diff, limit,
                                         amount_of_rods, divisions):
@@ -1722,6 +1722,28 @@ class Experiment(object):
                 u_val.append(vector[0])
                 v_val.append(vector[1])
         output_queue.put([x_val, y_val, u_val, v_val])
+
+    def velocity_rotational(self, divisions, limit, amount_of_rods, max_distance, max_angle_diff):
+        """
+        Computes sum_i(d_x(v_y_i)-d_y(v_x_i))
+        """
+        local_speeds = self.local_speeds(max_distance, max_angle_diff,
+                                            limit, amount_of_rods, divisions)
+        for index in range(len(local_speeds)):
+            pass
+
+    def velocity_rotational_process(self, local_speed, index):
+        """
+
+        """
+        output = []
+        velocity = methods.decompress(local_speed)
+        for index_x in range(local_speed):
+            for index_y in range(local_speed[0]):
+                output_ = float(velocity[index_x+1][index_y][1]-velocity[index_x-1][index_y][1])/diff
+                output_ -= float(velocity[index_x][index_y+1][0]-velocity[index_x][index_y-1][0])/diff
+                output += abs(output_)
+        return output
 
     def create_temperature_video(self, divisions, folder, fps,
                             max_distance, max_angle_diff,
@@ -2003,33 +2025,6 @@ class Experiment(object):
             fig = plt.figure()
             plt.xlabel("time[seconds]")
             plt.ylabel("cluster area proportion")
-        #try:
-        #    exponent, indep = self.get_order_evolution_coeficient(divisions_clust, index_length, number_of_bursts=number_of_bursts,
-        #                                        max_distance=max_distance,
-        #                                        max_angle_diff=max_angle_diff,
-        #                                        min_size=min_size)                                       
-        #except ValueError:
-        #    print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "All areas are 0 (no long enough clusters in systems). Skipping"
-        #    #print total_areas
-        #    return
-        #line = []
-        #for time in times_all:
-        #    value = indep*(time**exponent)
-        #    line.append(value)
-        #name = "coef_K"+str(self.kappas)+".log"
-        #output = open(name, 'w')
-        #text = "Exponent: "+str(exponent)+"\nindep: "+str(indep) +"\n"
-        #output.write(text)
-        #output.close()
-        #if settings.plot:
-        #    label = "Exponente: "+str(exponent)
-        #    line_plt = plt.plot(valid_times, line, label=label)
-        #if settings.to_file:
-		#    output_file_name = "linear_approx_K"+str(self.kappas)+".data"
-		#    output_file = open(output_file_name, 'w')
-		#    data = methods.compress([valid_times, line], level=9)
-		#    output_file.write(data)
-		#    output_file.close()
         clust = open("cluster_areas.txt", "w")
         for index in range(len(valid_times)):
             try:
