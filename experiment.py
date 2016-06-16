@@ -1157,7 +1157,7 @@ class Experiment(object):
     def create_relative_Q2_video(self, divisions, folder, fps,
                                  number_of_bursts):
         """
-        Creates a video of correlation Q2 evolution.
+        Creates a video of Q2 evolution.
         """
 
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating Q2 video"
@@ -1167,14 +1167,14 @@ class Experiment(object):
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
         units = "[S.U.]"
-        title = "Angular correlation 2*angle"
+        title = "Q2"
         self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts, title=title)
 
     def create_relative_Q4_video(self, divisions, folder, fps,
                                  number_of_bursts):
         """
-        Creates a video of correlation Q4 evolution.
+        Creates a video of Q4 evolution.
         """
 
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating Q4 video"
@@ -1184,7 +1184,7 @@ class Experiment(object):
         prop = self.average_covered_area_proportion[0]
         name = str(folder)+str(function_name)+"_K"+str(kappas)+".mp4"#+"prop"+str(round(100*prop,1))+'%.mp4'
         units = "[S.U.]"
-        title = "Angular correlation 4*angle"
+        title = "Q4"
         self._generic_scatter_animator(name, function_name, units,
                         divisions, fps=fps, number_of_bursts=number_of_bursts, title=title)
 

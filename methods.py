@@ -1300,6 +1300,7 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, bur
             levels = [0]
             cs = plt.contour(x_grid, y_grid, z_grid, linewidths=1.25, colors='k', levels=levels)
             length = 0
+            plt.gca().invert_yaxis()
             x0,y0 =  cs.allsegs[0][0][0]
             startx = x0
             starty = y0

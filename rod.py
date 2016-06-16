@@ -30,13 +30,8 @@ class Rod(object):
         self._min_feret = float(minferet)       #11
         #self._x_start = float(xstart)           #12
         #self._y_start = float(ystart)           #13
-        #self._hash = 0
-        #self._direction_matrix = matrix.zeros(2, 2)
-        #self._kappa = float(feret)/float(minferet)
         self._real_kappa = kappa
         self._real_length = real_length
-        #self._feret = float(real_length)
-        #self._min_feret = real_length/self._kappa
 
     @property
     def area(self):
@@ -88,8 +83,6 @@ class Rod(object):
         """
         output = ""
         output += "id: "+str(self.identifier)+"\n"
-        #output += "center: "+str(self.center)+"\n"
-        #output += "angle: "+str(self.angle)+"\n"
         return output
 
     @property
@@ -98,21 +91,6 @@ class Rod(object):
         Returns an identification number.
         """
         return self._identifier
-
-    #@property
-    #def hash_(self):
-    #    """
-    #    Returns an unique number of this rod.
-    #    Uses some of rod properties.
-    #    """
-    #    output = ""
-    #    output += str(self.identifier)
-    #    output += str(int(self.min_feret))
-    #    output += str(int(self.x_mid))
-    #    output += str(int(self.y_mid))
-    #    output += str(int(self.kappa))
-    #    return int(output)
-
 
     @property
     def min_feret(self):
@@ -141,13 +119,6 @@ class Rod(object):
         Real L/D of rod. 
         """
         return self._real_kappa
-
-    #@kappa.setter
-    #def kappa(self, value):
-    #    """
-    #    L/D of rod.
-    #    """
-    #    self._kappa = value
 
     @property
     def angle(self):
@@ -211,7 +182,7 @@ class Rod(object):
             self._min_feret = self._feret/float(kappa)
         return cond
 
-    def vector_to_rod(self, rod, scale):#=1):
+    def vector_to_rod(self, rod, scale):
         """
         Returns a vector that joins 2 rods.
         Start in self.
@@ -219,9 +190,9 @@ class Rod(object):
         scale = float(scale)
         diff_x = (rod.x_mid-self.x_mid)*scale
         diff_y = (rod.y_mid-self.y_mid)*scale
-        return (diff_x, diff_y)
+        return (diff_x, -diff_y)
 
-    def distance_to_rod(self, rod, scale):#=1):
+    def distance_to_rod(self, rod, scale):
         """
         Returns the distance to another rod.
         """
@@ -236,23 +207,6 @@ class Rod(object):
         if angle == 0 and int(imagej_angle/(math.pi/2.0))==1:
             angle = math.pi/2.0
         return angle
-
-    #@property
-    #def direction_matrix(self):
-    #    """
-    #    Returns a matrix with the form:
-    #    ex^2-1  ex*ey
-    #    ex*ey   ey^2-1
-    #    """
-    #    if self._direction_matrix == matrix.zeros(2, 2):
-    #        e_x = math.cos(self.angle)
-    #        e_y = math.sin(self.angle)
-    #        self._direction_matrix[0][0] = 2*e_x**2-1
-    #        self._direction_matrix[1][1] = 2*e_y**2-1
-    #        self._direction_matrix[1][0] = e_x*e_y
-    #        self._direction_matrix[0][1] = e_x*e_y
-    #    return self._direction_matrix
-
     @property
     def real_length(self):
         """

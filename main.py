@@ -27,7 +27,7 @@ try:
     if not waiting_time:
         waiting_time_process = 0
     #None uses all cpus      
-    cpus = int(mp.cpu_count()/2)
+    cpus = 3#int(mp.cpu_count()/2)
     if cpus is None:
         cpus = int(mp.cpu_count())
     # 1 or True, 0 or False
@@ -60,7 +60,7 @@ try:
     special_chars = 0
     ignore_temperature = 0
     counter_refresh = 10
-    plot_rods = 0
+    plot_rods = 1
     order_param = 1
     grid_length = 1000
     temp_final_rod_num_limit = 20
