@@ -1286,7 +1286,7 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, bur
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting"
         create_scatter_animation(x_val, y_val, z_vals_copy, divisions, z_max, z_min, units, name, radius, title=title)
         if settings.order_param_lengths:
-        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing contour lengths"
+            print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing contour lengths"
             lengths = []
             for index in range(len(z_vals_avg)):
                 #fig = plt.figure()
