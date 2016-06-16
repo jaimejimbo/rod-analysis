@@ -1431,7 +1431,7 @@ class Experiment(object):
                                 max_distance, max_angle_diff,
                                 limit, amount_of_rods, number_of_bursts, coef)
         if settings.rotationals:
-            self.plot_rotational_sum(divisions, limit, amount_of_rods, max_distance, max_angle_diff, number_of_bursts)
+            self.plot_rotational_sum(divisions, limit, amount_of_rods, max_distance, max_angle_diff, number_of_bursts, coef)
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,
@@ -1725,11 +1725,12 @@ class Experiment(object):
                 v_val.append(vector[1])
         output_queue.put([x_val, y_val, u_val, v_val])
 
-    def plot_rotational_sum(self, divisions, limit, amount_of_rods, max_distance, max_angle_diff, number_of_bursts):
+    def plot_rotational_sum(self, divisions, limit, amount_of_rods, max_distance, max_angle_diff, number_of_bursts, coef):
         """
         Plots velocity rotational sum over time.
         """
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Velocity rotational"
+        number_of_bursts *= coef
         valid_times = self.times(number_of_bursts)
         bursts_groups = self.bursts_groups
         z_vals = self.velocity_rotational_sum(divisions, limit, amount_of_rods, max_distance, max_angle_diff)
