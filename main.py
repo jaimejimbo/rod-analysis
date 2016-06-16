@@ -35,7 +35,7 @@ try:
     density = 0
     Q2_Q4 = 0
     temperature = 0
-    vector_map = 0
+    vector_map = 1
     rotationals = 1
     clusters = 0
     clusters_hist = 0
@@ -63,6 +63,7 @@ try:
     counter_refresh = 10
     plot_rods = 0
     order_param = 1
+    order_param_lengths = 0
     grid_length = 1000
     temp_final_rod_num_limit = 20
     cluster_bursts = 1
@@ -160,6 +161,8 @@ try:
     settings.write("vector_map = {0}".format(vector_map))
     settings.write("\n")
     settings.write("rotationals = {0}".format(rotationals))
+    settings.write("\n")
+    settings.write("order_param_lengths = {0}".format(order_param_lengths))
     settings.write("\n")
     try:
         rad = zone_coords[2]

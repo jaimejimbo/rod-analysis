@@ -1285,35 +1285,36 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, bur
         z_vals_copy = copy.deepcopy(z_vals_avg)
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting"
         create_scatter_animation(x_val, y_val, z_vals_copy, divisions, z_max, z_min, units, name, radius, title=title)
+        if settings.order_param_lengths:
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing contour lengths"
-        lengths = []
-        for index in range(len(z_vals_avg)):
-            #fig = plt.figure()
-            z_val = decompress(z_vals_avg[index])
-            x_grid = numpy.linspace(min(x_val), max(x_val), settings.grid_length)
-            y_grid = numpy.linspace(min(y_val), max(y_val), settings.grid_length)
-            x_val = numpy.array(x_val)
-            y_val = numpy.array(y_val)
-            z_val = numpy.array(z_val)
-            len(x_grid)
-            z_grid = griddata((x_val, y_val), z_val, (x_grid[None,:], y_grid[:,None]), method='cubic')
-            levels = [0]
-            cs = plt.contour(x_grid, y_grid, z_grid, linewidths=1.25, colors='k', levels=levels)
-            length = 0
-            plt.gca().invert_yaxis()
-            x0,y0 =  cs.allsegs[0][0][0]
-            startx = x0
-            starty = y0
-            length = 0
-            for coords in cs.allsegs[0][0][1:]:
-                x1,y1 =  coords[0], coords[1]
-                length += numpy.sqrt((x1-x0)**2 + (y1-y0)**2)
-                x0,y0 = x1,y1
-            length += numpy.sqrt((startx-x0)**2 + (starty-y0)**2)
-            lengths.append(length)
-        fig = plt.figure()
-        plt.scatter(bursts_times, lengths)
-        plt.savefig("cluster_boundaries_length.png")
+            lengths = []
+            for index in range(len(z_vals_avg)):
+                #fig = plt.figure()
+                z_val = decompress(z_vals_avg[index])
+                x_grid = numpy.linspace(min(x_val), max(x_val), settings.grid_length)
+                y_grid = numpy.linspace(min(y_val), max(y_val), settings.grid_length)
+                x_val = numpy.array(x_val)
+                y_val = numpy.array(y_val)
+                z_val = numpy.array(z_val)
+                len(x_grid)
+                z_grid = griddata((x_val, y_val), z_val, (x_grid[None,:], y_grid[:,None]), method='cubic')
+                levels = [0]
+                cs = plt.contour(x_grid, y_grid, z_grid, linewidths=1.25, colors='k', levels=levels)
+                length = 0
+                plt.gca().invert_yaxis()
+                x0,y0 =  cs.allsegs[0][0][0]
+                startx = x0
+                starty = y0
+                length = 0
+                for coords in cs.allsegs[0][0][1:]:
+                    x1,y1 =  coords[0], coords[1]
+                    length += numpy.sqrt((x1-x0)**2 + (y1-y0)**2)
+                    x0,y0 = x1,y1
+                length += numpy.sqrt((startx-x0)**2 + (starty-y0)**2)
+                lengths.append(length)
+            fig = plt.figure()
+            plt.scatter(bursts_times, lengths)
+            plt.savefig("cluster_boundaries_length.png")
 
 
 def _compute_z_averages_process(index, output_queue, group, z_vals):
