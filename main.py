@@ -32,17 +32,18 @@ try:
         cpus = int(mp.cpu_count())
     # 1 or True, 0 or False
     create_videos = 1
-    density = 1
-    Q2_Q4 = 1
-    temperature = 1
-    vector_map = 1
-    clusters = 1
-    clusters_hist = 1
+    density = 0
+    Q2_Q4 = 0
+    temperature = 0
+    vector_map = 0
+    rotationals = 1
+    clusters = 0
+    clusters_hist = 0
     avg_temp = 0
-    order_param_exp = 1
+    order_param_exp = 0
     lost_percentage = 0
     run_imagej = 0
-    run_props = 1
+    run_props = 0
     run_graphs = 1
     run_check_dim = 0
     get_image_dates = 0
@@ -60,7 +61,7 @@ try:
     special_chars = 0
     ignore_temperature = 0
     counter_refresh = 10
-    plot_rods = 1
+    plot_rods = 0
     order_param = 1
     grid_length = 1000
     temp_final_rod_num_limit = 20
@@ -157,6 +158,8 @@ try:
     settings.write("temperature = {0}".format(temperature))
     settings.write("\n")
     settings.write("vector_map = {0}".format(vector_map))
+    settings.write("\n")
+    settings.write("rotationals = {0}".format(rotationals))
     settings.write("\n")
     try:
         rad = zone_coords[2]

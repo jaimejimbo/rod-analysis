@@ -1430,6 +1430,8 @@ class Experiment(object):
             self.create_vector_map_video(divisions, folder, fps_temps,
                                 max_distance, max_angle_diff,
                                 limit, amount_of_rods, number_of_bursts, coef)
+        if settings.rotationals:
+            self.plot_rotational_sum(divisions, limit, amount_of_rods, max_distance, max_angle_diff, number_of_bursts)
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,
@@ -1723,27 +1725,131 @@ class Experiment(object):
                 v_val.append(vector[1])
         output_queue.put([x_val, y_val, u_val, v_val])
 
-    def velocity_rotational(self, divisions, limit, amount_of_rods, max_distance, max_angle_diff):
+    def plot_rotational_sum(self, divisions, limit, amount_of_rods, max_distance, max_angle_diff, number_of_bursts):
+        """
+        Plots velocity rotational sum over time.
+        """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Velocity rotational"
+        valid_times = self.times(number_of_bursts)
+        bursts_groups = self.bursts_groups
+        z_vals = self.velocity_rotational_sum(divisions, limit, amount_of_rods, max_distance, max_angle_diff)
+        z_vals_avg = []
+        if not (number_of_bursts is None):
+            end = False
+            while not end:
+                groups = []
+                average = None
+                _z_vals = []
+                for dummy_time in range(number_of_bursts):
+                    try:
+                        group = bursts_groups.pop(0)
+                        groups.append(group)
+                    except IndexError:
+                        end = True
+                if not len(groups):
+                    break
+                for group in groups:
+                    for dummy_time in range(len(group)):
+                        z_val = z_vals.pop(0)
+                        _z_vals.append(z_val)
+                average = sum(_z_vals)/len(_z_vals)
+                z_vals_avg.append(average)
+        else:
+            z_vals_avg = z_vals
+        z_max = max(z_vals_avg)
+        z_vals_avg = [val/z_max for val in z_vals_avg]
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting"
+        if settings.plot:
+            fig = plt.figure()
+            plt.xlabel("time[seconds]")
+            plt.ylabel("sum of velocity rotational[norm with max]")
+        clust = open("rotational.txt", "w")
+        for index in range(len(valid_times)):
+            try:
+                string = str(valid_times[index])+"\t"+str(z_vals_avg[index])+"\n"
+                clust.write(string)
+            except:
+                pass
+        clust.close()
+        if settings.plot:
+            try:
+                data_plt = plt.scatter(valid_times, z_vals_avg, label="velocity rotational")
+                plt.legend()
+                kappa = int(self.average_kappa)
+                title = "K"+str(kappa)
+                plt.ylim((0, 1.2))
+                plt.suptitle(title)
+            except ValueError:
+                print(len(valid_times), len(z_vals_avg))
+                print(valid_times, z_vals_avg)
+                raise ValueError
+            plt.grid(b=True, which='major', color='b', linestyle='-')
+            plt.grid(b=True, which='minor', color='b', linestyle='--')
+            file_name = "velocity_rotational_sum_K" + str(self.kappas) + ".png"
+            plt.savefig(file_name)
+        if settings.to_file:
+	        output_file_name = "velocity_rotational_sum_K"+str(self.kappas)+".data"
+	        output_file = open(output_file_name, 'w')
+	        data = methods.compress([valid_times, z_vals_avg], level=9)
+	        output_file.write(data)
+	        output_file.close()
+            
+
+    def velocity_rotational_sum(self, divisions, limit, amount_of_rods, max_distance, max_angle_diff):
         """
         Computes sum_i(d_x(v_y_i)-d_y(v_x_i))
         """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Velocity rotational"
         local_speeds = self.local_speeds(max_distance, max_angle_diff,
-                                            limit, amount_of_rods, divisions)
+                                         limit, amount_of_rods, divisions)
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing velocity rotational sum values"
+        processes = []
+        rotationals = []
+        output_queue = mp.Queue()
         for index in range(len(local_speeds)):
-            pass
+            local_speed = local_speeds[index]
+            process = mp.Process(target=self.velocity_rotational_process, args=(index, local_speed, divisions, output_queue))
+            processes.append(process)
+            rotationals.append(None)
+        num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
+        finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        while finished < num_processes:
+            counter += 1
+            finished += 1
+            previous_time, counter, time_left, times = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
+            output = output_queue.get()
+            rotationals[output[0]] = output[1]
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                #time.sleep(settings.waiting_time)
+                new_process.start()
+        print CLEAR_LAST
+        return rotationals
+            
 
-    def velocity_rotational_process(self, local_speed, index):
+    def velocity_rotational_process(self, index, local_speeds, divisions, output_queue):
         """
 
         """
-        output = []
-        velocity = methods.decompress(local_speed)
-        for index_x in range(local_speed):
-            for index_y in range(local_speed[0]):
-                output_ = float(velocity[index_x+1][index_y][1]-velocity[index_x-1][index_y][1])/diff
-                output_ -= float(velocity[index_x][index_y+1][0]-velocity[index_x][index_y-1][0])/diff
-                output += abs(output_)
-        return output
+        output = 0
+        local_speeds = methods.decompress(local_speeds)
+        subgroups = self.get(index).subgroups_matrix(divisions)
+        diff = abs(subgroups[0][1].center[0]-subgroups[0][0].center[0])
+        for index_x in range(1, len(local_speeds)-1):
+            for index_y in range(1, len(local_speeds[index_x])-1):
+                try:
+                    output_ = float(local_speeds[index_x+1][index_y].values()[0][3][1]-local_speeds[index_x-1][index_y].values()[0][3][1])/diff
+                    output_ -= float(local_speeds[index_x][index_y+1].values()[0][3][0]-local_speeds[index_x][index_y-1].values()[0][3][0])/diff
+                    output += abs(output_)
+                except IndexError:
+                    pass
+        output_queue.put([index, output])
 
     def create_temperature_video(self, divisions, folder, fps,
                             max_distance, max_angle_diff,
@@ -2043,8 +2149,6 @@ class Experiment(object):
         clust.close()
         if settings.plot:
             try:
-                valid_times = valid_times
-                norm_areas = norm_areas
                 data_plt = plt.scatter(valid_times, norm_areas, label="Area clusters")
                 plt.legend()
                 kappa = int(self.average_kappa)
