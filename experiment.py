@@ -995,7 +995,7 @@ class Experiment(object):
     def density_and_quad_speed(self, max_distance=100, max_angle_diff=90,
                                 limit=5, amount_of_rods=200, divisions=5):
         """
-        Returns 2 arrays: density values and temperature
+        Returns 2 arrays: density values and average_quadratic_speed
         """
         if (max_distance, max_angle_diff, limit, amount_of_rods) != (self._max_distance,
                     self._max_angle_diff, self._limit, self._amount_of_rods):
@@ -1255,7 +1255,7 @@ class Experiment(object):
         match1 = re.match(r'.*plottable_density.*', function_name)
         match2 = re.match(r'.*Q[2|4].*', function_name)
         match3 = re.match(r'.*vector.*', function_name)
-        match4 = re.match(r'.*temperature.*', function_name)
+        match4 = re.match(r'.*average_quadratic_speed.*', function_name)
         print ""
         if match2:
             z_max = 1
@@ -1421,9 +1421,9 @@ class Experiment(object):
         if settings.Q2_Q4:
             self.create_relative_Q2_video(divisions, folder, fps, number_of_bursts)
             self.create_relative_Q4_video(divisions, folder, fps, number_of_bursts)
-        if settings.temperature:
+        if settings.average_quadratic_speed:
             max_angle_diff = math.radians(max_angle_diff)
-            self.create_temperature_video(divisions, folder, fps_temps, max_distance,
+            self.create_average_quadratic_speed_video(divisions, folder, fps_temps, max_distance,
                                    max_angle_diff, limit, amount_of_rods,
                                    number_of_bursts, coef)
         if settings.vector_map:
@@ -1617,7 +1617,7 @@ class Experiment(object):
             if not len(groups):
                 break
             for group in groups:
-                for dummy_time in range(len(group)):
+                for index in range(len(group)-1): #with -1 speeds between non-bursts states are not used
                     _u_vals.append(u_vals.pop(0))
                     _v_vals.append(v_vals.pop(0))
             try:
@@ -1750,7 +1750,7 @@ class Experiment(object):
                 if not len(groups):
                     break
                 for group in groups:
-                    for dummy_time in range(len(group)):
+                    for dummy_time in range(len(group)-1):
                         z_val = z_vals.pop(0)
                         _z_vals.append(z_val)
                 average = sum(_z_vals)/len(_z_vals)
@@ -1758,7 +1758,7 @@ class Experiment(object):
         else:
             z_vals_avg = z_vals
         z_max = max(z_vals_avg)
-        z_vals_avg = [val/z_max for val in z_vals_avg]
+        #z_vals_avg = [val/z_max for val in z_vals_avg]
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting"
         if settings.plot:
             fig = plt.figure()
@@ -1845,20 +1845,20 @@ class Experiment(object):
         for index_x in range(1, len(local_speeds)-1):
             for index_y in range(1, len(local_speeds[index_x])-1):
                 try:
-                    output_ = float(local_speeds[index_x+1][index_y].values()[0][3][1]-local_speeds[index_x-1][index_y].values()[0][3][1])/diff
-                    output_ -= float(local_speeds[index_x][index_y+1].values()[0][3][0]-local_speeds[index_x][index_y-1].values()[0][3][0])/diff
+                    output_ = float(local_speeds[index_x+1][index_y].values()[0][3][1]-local_speeds[index_x-1][index_y].values()[0][3][1])/(2*diff*divisions**2)
+                    output_ -= float(local_speeds[index_x][index_y+1].values()[0][3][0]-local_speeds[index_x][index_y-1].values()[0][3][0])/(2*diff*divisions**2)
                     output += abs(output_)
                 except IndexError:
                     pass
         output_queue.put([index, output])
 
-    def create_temperature_video(self, divisions, folder, fps,
+    def create_average_quadratic_speed_video(self, divisions, folder, fps,
                             max_distance, max_angle_diff,
                             limit, amount_of_rods, number_of_bursts, coef):
         """
-        Creates a video of temperature evolution.
+        Creates a video of average_quadratic_speed evolution.
         """
-        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating temperature video"
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating average_quadratic_speed video"
         x_vals, y_vals, z_vals = self.plottable_local_average_quadratic_speeds(
                                         max_distance, max_angle_diff, limit,
                                         amount_of_rods, divisions)
@@ -1884,7 +1884,7 @@ class Experiment(object):
             if not len(groups):
                 break
             for group in groups:
-                for dummy_time in range(len(group)):
+                for dummy_time in range(len(group)-1):
                     z_val = z_vals.pop(0)
                     new_vals = []
                     for val in z_val:
@@ -1907,11 +1907,11 @@ class Experiment(object):
         state = self.get(0)
         kappas = state.kappas
         state = None
-        name = str(folder)+"Temperature"+str(kappas)+".mp4"
+        name = str(folder)+"average_quadratic_speed"+str(kappas)+".mp4"
         z_max = max(z_maxs)
         z_min = min(z_mins)
         units = "[mm^2/seg^2]"
-        title = "\"Temperature\""
+        title = "\"average_quadratic_speed\""
         rad = self.radius
         if settings.plot:
             methods.create_scatter_animation(x_vals, y_vals, z_vals_avg, divisions, z_max, z_min, units, name, radius=rad, fps=fps, title=title)
@@ -1922,7 +1922,7 @@ class Experiment(object):
             output_file.write(data)
             output_file.close()
 
-    def _temperature_video_wrapper(self, x_val, y_val, z_vals,
+    def _average_quadratic_speed_video_wrapper(self, x_val, y_val, z_vals,
                                 divisions, name, z_max, z_min):
         """
         Wrapper
@@ -1947,7 +1947,7 @@ class Experiment(object):
         cb = plt.colorbar()
         plt.xlabel("x [pixels]")
         plt.ylabel("y [pixels]")
-        cb.set_label("Temperature [pixels^2/seg^2]")
+        cb.set_label("Average quadratic speeds [mm^2/seg^2]")
 
     def _average_cluster_areas(self, z_vals, number_of_bursts=1):
         """
@@ -2272,11 +2272,11 @@ class Experiment(object):
             print CLEAR_LAST
         return self._bursts_groups
 
-    def plot_average_temperature(self, max_distance=None, max_angle_diff=None, limit=None):
+    def plot_average_average_quadratic_speed(self, max_distance=None, max_angle_diff=None, limit=None):
         """
-            Average temperature over time.
+            Average average_quadratic_speed over time.
         """
-        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing average temperature"
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Computing average average_quadratic_speed"
         max_angle_diff = math.radians(max_angle_diff)
         self._compute_speeds(max_distance, max_angle_diff,
                         limit, None)
@@ -2320,10 +2320,10 @@ class Experiment(object):
             kappa = self.kappas
             name += str(kappa) + ".png"
             plt.xlabel("time [seconds]")
-            plt.ylabel("average temperature [pixels^2 / s^2]")
+            plt.ylabel("average average_quadratic_speed [pixels^2 / s^2]")
             plt.savefig(name)
         else:
-            name = "average_temperature_K"+str(self.kappas)+".data"
+            name = "average_average_quadratic_speed_K"+str(self.kappas)+".data"
             output_file = open(name, 'w')
             data = methods.compress([indices, average_speeds], level=9)
             output_file.write(data)

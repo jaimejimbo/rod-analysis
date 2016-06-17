@@ -848,34 +848,34 @@ def animate_scatter(x_val, y_val, z_vals,
     """
     try:
         z_val = decompress(z_vals.pop(0), level=settings.default_comp_level)
+        plt.cla()
+        plt.clf()
+        rad = float(radius*1.3)/divisions
+        size = (rad/4)**2
+        x_min = min(x_val)-rad*1.1
+        x_max = max(x_val)+rad*1.1
+        y_min = min(y_val)-rad*1.1
+        y_max = max(y_val)+rad*1.1
+        plt.xlim((x_min, x_max))
+        plt.ylim((y_min, y_max))
+        scat = plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
+                                            vmin=z_min, vmax=z_max)
+        scat.cmap.set_under('w')
+        scat.cmap.set_over('w')
+        plt.gca().invert_yaxis()
+        #step = int((z_max-z_min)*10.0)/100.0
+        #ticks = [int((z_min + index*step)*10.0)/10.0 for index in range(10+1)]
+        try:
+            cb = plt.colorbar()#ticks=ticks)
+        except TypeError:
+            print z_val
+        plt.xlabel("x [pixels]")
+        plt.ylabel("y [pixels]")
+        if not title is None:
+            plt.suptitle(title)
+        cb.set_label(units)
     except IndexError:
-        return
-    plt.cla()
-    plt.clf()
-    rad = float(radius*1.3)/divisions
-    size = (rad/4)**2
-    x_min = min(x_val)-rad*1.1
-    x_max = max(x_val)+rad*1.1
-    y_min = min(y_val)-rad*1.1
-    y_max = max(y_val)+rad*1.1
-    plt.xlim((x_min, x_max))
-    plt.ylim((y_min, y_max))
-    scat = plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
-                                        vmin=z_min, vmax=z_max)
-    scat.cmap.set_under('w')
-    scat.cmap.set_over('w')
-    plt.gca().invert_yaxis()
-    #step = int((z_max-z_min)*10.0)/100.0
-    #ticks = [int((z_min + index*step)*10.0)/10.0 for index in range(10+1)]
-    try:
-        cb = plt.colorbar()#ticks=ticks)
-    except TypeError:
-        print z_val
-    plt.xlabel("x [pixels]")
-    plt.ylabel("y [pixels]")
-    if not title is None:
-        plt.suptitle(title)
-    cb.set_label(units)
+        pass
 
 def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, units, name, radius=800, fps=15, title=None):
     """
@@ -884,7 +884,6 @@ def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, 
     print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Creating animation"
     fig = plt.figure()
     num_frames = len(z_vals_avg)
-    
     def animate(dummy_frame):
         """
         Wrapper.
@@ -1283,6 +1282,7 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, bur
         radius = 800
         title = "Order parameter"
         z_vals_copy = copy.deepcopy(z_vals_avg)
+        print len(z_vals_avg)
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting"
         create_scatter_animation(x_val, y_val, z_vals_copy, divisions, z_max, z_min, units, name, radius, title=title)
         if settings.order_param_lengths:
@@ -1300,8 +1300,7 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, bur
                 z_grid = griddata((x_val, y_val), z_val, (x_grid[None,:], y_grid[:,None]), method='cubic')
                 levels = [0]
                 cs = plt.contour(x_grid, y_grid, z_grid, linewidths=1.25, colors='k', levels=levels)
-                length = 0
-                plt.gca().invert_yaxis()
+                length = 0  
                 x0,y0 =  cs.allsegs[0][0][0]
                 startx = x0
                 starty = y0

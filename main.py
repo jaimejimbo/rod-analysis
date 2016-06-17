@@ -34,7 +34,7 @@ try:
     create_videos = 1
     density = 0
     Q2_Q4 = 0
-    temperature = 0
+    average_quadratic_speed = 0
     vector_map = 1
     rotationals = 1
     clusters = 0
@@ -59,7 +59,7 @@ try:
     changing_props = 0
     discard_exceptions = 0
     special_chars = 0
-    ignore_temperature = 0
+    ignore_average_quadratic_speed = 0
     counter_refresh = 10
     plot_rods = 0
     order_param = 1
@@ -140,7 +140,7 @@ try:
     settings.write("\n")
     settings.write("waiting_time_process = {0}".format(waiting_time_process))
     settings.write("\n")
-    settings.write("ignore_temperature = {0}".format(ignore_temperature))
+    settings.write("ignore_average_quadratic_speed = {0}".format(ignore_average_quadratic_speed))
     settings.write("\n")
     settings.write("counter_refresh = {0}".format(counter_refresh))
     settings.write("\n")
@@ -156,7 +156,7 @@ try:
     settings.write("\n")
     settings.write("Q2_Q4 = {0}".format(Q2_Q4))
     settings.write("\n")
-    settings.write("temperature = {0}".format(temperature))
+    settings.write("average_quadratic_speed = {0}".format(average_quadratic_speed))
     settings.write("\n")
     settings.write("vector_map = {0}".format(vector_map))
     settings.write("\n")
@@ -231,7 +231,7 @@ try:
                                 cluster_index_length, max_distance=cluster_max_dist,
                                 max_angle_diff=cluster_max_angle, fps=15)
                 if avg_temp:
-                    experiment_.plot_average_temperature(100, 10, 5)
+                    experiment_.plot_average_average_quadratic_speed(100, 10, 5)
                 if lost_percentage:
                     percentage, std_dev = experiment_.lost_rods_percentage
                     msg = "Rods lost: "+str(percentage)+"%\t"+" Standard deviation: "+str(std_dev)
@@ -282,7 +282,7 @@ try:
                                 cluster_index_length, max_distance=cluster_max_dist,
                                 max_angle_diff=cluster_max_angle, fps=15)
                 if avg_temp:
-                    experiment_.plot_average_temperature(max_distance=100, max_angle_diff=10, limit=5)
+                    experiment_.plot_average_average_quadratic_speed(max_distance=100, max_angle_diff=10, limit=5)
                 if lost_percentage:
                     percentage, std_dev = experiment_.lost_rods_percentage
                     msg = "Rods lost: "+str(percentage)+"%\t"+" Standard deviation: "+str(std_dev)
