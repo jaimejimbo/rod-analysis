@@ -1282,7 +1282,6 @@ def order_param_animation(matrices_12, matrices_6, divisions, bursts_groups, bur
         radius = 800
         title = "Order parameter"
         z_vals_copy = copy.deepcopy(z_vals_avg)
-        print len(z_vals_avg)
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting"
         create_scatter_animation(x_val, y_val, z_vals_copy, divisions, z_max, z_min, units, name, radius, title=title)
         if settings.order_param_lengths:
