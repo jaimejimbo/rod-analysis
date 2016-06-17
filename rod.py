@@ -15,21 +15,12 @@ class Rod(object):
         (ID, area, xmid, ymid, major, minor,
                         angle, feret, feretx, ferety,
                         feretangle, minferet, xstart, ystart) = args_tuple
-                                                #Column
-        self._identifier = int(ID)                      #0
-        #self._area = float(area)                #1
-        self._x_mid = float(xmid)               #2
-        self._y_mid = float(ymid)               #3
-        #self._major = float(major)              #4
-        #self._minor = float(minor)              #5
-        self._angle = -math.radians(float(angle))#6
-        self._feret = float(feret)              #7
-        #self._feret_x = float(feretx)           #8
-        #self._feret_y = float(ferety)           #9
-        #self._feret_angle = float(feretangle)   #10
-        self._min_feret = float(minferet)       #11
-        #self._x_start = float(xstart)           #12
-        #self._y_start = float(ystart)           #13
+        self._identifier = int(ID)
+        self._x_mid = float(xmid)
+        self._y_mid = float(ymid)
+        self._angle = -math.radians(float(angle))
+        self._feret = float(feret)
+        self._min_feret = float(minferet)
         self._real_kappa = kappa
         self._real_length = real_length
 
@@ -69,7 +60,7 @@ class Rod(object):
         Check if a rod is the same as another rod.
         Rods must be of the same group.
         """
-        return self.id == rod2.id #self.hash_ == rod2.hash_
+        return self.id == rod2.id
 
     def __ne__(self, rod2):
         """
@@ -207,6 +198,7 @@ class Rod(object):
         if angle == 0 and int(imagej_angle/(math.pi/2.0))==1:
             angle = math.pi/2.0
         return angle
+        
     @property
     def real_length(self):
         """

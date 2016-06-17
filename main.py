@@ -27,19 +27,19 @@ try:
     if not waiting_time:
         waiting_time_process = 0
     #None uses all cpus      
-    cpus = 3#int(mp.cpu_count()/2)
+    cpus = int(mp.cpu_count())-1
     if cpus is None:
         cpus = int(mp.cpu_count())
     # 1 or True, 0 or False
     create_videos = 1
     density = 0
     Q2_Q4 = 0
-    average_quadratic_speed = 0
+    average_quadratic_speed = 1
     vector_map = 1
     rotationals = 1
     clusters = 0
     clusters_hist = 0
-    avg_temp = 0
+    avg_temp = 1
     order_param_exp = 0
     lost_percentage = 0
     run_imagej = 0
@@ -59,20 +59,19 @@ try:
     changing_props = 0
     discard_exceptions = 0
     special_chars = 0
-    ignore_average_quadratic_speed = 0
     counter_refresh = 10
     plot_rods = 0
     order_param = 1
     order_param_lengths = 0
     grid_length = 1000
-    temp_final_rod_num_limit = 20
-    cluster_bursts = 1
+    temp_final_rod_num_limit = 100
+    cluster_bursts = 3
     cluster_max_dist = 1.8
     cluster_max_angle = math.radians(10)
     cluster_min_size = 5
-    evol_max_dist = 12
-    evol_max_ang_diff = math.radians(45)
-    evol_bursts = 1
+    evol_max_dist = 3
+    evol_max_ang_diff = math.radians(10)
+    evol_bursts = 5
 
 
 
@@ -139,8 +138,6 @@ try:
     settings.write("special_chars = {0}".format(special_chars))
     settings.write("\n")
     settings.write("waiting_time_process = {0}".format(waiting_time_process))
-    settings.write("\n")
-    settings.write("ignore_average_quadratic_speed = {0}".format(ignore_average_quadratic_speed))
     settings.write("\n")
     settings.write("counter_refresh = {0}".format(counter_refresh))
     settings.write("\n")

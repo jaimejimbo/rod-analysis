@@ -6,7 +6,7 @@ import multiprocessing as mp
 from matplotlib import animation
 import matplotlib
 import matplotlib.pyplot as plt
-import numpy
+import numpy, random
 import numpy as np
 from scipy import stats
 import scipy.optimize as optimization
@@ -189,7 +189,6 @@ class Experiment(object):
             self._states[index] = compressed_state
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                #time.sleep(settings.waiting_time)
                 new_process.start()
         print CLEAR_LAST
 
@@ -234,7 +233,6 @@ class Experiment(object):
             self._states[index] = compressed_state
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                #time.sleep(settings.waiting_time)
                 new_process.start()
         print CLEAR_LAST
 
@@ -295,7 +293,6 @@ class Experiment(object):
             self._initial_rods[index] = initial_rods
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                #time.sleep(settings.waiting_time)
                 new_process.start()
         for index in range(len(self)-1):
             self._final_rods[index] = self._initial_rods[index+1]
@@ -357,7 +354,6 @@ class Experiment(object):
             self._relative_dictionaries[index] = output_row[2]
             if len(processes_left):
                 new_process = processes_left.pop(0)
-                #time.sleep(settings.waiting_time)
                 new_process.start()
         print CLEAR_LAST
 
@@ -390,31 +386,31 @@ class Experiment(object):
         available_final_rods = available_final_rods_
         speeds_ = {}
         for initial_id in available_final_rods.keys():
+        #for initial_rod in initial_state:
             speeds = []
             initial_rod = initial_state[initial_id]
-            initial_kappa = initial_rod.kappa
-            kappa_error = initial_state.kappa_error/2
+            #initial_id = initial_rod.identifier
             for final_rod in available_final_rods[initial_id]:
+            #for final_rod in final_state:
                 final_id = final_rod.identifier
                 distance = initial_rod.distance_to_rod(final_rod, initial_state.scale)
-                vector = initial_rod.vector_to_rod(final_rod, initial_state.scale)
-                #if vector[1]>0: print "A"
-                #else: print "B"
                 angle = initial_rod.angle_between_rods(final_rod)
                 if (distance <= max_distance and angle <= max_angle_diff):
-                    speeds.append([distance, final_id, vector, angle])
+                    vector = initial_rod.vector_to_rod(final_rod, initial_state.scale)
+                    order = distance*angle
+                    speeds.append([order, distance, final_id, vector, angle])
                     speeds.sort()
                     if len(speeds) > limit:
-                        dummy, rod_id, dummy, dummy = speeds.pop(-1)
-                    else:
-                        dummy, rod_id, dummy, dummy = speeds[-1]
-                        continue
+                        speeds.pop(-1)
             speeds_[initial_id] = speeds
-        for initial_id in available_final_rods.keys():
+        #for initial_id in available_final_rods.keys():
+        for initial_rod in initial_state:
+            initial_id = initial_rod.identifier
             for speed in speeds_[initial_id]:
-                [distance, final_id, vector, angle] = speed
+                [order, distance, final_id, vector, angle] = speed
+                assert distance<=max_distance, "fill_dicts_process_limited"
                 evol_dict[initial_id] |= set([final_id])
-                relative_dict[initial_id][final_id] = (distance, angle, vector)
+                relative_dict[initial_id][final_id] = (order, distance, angle, vector)
         output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict)])
 
     def _remove_final_rod(self, index, initial_rod_id, final_rod_id):
@@ -422,7 +418,6 @@ class Experiment(object):
             Remove final rod from the rest of rods' evolutions.
         """
         evol_dict = methods.decompress(self._evolution_dictionaries[index])
-        #rel_dict = methods.decompress(self._relative_dictionaries[index])
         system_end = self.get(index+1)
         final_rod = system_end[list(final_rod_id)[0]]
         changed = False
@@ -492,18 +487,47 @@ class Experiment(object):
         selected = set([])
         evol_dict = methods.decompress(self._evolution_dictionaries[index])
         relative_dict = methods.decompress(self._relative_dictionaries[index])
-        for initial_rod_id in list(evol_dict.keys()):
+        initial_rods = list(evol_dict.keys())
+        random.shuffle(initial_rods)
+        for initial_rod_id in initial_rods:
             final_rod_id, distance, angle_diff, vector = self._closer_rod(index,
                                           initial_rod_id, selected, evol_dict,
                                           relative_dict, max_distance)
-            if not(initial_rod_id is None):
+            if not (initial_rod_id is None):
                 evol_dict[initial_rod_id] = final_rod_id
                 relative_dict[initial_rod_id] = (distance, angle_diff, vector)
+                assert distance<=max_distance, "leave_only_closer_process"
                 selected |= set([final_rod_id])
         output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict)])
         selected_queue.put([index, selected])
 
-    def _closer_rod(self, index, final_rod, selected, evol_dict, relative_dict_, max_distance=150):
+    def _closer_rod(self, index, initial_rod, selected, evol_dict, relative_dict_, max_distance=150):
+        """
+            If there are multiple choices,
+        this erase all but the closest.
+        """
+        final_rods_list = list(evol_dict[initial_rod])
+        vector = None
+        prev_final_rod = None
+        distance = None
+        while True:
+            try:
+                final_rod = final_rods_list.pop(0)
+            except IndexError:
+                if prev_final_rod is not None:
+                    break
+                else:
+                    return None, None, None, None
+            if final_rod not in selected:
+                rel = relative_dict_[initial_rod][final_rod]
+                #order = rel[0]
+                distance = rel[1]
+                angle_diff = rel[2]
+                vector = rel[3]
+                prev_final_rod = final_rod
+        return prev_final_rod, distance, angle_diff, vector
+
+    def _closer_rod_2(self, index, final_rod, selected, evol_dict, relative_dict_, max_distance=150):
         """
             If there are multiple choices,
         this erase all but the closest.
@@ -545,7 +569,7 @@ class Experiment(object):
                         prev_initial_rod = initial_rod
         return prev_initial_rod, min_distance, angle_diff, vector
 
-    def compute_dictionaries(self, max_distance=30, max_angle_diff=90,
+    def compute_dictionaries(self, max_distance=None, max_angle_diff=None,
                             limit=30, amount_of_rods=None):
         """
                 List of evolution dictionaries.
@@ -1758,7 +1782,6 @@ class Experiment(object):
         else:
             z_vals_avg = z_vals
         z_max = max(z_vals_avg)
-        #z_vals_avg = [val/z_max for val in z_vals_avg]
         print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Plotting"
         if settings.plot:
             fig = plt.figure()
