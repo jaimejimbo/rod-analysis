@@ -105,6 +105,7 @@ class Experiment(object):
         self._speeds_matrices = []
         self._cluster_areas = []
         self._bursts_groups = []
+        self._conflicts = []
         self._divisions = None
         self._min_density = None
         self._max_density = None
@@ -265,6 +266,7 @@ class Experiment(object):
         for dummy_index in range(len(self)):
             self._evolution_dictionaries.append(methods.compress({}))
             self._relative_dictionaries.append(methods.compress({}))
+            self._conflicts.append(methods.compress({}))
             self._conflictive_final_rods.append(set([]))
             self._final_rods.append(set([]))
             self._initial_rods.append(set([]))
@@ -287,9 +289,10 @@ class Experiment(object):
             finished_ += 1
             previous_time, counter, time_left, times = methods.print_progress(finished_, num_processes,
                                     counter, times, time_left, previous_time)
-            [index, evol_dict, rel_dict, initial_rods] = output_queue.get()
+            [index, evol_dict, rel_dict, initial_rods, conflict] = output_queue.get()
             self._evolution_dictionaries[index] = evol_dict
             self._relative_dictionaries[index] = rel_dict
+            self._conflicts[index] = conflict
             self._initial_rods[index] = initial_rods
             if len(processes_left):
                 new_process = processes_left.pop(0)
@@ -304,21 +307,29 @@ class Experiment(object):
         Process
         """
         state = self.get(index)
+        try:
+            final = self.get(index+1)
+        except:
+            final = []
         if not state:
             msg = "State is not defined. " + str(index) + "\t" + str(state) + "\n\n"
             print msg
             raise TypeError(msg)
         evol_dict = methods.decompress(self._evolution_dictionaries[index])
         relative_dict = methods.decompress(self._relative_dictionaries[index])
+        conflicts = methods.decompress(self._conflicts[index])
         initial_rods = set([])
         for rod_ in state:
-            initial_rods |= set([rod_.identifier])
             rod_id = rod_.identifier
+            initial_rods |= set([rod_id])
             evol_dict[rod_id] = set([])
             relative_dict[rod_id] = {}
+        for rod_ in final:
+            conflicts[rod_.identifier] = set([])
         evol_dict = methods.compress(evol_dict)
         rel_dict = methods.compress(relative_dict)
-        output_queue.put([index, evol_dict, rel_dict, initial_rods])
+        conflicts = methods.compress(conflicts)
+        output_queue.put([index, evol_dict, rel_dict, initial_rods, conflicts])
 
     def _fill_dicts(self, max_distance, max_angle_diff, index_rad=1, temp_divisions=10,
                     limit=20, amount_of_rods=None):
@@ -352,6 +363,7 @@ class Experiment(object):
             index = output_row[0]
             self._evolution_dictionaries[index] = output_row[1]
             self._relative_dictionaries[index] = output_row[2]
+            self._conflicts[index] = output_row[3]
             if len(processes_left):
                 new_process = processes_left.pop(0)
                 new_process.start()
@@ -370,7 +382,9 @@ class Experiment(object):
         final_grid_of_rods = final_state.grid_of_rods(temp_divisions)
         evol_dict = methods.decompress(self._evolution_dictionaries[index])
         relative_dict = methods.decompress(self._relative_dictionaries[index])
+        conflicts = methods.decompress(self._conflicts[index])
         available_final_rods_ = {}
+        selected = set([])
         for index_x in range(len(initial_grid_of_rods)):
             for index_y in range(len(initial_grid_of_rods[index_x])):
                 available_final_rods = set([])
@@ -397,21 +411,28 @@ class Experiment(object):
                 angle = initial_rod.angle_between_rods(final_rod)
                 if (distance <= max_distance and angle <= max_angle_diff):
                     vector = initial_rod.vector_to_rod(final_rod, initial_state.scale)
-                    order = distance*angle
+                    order = distance	#It would be better to include angle in some way
                     speeds.append([order, distance, final_id, vector, angle])
                     speeds.sort()
                     if len(speeds) > limit:
                         speeds.pop(-1)
             speeds_[initial_id] = speeds
         #for initial_id in available_final_rods.keys():
-        for initial_rod in initial_state:
-            initial_id = initial_rod.identifier
-            for speed in speeds_[initial_id]:
-                [order, distance, final_id, vector, angle] = speed
-                assert distance<=max_distance, "fill_dicts_process_limited"
-                evol_dict[initial_id] |= set([final_id])
-                relative_dict[initial_id][final_id] = (order, distance, angle, vector)
-        output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict)])
+        #for initial_rod in initial_state:
+        #    initial_id = initial_rod.identifier
+        #    for speed in speeds_[initial_id]:
+        #        [order, distance, final_id, vector, angle] = speed
+        #        conflicts[final_id] |= set([initial_id])
+        for initial_id in available_final_rods.keys():
+            speeds__ = speeds_[initial_id]
+            for index_ in range(len(speeds__)):
+                speed = speeds__[index_]
+                final_id = speed[2]
+                if final_id not in selected:
+                    relative_dict[initial_id] = (speed[1], speed[4], speed[3])
+                    evol_dict[initial_id] = final_id
+        #evol_dict = speeds_
+        output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict), methods.compress(conflicts)])
 
     def _remove_final_rod(self, index, initial_rod_id, final_rod_id):
         """
@@ -589,9 +610,160 @@ class Experiment(object):
             self._create_dict_keys()
             self._fill_dicts(max_distance, max_angle_diff, limit=limit,
                                 amount_of_rods=amount_of_rods)
-            self._leave_only_closer(max_distance=max_distance)
-            self._clean_unmatched_rods()
-            self._join_rods_left(max_distance=max_distance)
+            # luchar por los rods desde el rod final
+            # mirar todos los rods con el mismo rod final en la primera posicion, mirar cual esta mas cerca, quitar los del resto.
+            #self._resolve_conflicts(limit)
+            #self._leave_only_closer(max_distance=max_distance)
+            #self._clean_unmatched_rods()
+            #self._join_rods_left(max_distance=max_distance)
+
+    def _resolve_conflicts(self, limit):
+        """
+        As each rod is linked to a wide range of rods, there will be conflicts, so they must be resolved.
+        """
+        print "--"*(len(inspect.stack())-2)+">"+"["+str(inspect.stack()[1][3])+"]->["+str(inspect.stack()[0][3])+"]: " + "Resolving conflicts"
+        output_queue = mp.Queue()
+        processes = []
+        for index in range(len(self._evolution_dictionaries)-1):
+            process = mp.Process(target=self._resolve_conflicts_process,
+                                 args=(index, output_queue, limit))
+            processes.append(process)
+        num_processes = len(processes)
+        running, processes_left = methods.run_processes(processes)
+        finished = 0
+        previous_time = datetime.datetime.now()
+        counter = 0
+        time_left = None
+        times = []
+        print " "
+        while finished < num_processes:
+            counter += 1
+            finished += 1
+            previous_time, counter, time_left, times = methods.print_progress(finished, num_processes,
+                                    counter, times, time_left, previous_time)
+            output = output_queue.get()
+            index = output[0]
+            evol_dict = output[1]
+            relative_dict = output[2]
+            self._evolution_dictionaries[index] = evol_dict
+            self._relative_dictionaries[index] = relative_dict
+            if len(processes_left):
+                new_process = processes_left.pop(0)
+                #time.sleep(settings.waiting_time)
+                new_process.start()
+        print CLEAR_LAST
+
+    def _resolve_conflicts_process(self, index, output_queue, limit):
+        """
+        Process
+        """
+        evol_dict = methods.decompress(self._evolution_dictionaries[index])
+        relative_dict = methods.decompress(self._relative_dictionaries[index])
+        conflicts = methods.decompress(self._conflicts[index])
+        evol_keys = evol_dict.keys()
+        selected_init = set([])
+        selected_final = set([])
+        while True:
+            for initial_rod_id_1 in evol_keys:
+                if initial_rod_id_1 not in selected_init:
+                    evol_1 = evol_dict[initial_rod_id_1]
+                    if type(evol_1) == type(2):
+                        continue
+                    if len(evol_1):
+                        array = evol_1[0]
+                    else:
+                        selected_init |= set([initial_rod_id_1])
+                        continue
+                    final_rod_id = array[2]
+                    if final_rod_id in selected_final:
+                        evol_1.remove(array)
+                    initial_rods = conflicts[final_rod_id]
+                    if len(initial_rods) == 1:
+                        [order, distance, fid, vector, angle] = array
+                        evol_1 = final_rod_id
+                        relative_dict[initial_rod_id_1] = (distance, vector, angle)
+                    elif len(initial_rods) > 1:
+                        min_distance = float('inf')
+                        array_ = None
+                        initial_id_ = None
+                        for initial_id in initial_rods:
+                            if initial_id not in selected_init:
+                                #buscar el mas cercano
+                                for array___ in evol_1:
+                                    if array___[2] == final_rod_id:
+                                        [order, distance, final_rod_id, vector, angle] = array___
+                                if distance < min_distance:
+                                    initial_id_ = initial_id
+                                    rel = (distance, vector, angle)
+                        evol_dict[initial_id_] = final_rod_id
+                        relative_dict[initial_id] = rel
+                        selected_init |= set([initial_id_])
+                        selected_final |= set([final_rod_id])
+                        initial_rods -= set([initial_id_])
+                        for initial_id__ in initial_rods:
+                            evol_in = evol_dict[initial_id__]
+                            if type(evol_in) == type(2):
+                                continue
+                            for array__ in evol_in:
+                                if array__[2] == final_rod_id:
+                                    evol_in.remove(array__)
+                    else:
+                        selected_init |= set([initial_rod_id_1])
+            print len(selected_init), len(evol_keys)
+            if len(selected_init) == len(evol_keys):
+                break
+        print evol_dict
+        output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict)])
+                    
+
+    def _resolve_conflicts_process_(self, index, output_queue, limit):
+        """
+        Process
+        """
+        evol_dict = methods.decompress(self._evolution_dictionaries[index])
+        relative_dict = methods.decompress(self._relative_dictionaries[index])
+        for dummy_time in range(limit):
+            conflicts = []
+            evol_keys = evol_dict.keys()
+            not_selected = set(evol_keys)
+            for initial_rod_id_1 in evol_keys:
+                if initial_rod_id_1 in not_selected:
+                    conflict = set([])
+                    for initial_rod_id_2 in evol_keys:
+                        if initial_rod_id_2 in not_selected:
+                            if initial_rod_id_1 != initial_rod_id_2:
+                                evol_1 = evol_dict[initial_rod_id_1]
+                                evol_2 = evol_dict[initial_rod_id_2]
+                                if type(evol_1) == type(2) or type(evol_2) == type(2):
+                                    continue
+                                try:
+                                    first_vect_1 = evol_1[0]
+                                    first_vect_2 = evol_2[0]
+                                    rod_id_1 = first_vect_1[2]
+                                    rod_id_2 = first_vect_2[2]
+                                    if rod_id_1 == rod_id_2:
+                                        conflict |= set([initial_rod_id_1, initial_rod_id_2])
+                                        not_selected -= set([initial_rod_id_1, initial_rod_id_2])
+                                except IndexError:
+                                    continue
+                    if len(conflict) > 0:
+                        conflicts.append(list(conflict))
+            for conflict_group in conflicts:
+                final_rod = evol_dict[conflict_group[0]][0][2]
+                max_order = float('inf')
+                initial_rod = None
+                array_ = None
+                for rod_id in conflict_group:
+                    array = evol_dict[rod_id].pop(0)
+                    order = array[0]
+                    if order < max_order:
+                        initial_rod = rod_id
+                        max_order = order
+                        array_ = array
+                evol_dict[initial_rod] = final_rod
+                [order, distance, final_id, vector, angle] = array
+                relative_dict[initial_rod] = (distance, vector, angle)
+        output_queue.put([index, methods.compress(evol_dict), methods.compress(relative_dict)])
 
     def _clean_unmatched_rods(self):
         """
@@ -821,6 +993,8 @@ class Experiment(object):
                 angular_speeds[initial_rod_id] = angular_speed
                 vector_speeds[initial_rod_id] = vector_speed
             except TypeError:
+                pass
+            except IndexError:
                 pass
         speeds_queue.put([index, methods.compress(speeds)])
         angular_speeds_queue.put([index, methods.compress(angular_speeds)])
