@@ -71,7 +71,7 @@ try:
     cluster_min_size = 5
     evol_max_dist = 3
     evol_max_ang_diff = math.radians(10)
-    evol_bursts = 5
+    number_of_bursts = 1
 
 
 
@@ -218,7 +218,7 @@ try:
                 times = experiment_.times(1)
                 if create_videos:
                     experiment_.create_videos(divisions=divisions, fps=10, max_distance=evol_max_dist, max_angle_diff=evol_max_ang_diff,
-                                             number_of_bursts=evol_bursts, limit=temp_final_rod_num_limit)
+                                             number_of_bursts=number_of_bursts, limit=temp_final_rod_num_limit, coef=coef)
                 if clusters:
                     experiment_.plot_cluster_areas(cluster_divisions, cluster_index_length,
                             number_of_bursts=cluster_bursts, max_distance=cluster_max_dist,
@@ -269,7 +269,7 @@ try:
                 times = experiment_.times(1)
                 if create_videos:
                     experiment_.create_videos(divisions=divisions, fps=10, max_distance=evol_max_dist, max_angle_diff=evol_max_ang_diff,
-                                             number_of_bursts=evol_bursts, limit=temp_final_rod_num_limit)
+                                             number_of_bursts=number_of_bursts, limit=temp_final_rod_num_limit, coef=coef)
                 if clusters:
                     experiment_.plot_cluster_areas(cluster_divisions, cluster_index_length,
                             number_of_bursts=cluster_bursts, max_distance=cluster_max_dist,
