@@ -423,7 +423,9 @@ class Experiment(object):
         #    for speed in speeds_[initial_id]:
         #        [order, distance, final_id, vector, angle] = speed
         #        conflicts[final_id] |= set([initial_id])
-        for initial_id in available_final_rods.keys():
+        initial_ids = list(available_final_rods.keys())
+        random.shuffle(initial_ids)
+        for initial_id in initial_ids:
             speeds__ = speeds_[initial_id]
             for index_ in range(len(speeds__)):
                 speed = speeds__[index_]

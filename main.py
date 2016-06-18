@@ -27,7 +27,7 @@ try:
     if not waiting_time:
         waiting_time_process = 0
     #None uses all cpus      
-    cpus = int(mp.cpu_count())-1
+    cpus = 1#int(mp.cpu_count())-1
     if cpus is None:
         cpus = int(mp.cpu_count())
     # 1 or True, 0 or False
