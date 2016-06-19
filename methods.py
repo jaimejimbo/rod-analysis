@@ -56,49 +56,6 @@ def change_compression_coef(new_coef):
     settings.close()
     import settings
 
-#def segment_area(rad, min_dist):
-#    """
-#    Computes the area of an intersection of a circle with a line
-#    (the part that doesn't have the center)
-#    rad: radius of the circle
-#    min_dist: minimum distance from small circle center to a line that joins
-#        both intersections of the circles.
-#    """
-#    min_dist = float(min_dist)
-#    if min_dist >= rad:
-#        return 0
-#    elif abs(min_dist) >= rad:
-#        return math.pi*rad**2
-#    phi = math.acos(abs(min_dist)/rad)
-#    assert 0 <= phi <= math.pi/2, "Error in angle\n\n"
-#    if phi <= 1e-10:
-#        if min_dist > 0:
-#            return 0
-#        else:
-#            return math.pi*rad**2
-#    section = phi*rad**2
-#    assert section >= 0, "segment_area: Section is negative\n\n"
-#    distance_between_intersections = 2*min_dist*math.tan(phi)
-#    msg = "segment_area: distance between "
-#    msg += "intersections can't be greater than diameter\n\n"
-#    assert distance_between_intersections <= 2*rad, msg
-#    triangle_area = distance_between_intersections*min_dist/2.0
-#    msg = "segment_area: Triangle area must be smaller than section area"
-#    msg += "\nRatio="+str(triangle_area*1.0/section)+"\n\n"
-#    assert triangle_area < section, msg
-#    if min_dist >= 0:
-#        output = section - triangle_area
-#    else:
-#        output = math.pi*rad**2 - section + triangle_area
-#    msg = "segment_area: Obtained area is negative. "
-#    msg += "Values: rad:"+str(rad)
-#    msg += " min_dist:"+str(min_dist)+" rat:"+str(min_dist/rad)
-#    msg += " phi:"+str(phi)+" area:"+str(output)+"\n\n"
-#    assert output > 0, msg
-#    return output
-
-
-
 
 def effective_area(small_rad, centers_distance, main_rad):
     """
@@ -149,7 +106,7 @@ def compute_min_dist(small_rad, centers_distance, main_rad):
 
 def same_area_rad(small_rad, centers_distance,
                     main_rad, allowed_error_ratio=.2,
-                    max_reps=1000):
+                    max_reps=10):
     """
     Computes a new radius. With that, effective area is the same small circle's.
     Better use binary search
