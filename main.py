@@ -32,18 +32,18 @@ try:
         cpus = int(mp.cpu_count())
     # 1 or True, 0 or False
     create_videos = 1
-    density = 0
-    Q2_Q4 = 0
+    density = 1
+    Q2_Q4 = 1
     average_quadratic_speed = 1
     vector_map = 1
     rotationals = 1
-    clusters = 0
-    clusters_hist = 0
+    clusters = 1
+    clusters_hist = 1
     avg_temp = 1
     order_param_exp = 0
     lost_percentage = 0
     run_imagej = 0
-    run_props = 0
+    run_props = 1
     run_graphs = 1
     run_check_dim = 0
     get_image_dates = 0
@@ -60,7 +60,7 @@ try:
     discard_exceptions = 0
     special_chars = 0
     counter_refresh = 10
-    plot_rods = 0
+    plot_rods = 1
     order_param = 1
     order_param_lengths = 0
     grid_length = 1000
@@ -72,6 +72,7 @@ try:
     evol_max_dist = 3
     evol_max_ang_diff = math.radians(10)
     number_of_bursts = 1
+    burst_mult = 5
 
 
 
@@ -218,7 +219,7 @@ try:
                 times = experiment_.times(1)
                 if create_videos:
                     experiment_.create_videos(divisions=divisions, fps=10, max_distance=evol_max_dist, max_angle_diff=evol_max_ang_diff,
-                                             number_of_bursts=number_of_bursts, limit=temp_final_rod_num_limit, coef=coef)
+                                             number_of_bursts=number_of_bursts, limit=temp_final_rod_num_limit, coef=burst_mult)
                 if clusters:
                     experiment_.plot_cluster_areas(cluster_divisions, cluster_index_length,
                             number_of_bursts=cluster_bursts, max_distance=cluster_max_dist,
@@ -269,7 +270,7 @@ try:
                 times = experiment_.times(1)
                 if create_videos:
                     experiment_.create_videos(divisions=divisions, fps=10, max_distance=evol_max_dist, max_angle_diff=evol_max_ang_diff,
-                                             number_of_bursts=number_of_bursts, limit=temp_final_rod_num_limit, coef=coef)
+                                             number_of_bursts=number_of_bursts, limit=temp_final_rod_num_limit, coef=burst_mult)
                 if clusters:
                     experiment_.plot_cluster_areas(cluster_divisions, cluster_index_length,
                             number_of_bursts=cluster_bursts, max_distance=cluster_max_dist,

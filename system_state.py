@@ -900,6 +900,9 @@ class SubsystemState(object):
             Initialization
         """
         self._main_coords = zone_coords
+        pos_rad = methods.distance_between_points(center, (zone_coords[0], zone_coords[1]))
+        if pos_rad > zone_coords[2]-rad:
+            rad = methods.same_area_rad(rad, pos_rad, zone_coords[2])
         self._zone_coords = (center[0], center[1], rad)
         self._real_radius = real_rad # + real_kappas
         self._scale = real_rad*1.0/rad

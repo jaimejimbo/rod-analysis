@@ -56,91 +56,86 @@ def change_compression_coef(new_coef):
     settings.close()
     import settings
 
-def segment_area(rad, min_dist):
-    """
-    Computes the area of an intersection of a circle with a line
-    (the part that doesn't have the center)
-    rad: radius of the circle
-    min_dist: minimum distance from small circle center to a line that joins
-        both intersections of the circles.
-    """
-    min_dist = float(min_dist)
-    if min_dist >= rad:
-        return 0
-    elif abs(min_dist) >= rad:
-        return math.pi*rad**2
-    phi = math.acos(abs(min_dist)/rad)
-    assert 0 <= phi <= math.pi/2, "Error in angle\n\n"
-    if phi <= 1e-10:
-        if min_dist > 0:
-            return 0
-        else:
-            return math.pi*rad**2
-    section = phi*rad**2
-    assert section >= 0, "segment_area: Section is negative\n\n"
-    distance_between_intersections = 2*min_dist*math.tan(phi)
-    msg = "segment_area: distance between "
-    msg += "intersections can't be greater than diameter\n\n"
-    assert distance_between_intersections <= 2*rad, msg
-    triangle_area = distance_between_intersections*min_dist/2.0
-    msg = "segment_area: Triangle area must be smaller than section area"
-    msg += "\nRatio="+str(triangle_area*1.0/section)+"\n\n"
-    assert triangle_area < section, msg
-    if min_dist >= 0:
-        output = section - triangle_area
-    else:
-        output = math.pi*rad**2 - section + triangle_area
-    msg = "segment_area: Obtained area is negative. "
-    msg += "Values: rad:"+str(rad)
-    msg += " min_dist:"+str(min_dist)+" rat:"+str(min_dist/rad)
-    msg += " phi:"+str(phi)+" area:"+str(output)+"\n\n"
-    assert output > 0, msg
-    return output
+#def segment_area(rad, min_dist):
+#    """
+#    Computes the area of an intersection of a circle with a line
+#    (the part that doesn't have the center)
+#    rad: radius of the circle
+#    min_dist: minimum distance from small circle center to a line that joins
+#        both intersections of the circles.
+#    """
+#    min_dist = float(min_dist)
+#    if min_dist >= rad:
+#        return 0
+#    elif abs(min_dist) >= rad:
+#        return math.pi*rad**2
+#    phi = math.acos(abs(min_dist)/rad)
+#    assert 0 <= phi <= math.pi/2, "Error in angle\n\n"
+#    if phi <= 1e-10:
+#        if min_dist > 0:
+#            return 0
+#        else:
+#            return math.pi*rad**2
+#    section = phi*rad**2
+#    assert section >= 0, "segment_area: Section is negative\n\n"
+#    distance_between_intersections = 2*min_dist*math.tan(phi)
+#    msg = "segment_area: distance between "
+#    msg += "intersections can't be greater than diameter\n\n"
+#    assert distance_between_intersections <= 2*rad, msg
+#    triangle_area = distance_between_intersections*min_dist/2.0
+#    msg = "segment_area: Triangle area must be smaller than section area"
+#    msg += "\nRatio="+str(triangle_area*1.0/section)+"\n\n"
+#    assert triangle_area < section, msg
+#    if min_dist >= 0:
+#        output = section - triangle_area
+#    else:
+#        output = math.pi*rad**2 - section + triangle_area
+#    msg = "segment_area: Obtained area is negative. "
+#    msg += "Values: rad:"+str(rad)
+#    msg += " min_dist:"+str(min_dist)+" rat:"+str(min_dist/rad)
+#    msg += " phi:"+str(phi)+" area:"+str(output)+"\n\n"
+#    assert output > 0, msg
+#    return output
 
 
 
 
-def effective_area(small_rad, small_position_rad, main_rad):
+def effective_area(small_rad, centers_distance, main_rad):
     """
     Computes the area of the small circle intersected with main circle.
     There are errors in this method implementation.
     """
     # circle completely included in the bigger one
-    if small_rad+small_position_rad <= main_rad:
+    if small_rad+centers_distance <= main_rad:
         return math.pi*small_rad**2
-    min_dist = compute_min_dist(small_rad, small_position_rad, main_rad)
-    if min_dist >= small_rad:
-        return math.pi*small_rad**2
-    elif abs(min_dist) >= small_rad:
-        return 0
-    min_dist_main = small_position_rad+min_dist
-    correction = segment_area(main_rad, min_dist_main)
-    msg = "effective_area: Correction must be smaller than small circle's area\n\n"
-    assert correction < math.pi*small_rad**2, msg
-    section_area = segment_area(small_rad, min_dist)
-    small_area = math.pi*small_rad**2
-    msg = "In the limit, h=-rad has to return total area\n\n"
-    assert small_area == segment_area(small_rad, -small_rad), msg
-    msg = "Correction too high: Ration: "+str(float(correction)/small_area)+"\n\n"
-    assert correction < small_area, msg
-    output = math.pi*small_rad**2 - section_area + correction
-    return output
+    R, r, d = main_rad, small_rad, centers_distance
+    if R<r:
+        rr = R
+        R = r
+        r = rr
+    q_1 = float(d**2+r**2-R**2)/(2.0*d*r)
+    A_1 = float(r**2)*math.acos(q_1)
+    q_2 = float(d**2-r**2+R**2)/(2.0*d*R)
+    A_2 = float(R**2)*math.acos(q_2)
+    corr = -.5*math.sqrt((-d+r+R)*(d+r-R)*(d-r+R)*(d+r+R))
+    A = A_1+A_2+corr
+    return A
 
 
 
 
-def compute_min_dist(small_rad, small_position_rad, main_rad):
+def compute_min_dist(small_rad, centers_distance, main_rad):
     """
     Computes the distance from small circle center to the line that joins both
     circles' intersections.
     """
     try:
-        min_dist = (main_rad**2)-(small_position_rad**2)-(small_rad**2)
+        min_dist = (main_rad**2)-(centers_distance**2)-(small_rad**2)
         min_dist = float(min_dist)
     except OverflowError:
         return small_rad*1.1
     try:
-        min_dist /= (2*small_position_rad)
+        min_dist /= (2*centers_distance)
     except:
         min_dist = main_rad*2
     if min_dist > small_rad:
@@ -152,32 +147,27 @@ def compute_min_dist(small_rad, small_position_rad, main_rad):
 
 
 
-def same_area_rad(small_rad, small_position_rad,
+def same_area_rad(small_rad, centers_distance,
                     main_rad, allowed_error_ratio=.2,
-                    max_reps=10):
+                    max_reps=1000):
     """
     Computes a new radius. With that, effective area is the same small circle's.
     Better use binary search
     """
-    # circle completely included in main
-    if small_position_rad + small_rad <= main_rad:
+    if centers_distance + small_rad <= main_rad:
         return small_rad
-    # circle completely excluded of main
-    if small_position_rad - small_rad > main_rad:
-        print "External circle introduced"
-        raise ValueError
     wanted_area = math.pi*small_rad**2
     allowed_error = wanted_area * allowed_error_ratio
     low_rad = small_rad
     high_rad = small_rad*10
-    def area(rad, small_position_rad=small_position_rad, main_rad=main_rad):
+    def area(rad, centers_distance=centers_distance, main_rad=main_rad):
         """
         Needed function for binary search, as only 1 arg is allowed.
         """
         try:
-            return effective_area(rad, small_position_rad, main_rad)
+            return effective_area(rad, centers_distance, main_rad)
         except OverflowError:
-            return wanted_area*10
+            return float('inf')
     actual_area = area(high_rad)
     while actual_area < wanted_area:
         high_rad *= 10
@@ -913,7 +903,7 @@ def animate_vector_map(x_val, y_val, u_vals, v_vals, units, name, radius):
     plt.xlim((x_min, x_max))
     plt.ylim((y_min, y_max))
     try:
-        plt.quiver(x_val, y_val, u_val, v_val, label=units, pivot="mid", units="inches")
+        plt.quiver(x_val, y_val, u_val, v_val, label=units, pivot="mid", units="inches")#, scale=1/.75)
     except TypeError:
         print (x_val, y_val, u_val, v_val)
     plt.gca().invert_yaxis()
