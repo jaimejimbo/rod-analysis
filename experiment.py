@@ -1611,7 +1611,7 @@ class Experiment(object):
 
     def create_videos(self, divisions=5, folder="./", fps=1,
                             max_distance=100, max_angle_diff=90, limit=5,
-                            amount_of_rods=200, number_of_bursts=1, fps_temps=1, coef=30):
+                            amount_of_rods=200, number_of_bursts=1, fps_temps=1, bursts_coef=30):
         """
         Creates a video per property of the system that shows evolution.
         """
@@ -1625,13 +1625,13 @@ class Experiment(object):
             max_angle_diff = math.radians(max_angle_diff)
             self.create_average_quadratic_speed_video(divisions, folder, fps_temps, max_distance,
                                    max_angle_diff, limit, amount_of_rods,
-                                   number_of_bursts, coef)
+                                   number_of_bursts, bursts_coef)
         if settings.vector_map:
             self.create_vector_map_video(divisions, folder, fps_temps,
                                 max_distance, max_angle_diff,
-                                limit, amount_of_rods, number_of_bursts, coef)
+                                limit, amount_of_rods, number_of_bursts, bursts_coef)
         if settings.rotationals:
-            self.plot_rotational_sum(divisions, limit, amount_of_rods, max_distance, max_angle_diff, number_of_bursts, coef)
+            self.plot_rotational_sum(divisions, limit, amount_of_rods, max_distance, max_angle_diff, number_of_bursts, bursts_coef)
 
     def plottable_local_average_quadratic_speeds(self,
                                         max_distance=100,
@@ -2308,6 +2308,7 @@ class Experiment(object):
         areas = self.cluster_areas(divisions_clust, index_length, number_of_bursts=number_of_bursts,
                     max_distance=max_distance, max_angle_diff=max_angle_diff, min_size=min_size)
         total_areas = self._total_cluster_areas
+	number_of_bursts *= 5 #each burst has 5 systems
         norm_areas = []
         self._compute_times(number_of_bursts=number_of_bursts)
         times_all = self.times(number_of_bursts)
