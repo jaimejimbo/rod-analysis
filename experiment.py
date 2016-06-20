@@ -1962,7 +1962,7 @@ class Experiment(object):
         if settings.plot:
             fig = plt.figure()
             plt.xlabel("time[seconds]")
-            plt.ylabel("sum of velocity rotational[norm with max]")
+            plt.ylabel("average rotational sum per subsystem [1/s]")
         clust = open("rotational.txt", "w")
         for index in range(len(valid_times)):
             try:
@@ -1973,11 +1973,11 @@ class Experiment(object):
         clust.close()
         if settings.plot:
             try:
-                data_plt = plt.scatter(valid_times, z_vals_avg, label="velocity rotational")
+                data_plt = plt.scatter(valid_times, z_vals_avg, label="average sum of velocity rotational per subsystem")
                 plt.legend()
                 kappa = int(self.average_kappa)
                 title = "K"+str(kappa)
-                plt.ylim((0, z_max))
+                plt.ylim((0, z_max*1.2))
                 plt.suptitle(title)
             except ValueError:
                 print(len(valid_times), len(z_vals_avg))
@@ -2353,7 +2353,7 @@ class Experiment(object):
                 plt.legend()
                 kappa = int(self.average_kappa)
                 title = "K"+str(kappa)
-                plt.ylim((0, 1.2))
+                plt.ylim((0, max(norm_areas)*1.2))
                 plt.suptitle(title)
             except ValueError:
                 print(len(valid_times), len(norm_areas))

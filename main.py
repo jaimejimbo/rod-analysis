@@ -27,7 +27,7 @@ try:
     if not waiting_time:
         waiting_time_process = 0
     #None uses all cpus      
-    cpus = 1#int(mp.cpu_count())-1
+    cpus = int(mp.cpu_count())-1
     if cpus is None:
         cpus = int(mp.cpu_count())
     # 1 or True, 0 or False
@@ -35,15 +35,15 @@ try:
     density = 0
     Q2_Q4 = 0
     average_quadratic_speed = 0
-    vector_map = 1
+    vector_map = 0
     rotationals = 1
-    clusters = 0
+    clusters = 1
     clusters_hist = 0
     avg_temp = 0
     order_param_exp = 0
     lost_percentage = 0
     run_imagej = 0
-    run_props = 1
+    run_props = 0
     run_graphs = 1
     run_check_dim = 0
     get_image_dates = 0
@@ -65,14 +65,14 @@ try:
     order_param_lengths = 0
     grid_length = 1000
     temp_final_rod_num_limit = 100
-    cluster_bursts = 3
+    cluster_bursts = 10
     cluster_max_dist = 1.8
     cluster_max_angle = math.radians(10)
     cluster_min_size = 5
     evol_max_dist = 3
     evol_max_ang_diff = math.radians(10)
     number_of_bursts = 1
-    burst_mult = 15
+    burst_mult = 10
 
 
 
