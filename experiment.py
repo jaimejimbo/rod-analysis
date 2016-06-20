@@ -1953,7 +1953,7 @@ class Experiment(object):
                     for dummy_time in range(len(group)-1):
                         z_val = z_vals.pop(0)
                         _z_vals.append(z_val)
-                average = sum(_z_vals)/len(_z_vals)
+                average = float(sum(_z_vals))/len(_z_vals)
                 z_vals_avg.append(average)
         else:
             z_vals_avg = z_vals
@@ -1977,7 +1977,7 @@ class Experiment(object):
                 plt.legend()
                 kappa = int(self.average_kappa)
                 title = "K"+str(kappa)
-                plt.ylim((0, 1.2))
+                plt.ylim((0, z_max))
                 plt.suptitle(title)
             except ValueError:
                 print(len(valid_times), len(z_vals_avg))
@@ -2044,8 +2044,8 @@ class Experiment(object):
         for index_x in range(1, len(local_speeds)-1):
             for index_y in range(1, len(local_speeds[index_x])-1):
                 try:
-                    output_ = float(local_speeds[index_x+1][index_y].values()[0][3][1]-local_speeds[index_x-1][index_y].values()[0][3][1])/(2*diff*divisions**2)
-                    output_ -= float(local_speeds[index_x][index_y+1].values()[0][3][0]-local_speeds[index_x][index_y-1].values()[0][3][0])/(2*diff*divisions**2)
+                    output_ = float(local_speeds[index_x+1][index_y].values()[0][3][1]-local_speeds[index_x-1][index_y].values()[0][3][1])/(2.0*diff*divisions**2)
+                    output_ -= float(local_speeds[index_x][index_y+1].values()[0][3][0]-local_speeds[index_x][index_y-1].values()[0][3][0])/(2.0*diff*divisions**2)
                     output += abs(output_)
                 except IndexError:
                     pass

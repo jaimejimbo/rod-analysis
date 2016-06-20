@@ -32,14 +32,14 @@ try:
         cpus = int(mp.cpu_count())
     # 1 or True, 0 or False
     create_videos = 1
-    density = 1
-    Q2_Q4 = 1
-    average_quadratic_speed = 1
+    density = 0
+    Q2_Q4 = 0
+    average_quadratic_speed = 0
     vector_map = 1
     rotationals = 1
-    clusters = 1
-    clusters_hist = 1
-    avg_temp = 1
+    clusters = 0
+    clusters_hist = 0
+    avg_temp = 0
     order_param_exp = 0
     lost_percentage = 0
     run_imagej = 0
@@ -60,8 +60,8 @@ try:
     discard_exceptions = 0
     special_chars = 0
     counter_refresh = 10
-    plot_rods = 1
-    order_param = 1
+    plot_rods = 0
+    order_param = 0
     order_param_lengths = 0
     grid_length = 1000
     temp_final_rod_num_limit = 100
@@ -72,7 +72,7 @@ try:
     evol_max_dist = 3
     evol_max_ang_diff = math.radians(10)
     number_of_bursts = 1
-    burst_mult = 5
+    burst_mult = 15
 
 
 
