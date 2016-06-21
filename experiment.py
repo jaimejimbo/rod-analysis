@@ -1953,6 +1953,7 @@ class Experiment(object):
                     for dummy_time in range(len(group)-1):
                         z_val = z_vals.pop(0)
                         _z_vals.append(z_val)
+                    z_vals.pop(0)
                 average = float(sum(_z_vals))/len(_z_vals)
                 z_vals_avg.append(average)
         else:
@@ -2308,7 +2309,6 @@ class Experiment(object):
         areas = self.cluster_areas(divisions_clust, index_length, number_of_bursts=number_of_bursts,
                     max_distance=max_distance, max_angle_diff=max_angle_diff, min_size=min_size)
         total_areas = self._total_cluster_areas
-	number_of_bursts *= 5 #each burst has 5 systems
         norm_areas = []
         self._compute_times(number_of_bursts=number_of_bursts)
         times_all = self.times(number_of_bursts)
