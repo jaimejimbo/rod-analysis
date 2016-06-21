@@ -32,8 +32,8 @@ try:
         cpus = int(mp.cpu_count())
     # 1 or True, 0 or False
     create_videos = 1
-    density = 0
-    Q2_Q4 = 0
+    density = 1
+    Q2_Q4 = 1
     average_quadratic_speed = 1
     vector_map = 1
     rotationals = 1
@@ -50,7 +50,7 @@ try:
     to_file = 1
     plot = 1
     # variables
-    coef = 5
+    coef = 4
     divisions = 30
     cluster_divisions = 10
     cluster_index_length = 1
@@ -61,7 +61,7 @@ try:
     special_chars = 0
     counter_refresh = 10
     plot_rods = 0
-    order_param = 0
+    order_param = 1
     order_param_lengths = 0
     grid_length = 1000
     temp_final_rod_num_limit = 100

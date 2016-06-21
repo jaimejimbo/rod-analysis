@@ -1834,13 +1834,13 @@ class Experiment(object):
                 _v_vals_avg = _v_vals
             if _u_vals_avg is None or _v_vals_avg is None:
                 print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + str(_u_vals_avg) + "  " + str(_v_vals_avg)
-            for index in range(len(u_vals)):
-                modules.append(math.sqrt(_u_vals_avg[index]**2+_v_vals_avg[index]**2))
+            #for index in range(len(u_vals)):
+            #    modules.append(math.sqrt(_u_vals_avg[index]**2+_v_vals_avg[index]**2))
             for index in range(coef):
                 u_vals_avg.append(methods.compress(_u_vals_avg))
                 v_vals_avg.append(methods.compress(_v_vals_avg))
-        max_mod = max(modules)
-        scale = 1.0/max_mod
+        #max_mod = max(modules)
+        scale = None#1.0/max_mod
         if not settings.to_file:
             fig = plt.figure()
         state = self.get(0)
@@ -1982,7 +1982,7 @@ class Experiment(object):
         clust.close()
         if settings.plot:
             try:
-                data_plt = plt.scatter(valid_times, z_vals_avg, label="average sum of velocity rotational per subsystem")
+                data_plt = plt.plot(valid_times, z_vals_avg, label="average sum of velocity rotational per subsystem")
                 plt.legend()
                 kappa = int(self.average_kappa)
                 title = "K"+str(kappa)
@@ -2150,7 +2150,7 @@ class Experiment(object):
         y_max = max(y_val)+rad*1.1
         plt.xlim((x_min, x_max))
         plt.ylim((y_min, y_max))
-        plt.scatter(x_val, y_val, s=size, c=z_val, marker='s',
+        plt.plot(x_val, y_val, s=size, c=z_val, marker='s',
                     vmax=z_max, vmin=z_min)
         plt.gca().invert_yaxis()
         cb = plt.colorbar()
@@ -2359,7 +2359,7 @@ class Experiment(object):
         clust.close()
         if settings.plot:
             try:
-                data_plt = plt.scatter(valid_times, norm_areas, label="Area clusters")
+                data_plt = plt.plot(valid_times, norm_areas, label="Area clusters")
                 plt.legend()
                 kappa = int(self.average_kappa)
                 title = "K"+str(kappa)
