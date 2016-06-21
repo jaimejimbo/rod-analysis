@@ -1820,6 +1820,8 @@ class Experiment(object):
                 for index in range(len(group)-1): #with -1 speeds between non-bursts states are not used
                     _u_vals.append(u_vals.pop(0))
                     _v_vals.append(v_vals.pop(0))
+                u_vals.pop(0)
+                v_vals.pop(0)
             try:
                 _u_vals_avg = methods.array_average(_u_vals)
             except IndexError:
@@ -2094,6 +2096,7 @@ class Experiment(object):
                             new_vals.append(None)
                     z_val = new_vals
                     _z_vals.append(z_val)
+                z_vals.pop(0)
             try:
                 average = methods.array_average(_z_vals)
             except IndexError:
