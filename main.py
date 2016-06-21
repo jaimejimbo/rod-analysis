@@ -34,8 +34,8 @@ try:
     create_videos = 1
     density = 0
     Q2_Q4 = 0
-    average_quadratic_speed = 0
-    vector_map = 0
+    average_quadratic_speed = 1
+    vector_map = 1
     rotationals = 1
     clusters = 1
     clusters_hist = 0
@@ -51,7 +51,7 @@ try:
     plot = 1
     # variables
     coef = 5
-    divisions = 50
+    divisions = 30
     cluster_divisions = 10
     cluster_index_length = 1
     #sigma = sigma_coef * subsystem_rad

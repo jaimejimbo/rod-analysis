@@ -70,13 +70,17 @@ def effective_area(small_rad, centers_distance, main_rad):
         rr = R
         R = r
         r = rr
-    q_1 = float(d**2+r**2-R**2)/(2.0*d*r)
-    A_1 = float(r**2)*math.acos(q_1)
-    q_2 = float(d**2-r**2+R**2)/(2.0*d*R)
-    A_2 = float(R**2)*math.acos(q_2)
-    corr = -.5*math.sqrt((-d+r+R)*(d+r-R)*(d-r+R)*(d+r+R))
-    A = A_1+A_2+corr
-    return A
+    try:
+        q_1 = float(d**2+r**2-R**2)/(2.0*d*r)
+        A_1 = float(r**2)*math.acos(q_1)
+        q_2 = float(d**2-r**2+R**2)/(2.0*d*R)
+        A_2 = float(R**2)*math.acos(q_2)
+        corr = -.5*math.sqrt((-d+r+R)*(d+r-R)*(d-r+R)*(d+r+R))
+        A = A_1+A_2+corr
+        return A
+    except ValueError:
+        #print small_rad, centers_distance, main_rad
+        return float('inf')
 
 
 
@@ -126,9 +130,12 @@ def same_area_rad(small_rad, centers_distance,
         except OverflowError:
             return float('inf')
     actual_area = area(high_rad)
+    reps = 0
     while actual_area < wanted_area:
         high_rad *= 10
         actual_area = area(high_rad)
+        if reps >= max_reps:
+            break
     return binary_search(low_rad, high_rad,
                         area, wanted_area,
                         allowed_error, max_reps)
@@ -840,7 +847,7 @@ def create_scatter_animation(x_val, y_val, z_vals_avg, divisions, z_max, z_min, 
     anim = animation.FuncAnimation(fig, animate, frames=num_frames)
     anim.save(name, writer=WRITER, fps=fps)
 
-def animate_vector_map(x_val, y_val, u_vals, v_vals, units, name, radius):
+def animate_vector_map(x_val, y_val, u_vals, v_vals, units, name, radius, scale):
     """
     Specific animator.
     """
@@ -860,7 +867,7 @@ def animate_vector_map(x_val, y_val, u_vals, v_vals, units, name, radius):
     plt.xlim((x_min, x_max))
     plt.ylim((y_min, y_max))
     try:
-        plt.quiver(x_val, y_val, u_val, v_val, label=units, pivot="mid", units="inches")#, scale=1/.75)
+        plt.quiver(x_val, y_val, u_val, v_val, label=units, pivot="mid")#, units='x')#, scale=rad*scale*100)
     except TypeError:
         print (x_val, y_val, u_val, v_val)
     plt.gca().invert_yaxis()
@@ -868,7 +875,7 @@ def animate_vector_map(x_val, y_val, u_vals, v_vals, units, name, radius):
     plt.ylabel("y [pixels]")
     #plt.legend()
 
-def create_vector_map(x_vals, y_vals, u_vals, v_vals, units, name, radius=800, fps=15):
+def create_vector_map(x_vals, y_vals, u_vals, v_vals, units, name, scale, radius=800, fps=15):
     """
     Creates animation from data.
     """
@@ -879,7 +886,7 @@ def create_vector_map(x_vals, y_vals, u_vals, v_vals, units, name, radius=800, f
         """
         Wrapper.
         """
-        animate_vector_map(x_vals, y_vals, u_vals, v_vals, units, name, radius)
+        animate_vector_map(x_vals, y_vals, u_vals, v_vals, units, name, radius, scale)
     anim = animation.FuncAnimation(fig, animate, frames=frames)
     anim.save(name, writer=WRITER, fps=fps)
 

@@ -386,7 +386,7 @@ class SystemState(object):
                 available_rods = set([])
                 index_x = int((center[0]-x_min)/diff)
                 index_y = int((center[1]-y_min)/diff)
-                number_of_squares = int(self.coef/2)+1
+                number_of_squares = self.coef*2 #int(self.coef/2)+1
                 for diff_index_x in range(number_of_squares):
                     for diff_index_y in range(number_of_squares):
                         try:

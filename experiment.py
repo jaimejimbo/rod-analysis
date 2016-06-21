@@ -1800,8 +1800,10 @@ class Experiment(object):
         end = False
         u_vals_avg = []
         v_vals_avg = []
+        
         number_of_bursts *= coef
         print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + "Computing averages"
+        modules = []
         while not end:
             groups = []
             _u_vals_avg = []
@@ -1832,9 +1834,13 @@ class Experiment(object):
                 _v_vals_avg = _v_vals
             if _u_vals_avg is None or _v_vals_avg is None:
                 print "--"*(len(inspect.stack())-1)+">"+"["+str(inspect.stack()[0][3])+"]: " + str(_u_vals_avg) + "  " + str(_v_vals_avg)
+            for index in range(len(u_vals)):
+                modules.append(math.sqrt(_u_vals_avg[index]**2+_v_vals_avg[index]**2))
             for index in range(coef):
                 u_vals_avg.append(methods.compress(_u_vals_avg))
                 v_vals_avg.append(methods.compress(_v_vals_avg))
+        max_mod = max(modules)
+        scale = 1.0/max_mod
         if not settings.to_file:
             fig = plt.figure()
         state = self.get(0)
@@ -1844,7 +1850,7 @@ class Experiment(object):
         units = "velocidad [mm^2/seg^2]"
         rad = self.radius
         if settings.plot:
-            methods.create_vector_map(x_vals, y_vals, u_vals_avg, v_vals_avg, units, name, radius=rad, fps=fps)
+            methods.create_vector_map(x_vals, y_vals, u_vals_avg, v_vals_avg, units, name, scale, radius=rad, fps=fps)
         if settings.to_file:
             output_file_name = name + ".data"
             output_file = open(output_file_name, 'w')
