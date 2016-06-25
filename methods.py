@@ -538,6 +538,20 @@ def array_average(array_of_arrays):
             output = sum_arrays_with_cl(output, array_of_arrays[index])
         return normalize_opencl(output, number_of_arrays)
 
+def array_average_sqrt(array_of_arrays):
+    """
+    Computes sqrt after averagin.
+    """
+    array = array_average(array_of_arrays)
+    array_ = []
+    for value in array:
+        try:
+            sqrtvalue = math.sqrt(value)
+        except ValueError:
+            sqrtvalue = -1000
+        array_.append(sqrtvalue)
+    return array
+
 def array_average_N(array_of_arrays):
     """
     Average for data of type: [[[val000, val001], [val010, val011], ...],
@@ -578,7 +592,7 @@ def array_average_N_process(col, output_queue, array_of_arrays):
     """
     Process
     """
-    output_queue.put([col, array_average(array_of_arrays)])
+    output_queue.put([col, array_average_sqrt(array_of_arrays)])
 
 def sum_arrays_with_cl(array1, array2):
     """
