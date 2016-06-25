@@ -1022,7 +1022,7 @@ class SubsystemState(object):
         for rod_ in self:
             Q2_cos += float(math.cos(2*rod_.angle))/N
             Q2_sin += float(math.sin(2*rod_.angle))/N
-        Q2 = [Q2_cos**2, Q2_sin**2]
+        Q2 = [Q2_cos, Q2_sin]
         return Q2
 
     @property
@@ -1039,7 +1039,7 @@ class SubsystemState(object):
         for rod_ in self:
             Q4_cos += float(math.cos(4*rod_.angle))/N
             Q4_sin += float(math.sin(4*rod_.angle))/N
-        Q4 = [Q4_cos**2, Q4_sin**2]
+        Q4 = [Q4_cos, Q4_sin]
         return Q4
 
 

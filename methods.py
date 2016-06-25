@@ -592,7 +592,7 @@ def array_average_N_process(col, output_queue, array_of_arrays):
     """
     Process
     """
-    output_queue.put([col, array_average_sqrt(array_of_arrays)])
+    output_queue.put([col, array_average(array_of_arrays)])
 
 def sum_arrays_with_cl(array1, array2):
     """
