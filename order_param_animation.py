@@ -23,7 +23,7 @@ REWRITE_LAST = CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
 
 resol = 30
 cresol = 256*32
-sigma = 5
+sigma = 1.0
 
 connection = sql.connect("rods.db")
 cursor = connection.cursor()
@@ -47,13 +47,13 @@ def _update_matrix(row, col, rods_6, rods_12, dx, dy, x0, y0, center, rad, num_r
     """
     pos = np.array([col*dx+x0, row*dy+y0])
     if np.sum((pos-center)**2) <= rad**2:
-        xcenter = col*dx-x0
-        ycenter = row*dy-y0
+        xcenter = col*dx+x0
+        ycenter = row*dy+y0
         xvals6 = rods_6[:, 0]
         yvals6 = rods_6[:, 1]
         xvals12 = rods_12[:, 0]
         yvals12 = rods_12[:, 1]
-        val6 = -((xvals6-xcenter)**2/dx**2 + (-ycenter)**2/dy**2)
+        val6 = -((xvals6-xcenter)**2/dx**2 + (yvals6-ycenter)**2/dy**2)
         exps6 = np.exp(val6/(4*sigma**2))/(np.sqrt(2*math.pi)*sigma)
         distr6[row, col] = np.sum(exps6)/num_rods
         val12 = -((xvals12-xcenter)**2/dx**2 + (yvals12-ycenter)**2/dy**2)
