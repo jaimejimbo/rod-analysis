@@ -21,9 +21,9 @@ CURSOR_UP_ONE = '\x1b[1A'
 ERASE_LINE = '\x1b[2K'
 REWRITE_LAST = CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
 
-resol = 30
-cresol = 30
-sigma = 1
+resol = 50
+cresol = 256*32
+sigma = 0.5
 
 connection = sql.connect("rods.db")
 cursor = connection.cursor()
@@ -41,19 +41,25 @@ plot_ = None
 fig = plt.figure()
 
 
-def _update_matrix(row, col, rods_6, rods_12, dx, dy, x0, y0, center, rad, num_rods, distr_6, distr_12):
+def _update_matrix(row, col, rods_6, rods_12, dx, dy, x0, y0, center, rad, num_rods, distr6, distr12):
     """
     Updates matrix with density values.
     """
     pos = np.array([col*dx+x0, row*dy+y0])
     if np.sum((pos-center)**2) <= rad**2:
-        val_6 = -((rods_6[:, 0]-col*dx-x0)**2/dx**2+np.abs(rods_6[:, 1]-row*dy-y0)**2/dy**2)
-        exps_6 = np.exp(val_6/(4*sigma**2))/np.sqrt(2*math.pi)*sigma
-        distr_6[row, col] += np.sum(exps_6)/num_rods
-        val_12 = -((rods_12[:, 0]-col*dx-x0)**2/dx**2+np.abs(rods_12[:, 1]-row*dy-y0)**2/dy**2)
-        exps_12 = np.exp(val_12/(4*sigma**2))/np.sqrt(2*math.pi)*sigma
-        distr_12[row, col] += np.sum(exps_12)/num_rods
-    return distr_6, distr_12
+        xcenter = col*dx-x0
+        ycenter = row*dy-y0
+        xvals6 = rods_6[:, 0]
+        yvals6 = rods_6[:, 1]
+        xvals12 = rods_12[:, 0]
+        yvals12 = rods_12[:, 1]
+        val6 = -((xvals6-xcenter)**2/dx**2 + (-ycenter)**2/dy**2)
+        exps6 = np.exp(val6/(4*sigma**2))/(np.sqrt(2*math.pi)*sigma)
+        distr6[row, col] = np.sum(exps6)/num_rods
+        val12 = -((xvals12-xcenter)**2/dx**2 + (yvals12-ycenter)**2/dy**2)
+        exps12 = np.exp(val12/(4*sigma**2))/(np.sqrt(2*math.pi)*sigma)
+        distr12[row, col] = np.sum(exps12)/num_rods
+    return distr6, distr12
 
 def _density_matrix_process(experiment_id_, file_ids, rods):
     """
@@ -95,7 +101,6 @@ def _get_distr(experiment_id_, file_ids):
     """
     Computes plottable data.
     """
-    distr = np.array([[0.0 for dummy1 in range(resol)] for dummy2 in range(resol)])
     cursor2 = connection.cursor()
     rods = []
     for index in range(5):
@@ -115,39 +120,50 @@ def _get_distr(experiment_id_, file_ids):
     distr = list(distr.reshape(1, len(distr)**2)[0])
     return distr
 
+def _create_colors_proc(value):
+    """
+    Process
+    """
+    if np.isnan(value):
+        color = white
+    else:
+        color = colors[int((value+1)*cresol/2)-1]
+    return color
 
-def _plot_initial_frame(experiment_id_, file_ids, plot, fig):
+def _create_colors(distr):
     """
-    Plots initial frame.
+    Creates a color distribution for data.
     """
+    colors_ = []
+    try:
+        pool = Pool(4)
+        colors_ = pool.map(_create_colors_proc, distr)
+    finally:
+        pool.close()
+        pool.join()
+    return colors_
+
+def _plot_frame(experiment_id_, file_ids, plot, fig):
+    """
+    Plots frame.
+    """
+    plt.clf()
     distr = _get_distr(experiment_id_, file_ids)
     #first plot. It create axes...
     x_vals, y_vals = np.array(range(resol)), np.array(range(resol))
     mesh = np.array(np.meshgrid(x_vals, y_vals))
     x_vals, y_vals = tuple(mesh.reshape(2, resol**2))
+    #x_vals, y_vals, distr = delete_nones(x_vals, y_vals, distr)
     size = 2000.0/resol
-    plot = plt.scatter(x_vals, y_vals, c=distr, marker='s', s=size)
+    plot = plt.scatter(x_vals, y_vals, c=distr, marker='s', s=size,
+                       vmin=-1, vmax=1)
+    colors_ = _create_colors(distr)
+    plot.set_color(colors_)
     cb = plt.colorbar()
     cb.set_label('(n_12-n_6)/(n_12+n_6)')
     plt.xlabel("x [norm]")
     plt.ylabel("y [norm]")
     plt.suptitle('density distribution')
-    return plot
-
-def _plot_frame(experiment_id_, file_ids, plot, fig):
-    """
-    Updates the frame.
-    """
-    #only update colors.
-    distr = _get_distr(experiment_id_, file_ids)
-    colors_ = []
-    for value in distr:
-        if np.isnan(value):
-            color = white
-        else:
-            color = colors[int(value*cresol/2)]
-        colors_.append(color)
-    plot.set_color(colors_)
     return plot
 
 def create_animation(experiment_id):
@@ -162,28 +178,24 @@ def create_animation(experiment_id):
     plot_ = None
     exit = False
     frame_idx = 0
-    print("\n")
+    msg = "Computing densiry matrix for experiment {}".format(experiment_id)
+    print(msg)
     def animate(frame_idx):
         """
         Wrapper
         """
         global plot_
         global fig
-        progress = str(frame_idx) + "/" + str(num_frames) + "("
+        progress = str(frame_idx) + "/" + str(num_frames) + "\t("
         progress += "{0:.2f}%)"
         print(progress.format(frame_idx*100.0/num_frames),end='\r')
         file_id0 = frame_idx*5
-        if plot_ is None:
-            plot_ = _plot_initial_frame(int(experiment_id), file_ids[file_id0:file_id0+5] , plot_, fig)
-        else:
-            plot_ = _plot_frame(int(experiment_id), file_ids[file_id0:file_id0+5] , plot_, fig)
-    try:
-        anim = animation.FuncAnimation(fig, animate, frames=num_frames, repeat=False)
-    except KeyboardInterrupt:
-        exit = True
+        plot_ = _plot_frame(int(experiment_id), file_ids[file_id0:file_id0+5] , plot_, fig)
+    anim = animation.FuncAnimation(fig, animate, frames=num_frames, repeat=False)
     name = 'density_animation{}.mp4'.format(experiment_id)
-    anim.save(name)
-    if exit:
+    try:
+        anim.save(name)
+    except KeyboardInterrupt:
         connection.commit()
         connection.close()
         raise KeyboardInterrupt
