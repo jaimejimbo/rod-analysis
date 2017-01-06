@@ -1,5 +1,5 @@
 """
-Density animation creation module.
+Order parameter animation creation module.
 """
 
 import numpy as np
@@ -23,7 +23,7 @@ REWRITE_LAST = CURSOR_UP_ONE + ERASE_LINE + CURSOR_UP_ONE
 
 resol = 30
 cresol = 256*32
-sigma = 0.1
+sigma = 5
 
 connection = sql.connect("rods.db")
 cursor = connection.cursor()
@@ -61,9 +61,9 @@ def _update_matrix(row, col, rods_6, rods_12, dx, dy, x0, y0, center, rad, num_r
         distr12[row, col] = np.sum(exps12)/num_rods
     return distr6, distr12
 
-def _density_matrix_process(experiment_id_, file_ids, rods):
+def _order_param_matrix_process(experiment_id_, file_ids, rods):
     """
-    Density matrix computing process.
+    Order parameter matrix computing process.
     """
     distr_6 = np.array([[0.0 for dummy1 in range(resol)] for dummy2 in range(resol)])
     distr_12 = np.array([[0.0 for dummy1 in range(resol)] for dummy2 in range(resol)])
@@ -110,7 +110,7 @@ def _get_distr(experiment_id_, file_ids):
         pool = Pool(4)
         r = itertools.repeat
         izip = zip(r(experiment_id_), r(file_ids), rods)
-        distrs = np.array(pool.starmap(_density_matrix_process, izip))
+        distrs = np.array(pool.starmap(_order_param_matrix_process, izip))
     finally:
         pool.close()
         pool.join()
@@ -163,7 +163,7 @@ def _plot_frame(experiment_id_, file_ids, plot, fig):
     cb.set_label('(n_12-n_6)/(n_12+n_6)')
     plt.xlabel("x [norm]")
     plt.ylabel("y [norm]")
-    plt.suptitle('density distribution')
+    plt.suptitle('order parameter distribution')
     return plot
 
 def create_animation(experiment_id):
@@ -178,7 +178,7 @@ def create_animation(experiment_id):
     plot_ = None
     exit = False
     frame_idx = 0
-    msg = "Computing densiry matrix for experiment {}".format(experiment_id)
+    msg = "Computing order parameter matrix for experiment {}".format(experiment_id)
     print(msg)
     def animate(frame_idx):
         """
@@ -192,7 +192,7 @@ def create_animation(experiment_id):
         file_id0 = frame_idx*5
         plot_ = _plot_frame(int(experiment_id), file_ids[file_id0:file_id0+5] , plot_, fig)
     anim = animation.FuncAnimation(fig, animate, frames=num_frames, repeat=False)
-    name = 'density_animation{}.mp4'.format(experiment_id)
+    name = 'order_param_animation{}.mp4'.format(experiment_id)
     try:
         anim.save(name)
     except KeyboardInterrupt:
