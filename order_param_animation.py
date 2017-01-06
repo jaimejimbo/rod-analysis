@@ -147,6 +147,7 @@ def _plot_frame(experiment_id_, file_ids, plot, fig):
     """
     Plots frame.
     """
+    plt.cla()
     plt.clf()
     distr = _get_distr(experiment_id_, file_ids)
     #first plot. It create axes...
@@ -154,11 +155,13 @@ def _plot_frame(experiment_id_, file_ids, plot, fig):
     mesh = np.array(np.meshgrid(x_vals, y_vals))
     x_vals, y_vals = tuple(mesh.reshape(2, resol**2))
     #x_vals, y_vals, distr = delete_nones(x_vals, y_vals, distr)
-    size = 2000.0/resol
+    rad = (max(x_vals)-min(x_vals))/(2.0*resol)
+    size = 500*(rad)**2
     plot = plt.scatter(x_vals, y_vals, c=distr, marker='s', s=size,
                        vmin=-1, vmax=1)
-    colors_ = _create_colors(distr)
-    plot.set_color(colors_)
+    #This makes plots strange.
+    #colors_ = _create_colors(distr)
+    #plot.set_color(colors_)
     cb = plt.colorbar()
     cb.set_label('(n_12-n_6)/(n_12+n_6)')
     plt.xlabel("x [norm]")
