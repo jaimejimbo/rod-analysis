@@ -1,6 +1,8 @@
-Libraries to study granular particles behaviour.
+Library to create videos for monolayer vibrated rod system.
 
-- Change execution parameters in main and then run it with python or bash (./main.py).
+Dependencies: sqlite3, numpy, matplotlib, re, multiprocessing
 
-Needs:
-  - matplotlib, scipy, numpy, ffmpeg, PIL or pillow, imagej, pyopencl, zlib, lzo, lz4 (and python bindings).
+- Use imagej to create rod data file.
+- Create database with create_db.py.
+- Insert values in database(previously created) with insert_db.py, dates_db.py.
+- Launch modules to create videos (order_param.py, correlation.py, ...).
