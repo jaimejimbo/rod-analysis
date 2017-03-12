@@ -1,5 +1,7 @@
 Library to create videos for monolayer vibrated rod system.
 
+This processes data on a Map-Reduce way (with multiprocessing).
+
 Dependencies: sqlite3, numpy, matplotlib, re, multiprocessing
 
 - Use imagej to create rod data file.
